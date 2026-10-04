@@ -50720,7 +50720,9 @@ function shareCard(kind                ) {
 async function shareNow(kind                ) {
   sfx("click");
   const c = shareCard(kind),
-    blob       = await new Promise((res) => c.toBlob((b) => res(b), "image/png")),
+    blob       = await new Promise((res) => {
+      c.toBlob((b) => res(b), "image/png");
+    }),
     name = "space-pub-" + (kind === "cup" ? "cup" : String(G.score)) + ".png",
     text =
       kind === "cup" && CUP.s && CUP.s.champ

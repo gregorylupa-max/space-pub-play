@@ -1,0 +1,16 @@
+{
+  "name": "Space Pub",
+  "short_name": "Space Pub",
+  "description": "A space milkshake bar arcade game: pour, slide, catch the empties - for kids and grown-ups.",
+  "start_url": "./",
+  "scope": "./",
+  "display": "fullscreen",
+  "orientation": "any",
+  "background_color": "#0a0610",
+  "theme_color": "#0a0610",
+  "icons": [
+    { "src": "icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "icon-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ]
+}

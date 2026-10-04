@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"></head><body>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><link rel="manifest" href="manifest.webmanifest"><meta name="theme-color" content="#0a0610"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"><meta name="apple-mobile-web-app-title" content="Space Pub"><link rel="apple-touch-icon" href="apple-touch-icon.png"><link rel="icon" type="image/png" href="icon-192.png"><script>if('serviceWorker' in navigator && /^https?:/.test(location.protocol))addEventListener('load',function(){navigator.serviceWorker.register('sw.js').catch(function(){});});</script></head><body>
 <title>Space Pub</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -81,6 +81,12 @@ button.wide { grid-column: 1 / -1; }
 #jbList button.on::before { content: "♪ NOW PLAYING"; font-size: 10px; color: var(--amber, #ffc34d); }
 #jbList .jbHead { grid-column: 1 / -1; font: 700 14px/1.2 var(--body); letter-spacing: .12em; color: var(--amber, #ffc34d); padding: 14px 4px 4px; border-bottom: 1px solid rgba(255,195,77,.4); }
 #jbList .jbJump { grid-column: 1 / -1; }
+#galmap, #cup { width: min(1000px, 96vw); max-height: 96vh; overflow-y: auto; box-sizing: border-box; }
+#gmCanvas { width: 100%; aspect-ratio: 16 / 8; display: block; border-radius: 12px; margin: 6px 0 12px; touch-action: none; }
+@media (max-aspect-ratio: 9/10) { #gmCanvas { aspect-ratio: 3 / 4; } }
+#cupCanvas { width: 100%; aspect-ratio: 16 / 6; display: block; border-radius: 12px; margin: 6px 0 12px; }
+#cupList { grid-template-columns: 1fr 1fr; }
+#cupList input { font: 600 15px var(--body); padding: 9px 10px; border-radius: 8px; border: 1px solid var(--line); background: rgba(10,6,20,.7); color: var(--ink); min-width: 0; }
 #jbViz { width: 100%; height: 56px; display: block; border-radius: 10px; background: rgba(0,0,0,.35); }
 button b { color: var(--amber); font-weight: 700; }
 .add { font: 600 15px/1.2 var(--body); letter-spacing: .06em; color: var(--amber); cursor: pointer; border: 1px dashed rgba(255, 195, 77, .6);
@@ -174,8 +180,13 @@ body.retro .table { font-size: 10px; gap: 5px; }
     <button id="bShop">COIN SHOP <b id="vShop"></b></button>
     <button id="bTroph">TROPHIES <b id="vTroph"></b></button>
     <button id="bEndless" class="wide">ENDLESS MODE <b id="vEndless"></b></button>
+    <button id="bMap">GALAXY MAP <b id="vMap"></b></button>
+    <button id="bCup">CUP TOURNAMENT <b id="vCup"></b></button>
     <button id="bOneBtn">ONE-BUTTON: <b id="vOneBtn">OFF</b></button>
     <button id="bBreak">BREAK REMINDER: <b id="vBreak">OFF</b></button>
+    <button id="bCalm">CALM MODE: <b id="vCalm">OFF</b></button>
+    <button id="bShapes">FLAVOUR SHAPES: <b id="vShapes">OFF</b></button>
+    <button id="bBuzz" class="wide">VIBRATION: <b id="vBuzz">ON</b></button>
     <button id="bHoliday" class="wide">HOLIDAY: <b id="vHoliday">BY DATE</b></button>
     <button id="bContSet" class="wide">CONTINUE AFTER GAME OVER: <b id="vContSet">ON</b></button>
     <button id="bPour">POUR: <b id="vPour">HOLD</b> <kbd>T</kbd></button>
@@ -265,6 +276,21 @@ body.retro .table { font-size: 10px; gap: 5px; }
   <p class="tag" id="trTag"></p>
   <div class="buttons" id="trList"></div>
   <button id="trBack" class="primary">DONE <kbd>Esc</kbd></button>
+</section>
+
+<section id="galmap" class="panel" hidden aria-label="Galaxy map">
+  <h2>GALAXY MAP</h2>
+  <p class="tag" id="gmTag"></p>
+  <canvas id="gmCanvas"></canvas>
+  <button id="gmBack" class="primary">DONE <kbd>Esc</kbd></button>
+</section>
+
+<section id="cup" class="panel" hidden aria-label="Cup tournament">
+  <h2 id="cupTitle">CUP TOURNAMENT</h2>
+  <p class="tag" id="cupTag"></p>
+  <canvas id="cupCanvas"></canvas>
+  <div class="buttons" id="cupList"></div>
+  <button id="cupBack" class="primary">DONE <kbd>Esc</kbd></button>
 </section>
 
 <section id="breakp" class="panel" hidden aria-label="Time for a break">
@@ -1410,7 +1436,22 @@ const RM_Q = (() => {
       return null;
     }
   })(),
-  MOTION = () => (RM_Q && RM_Q.matches ? 0.35 : 1); // (how many times the video card was lost and the game fell back to the processor)
+  MOTION = () => (COMFORT.calm ? 0.15 : RM_Q && RM_Q.matches ? 0.35 : 1),
+  FLASH = () => (COMFORT.calm ? 0.25 : 1); // CALM MODE (in the settings): flashes a quarter as bright, almost no shaking
+// can this device buzz or rumble? (a phone or tablet, or a controller)
+const canBuzz = () => {
+  try {
+    return ("vibrate" in navigator && matchMedia("(pointer: coarse)").matches) || !!navigator.getGamepads;
+  } catch (e) {
+    return false;
+  }
+};
+// the comfort settings, read once (they're switched in the menu)
+const COMFORT = {
+  calm: !!store.get("calm", false),
+  shapes: !!store.get("shapes", false),
+  buzz: store.get("buzz", true) !== false,
+}; // (how many times the video card was lost and the game fell back to the processor)
 const stage = $("stage"),
   hud = $("hud"),
   hg = hud.getContext("2d");
@@ -3694,9 +3735,21 @@ function startGame() {
   sfx("start");
 }
 function toMenu() {
+  if (CUP.match) {
+    CUP.match = null;
+    if (CUP.keep) {
+      playMode = CUP.keep.mode;
+      fromLevel = CUP.keep.from;
+    }
+    CUP.back = true;
+  } // (a cup match left half-way: it can be played again)
   resetGame(true);
   G.state = "menu";
   showPanels();
+  if (CUP.back) {
+    CUP.back = false;
+    openFP("cup");
+  } // (after a cup match, straight back to the bracket)
 }
 let fromLevel = clamp(store.get("from", 1) | 0, 1, VENUES.length);
 let spills = [];
@@ -3755,8 +3808,11 @@ function setDev(d) {
 }
 // a little feedback in your hands: controller rumble, or a buzz on phones
 function buzz(kind) {
-  if (G.demo || G.state === "menu") return;
-  const ms = { catch: 18, power: 60, lose: 260, fired: 500, shield: 120, hop: 10 }[kind] || 30,
+  if (G.demo || (G.state === "menu" && kind !== "test") || !COMFORT.buzz) return; // (VIBRATION in the settings switches it all off)
+  const ms =
+      { catch: 18, power: 60, lose: 260, fired: 500, shield: 120, hop: 10, tip: 15, clear: 40, test: 60 }[
+        kind
+      ] || 30,
     str = { lose: 1, fired: 1, shield: 0.7, power: 0.5 }[kind] || 0.25;
   if (lastDev === "touch") {
     try {
@@ -4050,7 +4106,7 @@ function readPads() {
     if (e("b")) navBack();
     if (e("a") && performance.now() - NAVT.a > 250 && (NAVT.a = performance.now())) {
       if (!navPress()) {
-        if (G.state === "menu" && !JB.open && !SB.open && !WD.open && !FP.shop && !FP.trophies) startGame();
+        if (G.state === "menu" && !JB.open && !SB.open && !WD.open && !fpAny()) startGame();
         else if (G.state === "paused") pause(false);
         else if (G.state === "over") beginGame();
       }
@@ -4059,16 +4115,7 @@ function readPads() {
       closeJukebox();
       return;
     }
-    if (
-      pad.start &&
-      !pad.startW &&
-      G.state === "menu" &&
-      !JB.open &&
-      !SB.open &&
-      !WD.open &&
-      !FP.shop &&
-      !FP.trophies
-    ) {
+    if (pad.start && !pad.startW && G.state === "menu" && !JB.open && !SB.open && !WD.open && !fpAny()) {
       startGame();
       return;
     }
@@ -4617,6 +4664,10 @@ function update(dt) {
     G.clearT -= dt;
     if (Math.random() < dt * 30) confetti(rnd(0, PW), -10, 1);
     if (G.clearT <= 0) {
+      if (CUP.match && G.level >= CUP_LEVELS) {
+        gameOver();
+        return;
+      } // (a cup match lasts up to three levels)
       if (G.demo) {
         G.level = (G.level % 4) + 1;
         startLevel();
@@ -6791,7 +6842,7 @@ function update(dt) {
     if (!demo) {
       kidLevelClear();
       funLevelClear();
-      G.clearT = 4.2;
+      G.clearT = G.versus ? 4.2 : 4.8; // (time to see the stars - and the galaxy map, as the ship hops on)
       const bonusPts = 1000 * G.level + (G.perfect ? 2000 : 0);
       for (const p of active()) {
         SCORER = p;
@@ -8524,6 +8575,7 @@ function endFired() {
 } // (the empty bar and the manager stay behind the GAME OVER panel)
 function gameOver() {
   G.state = "over";
+  const cupM = cupResult(); // (a cup match: the result goes into the bracket)
   contRemember();
   if (twoP()) G.score = G.versus ? Math.max(P1.score, P2.score) : P1.score + P2.score;
   const best = G.score > G.hi;
@@ -8583,6 +8635,23 @@ function gameOver() {
     if (G.contN) $("overInfo").textContent += "   ·   CONTINUES USED: " + G.contN;
     funMenuText();
   }
+  // after a cup match: the match result, and the way back to the bracket
+  $("oAgain").hidden = !!cupM;
+  $("oMenu").textContent = cupM ? "BACK TO THE CUP ▶" : "MENU";
+  if (cupM) {
+    $("oCont").hidden = true;
+    $("overInfo").textContent =
+      cupM.w +
+      " WINS THE MATCH!   " +
+      cupM.a +
+      " " +
+      (cupM.sa ?? 0) +
+      "  ·  " +
+      cupM.b +
+      " " +
+      (cupM.sb ?? 0) +
+      (CUP.s && CUP.s.champ ? "   ·   " + CUP.s.champ + " IS THE CHAMPION!" : "");
+  }
   NAME.pos = 0;
   nameLabel();
   setTimeout(() => {
@@ -8591,7 +8660,7 @@ function gameOver() {
         $("nameIn").focus();
         if (lastDev === "pad") $("nameIn").setSelectionRange(0, 1);
         else $("nameIn").select();
-      } else ($("oCont").hidden ? $("oAgain") : $("oCont")).focus();
+      } else (cupM ? $("oMenu") : $("oCont").hidden ? $("oAgain") : $("oCont")).focus();
     } catch (e) {}
   }, 50);
 }
@@ -9418,8 +9487,8 @@ function draw() {
       ? (Math.sin(sq * 1.37 + 0.6) * 0.6 + Math.sin(sq * 2.71 + 2.2) * 0.4) * G.shake * 0.6 +
         (G.kick || 0) * (G.kick || 0) * 7 * MOTION()
       : 0;
-  SHK[0] = sx;
-  SHK[1] = sy; // (a smooth rattle, not a random jump every frame)
+  SHK[0] = sx * MOTION();
+  SHK[1] = sy * MOTION(); // (a smooth rattle, not a random jump every frame)
   drawBackdrop(V, t);
   // the camera leans gently towards you, so near things slide more than far things (parallax)
   const cdt = clamp(G.time - CAM.t, 0, 0.1);
@@ -9539,7 +9608,7 @@ function draw() {
   if (!ending && !deep) drawLights(V, t);
   if (!ending && !deep && !(VS === "bonus" && bonus)) drawTwistFx(t);
   pop();
-  if (G.flash > 0.01) rect(0, 0, W, H, withA(G.flashC, 0.45 * G.flash));
+  if (G.flash > 0.01) rect(0, 0, W, H, withA(G.flashC, 0.45 * G.flash * FLASH()));
   R.end();
 }
 // who is behind the bar: normally the active players; in the "you're fired" scene, whoever hasn't left yet
@@ -11257,7 +11326,7 @@ function venueOutside(v, L, Rr, y0, yb, t) {
       [4, 0, 24, "#a06020", "#804810", 0.024],
     ]         )
       dunes(L, Rr, yb, amp, base, t * sp, col(c1), col(c2), f);
-    const fl = t % 7 < 0.12 || (t + 0.3) % 7 < 0.06; // lightning flickers inside the clouds
+    const fl = !COMFORT.calm && (t % 7 < 0.12 || (t + 0.3) % 7 < 0.06); // lightning flickers inside the clouds
     if (fl) {
       const lx = L + hash(Math.floor(t / 7)) * w;
       R.setAdd(true);
@@ -13208,6 +13277,27 @@ function drawTap(lane, t, V) {
 }
 
 // ---- glasses: a shake (with cream, a cherry and a straw) or an empty ----
+// FLAVOUR SHAPES (for players who find the colours hard to tell apart): strawberry = a heart, chocolate = a square,
+// mint = a leaf - dark with a white rim, so it shows on every flavour
+function flavorMark(x, y, flavor, k) {
+  const ink = col("#1a0c18"),
+    wh = col("#ffffff");
+  for (const [c, g] of [
+    [wh, 1.3],
+    [ink, 0],
+  ]         ) {
+    if (flavor === 0) {
+      disc(x - 2 * k, y - 1.2 * k, (2.2 + g * 0.6) * k, c);
+      disc(x + 2 * k, y - 1.2 * k, (2.2 + g * 0.6) * k, c);
+      tri(x - (4.1 + g) * k, y - 0.4 * k, x + (4.1 + g) * k, y - 0.4 * k, x, y + (4.2 + g) * k, c);
+    } else if (flavor === 1)
+      rect(x - (3.4 + g) * k, y - (3.4 + g) * k, (6.8 + g * 2) * k, (6.8 + g * 2) * k, c);
+    else {
+      disc(x, y, (3.6 + g * 0.7) * k, c, (2.2 + g * 0.7) * k);
+      if (!g) line(x - 2.4 * k, y + 1.8 * k, x + 2.4 * k, y - 1.8 * k, 0.8 * k, col("#8ff0c0"));
+    }
+  }
+}
 function drawGlass(x, y, flavor, full, spin, tilt ) {
   push();
   translate(x, y);
@@ -13223,6 +13313,7 @@ function drawGlass(x, y, flavor, full, spin, tilt ) {
     line(1, -44, 4, -49, 0.8, col("#3a8a3a"));
     line(-4, -33, -9, -52, 2, col("#ff5f5f"));
     line(-4, -33, -9, -52, 0.8, C.white);
+    if (COMFORT.shapes) flavorMark(0, -15, flavor, 1.35); // (FLAVOUR SHAPES: a heart, a square or a leaf on the glass)
   }
   quad4(-8, -31, 8, -31, 6, -2, -6, -2, withA(col("#cfefff"), full ? 0.25 : 0.35));
   line(-8, -31, -6, -2, 1, withA(C.white, 0.7));
@@ -18886,7 +18977,7 @@ function drawLights(V, t) {
     inBonus = G.state === "bonus" && bonus,
     inCast = ATTRACT.on && ATTRACT.phase === "cast";
   let amb = AMBIENT[v];
-  if (v === 6 && (t % 7 < 0.12 || (t + 0.3) % 7 < 0.06)) amb += 0.12; // Venus lightning lights the whole room
+  if (v === 6 && !COMFORT.calm && (t % 7 < 0.12 || (t + 0.3) % 7 < 0.06)) amb += 0.12; // Venus lightning lights the whole room
   amb *= 0.92 + 0.08 * LAMP_FLICK(t);
   if (inBonus) amb = 0.42;
   if (window.NOLIGHT || !R.beginLights([amb, amb * 0.97, amb * 1.05])) return;
@@ -18994,7 +19085,7 @@ function drawLights(V, t) {
     if (p.light && !(p.wait > 0))
       g(p.x, p.y, p.light * (0.6 + (0.6 * p.life) / p.max), p.c, (0.3 * p.life) / p.max);
   for (const l of G.lfx || []) g(l.x, l.y, l.r, l.c, (0.5 * l.life) / l.max);
-  if (G.flash > 0.01) g(PW / 2, PH / 2, 900, G.flashC, 0.3 * G.flash);
+  if (G.flash > 0.01) g(PW / 2, PH / 2, 900, G.flashC, 0.3 * G.flash * FLASH());
   R.endLights();
 }
 
@@ -25855,7 +25946,7 @@ function drawSupernova(L, Rr, T, B, f, t) {
   drawSN(cx, cy, Rad, f, t, fade);
   if (f > 0.24 && f < 0.3) {
     R.setAdd(true);
-    rect(L, T, w, h, withA(C.white, 0.7 * (1 - (f - 0.24) / 0.06)));
+    rect(L, T, w, h, withA(C.white, 0.7 * FLASH() * (1 - (f - 0.24) / 0.06)));
     R.setAdd(false);
   } // the flash fills the screen
   // ...and in the corner a little green alien in a deck chair on a rock, watching with popcorn: on go the sunglasses,
@@ -26293,7 +26384,8 @@ function drawDinerExterior(L, Rr, T, B, ph, len, pan, t) {
     }
   } // a warm glow so you can spot it from far away
   {
-    const ls = clamp((ph - (len - 10)) / 2, 0, 1) * Math.min(1, (len - 0.8 - ph) * 2);
+    const ls =
+      clamp((ph - (len - 10)) / 2, 0, 1) * Math.min(1, (len - 0.8 - ph) * 2) * (COMFORT.calm ? 0.35 : 1);
     if (ls > 0) {
       R.setAdd(true); // a LASER SHOW from the roof: beams sweeping the sky
       const LC = ["#ff3b6f", "#40ff90", "#40b0ff", "#ffe040", "#c060ff", "#ff9020"];
@@ -26390,12 +26482,15 @@ function drawDinerExterior(L, Rr, T, B, ph, len, pan, t) {
     pop();
   }
   // into the diner: a flash and we're inside
-  if (ph > len - 1) rect(L, T, w, h, withA(C.white, ease((ph - (len - 1)) / 1)));
+  if (ph > len - 1)
+    rect(L, T, w, h, withA(COMFORT.calm ? col("#0a0610") : C.white, ease((ph - (len - 1)) / 1))); // (calm mode: a soft fade to dark, not a white-out)
 }
 // a BIG waving flag, drawn smoothly in many thin columns with the real geometry (for the flag tug): South Africa's
 // green Y edged white and gold around the black triangle, red above and blue below; or Poland's white over red
 function drawBigFlag(nat, x, y, w, h, t, A) {
-  const N = 40,
+  // (as many strips as the flag has room for on screen: a big flag waves in 40, a little one in a crowd in a handful -
+  //  the stadium scenes wave dozens of them, and that was most of their drawing)
+  const N = clamp(Math.round((Math.abs(w) * TS()) / 3), 6, 40),
     J = 0.5 / 1.5,
     hw = 0.1 * 1.414,
     wb = (1 / 15) * 1.414,
@@ -35935,7 +36030,7 @@ function drawGlutton(c, t, a) {
 //  BARTENDER LEVELS, DECORATE YOUR DINER, ENDLESS MODE, HOLIDAY EVENTS, STORY SCENES with Bocian Bogdan,
 //  ONE-BUTTON MODE for little ones, and a friendly BREAK REMINDER
 // =====================================================================================
-const FP = { shop: false, trophies: false },
+const FP = { shop: false, trophies: false, map: false, cup: false },
   BRK = { open: false, t: 0 };
 const FLAV_NAMES = ["STRAWBERRY", "CHOCOLATE", "MINT"],
   FLAV_HEX = ["#ff8fbf", "#9a5a3a", "#8ff0c0"],
@@ -37822,6 +37917,13 @@ function funMenuText() {
   if ($k("vTroph")) $k("vTroph").textContent = got + "/" + TROPHIES.length + "  ·  LV " + lv;
   if ($k("vEndless")) $k("vEndless").textContent = "BEST " + (s.endlessBest || 0) + " SERVED";
   if ($k("vOneBtn")) $k("vOneBtn").textContent = store.get("onebtn", false) ? "ON" : "OFF";
+  // the comfort settings: CALM MODE, FLAVOUR SHAPES, VIBRATION (only where the device can buzz)
+  if ($k("vCalm")) $k("vCalm").textContent = COMFORT.calm ? "ON" : "OFF";
+  if ($k("vShapes")) $k("vShapes").textContent = COMFORT.shapes ? "ON" : "OFF";
+  if ($k("vBuzz")) {
+    $k("vBuzz").textContent = COMFORT.buzz ? "ON" : "OFF";
+    $k("bBuzz").hidden = !canBuzz();
+  }
   if ($k("vHoliday")) {
     const pk = store.get("eventPick", "auto"),
       ev = funEvent();
@@ -37846,21 +37948,27 @@ function funMenuText() {
   const ev = funEvent();
   if ($k("bDaily") && ev && EVENT_NAMES[ev]) $k("bDaily").title = EVENT_NAMES[ev];
 }
+// the menu's own screens: the coin shop, the trophies, the galaxy map, the cup tournament
+const fpAny = () => FP.shop || FP.trophies || FP.map || FP.cup,
+  fpWhich = () => (FP.shop ? "shop" : FP.trophies ? "trophies" : FP.map ? "map" : "cup"),
+  FP_BTN = { shop: "bShop", trophies: "bTroph", map: "bMap", cup: "bCup" },
+  FP_FIRST = { shop: "shItems", trophies: "trList", map: "gmBack", cup: "cupList" };
 function openFP(id) {
   if (G.state !== "menu") return;
   FP[id] = true;
-  id === "shop" ? buildShop() : buildTroph();
+  ({ shop: buildShop, trophies: buildTroph, map: buildMap, cup: buildCup })[id]();
   showPanels();
   sfx("click");
   setTimeout(() => {
-    const el = $k(id === "shop" ? "shItems" : "trList").children[0];
+    const box = $k(FP_FIRST[id]),
+      el = box && (box.tagName === "BUTTON" ? box : box.children[0]);
     if (el) el.focus();
   }, 30);
 }
 function closeFP(id) {
   FP[id] = false;
   showPanels();
-  setTimeout(() => $k(id === "shop" ? "bShop" : "bTroph").focus(), 30);
+  setTimeout(() => $k(FP_BTN[id]).focus(), 30);
 }
 function buildShop() {
   $k("shTitle").textContent = "COIN SHOP  ● " + fCoins();
@@ -37972,6 +38080,10 @@ function funPanelsInit() {
   $k("shBack").onclick = () => closeFP("shop");
   $k("bTroph").onclick = () => openFP("trophies");
   $k("trBack").onclick = () => closeFP("trophies");
+  $k("bMap").onclick = () => openFP("map");
+  $k("gmBack").onclick = () => closeFP("map");
+  $k("bCup").onclick = () => openFP("cup");
+  $k("cupBack").onclick = () => closeFP("cup");
   $k("bEndless").onclick = () => {
     if (G.state !== "menu") return;
     sfx("click");
@@ -37993,6 +38105,25 @@ function funPanelsInit() {
   };
   $k("bCont").onclick = () => continueGame();
   $k("oCont").onclick = () => continueGame();
+  $k("bCalm").onclick = () => {
+    COMFORT.calm = !COMFORT.calm;
+    store.set("calm", COMFORT.calm);
+    funMenuText();
+    sfx("click");
+  };
+  $k("bShapes").onclick = () => {
+    COMFORT.shapes = !COMFORT.shapes;
+    store.set("shapes", COMFORT.shapes);
+    funMenuText();
+    sfx("click");
+  };
+  $k("bBuzz").onclick = () => {
+    COMFORT.buzz = !COMFORT.buzz;
+    store.set("buzz", COMFORT.buzz);
+    funMenuText();
+    sfx("click");
+    buzz("test"); // (so you can feel it)
+  };
   $k("bOneBtn").onclick = () => {
     store.set("onebtn", !store.get("onebtn", false));
     funMenuText();
@@ -38402,7 +38533,7 @@ function drawWorld(Wd, x, y, r, t) {
       );
     R.setAdd(false);
   }
-  if (Wd.lightning && Math.sin(t * 5.3) > 0.93) {
+  if (Wd.lightning && !COMFORT.calm && Math.sin(t * 5.3) > 0.93) {
     R.setAdd(true);
     const lx = x + Math.sin(t * 17) * r * 0.5,
       ly = y + Math.cos(t * 13) * r * 0.4;
@@ -42675,7 +42806,10 @@ function coachCaught(demo) {
   if (!demo) coachMark("catch");
 }
 function coachTip(demo) {
-  if (!demo) coachMark("tip");
+  if (!demo) {
+    coachMark("tip");
+    buzz("tip");
+  } // (a little tap for a tip)
 }
 function coachServed(c, s, demo) {
   // a customer has just caught a shake
@@ -42797,6 +42931,7 @@ function lifeLostMech() {
 }
 function levelClearMech(demo) {
   if (demo) return;
+  buzz("clear"); // (a happy little tap)
   if (G.perfect) {
     G.flawless = (G.flawless || 0) + 1;
     setTimeout(() => {
@@ -42836,6 +42971,591 @@ function flawHud(g, s, pad, fD) {
   g.textAlign = "left";
   g.fillStyle = "#ffd24d";
   g.fillText("FLAWLESS x" + flawMul().toFixed(1), pad + 150 * s, pad + 24 * s);
+}
+// =====================================================================================
+//  THE GALAXY MAP (v2026.10.04ao): the whole tour on one page - the 40 stops from Mercury out to the heart of the Andromeda
+//  galaxy, as a winding route through four regions: THE SOLAR SYSTEM, BEYOND THE SUN (the rest of the Milky Way), THE
+//  PA-99-N2 SYSTEM and DEEP ANDROMEDA. The stops you've cleared shine gold with their stars, your ship sits on the stop
+//  you're at, and Andromeda glows at the far end. It's in the menu (GALAXY MAP), and after every level the map slides in
+//  under the stars and the ship hops on to the next stop.
+// =====================================================================================
+const GMV = { hover: -1, t0: 0, cur: 0 };
+const GM_REGIONS = [
+  { from: 0, to: 11, name: "THE SOLAR SYSTEM", c: "#ffb060" },
+  { from: 12, to: 19, name: "BEYOND THE SUN", c: "#6fb4ff" },
+  { from: 20, to: 31, name: "THE PA-99-N2 SYSTEM", c: "#c08aff" },
+  { from: 32, to: 39, name: "DEEP ANDROMEDA", c: "#ff8fd0" },
+];
+const gmRegion = (i) => GM_REGIONS.find((r) => i >= r.from && i <= r.to) || GM_REGIONS[0];
+// the best stars won at each stop (a stop comes round again after level 40)
+function gmStars() {
+  const S = levelStars(),
+    out = new Array(VENUES.length).fill(0);
+  for (const k in S) {
+    const L = +k;
+    if (L >= 1) out[(L - 1) % VENUES.length] = Math.max(out[(L - 1) % VENUES.length], S[k] | 0);
+  }
+  return out;
+}
+// where each stop sits: a snake of rows, left to right then back again (more rows on a tall screen)
+function gmLayout(w, h) {
+  const N = VENUES.length,
+    rows = w < h * 0.9 ? 8 : 4,
+    cols = Math.ceil(N / rows),
+    mx = w * 0.07,
+    my = h * 0.13,
+    dx = (w - mx * 2) / (cols - 1),
+    dy = (h - my * 2) / (rows - 1),
+    pts = [];
+  for (let i = 0; i < N; i++) {
+    const r = Math.floor(i / cols),
+      c = i % cols,
+      cc = r % 2 ? cols - 1 - c : c;
+    pts.push([mx + cc * dx, my + r * dy + Math.sin(i * 1.7) * dy * 0.12]);
+  }
+  return { pts, r: Math.max(5, Math.min(dx, dy) * 0.17), dy };
+}
+// draw the map into a 2D canvas: cur = the stop you're at, hop = 0..1 as the ship flies on to the next stop
+function drawGalaxyMap(g, w, h, cur, hop, t, opts                                      = {}) {
+  const L = gmLayout(w, h),
+    P = L.pts,
+    st = gmStars(),
+    a0 = opts.alpha ?? 1;
+  g.save();
+  g.globalAlpha = a0;
+  // the sky: deep blue at the top (our Milky Way), violet-pink at the bottom (Andromeda), with stars
+  const bg = g.createLinearGradient(0, 0, 0, h);
+  bg.addColorStop(0, "#070a1c");
+  bg.addColorStop(1, "#14061c");
+  g.fillStyle = bg;
+  g.beginPath();
+  g.rect(0, 0, w, h);
+  g.fill();
+  g.clip();
+  for (let i = 0; i < 140; i++) {
+    const x = hash(i * 3.1) * w,
+      y = hash(i * 7.7) * h,
+      tw = 0.4 + 0.6 * Math.abs(Math.sin(t * (0.6 + hash(i) * 1.4) + i));
+    g.fillStyle = "rgba(255,243,226," + (0.15 + 0.5 * tw * hash(i * 2.3)).toFixed(2) + ")";
+    g.fillRect(x, y, 1.5, 1.5);
+  }
+  // the Milky Way's glow behind the first half, Andromeda's tilted oval behind the end
+  const glowAt = (x, y, rx, ry, rot, c, al) => {
+    g.save();
+    g.translate(x, y);
+    g.rotate(rot);
+    g.scale(1, ry / rx);
+    const gr = g.createRadialGradient(0, 0, 0, 0, 0, rx);
+    gr.addColorStop(0, c.replace("A", String(al)));
+    gr.addColorStop(1, c.replace("A", "0"));
+    g.fillStyle = gr;
+    g.beginPath();
+    g.arc(0, 0, rx, 0, 6.283);
+    g.fill();
+    g.restore();
+  };
+  const mid = (i) => P[Math.min(P.length - 1, i)];
+  glowAt(mid(4)[0], mid(4)[1], w * 0.35, h * 0.16, -0.2, "rgba(150,170,255,A)", 0.16);
+  glowAt(mid(36)[0], mid(36)[1], w * 0.3, h * 0.12, -0.35, "rgba(255,190,230,A)", 0.22);
+  glowAt(mid(36)[0], mid(36)[1], w * 0.06, h * 0.04, -0.35, "rgba(255,236,200,A)", 0.5);
+  // the route: dotted ahead, solid gold where you've been
+  g.lineCap = "round";
+  for (let i = 0; i + 1 < P.length; i++) {
+    const done = i < cur;
+    g.strokeStyle = done ? "rgba(255,210,77,.75)" : "rgba(200,190,255,.28)";
+    g.lineWidth = done ? 3 : 2;
+    g.setLineDash(done ? [] : [3, 6]);
+    g.beginPath();
+    g.moveTo(P[i][0], P[i][1]);
+    g.lineTo(P[i + 1][0], P[i + 1][1]);
+    g.stroke();
+  }
+  g.setLineDash([]);
+  // region names, at the first stop of each
+  g.textAlign = "left";
+  g.textBaseline = "bottom";
+  g.font = "700 " + Math.round(Math.max(9, L.r * 1.05)) + "px " + FB;
+  for (const R0 of GM_REGIONS) {
+    const p = P[R0.from];
+    g.fillStyle = R0.c;
+    g.fillText(R0.name, Math.min(p[0] - L.r, w - g.measureText(R0.name).width - 8), p[1] - L.r * 2.1);
+  }
+  // the stops
+  for (let i = 0; i < P.length; i++) {
+    const [x, y] = P[i],
+      rc = gmRegion(i).c,
+      got = st[i],
+      here = i === cur;
+    g.fillStyle = got ? "#ffd24d" : i <= cur ? rc : "rgba(120,110,150,.55)";
+    g.beginPath();
+    g.arc(x, y, L.r * (got ? 1 : 0.8), 0, 6.283);
+    g.fill();
+    if (got) {
+      g.fillStyle = "#3a2400";
+      g.font = "700 " + Math.round(L.r * 0.95) + "px sans-serif";
+      g.textAlign = "center";
+      g.textBaseline = "middle";
+      g.fillText(String(i + 1), x, y + 0.5);
+      g.font = Math.round(L.r * 0.8) + "px sans-serif";
+      g.fillStyle = "#ffd24d";
+      g.fillText("★".repeat(got), x, y + L.r * 1.75); // its stars, under it
+    }
+    if (here) {
+      const pu = 1 + 0.25 * Math.sin(t * 5);
+      g.strokeStyle = "#5ff5c8";
+      g.lineWidth = 2.5;
+      g.beginPath();
+      g.arc(x, y, L.r * 1.6 * pu, 0, 6.283);
+      g.stroke();
+    }
+    if (i === P.length - 1) {
+      g.strokeStyle = "rgba(255,190,230,.8)";
+      g.lineWidth = 1.5;
+      g.beginPath();
+      g.arc(x, y, L.r * 2.2 + Math.sin(t * 2) * 2, 0, 6.283);
+      g.stroke();
+    } // (the heart of Andromeda: the end of the road)
+  }
+  // your ship: a little flying diner with a pink dome, hopping along the route
+  {
+    const nx = Math.min(P.length - 1, cur + 1),
+      e = hop <= 0 ? 0 : hop >= 1 ? 1 : hop * hop * (3 - 2 * hop),
+      x = P[cur][0] + (P[nx][0] - P[cur][0]) * e,
+      y =
+        P[cur][1] +
+        (P[nx][1] - P[cur][1]) * e -
+        L.r * 2.2 -
+        Math.sin(e * Math.PI) * L.r * 2.5 +
+        Math.sin(t * 3) * 1.5,
+      s = L.r * 0.11;
+    g.fillStyle = "rgba(95,245,200,.35)";
+    g.beginPath();
+    g.ellipse(x, y + 7 * s, 9 * s, 3 * s, 0, 0, 6.283);
+    g.fill();
+    g.fillStyle = "#ff8fbf";
+    g.beginPath();
+    g.ellipse(x, y - 2 * s, 5 * s, 5 * s, 0, Math.PI, 0);
+    g.fill();
+    g.fillStyle = "#e8eef8";
+    g.beginPath();
+    g.ellipse(x, y + 1 * s, 12 * s, 4 * s, 0, 0, 6.283);
+    g.fill();
+    g.fillStyle = "#ffd24d";
+    for (let k = -2; k <= 2; k++) g.fillRect(x + k * 4 * s - s, y + 0.5 * s, 2 * s, 1.5 * s);
+  }
+  // a name: the stop under your finger or mouse, or else where you are
+  {
+    const i = GMV.hover >= 0 && opts.panel ? GMV.hover : cur,
+      [x, y] = P[i],
+      txt = VENUES[i].name,
+      sub = VENUES[i].place === VENUES[i].name ? "" : VENUES[i].place;
+    g.font = "700 " + Math.round(Math.max(11, L.r * 1.25)) + "px " + FB;
+    const tw = g.measureText(txt).width,
+      bx = clamp(x - tw / 2 - 8, 4, w - tw - 20),
+      by = clamp(y + L.r * 2.4, 4, h - L.r * 3.4);
+    g.fillStyle = "rgba(10,6,20,.85)";
+    g.fillRect(bx, by, tw + 16, L.r * 2.6);
+    g.strokeStyle = gmRegion(i).c;
+    g.lineWidth = 1;
+    g.strokeRect(bx, by, tw + 16, L.r * 2.6);
+    g.fillStyle = "#fff3e2";
+    g.textAlign = "left";
+    g.textBaseline = "middle";
+    g.fillText(txt, bx + 8, by + L.r * 1.3);
+    if (sub && opts.panel) {
+      g.font = "600 " + Math.round(Math.max(9, L.r)) + "px " + FB;
+      g.fillStyle = gmRegion(i).c;
+      g.fillText(sub, bx + 8, by + L.r * 3.4);
+    }
+  }
+  g.restore();
+}
+// ---- the GALAXY MAP screen in the menu ----
+function buildMap() {
+  const st = gmStars(),
+    got = st.reduce((a, b) => a + b, 0),
+    best = Math.max(0, ...Object.keys(levelStars()).map((k) => +k)),
+    cur = clamp(best, 0, VENUES.length - 1);
+  GMV.hover = -1;
+  GMV.t0 = performance.now();
+  $k("gmTag").textContent =
+    "★ " +
+    got +
+    " OF " +
+    VENUES.length * 3 +
+    " STARS  ·  " +
+    st.filter((n) => n > 0).length +
+    " OF " +
+    VENUES.length +
+    " STOPS VISITED  ·  NEXT STOP: " +
+    VENUES[cur].name;
+  GMV.cur = cur;
+}
+function drawMapPanel() {
+  if (!FP.map) return;
+  const c = $k("gmCanvas")                                ,
+    r = c.getBoundingClientRect(),
+    dpr = Math.min(2, window.devicePixelRatio || 1);
+  if (!r.width) return;
+  if (c.width !== Math.round(r.width * dpr) || c.height !== Math.round(r.height * dpr)) {
+    c.width = Math.round(r.width * dpr);
+    c.height = Math.round(r.height * dpr);
+  }
+  const g = c.getContext("2d");
+  g.setTransform(dpr, 0, 0, dpr, 0, 0);
+  g.clearRect(0, 0, r.width, r.height);
+  drawGalaxyMap(g, r.width, r.height, GMV.cur || 0, 0, (performance.now() - GMV.t0) / 1000, { panel: true });
+}
+{
+  const c = document.getElementById("gmCanvas");
+  if (c) {
+    const pick = (e) => {
+      const r = c.getBoundingClientRect(),
+        L = gmLayout(r.width, r.height),
+        x = e.clientX - r.left,
+        y = e.clientY - r.top;
+      let best = -1,
+        bd = (L.r * 3) ** 2;
+      L.pts.forEach(([px, py], i) => {
+        const d = (px - x) ** 2 + (py - y) ** 2;
+        if (d < bd) {
+          bd = d;
+          best = i;
+        }
+      });
+      GMV.hover = best;
+    };
+    c.addEventListener("pointermove", pick);
+    c.addEventListener("pointerdown", pick);
+  }
+}
+// ---- after a level: the map slides in under the stars, and the ship hops on to the next stop ----
+function gmClearHud(g, s) {
+  if (G.state !== "clear" || G.demo || !(G.starsT >= 0) || G.versus) return;
+  const k = clamp((G.starsT - 1.7) / 0.4, 0, 1);
+  if (k <= 0) return;
+  const w = Math.min(cssW * 0.9, 900 * s),
+    h = Math.min(cssH * 0.34, w * 0.42),
+    x = (cssW - w) / 2,
+    y = cssH * 0.6 + (1 - k) * 30 * s;
+  g.save();
+  g.translate(x, y);
+  drawGalaxyMap(g, w, h, tourStop(), clamp((G.starsT - 2.3) / 1.1, 0, 1), G.time, { alpha: k });
+  g.restore();
+}
+// =====================================================================================
+//  THE CUP TOURNAMENT (v2026.10.04ao): a knockout cup for a party or a family night. Type in 2 to 8 names; the game
+//  draws the bracket (with a free pass - a "bye" - when the numbers don't come out even), and each match is a VERSUS
+//  game on one screen: up to three levels, the higher score goes through (lose all your lives and you're out at once).
+//  The bracket fills in round by round until one name lifts the trophy. It's remembered, so you can stop and carry on.
+// =====================================================================================
+const CUP_LEVELS = 3;
+                                                                               
+                                                                          
+const CUP   
+                     
+                         
+                
+                                        
+  = {
+  s: store.get("cup", null),
+  match: null,
+  back: false,
+};
+const cupSave = () => store.set("cup", CUP.s);
+// draw the bracket: shuffle the names, pad to 4 or 8 with byes - a bye is a free pass into the next round
+function cupDraw(names          ) {
+  const n = names.length <= 2 ? 2 : names.length <= 4 ? 4 : 8,
+    pool = names.slice();
+  for (let i = pool.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [pool[i], pool[j]] = [pool[j], pool[i]];
+  }
+  // spread the byes out, so two byes never meet
+  const slots           = [];
+  const byes = n - pool.length;
+  for (let i = 0; i < n / 2; i++) {
+    slots.push(pool.shift());
+    slots.push(i < byes ? "" : pool.shift());
+  }
+  const rounds               = [[]];
+  for (let i = 0; i < n; i += 2) rounds[0].push({ a: slots[i], b: slots[i + 1] });
+  for (let m = n / 4; m >= 1; m /= 2) rounds.push(Array.from({ length: m }, () => ({ a: "", b: "" })));
+  CUP.s = { names, rounds };
+  cupAdvance();
+  cupSave();
+}
+// fill in winners, pass byes through, and find the next match to play
+function cupAdvance() {
+  const S = CUP.s;
+  if (!S) return;
+  for (let r = 0; r < S.rounds.length; r++)
+    S.rounds[r].forEach((m, i) => {
+      if (!m.w && r === 0 && m.a && !m.b) m.w = m.a; // (a bye)
+      if (!m.w && r === 0 && !m.a && m.b) m.w = m.b;
+      if (m.w && r + 1 < S.rounds.length) {
+        const nx = S.rounds[r + 1][i >> 1];
+        if (i % 2) nx.b = m.w;
+        else nx.a = m.w;
+      }
+    });
+  const fin = S.rounds[S.rounds.length - 1][0];
+  S.champ = fin.w || undefined;
+}
+function cupNext()                  {
+  const S = CUP.s;
+  if (!S || S.champ) return null;
+  for (const R0 of S.rounds) for (const m of R0) if (!m.w && m.a && m.b) return m;
+  return null;
+}
+const roundName = (r, of) =>
+  r === of - 1
+    ? "THE FINAL"
+    : r === of - 2
+      ? "SEMI-FINALS"
+      : r === of - 3
+        ? "QUARTER-FINALS"
+        : "ROUND " + (r + 1);
+// ---- the screen ----
+function buildCup() {
+  const list = $k("cupList"),
+    S = CUP.s,
+    nx = cupNext();
+  list.innerHTML = "";
+  $k("cupCanvas").hidden = !S; // (no bracket yet: just the names)
+  const btn = (txt, fn, cls = "") => {
+    const b = document.createElement("button");
+    b.innerHTML = txt;
+    if (cls) b.className = cls;
+    b.onclick = fn;
+    list.appendChild(b);
+    return b;
+  };
+  if (!S) {
+    // the entry form: up to 8 names
+    $k("cupTitle").textContent = "CUP TOURNAMENT";
+    $k("cupTag").textContent =
+      "2 to 8 players, two at a time on one screen. Type the names, then START THE CUP. Each match: up to " +
+      CUP_LEVELS +
+      " levels of VERSUS - the higher score goes through.";
+    const old = store.get("cupNames", [])            ;
+    for (let i = 0; i < 8; i++) {
+      const inp = document.createElement("input");
+      inp.maxLength = 10;
+      inp.placeholder = "PLAYER " + (i + 1);
+      inp.value = old[i] || "";
+      inp.id = "cupN" + i;
+      inp.autocomplete = "off";
+      inp.spellcheck = false;
+      list.appendChild(inp);
+    }
+    btn(
+      "START THE CUP ▶",
+      () => {
+        const names           = [];
+        for (let i = 0; i < 8; i++) {
+          const v = ((document.getElementById("cupN" + i)                    ).value || "")
+            .trim()
+            .toUpperCase();
+          if (v && !names.includes(v)) names.push(v);
+        }
+        store.set("cupNames", names);
+        if (names.length < 2) {
+          $k("cupTag").textContent = "Type at least two different names to start a cup!";
+          sfx("click");
+          return;
+        }
+        cupDraw(names);
+        sfx("chime", undefined, 2);
+        buildCup();
+      },
+      "primary wide"
+    ).style.gridColumn = "1 / -1";
+    return;
+  }
+  $k("cupTitle").textContent = S.champ ? "THE CHAMPION!" : "CUP TOURNAMENT";
+  if (S.champ) {
+    $k("cupTag").textContent = S.champ + " WINS THE SPACE PUB CUP!";
+    btn("NEW CUP", () => cupReset(), "wide").style.gridColumn = "1 / -1";
+  } else if (nx) {
+    const r = S.rounds.findIndex((R0) => R0.includes(nx));
+    $k("cupTag").textContent =
+      roundName(r, S.rounds.length) + ":  " + nx.a + "  (PLAYER 1)  vs  " + nx.b + "  (PLAYER 2)";
+    const play = btn("▶ PLAY: " + nx.a + " vs " + nx.b, () => cupPlay(nx), "primary");
+    play.style.gridColumn = "1 / -1";
+    btn("NEW CUP", () => cupReset(), "wide").style.gridColumn = "1 / -1";
+  }
+}
+function cupReset() {
+  CUP.s = null;
+  cupSave();
+  sfx("click");
+  buildCup();
+  setTimeout(() => {
+    const el = document.getElementById("cupN0");
+    if (el) el.focus();
+  }, 30);
+}
+// play a match: VERSUS from the first level - the game's own settings come back afterwards
+function cupPlay(m          ) {
+  CUP.match = m;
+  CUP.keep = { mode: playMode, from: fromLevel };
+  playMode = 2;
+  fromLevel = 1;
+  FP.cup = false;
+  G.introShown = true;
+  startGame();
+  showPanels();
+}
+// the match is over (game over, or the level cap reached): the higher score goes through
+function cupResult() {
+  const m = CUP.match;
+  if (!m) return null;
+  CUP.match = null;
+  if (CUP.keep) {
+    playMode = CUP.keep.mode;
+    fromLevel = CUP.keep.from;
+  }
+  m.sa = P1.score;
+  m.sb = P2.score;
+  m.w =
+    P1.score > P2.score
+      ? m.a
+      : P2.score > P1.score
+        ? m.b
+        : G.loser === P1
+          ? m.b
+          : G.loser === P2
+            ? m.a
+            : P1.lives >= P2.lives
+              ? m.a
+              : m.b;
+  cupAdvance();
+  cupSave();
+  CUP.back = true;
+  return m;
+}
+const cupName = (id) => (CUP.match ? (id ? CUP.match.b : CUP.match.a) : null); // (the names on the score bar)
+function drawCupPanel() {
+  if (!FP.cup) return;
+  const c = $k("cupCanvas")                                ,
+    r = c.getBoundingClientRect(),
+    dpr = Math.min(2, window.devicePixelRatio || 1);
+  if (!r.width) return;
+  c.hidden = !CUP.s;
+  if (c.width !== Math.round(r.width * dpr) || c.height !== Math.round(r.height * dpr)) {
+    c.width = Math.round(r.width * dpr);
+    c.height = Math.round(r.height * dpr);
+  }
+  const g = c.getContext("2d"),
+    w = r.width,
+    h = r.height,
+    S = CUP.s,
+    t = performance.now() / 1000;
+  g.setTransform(dpr, 0, 0, dpr, 0, 0);
+  g.clearRect(0, 0, w, h);
+  if (!S) return;
+  g.fillStyle = "#0c0718";
+  g.fillRect(0, 0, w, h);
+  const R = S.rounds.length,
+    colW = w / (R + 1),
+    nx = cupNext(),
+    fs = Math.max(10, Math.min(15, colW / 9));
+  g.textBaseline = "middle";
+  g.lineCap = "round";
+  // each round is a column; each match a pair of name boxes, with lines joining the winner to the next round
+  const slotY = (r0, i, which) => {
+    const n = S.rounds[r0].length,
+      cell = h / n;
+    return cell * i + cell * (which ? 0.7 : 0.3);
+  };
+  for (let r0 = 0; r0 < R; r0++) {
+    const x = colW * r0 + 10,
+      bw = colW - 26;
+    g.font = "700 " + Math.round(fs * 0.8) + "px " + FB;
+    g.fillStyle = "#b9a8b8";
+    g.textAlign = "left";
+    g.fillText(roundName(r0, R), x, 10);
+    S.rounds[r0].forEach((m, i) => {
+      for (const which of [0, 1]) {
+        const nm = which ? m.b : m.a,
+          y = slotY(r0, i, which),
+          won = m.w && m.w === nm,
+          lost = m.w && nm && m.w !== nm,
+          live = nx === m;
+        g.fillStyle = won ? "rgba(255,210,77,.22)" : "rgba(255,255,255,.06)";
+        g.fillRect(x, y - fs * 0.9, bw, fs * 1.8);
+        g.strokeStyle = live
+          ? "rgba(95,245,200," + (0.6 + 0.4 * Math.sin(t * 5)).toFixed(2) + ")"
+          : won
+            ? "#ffd24d"
+            : "rgba(255,140,200,.28)";
+        g.lineWidth = live ? 2 : 1;
+        g.strokeRect(x, y - fs * 0.9, bw, fs * 1.8);
+        g.font = "700 " + Math.round(fs) + "px " + FB;
+        g.fillStyle = lost ? "rgba(255,243,226,.35)" : won ? "#ffd24d" : "#fff3e2";
+        g.fillText(nm || (r0 === 0 ? "— bye —" : "?"), x + 8, y);
+        const sc = which ? m.sb : m.sa;
+        if (sc !== undefined) {
+          g.textAlign = "right";
+          g.font = "600 " + Math.round(fs * 0.8) + "px " + FB;
+          g.fillText(String(sc), x + bw - 6, y);
+          g.textAlign = "left";
+        }
+      }
+      if (r0 + 1 < R) {
+        const ya = slotY(r0, i, 0),
+          yb = slotY(r0, i, 1),
+          ym = (ya + yb) / 2,
+          ny = slotY(r0 + 1, i >> 1, i % 2);
+        g.strokeStyle = m.w ? "rgba(255,210,77,.7)" : "rgba(255,140,200,.25)";
+        g.lineWidth = 1.5;
+        g.beginPath();
+        g.moveTo(x + bw, ym);
+        g.lineTo(x + bw + 8, ym);
+        g.lineTo(x + bw + 8, ny);
+        g.lineTo(colW * (r0 + 1) + 10, ny);
+        g.stroke();
+      }
+    });
+  }
+  // the trophy, in the last column - with the champion's name once there is one
+  {
+    const cx = colW * R + colW / 2,
+      cy = h * 0.45,
+      k = Math.min(colW, h) / 120,
+      gold = S.champ ? "#ffd24d" : "rgba(255,210,77,.35)";
+    if (S.champ) {
+      const gr = g.createRadialGradient(cx, cy, 0, cx, cy, 60 * k);
+      gr.addColorStop(0, "rgba(255,210,77," + (0.35 + 0.15 * Math.sin(t * 3)).toFixed(2) + ")");
+      gr.addColorStop(1, "rgba(255,210,77,0)");
+      g.fillStyle = gr;
+      g.beginPath();
+      g.arc(cx, cy, 60 * k, 0, 6.283);
+      g.fill();
+    }
+    g.fillStyle = gold;
+    g.beginPath();
+    g.moveTo(cx - 22 * k, cy - 30 * k);
+    g.lineTo(cx + 22 * k, cy - 30 * k);
+    g.quadraticCurveTo(cx + 22 * k, cy + 4 * k, cx, cy + 8 * k);
+    g.quadraticCurveTo(cx - 22 * k, cy + 4 * k, cx - 22 * k, cy - 30 * k);
+    g.fill(); // the cup
+    g.lineWidth = 4 * k;
+    g.strokeStyle = gold;
+    g.beginPath();
+    g.arc(cx - 22 * k, cy - 18 * k, 9 * k, Math.PI * 0.5, Math.PI * 1.5);
+    g.stroke();
+    g.beginPath();
+    g.arc(cx + 22 * k, cy - 18 * k, 9 * k, -Math.PI * 0.5, Math.PI * 0.5);
+    g.stroke(); // the handles
+    g.fillRect(cx - 4 * k, cy + 6 * k, 8 * k, 12 * k);
+    g.fillRect(cx - 16 * k, cy + 18 * k, 32 * k, 8 * k); // the stem and the base
+    g.textAlign = "center";
+    g.font = "700 " + Math.round(fs * 1.1) + "px " + FB;
+    g.fillStyle = S.champ ? "#ffd24d" : "#b9a8b8";
+    g.fillText(S.champ || "THE CUP", cx, cy + 42 * k);
+  }
 }
 // =====================================================================================
 //  ATTRACT MODE  -  what an arcade cabinet does when nobody is playing:
@@ -43099,8 +43819,7 @@ function attractTick(dt) {
       !CS.open &&
       !SB.open &&
       !WD.open &&
-      !FP.shop &&
-      !FP.trophies
+      !fpAny()
     )
       startAttract();
     return;
@@ -43206,12 +43925,8 @@ window.addEventListener("pointerdown", (e) => {
     closeWard();
     return;
   }
-  if (FP.shop) {
-    closeFP("shop");
-    return;
-  }
-  if (FP.trophies) {
-    closeFP("trophies");
+  if (fpAny()) {
+    closeFP(fpWhich());
     return;
   }
   if (!$("menu").hidden) {
@@ -43228,8 +43943,7 @@ window.addEventListener("keydown", (e) => {
     !JB.open &&
     !SB.open &&
     !WD.open &&
-    !FP.shop &&
-    !FP.trophies &&
+    !fpAny() &&
     !$("menu").hidden
   ) {
     e.preventDefault();
@@ -43811,7 +44525,7 @@ function drawEggs(g, s) {
   }
   g.restore();
 }
-const GAME_VERSION = "v2026.10.04an"; // year.month.day it was made
+const GAME_VERSION = "v2026.10.04ao"; // year.month.day it was made
 const FB = '"Chakra Petch", "Segoe UI", sans-serif';
 let FD = '"Bungee", "Impact", sans-serif';
 const HUDB = { w: 0, t: -9, l: 0, b: 0, right: 0, lives: 0, room: 0, under: false };
@@ -44147,7 +44861,7 @@ function drawHud(fps) {
         g.fillStyle = c;
         g.shadowColor = c;
         g.font = fD(12);
-        g.fillText(p.id ? "2UP" : "1UP", pad, y + 4 * s);
+        g.fillText(cupName(p.id) ? cupName(p.id).slice(0, 4) : p.id ? "2UP" : "1UP", pad, y + 4 * s); // (in a cup match: the names)
         g.font = fD(18);
         g.fillText(String(p.score).padStart(6, "0"), pad + 46 * s, y);
         if (G.versus)
@@ -44406,6 +45120,7 @@ function drawHud(fps) {
     g.fillText("♪ " + MY.now, cssW - 20 - glW - g.measureText(GAME_VERSION).width - 16, cssH - 11 - lift);
   }
   kidHud(g, s, t, fD, sx, sy);
+  gmClearHud(g, s); // (the galaxy map, after a level)
   funHud(g, s, t, fD, sx, sy);
   coachHud(g, s, t, fD, sx, sy);
   drawAttract(g, s, t);
@@ -48170,10 +48885,11 @@ function toggleSound() {
 //  MENUS AND BUTTONS
 // =====================================================================================
 function showPanels() {
-  $("menu").hidden =
-    G.state !== "menu" || ATTRACT.on || JB.open || CS.open || SB.open || WD.open || FP.shop || FP.trophies;
+  $("menu").hidden = G.state !== "menu" || ATTRACT.on || JB.open || CS.open || SB.open || WD.open || fpAny();
   $("shop").hidden = !FP.shop;
   $("trophies").hidden = !FP.trophies;
+  $("galmap").hidden = !FP.map;
+  $("cup").hidden = !FP.cup;
   $("breakp").hidden = !BRK.open;
   funMenuText();
   $("jukebox").hidden = !JB.open;
@@ -48783,8 +49499,7 @@ function navBack() {
   else if (JB.open) closeJukebox();
   else if (SB.open) closeStickers();
   else if (WD.open) closeWard();
-  else if (FP.shop) closeFP("shop");
-  else if (FP.trophies) closeFP("trophies");
+  else if (fpAny()) closeFP(fpWhich());
   else if (G.state === "paused") pause(false);
 }
 const panelNav = () =>
@@ -48793,8 +49508,7 @@ const panelNav = () =>
     JB.open ||
     SB.open ||
     WD.open ||
-    FP.shop ||
-    FP.trophies ||
+    fpAny() ||
     BRK.open ||
     G.state === "menu" ||
     G.state === "paused" ||
@@ -48804,7 +49518,7 @@ window.addEventListener(
   (e) => {
     if (!panelNav() || (e.target && (e.target          ).tagName === "INPUT")) return;
     const k = e.code;
-    if (k === "KeyJ" && G.state === "menu" && !SB.open && !WD.open && !FP.shop && !FP.trophies) {
+    if (k === "KeyJ" && G.state === "menu" && !SB.open && !WD.open && !fpAny()) {
       e.preventDefault();
       e.stopImmediatePropagation();
       JB.open ? closeJukebox() : openJukebox();
@@ -48844,7 +49558,7 @@ window.addEventListener(
       navPress();
       return;
     }
-    if (k === "KeyB" && G.state === "menu" && !JB.open && !SB.open && !WD.open && !FP.shop && !FP.trophies) {
+    if (k === "KeyB" && G.state === "menu" && !JB.open && !SB.open && !WD.open && !fpAny()) {
       e.preventDefault();
       e.stopImmediatePropagation();
       CS.open ? closeChars() : openChars(false);
@@ -48868,13 +49582,13 @@ window.addEventListener(
     if (JB.open) {
       e.stopImmediatePropagation();
     } // in the music box, other game keys do nothing
-    if ((SB.open || WD.open || FP.shop || FP.trophies) && (k === "Escape" || k === "Backspace")) {
+    if ((SB.open || WD.open || fpAny()) && (k === "Escape" || k === "Backspace")) {
       e.preventDefault();
       e.stopImmediatePropagation();
-      SB.open ? closeStickers() : WD.open ? closeWard() : closeFP(FP.shop ? "shop" : "trophies");
+      SB.open ? closeStickers() : WD.open ? closeWard() : closeFP(fpWhich());
       return;
     }
-    if (SB.open || WD.open || FP.shop || FP.trophies || BRK.open) {
+    if (SB.open || WD.open || fpAny() || BRK.open) {
       e.stopImmediatePropagation();
     }
   },
@@ -49020,7 +49734,7 @@ function crashed(e) {
       for (const k of ["open"]) {
         SB[k] = WD[k] = CS[k] = JB[k] = BRK[k] = false;
       }
-      FP.shop = FP.trophies = false;
+      FP.shop = FP.trophies = FP.map = FP.cup = false;
       ATTRACT.on = false;
       toMenu();
       callout("SORRY - SOMETHING WENT WRONG. BACK TO THE MENU!", "#ff5fa8", 3);
@@ -49074,6 +49788,8 @@ function frameWork(ts) {
   draw();
   drawHud(fps);
   drawJukebox();
+  drawMapPanel();
+  drawCupPanel();
 }
 document.getElementById("crashReset").onclick = hardReset;
 document.getElementById("crashMenu").onclick = () => {

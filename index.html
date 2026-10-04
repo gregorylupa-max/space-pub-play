@@ -17929,18 +17929,21 @@ function drawPlayer(t) {
         disc(nx, ny, 2.4, c2, 1.8);
         line(nx + 2, ny, nx + 2, ny - 8, 1.2, c2);
         line(nx + 2, ny - 8, nx + 6, ny - 6, 1.2, c2);
-      } // music notes
+      }
+    // music notes
     else if (act === "watch")
       bubble(() => {
         ring(0, 0, 5.5, 1.4, col("#2a2a3a"));
         const a = t * 6;
         line(0, 0, Math.cos(a) * 4, Math.sin(a) * 4, 1.2, col("#d02030"));
         line(0, 0, 0, -3, 1.2, col("#2a2a3a"));
-      }); // "how late is it?"
+      });
+    // "how late is it?"
     else if (act === "yawn")
       bubble(() => {
         for (let i = 0; i < 3; i++) disc(-4 + i * 4, 0, 1.4, col("#5a5a7a"));
-      }); // "..."
+      });
+    // "..."
     else if (act === "sigh") {
       const f = (t * 0.8) % 1;
       disc(x + 12 + f * 12, y - 74 * bh - f * 6, 3 + f * 4, withA(col("#c8d0e0"), 0.8 * (1 - f)), 2 + f * 3);
@@ -18485,7 +18488,8 @@ function playerBody(t, flying) {
         col("#ffffff"),
         col("#ecece4"),
         col("#ecece4")
-      ); // a little half apron
+      );
+    // a little half apron
     else
       quad4(
         -8,
@@ -26728,7 +26732,8 @@ function histFolk(x, y, kk, A, o) {
           sh + 3.6 * q + i * 2.6 * q,
           0.45 * q,
           SH(bd, 0.72)
-        ); // a striped shirt
+        );
+    // a striped shirt
     else if (pat < 0.55 && !o.dress) {
       rect(x - 3.2 * q, sh + 3 * q, 2.2 * q, 2 * q, SH(bd, 0.85));
       line(x - 3.2 * q, sh + 3 * q, x - 1 * q, sh + 3 * q, 0.3 * q, SH(bd, 0.6));
@@ -31232,7 +31237,8 @@ function drawBonus(t) {
         const tip = [ax + sg * (7 + Math.sin(t * 3 + i) * 1.5), ay - 26 - (sp < 0.2 ? 6 : 0)];
         line(ax + sg * 4, ay - 16, tip[0], tip[1], 1.6, c0);
         disc(tip[0], tip[1], 2.2, c0);
-      } // antennae
+      }
+    // antennae
     else if (sp < 0.6)
       for (let k = 0; k < 3; k++)
         tri(ax - 8 + k * 6, ay - 15, ax - 4 + k * 6, ay - 15, ax - 6 + k * 6, ay - 23, c0); // spikes
@@ -43801,11 +43807,12 @@ function drawEggs(g, s) {
   }
   g.restore();
 }
-const GAME_VERSION = "v2026.10.04al"; // year.month.day it was made
+const GAME_VERSION = "v2026.10.04am"; // year.month.day it was made
 const FB = '"Chakra Petch", "Segoe UI", sans-serif';
 let FD = '"Bungee", "Impact", sans-serif';
-const HUDB = { w: 0, t: -9, l: 0 };
-let signX = 0;
+const HUDB = { w: 0, t: -9, l: 0, b: 0, right: 0, lives: 0, room: 0, under: false };
+let signX = 0,
+  signY = 0; // (0: the usual place, at the top)
 // THE TOUR MAP (on the hyperspace jump): every stop, grouped into the solar system, the rest of the Milky Way and Andromeda
 function tourMap(g, s, a) {
   // two halves: OUR MILKY WAY on the left, ANDROMEDA on the right - 20 stops each
@@ -43994,16 +44001,36 @@ function drawHud(fps) {
     let px = G.state === "bonus" ? 26 : 24;
     g.font = fD(px); // shrink to fit between the score and the buttons
     // on a narrow screen the sign sits between the score (left) and the buttons (right), so the long galaxy names never hide behind them
+    // where the corner buttons start (measured once a second - there are three of them now, so their width varies)
     const tb = $("topbtns"),
-      btnL =
-        !tb.hidden && cssW < 700
-          ? HUDB.w === cssW && HUDB.t > G.time - 1
-            ? HUDB.l
-            : ((HUDB.w = cssW), (HUDB.t = G.time), (HUDB.l = tb.getBoundingClientRect().left))
-          : 0;
-    signX = btnL ? (92 * s + btnL) / 2 : sx(PW / 2);
-    const room = btnL ? btnL - 92 * s - 8 : Math.max(140, cssW - (G.state === "menu" ? 40 : 330)),
+      btnAt = !tb.hidden
+        ? HUDB.w === cssW && HUDB.t > G.time - 1 && HUDB.t <= G.time
+          ? HUDB.l
+          : ((HUDB.w = cssW),
+            (HUDB.t = G.time),
+            (HUDB.b = tb.getBoundingClientRect().bottom),
+            (HUDB.l = tb.getBoundingClientRect().left))
+        : 0,
+      btnL = cssW < 700 ? btnAt : 0;
+    // the lives sit just left of the buttons - or, on a narrow screen, in a row of their own just under them
+    HUDB.under = !!btnL;
+    HUDB.right = HUDB.under ? cssW - 14 * s : (btnAt || cssW - 14 * s) - 12 * s;
+    HUDB.lives = HUDB.under ? cssW : HUDB.right - (G.versus ? 0 : Math.max(0, G.lives)) * 22 * s - 10 * s; // (and the sign stays left of them)
+    const scoreW = (G.versus ? 172 : twoP() ? 104 : 92) * s; // (how much room the score block on the left takes)
+    // (no room at all between the scores and the buttons - two players' scores on a phone: the sign drops to its own
+    //  line just under the buttons)
+    const drop = btnL && btnL - scoreW < 110 && G.versus;
+    signX = drop ? (scoreW + cssW) / 2 : btnL ? (scoreW + btnL) / 2 : sx(PW / 2);
+    signY = drop ? HUDB.b + 4 * s : 0;
+    const room = drop
+        ? cssW - scoreW - 16
+        : btnL
+          ? btnL - scoreW - 8
+          : G.state === "menu"
+            ? Math.max(140, cssW - 40)
+            : Math.max(140, 2 * Math.min(signX - 144 * s, HUDB.lives - signX)),
       wd = g.measureText(name).width;
+    HUDB.room = room;
     if (wd > room) px *= room / wd;
     g.font = fD(px);
   }
@@ -44017,14 +44044,14 @@ function drawHud(fps) {
   const signText = (txt, colr, a) => {
     let px = 24;
     g.font = fD(px);
-    const room = Math.max(140, cssW - (cssW < 700 ? 200 * s : 330)),
+    const room = HUDB.room || Math.max(140, cssW - (cssW < 700 ? 200 * s : 330)),
       wd = g.measureText(txt).width;
     if (wd > room) g.font = fD((px * room) / wd);
     g.fillStyle = colr;
     g.shadowColor = colr;
     g.shadowBlur = 16 * s;
     g.globalAlpha = a;
-    g.fillText(txt, signX, sy(10));
+    g.fillText(txt, signX, signY || sy(10));
     g.shadowBlur = 0;
     g.globalAlpha = 1;
   };
@@ -44044,7 +44071,7 @@ function drawHud(fps) {
     g.shadowBlur = 18 * s;
     g.globalAlpha = flick;
     if ((!ATTRACT.on || ATTRACT.phase === "demo") && !ending)
-      g.fillText(G.state === "bonus" ? "BONUS · FIND THE ALIEN" : here().name, signX, sy(10));
+      g.fillText(G.state === "bonus" ? "BONUS · FIND THE ALIEN" : here().name, signX, signY || sy(10));
     g.shadowBlur = 0;
     g.globalAlpha = 1;
   }
@@ -44142,8 +44169,8 @@ function drawHud(fps) {
     }
     // lives: little shakes, clear of the corner buttons
     for (let i = 0; i < (G.versus ? 0 : Math.max(0, G.lives)); i++) {
-      const lx = cssW - pad - 190 - 20 * s - i * 22 * s,
-        ly = pad + 2 * s;
+      const lx = (HUDB.right || cssW - pad - 190) - 14 * s - i * 22 * s,
+        ly = HUDB.under ? HUDB.b + 6 * s : pad + 2 * s;
       g.fillStyle = "#ff8fbf";
       g.beginPath();
       g.moveTo(lx, ly + 6 * s);

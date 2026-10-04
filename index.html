@@ -79,6 +79,8 @@ button.wide { grid-column: 1 / -1; }
 #jbList button small { font-size: 11px; color: var(--muted, #b9a8b8); letter-spacing: .04em; text-transform: none; }
 #jbList button.on { border-color: var(--amber, #ffc34d); box-shadow: 0 0 16px rgba(255,195,77,.35); }
 #jbList button.on::before { content: "♪ NOW PLAYING"; font-size: 10px; color: var(--amber, #ffc34d); }
+#jbList .jbHead { grid-column: 1 / -1; font: 700 14px/1.2 var(--body); letter-spacing: .12em; color: var(--amber, #ffc34d); padding: 14px 4px 4px; border-bottom: 1px solid rgba(255,195,77,.4); }
+#jbList .jbJump { grid-column: 1 / -1; }
 #jbViz { width: 100%; height: 56px; display: block; border-radius: 10px; background: rgba(0,0,0,.35); }
 button b { color: var(--amber); font-weight: 700; }
 .add { font: 600 15px/1.2 var(--body); letter-spacing: .06em; color: var(--amber); cursor: pointer; border: 1px dashed rgba(255, 195, 77, .6);
@@ -36068,7 +36070,7 @@ function funLevelStart() {
         : null;
     let pool = [];
     try {
-      pool = folkTracks(nat);
+      pool = folkTracks(nat || (Math.random() < 0.5 ? "pl" : "za")); // (Poland and South Africa take turns)
     } catch (e) {
       /* (still loading: the folk songs aren't ready yet) */
     }
@@ -43666,7 +43668,7 @@ function drawEggs(g, s) {
   }
   g.restore();
 }
-const GAME_VERSION = "v2026.10.04aj"; // year.month.day it was made
+const GAME_VERSION = "v2026.10.04ak"; // year.month.day it was made
 const FB = '"Chakra Petch", "Segoe UI", sans-serif';
 let FD = '"Bungee", "Impact", sans-serif';
 const HUDB = { w: 0, t: -9, l: 0 };
@@ -46378,7 +46380,7 @@ const CHORD_IV = {
   dim: [0, 3, 6],
 };
 function chord(name) {
-  const m = /^([A-G])([#b]?)(m7|maj7|m|7|dim)?$/.exec(name);
+  const m = /^([A-G])([#b]?)(m7|maj7|m|7|dim)?$/.exec(name) || ["C", "C", "", ""]; // (an unknown name: plain C, never a crash)
   const pc = (NOTE[m[1]] + (m[2] === "#" ? 1 : m[2] === "b" ? -1 : 0) + 12) % 12;
   return { pc, iv: CHORD_IV[m[3] || ""], minor: m[3] === "m" || m[3] === "m7" };
 }
@@ -47704,7 +47706,7 @@ function playStep2(tr, t0) {
 }
 function advance2(tr) {
   if (tr.folk) {
-    SEQ2.next += 60 / tr.bpm / 2;
+    SEQ2.next += 60 / tr.bpm / 4; // (folk tunes step in sixteenths)
     SEQ2.step = (SEQ2.step + 1) % tr.len;
     return;
   }
@@ -48247,8 +48249,35 @@ let jbAnalyser = null,
 function buildJukebox() {
   const list = $("jbList");
   list.innerHTML = "";
+  // a songbook of its own (the Afrikaans folk songs) gets a heading - and a shortcut to it at the top of the list
+  const groups = {};
+  TRACKS.forEach((tr) => {
+    if (tr.group) groups[tr.group] = (groups[tr.group] || 0) + 1;
+  });
+  for (const g in groups) {
+    const j = document.createElement("button");
+    j.className = "add jbJump";
+    j.textContent = "♪ " + g + " (" + groups[g] + " SONGS) ▼";
+    j.onclick = () => {
+      const h = list.querySelector('[data-group="' + g + '"]');
+      if (h) h.scrollIntoView({ block: "start", behavior: "smooth" });
+      const first = list.querySelector('button[data-g="' + g + '"]')               ;
+      if (first) first.focus({ preventScroll: true });
+    };
+    list.appendChild(j);
+  }
+  let lastGroup = null;
   TRACKS.forEach((tr, i) => {
+    if (tr.group && tr.group !== lastGroup) {
+      const h = document.createElement("div");
+      h.className = "jbHead";
+      h.dataset.group = tr.group;
+      h.textContent = tr.group;
+      list.appendChild(h);
+    }
+    lastGroup = tr.group || null;
     const b = document.createElement("button");
+    if (tr.group) b.dataset.g = tr.group;
     b.dataset.i = String(i);
     b.innerHTML =
       String(i + 1).padStart(2, "0") + "  " + tr.title + "<small>" + tr.where + " · " + tr.mood + "</small>";
@@ -48258,7 +48287,8 @@ function buildJukebox() {
   jbRefresh();
 }
 function jbRefresh() {
-  for (const b of $("jbList").children) b.classList.toggle("on", +b.dataset.i === JB.playing);
+  for (const b of $("jbList").querySelectorAll("button[data-i]"))
+    b.classList.toggle("on", +(b               ).dataset.i === JB.playing);
 }
 function openJukebox() {
   audio();
@@ -48276,7 +48306,7 @@ function openJukebox() {
   showPanels();
   sfx("click");
   setTimeout(() => {
-    const b = $("jbList").children[Math.max(0, JB.playing)];
+    const b = $("jbList").querySelector('button[data-i="' + Math.max(0, JB.playing) + '"]')               ;
     if (b) b.focus();
   }, 30);
 }
@@ -48891,6 +48921,775 @@ resetGame(true);
 startAttract(); // the cabinet wakes up in demo mode; the menu comes when you touch it
 requestAnimationFrame(frame);
 // =====================================================================================
+//  AFRIKAANSE VOLKSLIEDJIES (v2026.10.04ak): 56 Afrikaans folk songs for the music box, from the four-part songbook
+//  "Afrikaanse Volksliedjies". Only the tunes are used - the bare melody with its chords, never the book's piano
+//  arrangements - and only tunes that are free for anyone to play: the ones the book marks as traditional (Tradisioneel,
+//  S.A. Volkswysie, Duitse / Sweedse / Oostenrykse / Franse volkswysie), and a few on old tunes by composers who died long
+//  ago (G.F. Root, S.C. Foster, W. Kittredge, A. Owen, C.M. von Weber). Songs by modern composers were left out.
+//  Same ABC as folk.ts (L: 1/8), plus sixteenths: "/2" is a sixteenth and "3/2" a dotted eighth.
+// =====================================================================================
+const VOLKS = [
+  {
+    title: "MÔRE OOMPIE, MÔRE TANNIE",
+    where: "Afrikaans folk song",
+    mood: "good morning uncle and auntie, a wedding is coming",
+    nat: "za",
+    group: "AFRIKAANSE VOLKSLIEDJIES",
+    bpm: 110,
+    bar8: 4,
+    style: "polka",
+    key: { F: 1 },
+    pickup: 1,
+    lead: { wave: "square", wave2: "triangle", vol: 0.05, vib: 7, lp: 2000, oct: 0, echo: 0.25 }, // (a concertina)
+    abc: '"G"D|"G"DGGG|"C"CEEE|"D7"DFAF|"G"G3 D|"G"DG GG/2G/2|"C"C/2C/2E EE|"D7"DFAF|"G"G4|"G"d2 Bc|d4|edcB|"D7"A2 z2|c2 AB|c4|dcBA|"G"G4|G2 zD|"G"DGGG|"C"CEEE|"D7"DFAF|"G"G3 D|"G"DG GG/2G/2|"C"C/2C/2E EE|"D7"DFAF|"G"G4|"G"d2 Bc|d4|edcB|"D7"A2 z2|c2 AB|c4|dcBA|"G"G4-|G2 z2|',
+  },
+  {
+    title: "DIS TE VER OM TE RY",
+    where: "Afrikaans folk song",
+    mood: "too far to ride to see a sweetheart",
+    nat: "za",
+    group: "AFRIKAANSE VOLKSLIEDJIES",
+    bpm: 108,
+    bar8: 4,
+    style: "polka",
+    key: { B: -1, E: -1, A: -1 },
+    pickup: 2,
+    lead: { wave: "square", wave2: "sawtooth", vol: 0.045, vib: 6, lp: 2200, oct: 0, echo: 0.25 }, // (an accordion)
+    abc: '"Eb"BB|c2 BA|G2 GG|"Bb7"B2 AG|F4|"Bb7"B2 BB|B2 BB|"Eb"A2 G2|G2 BB|"Eb"c2 BA|G2 GG|"Bb7"B2 AG|F4|"Bb7"B2 B2|c2 dd|"Eb"e2 E2|E2 FG|"Ab"A2 c2|c2 BA|"Eb"G2 B2|B3 G|"Bb7"FB BB|B2 B2|"Eb"A2 G2|G2 FG|"Ab"A2 c2|c2 BA|"Eb"G2 B2|B3 G|"Bb7"FB BB|"Bb7"B2 cd|"Eb"e2 d2|d4|',
+  },
+  {
+    title: "POLLENYS",
+    where: "Afrikaans folk song",
+    mood: "a cheerful song for a girl called Pollenys",
+    nat: "za",
+    group: "AFRIKAANSE VOLKSLIEDJIES",
+    bpm: 120,
+    bar8: 8,
+    style: "polka",
+    key: { F: 1 },
+    pickup: 2,
+    lead: { wave: "sawtooth", vol: 0.05, vib: 8, lp: 2600, swell: true, oct: 0, echo: 0.35 }, // (a fiddle)
+    abc: '"G"B B|"G"d2 B G D2 B2|"D7"B2 A F D2 B B|"D7"d2 d d d2 "G"B2|"G"A2 G2 G2 B2|"C"e2 d2 "G"B2 G B|"D7"A A D4 "G"B B|"D7"d2 d d d d B B|"D7"A G "G"G G G2 B2|"G"e2 d2 B B "G"G2|G2 B B "D7"d2 c2|A2 "D7"D4 A2|"D7"A2 B2 c2 "G"d2-|d2 d d "G"d2 e2|d2 "G"B4 B2|"G"e2 d2 B B "G"G2|G2 B B "D7"d2 c2|A2 "D7"D4 A2|"D7"A2 B2 c2 "G"d2-|d2 d d "G"d2 e2|d2 "G"B6|"C"e2 d B "G"G G B2|"D7"d2 c A D2 z2|"G"d2 d d d c B2|"D7"A G "G"G G G2 z2|"C"e2 d B "G"G G B2|"D7"d2 c A D2 z2|"G"d2 d d d c B2|"D7"A G "G"G G G4|',
+  },
+  {
+    title: "O, BOEREPLAAS",
+    where: "Afrikaans folk song",
+    mood: "love for the family farm",
+    nat: "za",
+    group: "AFRIKAANSE VOLKSLIEDJIES",
+    bpm: 96,
+    bar8: 8,
+    style: "polka",
+    key: { B: -1 },
+    pickup: 2,
+    lead: { wave: "triangle", wave2: "square", vol: 0.055, vib: 5, lp: 2400, oct: 0, echo: 0.4 }, // (a clarinet)
+    abc: '"F"C2|"F"F3/2 F/2 F4 G2|A3/2 A/2 A4 "C7"A2|G A B3 E "F"G2|F4 c2 "F"c3/2 A/2|d3 c "Bb"c =B B2-|B B "C7"B3/2 G/2 c3 B|"F"B3/2 A/2 A4 C2|"F"F3/2 F/2 F4 G2|"F"A3/2 A/2 A4 "C7"A2|G A B3 E "F"G2|F4 z2|',
+  },
+  {
+    title: "GERTJIE",
+    where: "Afrikaans folk song",
+    mood: "a boy asking his sweetheart when they will marry",
+    nat: "za",
+    group: "AFRIKAANSE VOLKSLIEDJIES",
+    bpm: 112,
+    bar8: 8,
+    style: "polka",
+    key: { B: -1 },
+    lead: { wave: "square", wave2: "triangle", vol: 0.05, vib: 7, lp: 2000, oct: 0, echo: 0.25 }, // (a concertina)
+    abc: '"F"F3 G AC FE|"Bb"ED z2 ED z2|"C7"E3 F GB AG|"F"F6 C2|"F"F3 G AC FE|"Bb"ED z2 ED z2|"C7"E3 F GB AG|"F"F6 z2|"F"A3 A AA AA|"Bb"BB z2 BB zB|"C7"c3 c cc BB|"F"AA z2 AA zC|"F"A3 A AA AA|"Bb"BB z2 d d3|"C7"c3 c cB AG|"F"F8|"F"F3 G AC FE|"Bb"ED z2 ED z2|"C7"E3 F GB AG|"F"F6 C2|"F"F3 G AC FE|"Bb"ED z2 ED z2|"C7"E3 F GB AG|"F"F6 z2|"F"A3 A AA AA|"Bb"BB z2 BB zB|"C7"c3 c cc BB|"F"AA z2 AA zC|"F"A3 A AA AA|"Bb"BB z2 d d3|"C7"c3 c cB AG|"F"F8|',
+  },
+  {
+    title: "DIE WANDELLIED",
+    where: "Afrikaans folk song",
+    mood: "a happy hike through the countryside",
+    nat: "za",
+    group: "AFRIKAANSE VOLKSLIEDJIES",
+    bpm: 120,
+    bar8: 8,
+    style: "polka",
+    key: { B: -1, E: -1 },
+    pickup: 2,
+    lead: { wave: "square", wave2: "sawtooth", vol: 0.045, vib: 6, lp: 2200, oct: 0, echo: 0.25 }, // (an accordion)
+    abc: '"Bb"F3/2F/2|"Bb"B2 F2 FG FE|D2 B,2 B,2 D2|"C7"C2 B2 A2 G2|"F"F6 F3/2F/2|"Bb"B2 F2 FG FE|D2 B,2 B,2 D2|"C7"C2 B2 A2 G2|"F"F6 F3/2F/2|"Bb"D2 F2 D2 F2|"Cm"G3 F E2 ED|"F"C2 E2 C2 E2|"Bb"F3 E D2 F2|"Bb"B3 F D2 F2|"Bb"B4 "Gm"d4|"Cm"c2 ec "F7"BA GA|"Bb"B4 z2|',
+  },
+  {
+    title: "TREKLIEDJIE",
+    where: "Afrikaans folk song",
+    mood: "an ox wagon trekking across the plains",
+    nat: "za",
+    group: "AFRIKAANSE VOLKSLIEDJIES",
+    bpm: 104,
+    bar8: 4,
+    style: "polka",
+    key: { B: -1, E: -1 },
+    pickup: 2,
+    lead: { wave: "sawtooth", vol: 0.05, vib: 8, lp: 2600, swell: true, oct: 0, echo: 0.35 }, // (a fiddle)
+    abc: '"Bb"F2|"Bb"d2 dc|B2 BA|"Eb"G2 BB|"Bb"F2 z2|"Bb"F2 FF|"F7"E3 D|"Bb"D4-|D2 F2|"Bb"d2 dc|B2 BA|"Eb"G2 BB|"Bb"F2 FF|"D7"A2 AA|"F7"G2 F2|"Bb"B4-|B2 z2|"Bb"F F2 F|F2 DF|"Eb"G G2 G|G3 z|"Bb"F2 FF|"Gm"B3 B|"F7"c4-|c2 z2|"Bb"d2 dc|B2 BA|"Eb"G2 BB|"Bb"F2 z B|"Bb"d2 dd|"F7"c3 B|"Bb"B4-|B2 z2|"Bb"F F2 F|F3 z|"Eb"G G2 G|G3 z|"Bb"F F2 F|"Gm"B2 B2|"F7"c4-|c2 z2|"Bb"d2 dc|B2 BA|"Eb"G2 BB|"Bb"F2 z B|"Bb"d2 dd|"F7"c3 B|"Bb"B4-|B2 F2|"Bb"d2 dc|B2 BA|"Eb"G2 BB|"Bb"F2 z2|"Bb"F2 FF|"F7"E3 D|"Bb"D4-|D2 F2|"Bb"d2 dc|B2 BA|"Eb"G2 BB|"Bb"F2 FF|"D7"A2 AA|"F7"G2 F2|"Bb"B4-|B2 z2|"Bb"F F2 F|F2 DF|"Eb"G G2 G|G3 z|"Bb"F2 FF|"Gm"B3 B|"F7"c4-|c2 z2|"Bb"d2 dc|B2 BA|"Eb"G2 BB|"Bb"F2 z B|"Bb"d2 dd|"F7"c3 B|"Bb"B4-|B2 z2|"Bb"F F2 F|F3 z|"Eb"G G2 G|G3 z|"Bb"F F2 F|"Gm"B2 B2|"F7"c4-|c2 z2|"Bb"d2 dc|B2 BA|"Eb"G2 BB|"Bb"F2 z B|"Bb"d2 dd|"F7"c3 B|"Bb"B4-|B2 z2|',
+  },
+  {
+    title: "HIER'S EK WEER",
+    where: "Afrikaans folk song",
+    mood: "back again at my sweetheart's door",
+    nat: "za",
+    group: "AFRIKAANSE VOLKSLIEDJIES",
+    bpm: 120,
+    bar8: 8,
+    style: "polka",
+    key: { F: 1 },
+    pickup: 4,
+    lead: { wave: "triangle", wave2: "square", vol: 0.055, vib: 5, lp: 2400, oct: 0, echo: 0.4 }, // (a clarinet)
+    abc: '"G"G2A2|"G"B4A2B2|"C"c4B2A2|"G"G2B2A2G2|D2D2E2D2|"D7"F8-|F2D2E2D2|"G"G8-|G4G2A2|"G"B4A2B2|"C"c4B2A2|"G"G2B2A2G2|D2D2E2D2|"D7"F8-|F2D2E2D2|"G"G8-|G4D4|"G"B4d4|c4B4|"C"A2A2A2G2|E2D2E2D2|"D7"F8-|F2D2E2D2|"G"G8-|G4D4|"G"B4d4|c4B4|"C"A2A2A2G2|E2D2E2D2|"D7"F8-|F2D2E2D2|"G"G8-|G2|',
+  },
+  {
+    title: "BOLANDSE NOOI'NTJIE",
+    where: "Afrikaans folk song",
+    mood: "a lullaby for a sleeping sweetheart",
+    nat: "za",
+    group: "AFRIKAANSE VOLKSLIEDJIES",
+    bpm: 95,
+    bar8: 9,
+    style: "six8",
+    key: { F: 1, C: 1 },
+    lead: { wave: "square", wave2: "triangle", vol: 0.05, vib: 7, lp: 2000, oct: 0, echo: 0.25 }, // (a concertina)
+    abc: '"D"dcd A3F3|"G"E^DE B3-B3|"A"AcB BAG GFE|"D"D6-D2z|"D"dcd A3F3|"G"E^DE B3-B3|"A"AcB BAG GFE|"D"D6-D2z|"A"AGE D3B3|"D"BAF D3-D3|"E7"dcd B3e2d|cdB A3-A3|"D"dcd A3F3|"G"E^DE B3-B3|"A"AcB BAG GFE|"D"D6-D2z|"D"dcd A3F3|"G"E^DE B3-B3|"A"AcB BAG GFE|"D"D6-D2z|"A"AGE D3B3|"D"BAF D3-D3|"E7"dcd B3e2d|cdB A3-A3|"D"dcd A3F3|"G"E^DE B3-B3|"A"AcB BAG GFE|"D"D6-"F#7"D2"Bm"z|"G"Bcd "A"dAF "A7"GFE|"D"D6-D2z|',
+  },
+  {
+    title: "VAT JOU GOED EN TREK",
+    where: "Afrikaans folk song",
+    mood: "packing up and trekking on",
+    nat: "za",
+    group: "AFRIKAANSE VOLKSLIEDJIES",
+    bpm: 110,
+    bar8: 4,
+    style: "polka",
+    key: { F: 1 },
+    lead: { wave: "square", wave2: "sawtooth", vol: 0.045, vib: 6, lp: 2200, oct: 0, echo: 0.25 }, // (an accordion)
+    abc: '"G"B,DGF|"C"E3/2E/2EE|"D7"DFAF|"G"G4|"G"B,D/2D/2 GF/2F/2|"C"EEEE|"D7"DFAF|"G"G4|"G"B2G2|DG/2B/2dd|"D"c2A2|DF/2A/2dc|"G"B2G2|"C"EE/2E/2EE|"D7"DFAF|"G"G4|',
+  },
+  {
+    title: "BOBBEJAAN KLIM DIE BERG",
+    where: "Afrikaans folk song",
+    mood: "a cheeky baboon climbs the mountain",
+    nat: "za",
+    group: "AFRIKAANSE VOLKSLIEDJIES",
+    bpm: 120,
+    bar8: 8,
+    style: "polka",
+    key: { B: -1, E: -1 },
+    pickup: 2,
+    lead: { wave: "sawtooth", vol: 0.05, vib: 8, lp: 2600, swell: true, oct: 0, echo: 0.35 }, // (a fiddle)
+    abc: '"Bb"FF|B2 B3/2B/2 B3 F|GFFF GFFF|"F7"c2 c3/2c/2 c3 F|GFFF GFFF|"Bb"d2 d3/2c/2 "Bb7"B2 cd|"Eb"eeee e2 z e|"Bb"d2 d3/2d/2 "F7"cc dc|"Bb"B4 z d ed|"Cm"c4 Gc dc|"Bb"B4 F2 B2|"F7"AAAG F2 e2|"Bb"d4- dd ed|"Cm"c4 Gc dc|"Bb"B4 F2 B2|"F7"AAAG F2 c2|"Bb"B6 z2|',
+  },
+  {
+    title: "DIE VROLIKE MUSIKANT",
+    where: "Afrikaans folk song",
+    mood: "a merry wandering musician",
+    nat: "za",
+    group: "AFRIKAANSE VOLKSLIEDJIES",
+    bpm: 120,
+    bar8: 8,
+    style: "polka",
+    key: {},
+    pickup: 2,
+    lead: { wave: "triangle", wave2: "square", vol: 0.055, vib: 5, lp: 2400, oct: 0, echo: 0.4 }, // (a clarinet)
+    abc: '"C"G2|"C"G2G2G3F|F2E2E3E|E2E2G2E2|"G7"F6G2|G2B2B3B|"C"c2G2G3G|"F"A2F2"G7"E2D2|"C"C6G3/2G/2|"G7"B2G3/2G/2G2G3/2G/2|"C"c2G3/2G/2G2G3/2G/2|"G7"d2G3/2G/2G2G3/2G/2|"C"edcB cBA3/2G/2|"G7"B2G3/2G/2G2G3/2G/2|"C"c2G3/2G/2G2G2|"F"A2F2"G7"E2D2|"C"C6z2|z6G2|"C"G2G2G3F|F2E2E3E|E2E2G2E2|"G7"F6G2|G2B2B3B|"C"c2G2G3G|"F"A2F2"G7"E2D2|"C"C6G3/2G/2|"G7"B2G3/2G/2G2G3/2G/2|"C"c2G3/2G/2G2G3/2G/2|"G7"d2G3/2G/2G2G3/2G/2|"C"edcB cBA3/2G/2|"G7"B2G3/2G/2G2G3/2G/2|"C"c2G3/2G/2G2G2|"F"A2F2"G7"E2D2|"C"C6z2|',
+  },
+  {
+    title: "DIS JULLE WAT DIE WIND LAAT WAAI",
+    where: "Afrikaans folk song",
+    mood: "who makes the wind blow",
+    nat: "za",
+    group: "AFRIKAANSE VOLKSLIEDJIES",
+    bpm: 120,
+    bar8: 8,
+    style: "polka",
+    key: { F: 1 },
+    pickup: 2,
+    lead: { wave: "square", wave2: "triangle", vol: 0.05, vib: 7, lp: 2000, oct: 0, echo: 0.25 }, // (a concertina)
+    abc: '"G"DD|"G"BBBB B2DD|BBBB B2DD|BBBB c2B2|"D7"A4 z2DD|"D7"AAAA A2DD|AAAA A2dd|dddc B2A2|"G"G4 z2|',
+  },
+  {
+    title: "DAAR KOM DIE ALIBAMA",
+    where: "Afrikaans folk song",
+    mood: "a famous ship sailing over the sea",
+    nat: "za",
+    group: "AFRIKAANSE VOLKSLIEDJIES",
+    bpm: 110,
+    bar8: 8,
+    style: "polka",
+    key: { B: -1, E: -1, A: -1 },
+    lead: { wave: "square", wave2: "sawtooth", vol: 0.045, vib: 6, lp: 2200, oct: 0, echo: 0.25 }, // (an accordion)
+    abc: '"Eb"G4 "Ab"A3/2A/2Bc|"Eb"B4 G3/2B/2Bc|"Bb7"B2FG A2GF|"Eb"G2B2"Bb7"c2B2|"Eb"G4 "Ab"A3/2A/2Bc|"Eb"B4 G3/2B/2Bc|"Bb7"B2FG A2GF|"Eb"E6z2|"Eb"G2G3/2A/2 BBB3/2B/2|BcB=A "Bb7"A3z/2B/2|"Bb7"BBBc ddd2|BBBA"Eb"G4|"Eb"G2G3/2A/2 BBB3/2B/2|BcB=A "Bb7"A3z/2B/2|"Bb7"BBBc ddd2|BBcd"Eb"eeee|"Ab"e2c3eee|"Eb"e2B3BBc|"Bb7"d3cB2AA|"Eb"G4zeee|"Ab"e2c3eee|"Eb"e2B3BBc|"Bb7"d3cB2cd|"Eb"e6z2|',
+  },
+  {
+    title: "O, DIE LIEWE MARTATJIE",
+    where: "Afrikaans folk song",
+    mood: "a merry little rascal named Martatjie",
+    nat: "za",
+    group: "AFRIKAANSE VOLKSLIEDJIES",
+    bpm: 132,
+    bar8: 6,
+    style: "waltz",
+    key: { F: 1 },
+    lead: { wave: "sawtooth", vol: 0.05, vib: 8, lp: 2600, swell: true, oct: 0, echo: 0.35 }, // (a fiddle)
+    abc: '"G"d3 e dc|B2 G2 G2|"D7"A2 D2 D2|"G"B2 G2 G2|"G"d3 e dc|B2 G2 G2|"D7"A2 D2 D2|"G"G6|"D7"A2 D2 D2|"G"B2 G2 G2|"D7"A2 D2 D2|"G"B2 G2 G2|"G"d3 e dc|B2 G2 G2|"D7"A2 D2 D2|"G"G6|"G"d3 e dc|B2 G2 G2|"D7"A2 D2 D2|"G"B2 G2 G2|"G"d3 e dc|B2 G2 G2|"D7"A2 D2 D2|"G"G6|"D7"A2 D2 D2|"G"B2 G2 G2|"D7"A2 D2 D2|"G"B2 G2 G2|"G"d3 e dc|B2 G2 G2|"D7"A2 D2 D2|"G"G6|',
+  },
+  {
+    title: "DAAR KOM DIE WA",
+    where: "Afrikaans folk song",
+    mood: "the four-horse wagon is coming",
+    nat: "za",
+    group: "AFRIKAANSE VOLKSLIEDJIES",
+    bpm: 110,
+    bar8: 4,
+    style: "polka",
+    key: {},
+    lead: { wave: "triangle", wave2: "square", vol: 0.055, vib: 5, lp: 2400, oct: 0, echo: 0.4 }, // (a clarinet)
+    abc: '"C"C2 EG|c3 c|"F"d2 cB|A3 c|"G7"Bc d2|G3 G|"G7"G3/2F/2 ED|"C"C3 G|"C"GA G2|"G7"FE D3/2D/2|G3/2G/2 FF|"C"E3 G|"C"GA G2|"G7"FE D3/2E/2|"G7"G3/2G/2 AB|"C"c3 z|"C"C2 EG|c3 c|"F"d2 cB|A3 c|"G7"Bc d2|G3 G|"G7"G3/2F/2 ED|"C"C3 G|"C"GA G2|"G7"FE D3/2D/2|G3/2G/2 FF|"C"E3 G|"C"GA G2|"G7"FE D3/2E/2|"G7"G3/2G/2 AB|"C"c3 z|',
+  },
+  {
+    title: "DAAR KOM TANT ALIE",
+    where: "Afrikaans folk song",
+    mood: "auntie Alie comes round the bend",
+    nat: "za",
+    group: "AFRIKAANSE VOLKSLIEDJIES",
+    bpm: 112,
+    bar8: 4,
+    style: "polka",
+    key: { F: 1 },
+    lead: { wave: "square", wave2: "triangle", vol: 0.05, vib: 7, lp: 2000, oct: 0, echo: 0.25 }, // (a concertina)
+    abc: '"G"G2 GA|B2 dB|"D7"A2 dc|"G"B2 d2|"G"G2 GA|B2 dB|"D7"Ac BA|"G"G z AB|"C"c/2e e/2 e d/2c/2|"G"B/2d d/2 d c/2B/2|"D7"A/2d/2d/2d/2 d/2c/2B/2A/2|"G"G/2d d/2 d c/2B/2|"C"c/2e e/2 e d/2c/2|"G"B/2d d/2 d c/2B/2|"D7"A/2d/2d/2d/2 d/2d/2d/2d/2|"G"g/2g g/2 g2|',
+  },
+  {
+    title: "AL LÊ DIE BERGE NOG SO BLOU",
+    where: "Afrikaans folk song",
+    mood: "blue mountains and a faraway sweetheart",
+    nat: "za",
+    group: "AFRIKAANSE VOLKSLIEDJIES",
+    bpm: 100,
+    bar8: 8,
+    style: "polka",
+    key: { B: -1, E: -1 },
+    pickup: 2,
+    lead: { wave: "square", wave2: "sawtooth", vol: 0.045, vib: 6, lp: 2200, oct: 0, echo: 0.25 }, // (an accordion)
+    abc: '"Bb"F2|"Bb"B3 d cc/2c/2 BB|"F7"A6 F2|"F7"c3 e dd/2d/2 cc|"Bb"B6 F2|"Bb7"d3 c BB/2B/2 cd|"Eb"e6 e2|"Bb"dd Bd/2d/2 "F7"c2 c2|"Bb"B6 F2|"Bb"B3 d cc/2c/2 BB|"F7"A6 F2|"F7"c3 e dd/2d/2 cc|"Bb"B6 F2|"Bb7"d3 c BB/2B/2 cd|"Eb"e6 e2|"Bb"dd Bd/2d/2 "F7"c2 c2|"Bb"B6|',
+  },
+  {
+    title: "MY HARTJIE, MY LIEFIE",
+    where: "Afrikaans folk song",
+    mood: "courting a sweetheart by the blue mountains",
+    nat: "za",
+    group: "AFRIKAANSE VOLKSLIEDJIES",
+    bpm: 104,
+    bar8: 8,
+    style: "polka",
+    key: { B: -1, E: -1, A: -1 },
+    pickup: 1,
+    lead: { wave: "sawtooth", vol: 0.05, vib: 8, lp: 2600, swell: true, oct: 0, echo: 0.35 }, // (a fiddle)
+    abc: '"Eb"B|"Eb"B2 ee "Ab"d2 cc|"Eb"B2 G2 G2 z B|"Bb7"B2 F2 F2 z B|"Eb"B2 G2 G2 z B|"Eb"B2 ee "Ab"d2 cc|"Eb"B2 G2 G2 z2|"Bb7"B4 Bc BA|"Eb"G2 E2 E2 FG|"Ab"AA AA A2 GF|"Eb"G B2 B B4|"Bb7"F2 FG A2 GF|"Eb"G B2 B B2 FG|"Ab"AA AA A2 GF|"Eb"G B2 B B4|"Bb7"B4 Bc BA|"Eb"G2 E2 E4|',
+  },
+  {
+    title: "KINDERS, MOENIE IN DIE WATER MORS NIE",
+    where: "Afrikaans folk song",
+    mood: "kids, don't splash in the water",
+    nat: "za",
+    group: "AFRIKAANSE VOLKSLIEDJIES",
+    bpm: 108,
+    bar8: 4,
+    style: "polka",
+    key: {},
+    lead: { wave: "triangle", wave2: "square", vol: 0.055, vib: 5, lp: 2400, oct: 0, echo: 0.4 }, // (a clarinet)
+    abc: '"C"cc c/2c/2c/2c/2|cc cc/2B/2|"G7"A G/2G/2 FE|D2 z d|"G7"BB B/2B/2B/2B/2|BB BB/2A/2|"G7"G F/2F/2 ED|"C"Cc "F"Ac|"C"G4|z EEF|"F"G2 C2|"Dm"z FFG|A2 D2|"G7"z BBc|d2 GG|"G7"G3/2F/2 ED|"C"C2 z2|"C"c2 cc|c3 B|"F"A G/2G/2 FE|"Dm"D3 d|"G7"B3/2B/2 BB|B3 A|"G7"G3/2F/2 ED|"C"CE EF|"C"G2 C2|"F"z FFG|"Dm"A2 D2|"G7"z BBc|d2 G2|"G7"z2 z G|G3/2G/2 AB|"C"c2 z2|"C"c2 cc|c3 B|"F"A G/2G/2 FE|"Dm"D3 d|"G7"B3/2B/2 BB|B3 A|"G7"G3/2F/2 ED|"C"CE EF|"C"G2 C2|"F"z FFG|"Dm"A2 D2|"G7"z BBc|d2 G2|"G7"z2 z G|G3/2G/2 AB|"C"c2 z2|',
+  },
+  {
+    title: "JAPIE, MY SKAPIE",
+    where: "Afrikaans folk song",
+    mood: "missing my little lamb Japie",
+    nat: "za",
+    group: "AFRIKAANSE VOLKSLIEDJIES",
+    bpm: 116,
+    bar8: 4,
+    style: "polka",
+    key: { F: 1 },
+    lead: { wave: "square", wave2: "triangle", vol: 0.05, vib: 7, lp: 2000, oct: 0, echo: 0.25 }, // (a concertina)
+    abc: '"G"d2 dd|"D7"cc dd|"G"B3/2B/2 cB|"D7"A4|"G"d2 dd|"D7"cc dd|"G"B3/2B/2 cB|"D7"A3 D|"G"G G/2G/2 GA|BD BB|"D7"AD AA|"G"BD BD|"G"G G/2G/2 GA|BD BB|"C"A2 "D"d2|"G"G2 z D/2D/2|"G"GG GA|BB B2|"D7"AA A2|"G"BB B D/2D/2|"G"GG GA|BB B2|"Am"A2 "D7"d2|"G"G2 z|',
+  },
+  {
+    title: "POLLIE, ONS GAAN PÊREL TOE",
+    where: "Afrikaans folk song",
+    mood: "a happy trip to Paarl together",
+    nat: "za",
+    group: "AFRIKAANSE VOLKSLIEDJIES",
+    bpm: 110,
+    bar8: 4,
+    style: "polka",
+    key: { F: 1, C: 1 },
+    lead: { wave: "square", wave2: "sawtooth", vol: 0.045, vib: 6, lp: 2200, oct: 0, echo: 0.25 }, // (an accordion)
+    abc: '"D"Ad dd|"A7"dc c2|GB BB|"D"BA A2|"D"Ad dd|"A7"dc c2|"A7"AA Bc|"D"d4|"D"Ad dd|"A7"dc c2|GB BB|"D"BA A2|"D"Ad dd|"A7"dc c2|"A7"AA Bc|"D"d4|',
+  },
+  {
+    title: "SIEMBAMBA",
+    where: "Afrikaans folk song",
+    mood: "a lullaby for a little baby",
+    nat: "za",
+    group: "AFRIKAANSE VOLKSLIEDJIES",
+    bpm: 100,
+    bar8: 4,
+    style: "polka",
+    key: { F: 1 },
+    lead: { wave: "sawtooth", vol: 0.05, vib: 8, lp: 2600, swell: true, oct: 0, echo: 0.35 }, // (a fiddle)
+    abc: '"G"DG G2|"D7"FF/2A/2 "G"GG|"G"DB B2|"D7"AA/2c/2 "G"BB|"G"GB/2B/2 "G7"dd/2d/2|"C"e/2e/2e/2e/2 "G"d2|"Am7"cc/2c/2 "G"BB/2B/2|"D7"AA "G"G2|"G"DG G2|"D7"FF/2A/2 "G"GG|"G"DB B2|"D7"AA/2c/2 "G"BB|"G"GB "G7"dd|"C"ee "E7"d2|"Am7"cc "G"BB|"D7"AA "G"G2|',
+  },
+  {
+    title: "KOM ONS GAAN BLOMME PLUK",
+    where: "Afrikaans folk song",
+    mood: "picking spring flowers in the meadow",
+    nat: "za",
+    group: "AFRIKAANSE VOLKSLIEDJIES",
+    bpm: 100,
+    bar8: 6,
+    style: "six8",
+    key: { B: -1, E: -1, A: -1, D: -1 },
+    lead: { wave: "triangle", wave2: "square", vol: 0.055, vib: 5, lp: 2400, oct: 0, echo: 0.4 }, // (a clarinet)
+    abc: '"Ab"E3 c2G|B3 A3|"Ab"C2E "Db"G2F|"Ab"E3-E2z|"Db"F3 "Eb"e2d|"Ab"c3 A3|"Bb"F2G A2F|"Eb"B3-B3|"Ab"E3 c2B|B3 A3|"Ab"C2E "Db"G2F|"Ab"E3-E2z|"Db"F3 "Eb"e2d|"Ab"c3 "Fm"A3|"Db"c2B "Eb"F2G|"Ab"A3-A2z|"Ab"C3 D2=D|Ec2-c3|"Db"B3 A2F|"Ab"E3-E2z|"Ab"C3 D2=D|Ec2-c3|"Db"B3 A2F|"Eb"B3-B2z|"Ab"C3 D2=D|Ec2-c3|"Db"B3 A2F|"Ab"E3-E2z|"Db"F3 "Eb"e2d|"Ab"cA2- "Fm"A3|"Db"c2B "Eb"F2G|"Ab"A3 A3|"Ab"E3 c2G|B3 A3|"Ab"C2E "Db"G2F|"Ab"E3-E2z|"Db"F3 "Eb"e2d|"Ab"c3 A3|"Bb"F2G A2F|"Eb"B3-B3|"Ab"E3 c2B|B3 A3|"Ab"C2E "Db"G2F|"Ab"E3-E2z|"Db"F3 "Eb"e2d|"Ab"c3 "Fm"A3|"Db"c2B "Eb"F2G|"Ab"A3-A2z|"Ab"C3 D2=D|Ec2-c3|"Db"B3 A2F|"Ab"E3-E2z|"Ab"C3 D2=D|Ec2-c3|"Db"B3 A2F|"Eb"B3-B2z|"Ab"C3 D2=D|Ec2-c3|"Db"B3 A2F|"Ab"E3-E2z|"Db"F3 "Eb"e2d|"Ab"cA2- "Fm"A3|"Db"c2B "Eb"F2G|"Ab"A3 A3|',
+  },
+  {
+    title: "VER IN DIE WÊRELD, KITTIE",
+    where: "Afrikaans folk song",
+    mood: "Kittie spinning far across the world",
+    nat: "za",
+    group: "AFRIKAANSE VOLKSLIEDJIES",
+    bpm: 110,
+    bar8: 4,
+    style: "polka",
+    key: { B: -1, E: -1, A: -1 },
+    lead: { wave: "square", wave2: "triangle", vol: 0.05, vib: 7, lp: 2000, oct: 0, echo: 0.25 }, // (a concertina)
+    abc: '"Eb"BB/2B/2 BA|GB3|"Bb7"FA3|"Eb"GB3|"Eb"BB/2B/2 BA|GB3|"Bb7"FA GF|"Eb"E3B|"Eb"ed cc/2c/2|BB BB/2B/2|"Bb7"FA GF|"Eb"B3B|"Eb"ed cc/2c/2|BB BB/2B/2|"Bb7"FA GF|"Eb"E3z|"Eb"BB/2B/2 BA|GB3|"Bb7"FA3|"Eb"GB3|"Eb"BB/2B/2 BA|GB3|"Bb7"FA GF|"Eb"E3B|"Eb"ed cc/2c/2|BB BB/2B/2|"Bb7"FA GF|"Eb"B3B|"Eb"ed cc/2c/2|BB BB/2B/2|"Bb7"FA GF|"Eb"E3z|',
+  },
+  {
+    title: "WAT MAAK OOM KALIE DAAR?",
+    where: "Afrikaans folk song",
+    mood: "Uncle Kalie getting ready to marry",
+    nat: "za",
+    group: "AFRIKAANSE VOLKSLIEDJIES",
+    bpm: 112,
+    bar8: 4,
+    style: "polka",
+    key: { F: 1 },
+    pickup: 1,
+    lead: { wave: "square", wave2: "sawtooth", vol: 0.045, vib: 6, lp: 2200, oct: 0, echo: 0.25 }, // (an accordion)
+    abc: '"G"D|"G"GG GG|G3A|"G"BB BB|B3c|"G"dd dd|"D7"cc dc|"G"B/2B/2B dB/2B/2|"D7"AA dc|"G"BB "D7"AA|"G"G3D|"G"GG GG|G3A|"G"BB BB|B3c|"G"dd dd|"D7"cc dc|"G"B/2B/2B dB/2B/2|"D7"AA dc|"G"BB "D7"AA|"G"G3z|',
+  },
+  {
+    title: "HOE RY DIE BOERE?",
+    where: "Afrikaans folk song",
+    mood: "farmers riding, whistling and dancing",
+    nat: "za",
+    group: "AFRIKAANSE VOLKSLIEDJIES",
+    bpm: 120,
+    bar8: 8,
+    style: "polka",
+    key: {},
+    pickup: 2,
+    lead: { wave: "sawtooth", vol: 0.05, vib: 8, lp: 2600, swell: true, oct: 0, echo: 0.35 }, // (a fiddle)
+    abc: '"C"G2|"C"c2B2 A2G2|E2F2 G4|"G7"D2E2 F4|"C"E2F2 G2G2|"C"c2B2 A2G2|E2F2 G4|"G7"D2F2 E2D2|"C"C4 z2D2|"D"D2D2 D2D2|"G"GGAA B4|"D"AABB c2d2|"C"B4 z2D2|"D"D2D2 D2D2|"G"GGAA B4|"D"AABB c2^F2|"G7"G6 G2|"C"c2B2 A2G2|E2F2 G4|"G7"D2E2 F4|"C"E2F2 G2G2|"C"c2B2 A2G2|E2F2 G4|"G7"D2F2 E2D2|"C"C4|',
+  },
+  {
+    title: "AANSTAP ROOIES",
+    where: "Afrikaans folk song",
+    mood: "wagon drivers cracking whips on a long road",
+    nat: "za",
+    group: "AFRIKAANSE VOLKSLIEDJIES",
+    bpm: 116,
+    bar8: 4,
+    style: "polka",
+    key: { F: 1, C: 1 },
+    lead: { wave: "triangle", wave2: "square", vol: 0.055, vib: 5, lp: 2400, oct: 0, echo: 0.4 }, // (a clarinet)
+    abc: '"D"d2c2|B2A3/2F/2|"D"DD DF|A3F|"A7"EE EF|G2A3/2A/2|"A7"AG FE|"D"D3F|"D"AA/2A/2 AB|A2A2|"D"AA/2A/2 AB|A4|"A7"EE/2E/2 EF|G2A2|"A7"A3/2G/2 FE|"D"D4|',
+  },
+  {
+    title: "AAI, AAI, DIE WITBORSKRAAI",
+    where: "Afrikaans folk song",
+    mood: "a cheeky white-breasted crow",
+    nat: "za",
+    group: "AFRIKAANSE VOLKSLIEDJIES",
+    bpm: 100,
+    bar8: 4,
+    style: "polka",
+    key: { F: 1 },
+    lead: { wave: "square", wave2: "triangle", vol: 0.05, vib: 7, lp: 2000, oct: 0, echo: 0.25 }, // (a concertina)
+    abc: '"G"B2 B3/2A/2|AG G2|"G"DG Bd|"D7"dc c2|"D7"c3/2c/2 c3/2B/2|BA A3/2G/2|"D7"GF EF|"G"AG G2|',
+  },
+  {
+    title: "VAARWEL, MY EIE SOETELIEF",
+    where: "Afrikaans folk song",
+    mood: "saying goodbye to a sweetheart",
+    nat: "za",
+    group: "AFRIKAANSE VOLKSLIEDJIES",
+    bpm: 110,
+    bar8: 6,
+    style: "waltz",
+    key: { B: -1 },
+    pickup: 2,
+    lead: { wave: "square", wave2: "sawtooth", vol: 0.045, vib: 6, lp: 2200, oct: 0, echo: 0.25 }, // (an accordion)
+    abc: '"F"F2|A4 A2|A2G2F2|"C"G4 G2|G4 A2|"Gm"B4 B2|"C"c4 c2|"F"A6-|A2 z2 F2|"F"A4 A2|"F7"F2G2A2|"Bb"B4 A2|"Gm"G4 F2|"C7"E4 B2|A4 G2|"F"F6-|F2 z2 c2|"F"c4 c2|d4 d2|"Bb"c4 B2|"Gm"B4 B2|"C7"B4 d2|c4 B2|"F"A6-|A2 z2 C2|"F"c4 A2|"F7"F2G2A2|"Bb"B4 A2|"Gm"G4 F2|"C7"E4 B2|A4 G2|"F"F6-|F2 z2|',
+  },
+  {
+    title: "DAAR LÊ DIE DING",
+    where: "Afrikaans folk song",
+    mood: "marching off with blanket and mattress",
+    nat: "za",
+    group: "AFRIKAANSE VOLKSLIEDJIES",
+    bpm: 120,
+    bar8: 8,
+    style: "polka",
+    key: { B: -1, E: -1, A: -1 },
+    lead: { wave: "sawtooth", vol: 0.05, vib: 8, lp: 2600, swell: true, oct: 0, echo: 0.35 }, // (a fiddle)
+    abc: '"Eb"G2G2G2G2|G2G2G2G2|"Eb"G4 B3A|G8|"Bb7"F4 A3G|F8|"Eb"E4 G3F|E8|"Eb"G2G2G2G2|G2G2G2G2|"Eb"G4 B3A|G8|"Bb7"F4 A3G|F8|"Eb"E4 G3F|"Eb7"E4 B2B2|"Ab"c4 e4|d4 c4|"Eb"c4 B4-|B4 B4|"Bb7"B4 A4-|A4 c4|"Eb"c4 B4-|"Eb7"B4 B2B2|"Ab"c4 e4|d4 c4|"Eb"c4 B4-|"C7"B4 B4|"Fm"B4 A4|"Bb7"G4 F4|"Eb"E8|z8|',
+  },
+  {
+    title: "AFRIKANERS IS PLESIERIG",
+    where: "Afrikaans folk song",
+    mood: "a merry party with dancing couples",
+    nat: "za",
+    group: "AFRIKAANSE VOLKSLIEDJIES",
+    bpm: 130,
+    bar8: 6,
+    style: "waltz",
+    key: { B: -1 },
+    pickup: 2,
+    lead: { wave: "triangle", wave2: "square", vol: 0.055, vib: 5, lp: 2400, oct: 0, echo: 0.4 }, // (a clarinet)
+    abc: '"F"AB|"F"c2 A2 AA|"C7"A2 G2 GA|B2 G2 d2|"F"c4 AB|"F"c2 A2 A2|"C7"A2 G2 GA|B2 E2 E2|"F"F4 AB|"F"c2 A2 A2|"C7"A2 G2 GA|B2 G2 d2|"F"c4 AB|"F"c2 A2 A2|"C7"A2 G2 GA|B2 E2 E2|"F"F4 AB|"F"c2 A2 A2|"C7"A2 G2 GA|B2 G2 d2|"F"c4 AB|"F"c2 A2 A2|"C7"A2 G2 GA|B2 E2 E2|"F"F6|',
+  },
+  {
+    title: "BOKKIE",
+    where: "Afrikaans folk song",
+    mood: "walking home under the moon with a sweetheart",
+    nat: "za",
+    group: "AFRIKAANSE VOLKSLIEDJIES",
+    bpm: 110,
+    bar8: 8,
+    style: "polka",
+    key: { F: 1 },
+    pickup: 1,
+    lead: { wave: "square", wave2: "triangle", vol: 0.05, vib: 7, lp: 2000, oct: 0, echo: 0.25 }, // (a concertina)
+    abc: '"G"D|"G"D2 GF E2 D2|B2 B B3 z D|D2 GF E2 D2|"D7"A2 A A3 z2|"G"D2 EF G2 AB|"C"c2 BA E4|"D7"BA FD B2 A2|"G"G6 z2|"G"d4 "C"e4|"G"d3/2c/2 Bc d4|"D7"c3/2B/2 AB c4|"G"d3/2c/2 Bc d4|"G"d4 "C"e4|"G"d3/2c/2 Bc d3 d|"D7"AA Ac BB AA|"G"G6 z|',
+  },
+  {
+    title: "DIE HEERLIKE LENTE",
+    where: "Afrikaans folk song",
+    mood: "spring is here and winter is over",
+    nat: "za",
+    group: "AFRIKAANSE VOLKSLIEDJIES",
+    bpm: 120,
+    bar8: 6,
+    style: "waltz",
+    key: { F: 1 },
+    pickup: 2,
+    lead: { wave: "square", wave2: "sawtooth", vol: 0.045, vib: 6, lp: 2200, oct: 0, echo: 0.25 }, // (an accordion)
+    abc: '"G"D2|"G"G2 G3G|B2 G2 D2|G2 G3G|"D7"A4 D2|A2 A3A|c2 A2 F2|D2 E2 F2|"G"G4 z2|"G"B2 B3B|d2 B2 B2|B2 B3B|"D7"c6|c2 c3c|e2 c2 A2|d2 d3c|"G"B4 D2|"G"G2 G3G|B2 G2 D2|G2 G3G|"D7"A4 D2|A2 A3A|c2 A2 F2|D2 E2 F2|"G"G4 z2|"G"B2 B3B|d2 B2 B2|B2 B3B|"D7"c6|c2 c3c|e2 c2 A2|d2 d3c|"G"B4|',
+  },
+  {
+    title: "TANT HESSIE SE WIT PERD",
+    where: "Afrikaans folk song",
+    mood: "auntie Hessie rides her white horse",
+    nat: "za",
+    group: "AFRIKAANSE VOLKSLIEDJIES",
+    bpm: 110,
+    bar8: 4,
+    style: "polka",
+    key: { F: 1, C: 1 },
+    lead: { wave: "sawtooth", vol: 0.05, vib: 8, lp: 2600, swell: true, oct: 0, echo: 0.35 }, // (a fiddle)
+    abc: '"D"DE FG|"D"A/2AA/2 AA|"A7"A/2AA/2 AA|"D"A/2AA/2 GA|"D"DE FG|"D"A/2AA/2 AA|"A7"A/2AG/2 FE|"D"D4|"D"dd dc|"G"B3c|"G"d/2dd/2 cB|"D"A3F|"D"A/2AA/2 BA|"A7"c3B|"A7"AG FE|"D"D2 A2|"D"DE FG|"D"A/2AA/2 AA|"A7"A/2AA/2 AA|"D"A/2AA/2 AA|"D"DE FG|"D"A/2AA/2 AA|"A7"A/2AA/2 Bc|"D"d4|',
+  },
+  {
+    title: "SAAI DIE WAATLEMOEN",
+    where: "Afrikaans folk song",
+    mood: "planting a watermelon",
+    nat: "za",
+    group: "AFRIKAANSE VOLKSLIEDJIES",
+    bpm: 100,
+    bar8: 4,
+    style: "polka",
+    key: { B: -1, E: -1, A: -1 },
+    lead: { wave: "triangle", wave2: "square", vol: 0.055, vib: 5, lp: 2400, oct: 0, echo: 0.4 }, // (a clarinet)
+    abc: '"Eb"B3B|"Bb"AGF2|"Bb7"c3c|"Eb"BAG2|"Eb"B3B|"Bb7"AGF2|"Bb7"B3/2B/2cd|"Eb"e2zB|"Eb"eedd/2d/2|"Ab"cc2c|"Bb"ddc3/2c/2|"Eb"BB2B/2B/2|"C"ccB3/2B/2|"Ab"AGFF|"Bb7"B3/2B/2cd|"Eb"e2z2|"Eb"B3B|"Bb"AGF2|"Bb7"c3c|"Eb"BAG2|"Eb"B3B|"Bb7"AGF2|"Bb7"B3/2B/2cd|"Eb"e2zB|"Eb"eedd/2d/2|"Ab"cc2c|"Bb"ddc3/2c/2|"Eb"BB2B/2B/2|"C"ccB3/2B/2|"Ab"AGFF|"Bb7"B3/2B/2cd|"Eb"e2z2|',
+  },
+  {
+    title: "JY, JY IS MY KLEIN HARTEDIEF",
+    where: "Afrikaans folk song",
+    mood: "a song for a little sweetheart",
+    nat: "za",
+    group: "AFRIKAANSE VOLKSLIEDJIES",
+    bpm: 90,
+    bar8: 3,
+    style: "six8",
+    key: { B: -1, E: -1, A: -1 },
+    lead: { wave: "square", wave2: "triangle", vol: 0.05, vib: 7, lp: 2000, oct: 0, echo: 0.25 }, // (a concertina)
+    abc: '"Eb"G3|G3|GFG|BAA|"Bb7"F3|F3|FBA|"Eb"G3|"Eb"G3|G3|GFG|BAA|"Bb7"FGA|cBA|"Eb"G3-|G2z|"Ab"c3|"Eb"B3|"Bb7"d3|"Cm"e3|"Fm"FGA|"Bb7"cBD|"Eb"E3-|Ezz|',
+  },
+  {
+    title: "ROKKIES WOU SY DRA",
+    where: "Afrikaans folk song",
+    mood: "she wants to wear pretty skirts",
+    nat: "za",
+    group: "AFRIKAANSE VOLKSLIEDJIES",
+    bpm: 110,
+    bar8: 4,
+    style: "polka",
+    key: { F: 1 },
+    lead: { wave: "square", wave2: "sawtooth", vol: 0.045, vib: 6, lp: 2200, oct: 0, echo: 0.25 }, // (an accordion)
+    abc: '"G"GGBc|d3d|"C"ee"D7"dc|"G"B3B|"G"ddcB|"D7"A3B|"D7"c3/2c/2BA|"G"G3D|"G"G/2GG/2FE|DBB2|"D7"DAA2|"G"DBBD|"G"G/2GG/2FE|DBB2|"D7"ddcF|"G"AGG2|"G"GGBc|d3d|"C"ee"D7"dc|"G"B3B|"G"ddcB|"D7"A3B|"D7"c3/2c/2BA|"G"G3D|"G"G/2GG/2FE|DBB2|"D7"DAA2|"G"DBBD|"G"G/2GG/2FE|DBB2|"D7"ddcF|"G"AGG2|',
+  },
+  {
+    title: "DAAR'S 'N WIND WAT WAAI",
+    where: "Afrikaans folk song",
+    mood: "the wind blowing all around",
+    nat: "za",
+    group: "AFRIKAANSE VOLKSLIEDJIES",
+    bpm: 120,
+    bar8: 8,
+    style: "polka",
+    key: { F: 1, C: 1 },
+    pickup: 2,
+    lead: { wave: "sawtooth", vol: 0.05, vib: 8, lp: 2600, swell: true, oct: 0, echo: 0.35 }, // (a fiddle)
+    abc: '"D"A,A,|"D"F2ED-D2A,A,|F2ED-D3A,|F2E2D2EF|"A7"G2FE-E3A,|G2F2E2A,A,|G2F2E3F|G2F2EEFG|"D"F2ED-D4|"D"F3EFEFG|"A7"F2=FE-E3^F|G2GG/2G/2GFGA|"D"G2FF-F3A|"D"d2ccB2AA|"G"zGF=F"Em"E4|"A7"AAAGF2E2|"D"D6z2|',
+  },
+  {
+    title: "BOEGOBERG SE DAM",
+    where: "Afrikaans folk song",
+    mood: "a lovely dam by the mountain",
+    nat: "za",
+    group: "AFRIKAANSE VOLKSLIEDJIES",
+    bpm: 120,
+    bar8: 8,
+    style: "polka",
+    key: { F: 1 },
+    pickup: 2,
+    lead: { wave: "triangle", wave2: "square", vol: 0.055, vib: 5, lp: 2400, oct: 0, echo: 0.4 }, // (a clarinet)
+    abc: '"G"D2|"G"B2B2A2G2|"G7"B4A2B2|"C"c2c2B2A2|"Am"E6E2|"D"D2-D2F2A2|"D7"d2d2A2B2|c2c2B2A2|"G"B6D2|"G"B2B2A2G2|"G7"B4A2B2|"C"c2c2B2A2|"Am"E6E2|"D"D2-D2F2A2|"D7"d2d2A2B2|c2c2B2A2|"G"G8|"G"B4A2B2|"G7"A4G4|"C"c2c2B2c2|"Am"B4A4|"D"d2d2d2c2|"D7"B4A4|"G"B8-|B6z2|"G"B4A2B2|"G7"A4G4|"C"c2c2B2c2|"Am"B4A4|"D"d2d2d2c2|"D7"B4A4|"G"G8-|G8|"G"B4A2B2|"G7"A4G4|"C"c2c2B2c2|"Am"B4A4|"D"d2d2d2c2|"D7"B4A4|"G"B8-|B6z2|"G"B4A2B2|"G7"A4G4|"C"c2c2B2c2|"Am"B4A4|"D"d2d2d2c2|"D7"B4A4|"G"G8-|G8|',
+  },
+  {
+    title: "SOLANK AS DIE RIETJIE",
+    where: "Afrikaans folk song",
+    mood: "a little reed in the water",
+    nat: "za",
+    group: "AFRIKAANSE VOLKSLIEDJIES",
+    bpm: 120,
+    bar8: 8,
+    style: "polka",
+    key: { F: 1 },
+    pickup: 2,
+    lead: { wave: "square", wave2: "triangle", vol: 0.05, vib: 7, lp: 2000, oct: 0, echo: 0.25 }, // (a concertina)
+    abc: '"G"D2|"G"G4G2F2|G2A2B2c2|z2d4B2|G4B2G2|"D7"z2A4G2|D4c2A2|"G"z2B4A2|G6D2|"G"G4G2F2|G2A2B2c2|"G"z2d4B2|G8|"D7"A2A2A2A2|B4A4|"G"G8|"G7"z4A2B2|"C"c2c2c2c2|d2c6|"G"B2B2B2B2|c2B6|"D7"A2A2A2A2|B4A4|"G"G8-|G6z2|"G7"z4A2B2|"C"c2c2c2c2|d2c6|"G"B2B2B2B2|c2B6|"D7"A2A2A2A2|B4A4|"G"G8-|G6z2|',
+  },
+  {
+    title: "SO RY DIE TREIN",
+    where: "Afrikaans folk song",
+    mood: "the train to Kimberley",
+    nat: "za",
+    group: "AFRIKAANSE VOLKSLIEDJIES",
+    bpm: 120,
+    bar8: 4,
+    style: "polka",
+    key: { F: 1 },
+    pickup: 0.5,
+    lead: { wave: "square", wave2: "sawtooth", vol: 0.045, vib: 6, lp: 2200, oct: 0, echo: 0.25 }, // (an accordion)
+    abc: '"G"B/2|"G"ded3/2B/2|ded3/2d/2|"D7"ABcd|"G"B3z/2B/2|"G"ded3/2B/2|ded3/2d/2|"D7"AcBA|"G"G4|"G"GG2A|B2B2|"D7"A2A2|"G"B2B2|"G"GG2A|B2B2|"D7"AcBA|"G"G4-|G4-|G4-|G2z2|',
+  },
+  {
+    title: "DIE KAT KOM WEER",
+    where: "Afrikaans folk song",
+    mood: "a cat that keeps coming back",
+    nat: "za",
+    group: "AFRIKAANSE VOLKSLIEDJIES",
+    bpm: 120,
+    bar8: 8,
+    style: "polka",
+    key: { B: -1 },
+    pickup: 2,
+    lead: { wave: "sawtooth", vol: 0.05, vib: 8, lp: 2600, swell: true, oct: 0, echo: 0.35 }, // (a fiddle)
+    abc: '"F"CC|"F"FFFF A2FF|"C"GCCC C3C|"C7"GGGG c2cB|"F"AFFF F3A|"Bb"BBBB d3B|"F"AAAA c3A|"C"GGGG cccc|"Cdim"c2cc "C7"c2c3/2B/2|"F"A2F2 F2FF|"C"GCCC C3C|"C7"G2G2 c2c3/2B/2|"F"A2F3/2F/2 F3A|"Bb"B2B2 d3B|"F"AAAA c3A|"C"GGG2 cccB|"F"A2F2F2|',
+  },
+  {
+    title: "SUKERBOSSIE",
+    where: "Afrikaans folk song",
+    mood: "courting a sweetheart under the moon",
+    nat: "za",
+    group: "AFRIKAANSE VOLKSLIEDJIES",
+    bpm: 110,
+    bar8: 8,
+    style: "polka",
+    key: { B: -1, E: -1 },
+    lead: { wave: "triangle", wave2: "square", vol: 0.055, vib: 5, lp: 2400, oct: 0, echo: 0.4 }, // (a clarinet)
+    abc: '"Bb"B3B AA_A_A|"Eb"G6z2|"Eb"B3B AAGG|"Bb"F6z2|"Bb"F3F GGFF|"F7"A6z2|FF2F GGAA|"Bb"B6F2|"Bb"BB2B AA_A_A|"Eb"G6zG|"Eb"BB2B AAGG|"Bb"F6zF|"Bb"FF2F GGFF|"F7"A6z2|FF2F GGAA|"Bb"B4-BFGF|"Bb"d2c2BFGF|"F7"A4-AFGF|e2d2cFGA|"Bb"B4-BFGF|"Bb"d2c2BFGF|"F7"A4-AFGF|"F7"e2d2cFGA|"Bb"B6F2|"Bb"BB2BA2_A2|"Eb"G6z2|"Eb"BB2BA2G2|"Bb"F6z2|"Bb"FF2FG2F2|"F7"A6z2|FF2Fddcc|"Bb"B6z2|',
+  },
+  {
+    title: "OU TANTE KOBA",
+    where: "Afrikaans folk song",
+    mood: "silly old auntie Koba stirring her coffee",
+    nat: "za",
+    group: "AFRIKAANSE VOLKSLIEDJIES",
+    bpm: 120,
+    bar8: 8,
+    style: "polka",
+    key: { F: 1 },
+    lead: { wave: "square", wave2: "triangle", vol: 0.05, vib: 7, lp: 2000, oct: 0, echo: 0.25 }, // (a concertina)
+    abc: '"G"B2BB BB2B|"C"c2c2 "Am"c3c|"D"d2d2 "D7"dddd|"G"c2BB B3B|"G"B2A2 G2FF|"C"E2E2 "Am"c3D|"D7"D2D2 D2EF|"G"Gz "C"G2 "G"G2z2|"G"B2BB BB2B|"C"c2c2 "Am"c3c|"D"d2d2 "D7"dddd|"G"c2BB B3B|"G"B2A2 G2FF|"C"E2E2 "Am"c3D|"D7"D2D2 D2EF|"G"Gz "C"G2 "G"G2z2|',
+  },
+  {
+    title: "EK SOEK NA MY DINA",
+    where: "Afrikaans folk song",
+    mood: "looking for my sweetheart Dina",
+    nat: "za",
+    group: "AFRIKAANSE VOLKSLIEDJIES",
+    bpm: 120,
+    bar8: 6,
+    style: "waltz",
+    key: { F: 1, C: 1 },
+    pickup: 2,
+    lead: { wave: "square", wave2: "sawtooth", vol: 0.045, vib: 6, lp: 2200, oct: 0, echo: 0.25 }, // (an accordion)
+    abc: '"D"A2|"D"D2F2G2|A2A2A2|"G"B2B2B2|"D"A2A2A2|"D"D2F2G2|A2A3A|"A7"G2F2E2|"D"D4A2|"D"d2c2B2|A2A2A2|"G"B2B2B2|"D"A2A2A2|"D"d2c2B2|A2A3A|"A7"G2F2E2|"D"D4z2|"D"D2F2G2|A2A2A2|"G"B2B2B2|"D"A2A2A2|"D"D2F2G2|A2A3A|"A7"G2F2E2|"D"D4A2|"D"d2c2B2|A2A2A2|"G"B2B2B2|"D"A2A2A2|"D"d2c2B2|A2A3A|"A7"G2F2E2|"D"D4z2|',
+  },
+  {
+    title: "IN DIE HELDER MAANSKYN",
+    where: "Afrikaans folk song",
+    mood: "borrowing a pen by bright moonlight",
+    nat: "za",
+    group: "AFRIKAANSE VOLKSLIEDJIES",
+    bpm: 100,
+    bar8: 8,
+    style: "polka",
+    key: { B: -1, E: -1, A: -1, D: -1 },
+    lead: { wave: "sawtooth", vol: 0.05, vib: 8, lp: 2600, swell: true, oct: 0, echo: 0.35 }, // (a fiddle)
+    abc: '"Ab"A2A2A2B2|"Ab"c4"Eb7"B4|"Ab"A2c2"Eb7"B2B2|"Ab"A4z4|"Ab"A2A2A2B2|"Ab"c4"Eb7"B4|"Ab"A2c2"Eb7"B2B2|"Ab"A4z4|"Eb"B2B2B2B2|"Bbm"F4F4|"Eb7"B2A2G2F2|"Eb"E8|"Ab"A2A2A2B2|"Ab"c4"Eb7"B4|"Ab"A2c2"Eb7"B2B2|"Ab"A8|',
+  },
+  {
+    title: "LIEWE MAAN",
+    where: "Afrikaans folk song",
+    mood: "singing to the dear moon sailing by",
+    nat: "za",
+    group: "AFRIKAANSE VOLKSLIEDJIES",
+    bpm: 96,
+    bar8: 8,
+    style: "polka",
+    key: { B: -1, E: -1, A: -1 },
+    pickup: 2,
+    lead: { wave: "triangle", wave2: "square", vol: 0.055, vib: 5, lp: 2400, oct: 0, echo: 0.4 }, // (a clarinet)
+    abc: '"Eb"BA|"Eb"G2G2 GABc|"Bb"BA F4 BA|"Eb"G2"Cm"G2 "Fm"FE"Bb"FG|"Eb"E6 BA|"Eb"G2G2 GABc|"Bb"BA F4 BA|"Eb"G2"Cm"G2 "Fm"FE"Bb"FG|"Eb"E6 FG|"Bb7"A2F4 GA|"Eb"B2G4 Be|"Ab"c3B cBAG|"Bb7"G2F4 BA|"Eb"G2G2 GABc|"Bb"BA F4 BA|"Eb"G2"Cm"G2 "Fm"FE"Bb"FG|"Eb"E6 BA|"Eb"G2G2 GABc|"Bb"BA F4 BA|"Eb"G2"Cm"G2 "Fm"FE"Bb"FG|"Eb"E6 BA|"Eb"G2G2 GABc|"Bb"BA F4 BA|"Eb"G2"Cm"G2 "Fm"FE"Bb"FG|"Eb"E6 FG|"Bb7"A2F4 GA|"Eb"B2G4 Be|"Ab"c3B cBAG|"Bb7"G2F4 BA|"Eb"G2G2 GABc|"Bb"BA F4 BA|"Eb"G2"Cm"G2 "Fm"FE"Bb"FG|"Eb"E6|',
+  },
+  {
+    title: "HANSIE SLIM",
+    where: "Afrikaans folk song",
+    mood: "little Hans goes off to see the world",
+    nat: "za",
+    group: "AFRIKAANSE VOLKSLIEDJIES",
+    bpm: 120,
+    bar8: 4,
+    style: "polka",
+    key: { F: 1 },
+    lead: { wave: "square", wave2: "triangle", vol: 0.05, vib: 7, lp: 2000, oct: 0, echo: 0.25 }, // (a concertina)
+    abc: '"G"dBB2|"D7"cAA2|"G"GABc|ddd2|"G"dBB2|"D7"cAA2|"G"GB"D7"dd|"G"B2z2|"D"AAAA|"D7"ABc2|"G"BBBB|Bcd2|"G"dBB2|"D7"cAA2|"G"GB"D7"dd|"G"G2z2|"G"dBB2|"D7"cAA2|"G"GABc|ddd2|"G"dBB2|"D7"cAA2|"G"GB"D7"dd|"G"B2z2|"D"AAAA|"D7"ABc2|"G"BBBB|Bcd2|"G"dBB2|"D7"cAA2|"G"GB"D7"dd|"G"G2z2|',
+  },
+  {
+    title: "JAN PIEREWIET",
+    where: "Afrikaans folk song",
+    mood: "a playful bird standing still",
+    nat: "za",
+    group: "AFRIKAANSE VOLKSLIEDJIES",
+    bpm: 120,
+    bar8: 6,
+    style: "waltz",
+    key: { B: -1 },
+    pickup: 2,
+    lead: { wave: "square", wave2: "sawtooth", vol: 0.045, vib: 6, lp: 2200, oct: 0, echo: 0.25 }, // (an accordion)
+    abc: '"F"C2|"F"AA A2 C2|"Fmaj7"AA A2 C2|"Dm"AA B2 A2|"C"G4 C2|"Gm"GG G2 C2|"C"GG G2 C2|"Gm"GG "C7"A2 G2|"F"F4 AB|"F"c2 f2 e2|"Bb"d2 d2 GA|"C7"B2 e2 d2|"F"c4 FG|"F7"A2 "D7"d2 c2|"Gm"B2- B2 GA|"Gm"BB "C"A2 "C7"G2|"F"F4|',
+  },
+  {
+    title: "VANAAND GAAN DIE VOLKIES KORING SNY",
+    where: "Afrikaans folk song",
+    mood: "farm folk cutting the wheat tonight",
+    nat: "za",
+    group: "AFRIKAANSE VOLKSLIEDJIES",
+    bpm: 110,
+    bar8: 8,
+    style: "polka",
+    key: { F: 1, C: 1, G: 1 },
+    pickup: 1,
+    lead: { wave: "sawtooth", vol: 0.05, vib: 8, lp: 2600, swell: true, oct: 0, echo: 0.35 }, // (a fiddle)
+    abc: '"A"E/2E/2|"A"AA A3/2A/2 AE AB|"A"c2 cc c2 dc|"E7"BB B3/2B/2 Bd cB|"A"A2 AA A2 Bc|"D"dF FF/2F/2 F2 AB|"A"cE EE/2E/2 E2 AB|"A"c-c c-c "E7"B-B cB|"A"AA "A"AA "A"A2 z E/2E/2|"A"AA A3/2A/2 AE AB|"A"c2 cc c2 dc|"E7"BB B3/2B/2 Bd cB|"A"A2 AA A2 Bc|"D"dF FF/2F/2 F2 AB|"A"cE EE/2E/2 E2 AB|"A"c-c c-c "E7"B-B cB|"A"AA "A"AA "A"A2 z2|',
+  },
+  {
+    title: "BY COETZENBURG",
+    where: "Afrikaans folk song",
+    mood: "a student town by a flowing stream",
+    nat: "za",
+    group: "AFRIKAANSE VOLKSLIEDJIES",
+    bpm: 130,
+    bar8: 6,
+    style: "waltz",
+    key: { B: -1, E: -1, A: -1 },
+    pickup: 2,
+    lead: { wave: "triangle", wave2: "square", vol: 0.055, vib: 5, lp: 2400, oct: 0, echo: 0.4 }, // (a clarinet)
+    abc: '"Eb"B,2|"Eb"E2E2E2|G4G2|B4B2|G6|B6|B6|"Bb7"A2F4-|F4B,2|"Bb7"D4D2|F4F2|A4A2|F6|B6|B6|"Eb"G2E4-|E4B,2|"Eb"E4E2|G4G2|B4B2|G6|B6|"Edim"B6|"Bb7"A2F4-|F4B,2|"Ab"A2A2c2|e2d2c2|"Eb"B2B2G2|E4c2|"Bb7"B2B2A2|F2F2c2|"Eb"B2B2G2|E4E2|"Ab"A2A2c2|e2d2c2|"Eb"B4G2|E4e2|"Bb7"d3cB2|A2G2F2|"Eb"E2z2B2|e2z2z2|"Eb"B2c2B2|G4E2|"Bb7"D4B2|A2z3E|D4B2|A4D2|"Eb"E4c2|B4z2|"Eb"B2c2B2|G4E2|"Bb7"D4B2|A4z2|F2G2F2|"F7"E2D2C2|"Bb7"B,2z2B2|B2z2z2|"Eb"B2c2B2|G4E2|"Bb7"D4B2|A2z3E|D4B2|A4D2|"Eb"E4c2|B4z2|"Eb"B2c2B2|G4E2|"Bb7"D4B2|A4z2|F2G2F2|"F7"E2D2C2|"Bb7"B,2z2B2|B2z2z2|',
+  },
+  {
+    title: "TARABOMDERY",
+    where: "Afrikaans folk song",
+    mood: "a merry dance for a fair maiden",
+    nat: "za",
+    group: "AFRIKAANSE VOLKSLIEDJIES",
+    bpm: 130,
+    bar8: 6,
+    style: "waltz",
+    key: { F: 1, C: 1 },
+    lead: { wave: "square", wave2: "triangle", vol: 0.05, vib: 7, lp: 2000, oct: 0, echo: 0.25 }, // (a concertina)
+    abc: '"D"A3^GBA|"D"F2z2A2|"D"d2F2B2|"A7"A4G2|"A7"G3FGE|"A7"C2z2A2|"A7"B4G2|"D"A4F2|"D"A3^GBA|"D"F2z2A2|"D"d2F2B2|"Em"A4G2|"Em"e4d2|"D"c2B2A2|"A7"G2F2E2|"D"D2z2z2|"A"E3FE^D|"A"E2czcz|"E7"czBzBz|"A"BzAzAz|"A"E3FE^D|"A"E2czcz|"E7"czBzBz|"A"B2"A7"A2A2|"D"A3^GBA|"D"F2z2A2|"D"d2F2B2|"A7"A4G2|"A7"G3FGE|"A7"C2z2A2|"A7"B4G2|"D"A4F2|"D"A3^GBA|"D"F2z2A2|"D"d2F2B2|"Em"A4G2|"Em"e4d2|"D"c2B2A2|"A7"G2F2E2|"D"D2z2z2|"A"E3FE^D|"A"E2czcz|"E7"czBzBz|"A"BzAzAz|"A"E3FE^D|"A"E2czcz|"E7"czBzBz|"A"B2"A7"A2A2|',
+  },
+  {
+    title: "SOVEEL GROETE STUUR EK JOU",
+    where: "Afrikaans folk song",
+    mood: "sending many greetings to a sweetheart",
+    nat: "za",
+    group: "AFRIKAANSE VOLKSLIEDJIES",
+    bpm: 110,
+    bar8: 6,
+    style: "waltz",
+    key: { F: 1 },
+    pickup: 2,
+    lead: { wave: "square", wave2: "sawtooth", vol: 0.045, vib: 6, lp: 2200, oct: 0, echo: 0.25 }, // (an accordion)
+    abc: '"G"GA|"G"B3"D7"BcA|"G"edd2Bd|"D7"dcc2dc|"G"B4GA|"G"B3"D7"BcA|"G"edd2Bd|"D7"dcc2dc|"G"B4dB|"D7"BAA2ec|"G"cBB2dB|"D7"BAA2ec|"G"cBB2GA|"G"B3"D7"BcA|"G"e2d2Bd|"D7"c3cdc|"G"B4z2|',
+  },
+  {
+    title: "DIE BOOTJIE NA KAMMALAND",
+    where: "Afrikaans folk song",
+    mood: "a little boat sailing to a dreamland",
+    nat: "za",
+    group: "AFRIKAANSE VOLKSLIEDJIES",
+    bpm: 85,
+    bar8: 6,
+    style: "six8",
+    key: { F: 1, C: 1 },
+    pickup: 1,
+    lead: { wave: "sawtooth", vol: 0.05, vib: 8, lp: 2600, swell: true, oct: 0, echo: 0.35 }, // (a fiddle)
+    abc: '"D"A|"D"A3-AFB|A3-AFd|"A"c3-cBc|"D"d3-dcB|"D"A3-AFB|A3-AFd|"A"c3-cBc|"D"d3-dzD|"G"d3-dcB|"D"A3-AGF|"A"E3-EFG|"D"A3-AzD|"G"d3-dcB|"D"A3-AGF|"A"E3-EFE|"D"D3-DzA|"D"A3-AFB|A3-AFd|"A"c3-cBc|"D"d3-dcB|"D"A3-AFB|A3-AFd|"A"c3-cBc|"D"d3-dzD|"G"d3-dcB|"D"A3-AGF|"A"E3-EFG|"D"A3-AzD|"G"d3-dcB|"D"A3-AGF|"A"E3-EFE|"D"D3-Dz2|',
+  },
+  {
+    title: "HORLOSIE IN DIE SAK",
+    where: "Afrikaans folk song",
+    mood: "a watch in the pocket and a chain round the neck",
+    nat: "za",
+    group: "AFRIKAANSE VOLKSLIEDJIES",
+    bpm: 120,
+    bar8: 8,
+    style: "polka",
+    key: { B: -1 },
+    pickup: 1,
+    lead: { wave: "triangle", wave2: "square", vol: 0.055, vib: 5, lp: 2400, oct: 0, echo: 0.4 }, // (a clarinet)
+    abc: '"F"A|"F"cc cc "C7"B z c3/2B/2|"F"AA AA "C7"G z z2|"F"c c2 c/2c/2 "C7"BB c3/2B/2|"F"A A2 A "C7"G z z C|"F"FF A3/2C/2 FF AA/2A/2|"C7"GB AG "F"F z z C|"F"FF A3/2C/2 FF AA/2A/2|"C7"GB AG "F"F z z F|"Bb"FF FF d3 F|"F"FF FF c3 F|"C7"FF FF c2 cc|"C7"cB AG "F"F2 z F|"Bb"FF FF d3 F|"F"FF FF c3 F|"C7"FF FF c2 cc|"C7"c2 BB A2 c2|"F"f6 z|',
+  },
+];
+// =====================================================================================
 //  FOLK SONGS (v2026.10.03q): traditional Polish and South African tunes in the music box - and now and then in the
 //  pub itself (always on the Polish and South African holidays). All of them are old traditional songs, free for anyone
 //  to play. Written in ABC notation (L: 1/8 - one unit is an eighth note), with the chords in quotes.
@@ -49019,9 +49818,16 @@ function parseFolk(tr) {
       m += s[i] === "'" ? 12 : -12;
       i++;
     }
+    // the length, in sixteenths: "3" = three eighths, "/2" = a sixteenth, "3/2" = a dotted eighth
     let n = "";
     while (/[0-9]/.test(s[i] || "")) n += s[i++];
-    const d = n ? +n : 1;
+    let d = (n ? +n : 1) * 2;
+    if (s[i] === "/") {
+      i++;
+      let q = "";
+      while (/[0-9]/.test(s[i] || "")) q += s[i++];
+      d = Math.max(1, Math.round(d / (q ? +q : 2)));
+    }
     for (let k = 0; k < d; k++) chAt[t + k] = ch;
     if (m !== null && tie && tie.m === m) {
       tie.d += d;
@@ -49038,21 +49844,24 @@ function parseFolk(tr) {
   for (const e of ev) tr.byT[e.t] = e;
   tr.chAt = chAt;
   tr.folk = true;
+  tr.bar16 = (tr.bar8 || tr.meter * 2) * 2; // (a bar, in sixteenths)
   tr.steps = 8;
   tr.div = 2;
   tr.swing = 0;
 }
-FOLK.forEach(parseFolk);
+// all of them: the Polish and South African songs above, then the Afrikaans songbook (volks.ts) - its own section of the music box
+const FOLK_ALL        = [...FOLK, ...VOLKS];
+FOLK_ALL.forEach(parseFolk);
 const FOLK_FIRST = TRACKS.length;
-for (const f of FOLK) TRACKS.push(f); // (they go at the end of the music box)
+for (const f of FOLK_ALL) TRACKS.push(f); // (they go at the end of the music box)
 const folkTracks = (nat) =>
-  FOLK.map((f, i) => [f, FOLK_FIRST + i]         )
+  FOLK_ALL.map((f, i) => [f, FOLK_FIRST + i]         )
     .filter(([f]) => !nat || f.nat === nat)
     .map(([, i]) => i);
-// play one eighth of a folk tune: the melody, a bass and the chords on the beat (a waltz in 3/4, an oom-pah polka in 2/4), light drums
+// play one sixteenth of a folk tune: the melody, a bass and the chords on the beat (a waltz in 3/4, an oom-pah polka in 2/4), light drums
 function folkStep(tr, t0) {
   const s = SEQ2.step,
-    st = 60 / tr.bpm / 2,
+    st = 60 / tr.bpm / 4,
     t = t0,
     B2 = musicBus,
     L = tr.lead;
@@ -49063,38 +49872,46 @@ function folkStep(tr, t0) {
     if (L.wave2)
       note2(L.wave2, e.m + (L.oct || 0), e.d * st * 0.95, L.vol * 0.5, leadBus, t, { ...o, det: 7 });
   }
+  // the band, on the sixteenth-note grid: a bass on the beat, the chord on the off-beat - an oom-pah polka (2/4, 4/4),
+  // a waltz (3/4: bass, chord, chord) or a lilting 6/8 (3/8, 6/8, 9/8: bass on each dotted quarter, chord in between)
   const ch = chord(tr.chAt[s] || "C"),
     pc = ch.pc,
     root = 40 + ((pc + 8) % 12),
-    bar = tr.meter * 2,
-    pos = (((s - (tr.pickup || 0)) % bar) + bar) % bar;
+    bar = tr.bar16,
+    pos = (((s - (tr.pickup || 0) * 2) % bar) + bar) % bar;
   const chordHit = (d) => {
     for (const x of ch.iv) note2("triangle", 60 + ((pc + x) % 12), d, 0.02, B2, t, { att: 0.006 });
   };
+  const bass = (fifth, d) =>
+    note2("triangle", root + (fifth ? 7 : 0) - (fifth && root + 7 > 52 ? 12 : 0), d, 0.42, B2, t, {
+      att: 0.005,
+    });
   if (tr.style === "waltz") {
     if (pos === 0) {
-      note2("triangle", root, st * 1.8, 0.4, B2, t, { att: 0.005 });
+      note2("triangle", root, st * 3.6, 0.4, B2, t, { att: 0.005 });
       drum("k", t, B2, 0.7);
-    }
-    if (pos === 2 || pos === 4) {
-      chordHit(st * 1.4);
+    } else if (pos % 4 === 0) {
+      chordHit(st * 2.8);
       drum("h", t, B2, 0.5);
     }
-  } else {
-    if (pos === 0 || pos === 2) {
-      note2(
-        "triangle",
-        root + (pos === 2 ? 7 : 0) - (pos === 2 && root + 7 > 52 ? 12 : 0),
-        st * 1.4,
-        0.42,
-        B2,
-        t,
-        { att: 0.005 }
-      );
-      drum(pos === 0 ? "k" : "s", t, B2, pos === 0 ? 0.7 : 0.35);
+  } else if (tr.style === "six8") {
+    const beat = Math.floor(pos / 6);
+    if (pos % 6 === 0) {
+      bass(beat % 2 === 1, st * 3.6);
+      drum(beat === 0 ? "k" : "s", t, B2, beat === 0 ? 0.7 : 0.35);
     }
-    if (pos === 1 || pos === 3) {
-      chordHit(st * 0.7);
+    if (pos % 6 === 2 || pos % 6 === 4) {
+      chordHit(st * 1.4);
+      drum("h", t, B2, 0.35);
+    }
+  } else {
+    const beat = Math.floor(pos / 4);
+    if (pos % 4 === 0) {
+      bass(beat % 2 === 1, st * 2.8);
+      drum(beat === 0 ? "k" : "s", t, B2, beat === 0 ? 0.7 : 0.35);
+    }
+    if (pos % 4 === 2) {
+      chordHit(st * 1.4);
       drum("h", t, B2, 0.45);
     }
   }

@@ -36215,6 +36215,10 @@ function funLevelStart() {
     }
     G.folk =
       (nat || Math.random() < 0.25) && pool.length ? pool[Math.floor(Math.random() * pool.length)] : null;
+    if (nat === "za" && Math.random() < 0.4) {
+      const k = FOLK_ALL.findIndex((f) => f.title === "SHOSHOLOZA");
+      if (k >= 0) G.folk = FOLK_FIRST + k;
+    } // (on Heritage Day and Freedom Day the band often strikes up Shosholoza)
     if (G.folk !== null && !G.demo)
       G.callouts.push({
         text: "♪ THE BAND PLAYS: " + TRACKS[G.folk].title + " - A " + TRACKS[G.folk].where.toUpperCase(),
@@ -43807,7 +43811,7 @@ function drawEggs(g, s) {
   }
   g.restore();
 }
-const GAME_VERSION = "v2026.10.04am"; // year.month.day it was made
+const GAME_VERSION = "v2026.10.04an"; // year.month.day it was made
 const FB = '"Chakra Petch", "Segoe UI", sans-serif';
 let FD = '"Bungee", "Impact", sans-serif';
 const HUDB = { w: 0, t: -9, l: 0, b: 0, right: 0, lives: 0, room: 0, under: false };
@@ -49969,6 +49973,30 @@ const FOLK = [
     abc:
       'A2|"D"dd de|fe dc|"G"B2 B2|"A"e3 d|"A7"c2 cB|A2 g2|"D"f4-|f2 A2|"D"dd de|fe dc|"G"B2 B2|"A"e3 d|"A7"c2 cB|A2 e2|"D"d4-|d2 f2|' +
       '"G"gg gg|g2 ag|"D"f2 fe|d4|"D"d2 de|f2 a2|"A"e4-|e2 A2|"D"dd de|fe dc|"G"B2 B2|"A"e3 d|"A7"c2 cB|A2 e2|"D"d4-|d4|',
+  },
+  // SHOSHOLOZA (v2026.10.04an): the traditional miners' song - a call ("Shosholoza!"), then the answers "Kulezontaba,
+  // stimela siphum'e South Afrika" and "Wen' uyabaleka", each sung twice. Only the traditional melody (as the sopranos
+  // sing it); the chords are our own. Played by voices - a soft "aah" choir sound - over a steady, walking beat.
+  {
+    title: "SHOSHOLOZA",
+    where: "South African folk song",
+    mood: "the miners' train song",
+    nat: "za",
+    bpm: 92,
+    meter: 4,
+    style: "polka",
+    key: { B: -1, E: -1, A: -1, D: -1 },
+    lead: {
+      wave: "triangle",
+      wave2: "sawtooth",
+      vol: 0.055,
+      vib: 5,
+      lp: 1500,
+      swell: true,
+      oct: 0,
+      echo: 0.3,
+    }, // (voices)
+    abc: '"Ab"E3 B, E2 A,2|"Ab"A3 B cB A2|"Db"z d d3/2d/2 dc B2|"Eb7"BB B3/2B/2 BBA c-|"Ab"cB A2 z4|"Ab"A3 B cB A2|"Db"z d d3/2d/2 dc B2|"Eb7"BB B3/2B/2 BBA c-|"Ab"cB A2 z4|"Ab"AAAB cB A2|"Db"z d d3/2d/2 dc B2|"Eb7"BB B3/2B/2 BBA c-|"Ab"cB A2 z4|"Ab"AAAB cB A2|"Db"z d d3/2d/2 dc B2|"Eb7"BB B3/2B/2 BBA c-|"Ab"cB A2 z4|"Ab"E3 B, E2 A,2|"Ab"A,4 z4|',
   },
 ]         ;
 // read a tune: notes (with their start and length in eighths) and the chord under every eighth

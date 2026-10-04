@@ -1503,6 +1503,11 @@ const OUT4 = [
     [0, 1],
   ]; // (outline directions: made once, not every call)
 function outlined(fn, ink) {
+  outlinedLit(fn, ink, null, 0, 0);
+}
+// the outline, then a RIM OF LIGHT (v2026.10.04ar): the figure drawn once more in the light's colour, nudged (dx, dy)
+// towards the light, before the figure itself goes on top - so a thin bright edge shows on the side the light comes from
+function outlinedLit(fn, ink, rim, dx, dy) {
   const o = retroLook ? 1 / pxScale : 1.1;
   if (R.kind === "CPU" && QUAL < 1) {
     fn();
@@ -1511,13 +1516,21 @@ function outlined(fn, ink) {
   // a struggling machine (AUTO QUALITY below high) draws a cheaper two-pass outline
   OUT = ink;
   for (const [ux, uy] of QUAL < 2 ? OUT2 : OUT4) {
-    const dx = ux * o,
-      dy = uy * o;
-    M[4] += dx;
-    M[5] += dy;
+    const ex = ux * o,
+      ey = uy * o;
+    M[4] += ex;
+    M[5] += ey;
     fn();
-    M[4] -= dx;
-    M[5] -= dy;
+    M[4] -= ex;
+    M[5] -= ey;
+  }
+  if (rim && QUAL >= 1) {
+    OUT = rim;
+    M[4] += dx * o;
+    M[5] += dy * o;
+    fn();
+    M[4] -= dx * o;
+    M[5] -= dy * o;
   }
   OUT = null;
   fn();
@@ -2084,6 +2097,21 @@ const DICT_ROWS                             = [
   ["2.5 MILLION LIGHT-YEARS AWAY", "2,5 MILJOEN LIGJARE VER", "2,5 MILIONA LAT ŚWIETLNYCH STĄD"],
   ["2.5 MILLION LIGHT-YEARS", "2,5 MILJOEN LIGJARE", "2,5 MILIONA LAT ŚWIETLNYCH"],
   ["THE SUN", "DIE SON", "SŁOŃCE"],
+  [
+    "\u{1F50A}  SOUND ON!  PRESS A BUTTON AGAIN FOR THE MENU",
+    "\u{1F50A}  KLANK AAN!  DRUK WEER 'N KNOPPIE VIR DIE KIESLYS",
+    "\u{1F50A}  DŹWIĘK WŁĄCZONY!  NACIŚNIJ PRZYCISK JESZCZE RAZ, BY OTWORZYĆ MENU",
+  ],
+  [
+    "\u{1F50A}  SOUND ON!  TOUCH AGAIN FOR THE MENU",
+    "\u{1F50A}  KLANK AAN!  RAAK WEER AAN VIR DIE KIESLYS",
+    "\u{1F50A}  DŹWIĘK WŁĄCZONY!  DOTKNIJ JESZCZE RAZ, BY OTWORZYĆ MENU",
+  ],
+  [
+    "\u{1F50A}  SOUND ON!  PRESS A KEY AGAIN FOR THE MENU",
+    "\u{1F50A}  KLANK AAN!  DRUK WEER 'N SLEUTEL VIR DIE KIESLYS",
+    "\u{1F50A}  DŹWIĘK WŁĄCZONY!  NACIŚNIJ KLAWISZ JESZCZE RAZ, BY OTWORZYĆ MENU",
+  ],
   [
     "DON'T FANCY IT?  PRESS B TO SKIP THIS BONUS ROUND",
     "LUS NIE?  DRUK B OM HIERDIE BONUSRONDTE OOR TE SLAAN",
@@ -3972,7 +4000,7 @@ const REGULARS2 = [
   "ranger",
 ]; // (Afrikaners come in often)
 const TYPE_OF = Object.fromEntries(TYPES.map((t) => [t.kind, t])); // look a customer type up by its name
-const DEMO_STAY = 18; // holy water per level; seconds the demo spends on each planet                                            // bottles of holy water you get each level
+const DEMO_STAY = 36; // holy water per level; seconds the demo spends on each planet                                            // bottles of holy water you get each level
 const PROTEST_SIGNS = [
   "MORE SHAKES!",
   "FAIR PRICES!",
@@ -4983,11 +5011,13 @@ function readPads() {
     if (rb && !pd.rb) edge.ld = true;
     pd.lb = lb;
     pd.rb = rb;
-    if (pd.up || pd.down || pd.left || pd.right || pd.pour || pd.start || b(1) || b(3) || lb || rb) {
-      noteInput();
+    const any = pd.up || pd.down || pd.left || pd.right || pd.pour || pd.start || b(1) || b(3) || lb || rb;
+    if (any) {
+      if (!pd.anyW || !ATTRACT.on) noteInput(); // (in the demo a button counts once per press)
       setDev("pad");
       document.body.classList.add("padnav");
     }
+    pd.anyW = any;
   };
   read(pad, pa, pressedEdge);
   read(pad2, pb, pressedEdge2);
@@ -14610,7 +14640,10 @@ function drawCustomerRaw(c, t) {
     (G.lowg && c.state !== "out" ? G.lowg * (12 + Math.sin(t * 2 + c.ph * 3) * 7) : 0); // (low gravity: everyone floats)
   const fh = c.fly ? Math.min(330, c.fly.t * 40 + c.fly.t * c.fly.t * 120) : 0,
     ftilt = c.fly && c.fly.kind !== "bat" ? -0.18 + Math.sin(t * 6 + c.ph) * 0.04 : 0; // (flying away: up and off towards the door)
-  outlined(
+  // lit by the pub's lamps from above: a thin edge of the room's light colour along the top of every customer
+  const rimC = mix(LOOK().neon, C.white, 0.5);
+  rimC[3] = 0.7 * a * (1 - 0.85 * (G.dark || 0));
+  outlinedLit(
     () => {
       push();
       translate(c.x, floorY - lift - fh);
@@ -14622,7 +14655,10 @@ function drawCustomerRaw(c, t) {
       customerBody(c, t, a);
       pop();
     },
-    withA(INK, a)
+    withA(INK, a),
+    a > 0.5 ? rimC : null,
+    0.5,
+    -1.4
   );
   if (c.type.kid && c.state !== "out" && !OUT) {
     const bx = c.x - 8 + Math.sin(t * 1.5 + c.ph) * 4,
@@ -27079,16 +27115,16 @@ function drawDeepSpace(t) {
         drawSkyDragon(x, cy, k * 0.9, t, DRAGONS[(ATTRACT.sn + (cur.item.what === "dragon2" ? 2 : 0)) % 4]);
         break;
       case "retro1":
-        drawRetroCruiser(x, cy, k, t);
+        outlined(() => drawRetroCruiser(x, cy, k, t), INK);
         break;
       case "taxi":
-        drawTaxiRace(f, L, Rr, cy + 6 * k, k * 0.95, t, true, true); // (smaller - further away, out in space)
+        outlined(() => drawTaxiRace(f, L, Rr, cy + 10 * k, k * 0.6, t, true, true), INK); // (smaller - further away, out in space)
         break;
       case "convoy":
-        drawConvoy(f, L, Rr, cy - 20 * k, k * 0.6, t); // (smaller - further away)
+        outlined(() => drawConvoy(f, L, Rr, cy - 10 * k, k * 0.42, t), INK); // (smaller - further away)
         break; // the holiday convoy of old family cars (cars.ts)   // the minibus taxi overtakes the super rocket race car
       case "retro2":
-        drawRetroScout(xr, cy, k, t, 0);
+        outlined(() => drawRetroScout(xr, cy, k, t, 0), INK);
         break;
       case "eagle":
         drawEagle(x, cy, k * 0.9, Math.sin(t * 3) * 0.6, t);
@@ -38874,7 +38910,7 @@ function funDecor(V, t, layer) {
     {
       const tf = ((t + 40) % 75) / 4.5; // every so often, far off past the windows: the minibus taxi overtaking a race car
       if (tf < 1) {
-        drawTaxiRace(tf, 175, 785, 86, 0.5, t);
+        outlined(() => drawTaxiRace(tf, 175, 785, 86, 0.5, t), INK); // (a crisp outline, like everyone in the pub)
         if (!G.taxiOn) {
           G.taxiOn = true;
           if (G.state === "play" && !G.demo) sfx("hoot");
@@ -42259,7 +42295,7 @@ const showBpm = () => {
 // at us, the far arm passes BEHIND the body, the face slides round to the side into profile - and facing away we see
 // the back of her head and her hair.
 // STAGE LIGHTING ON EVERY PERFORMER (v2026.10.04ar): a pool of the show's coloured light on the boards at their feet,
-// their reflection in the polished boards, and a rim of coloured light down one side from the stage lights (the
+// and a rim of coloured light down one side from the stage lights (the
 // performer is drawn once in the light's colour, nudged towards the light, then for real on top). Struggling machines
 // skip it. STAGE_ACC: tonight's light colour.
 let STAGE_ACC = "#ff5fa8";
@@ -42269,17 +42305,8 @@ function perf(x        , y        , s        , o      , p      , t        ) {
     dk = 1 - 0.8 * (G.dark || 0),
     lift = p.lift || 0;
   R.setAdd(true);
-  glowE(x + (p.sway || 0) * s, y + 1, 15 * s, 3.6 * s, withA(acc, 0.28 * dk));
+  glowE(x + (p.sway || 0) * s, y + 1, 15 * s, 3.6 * s, withA(acc, 0.28 * dk * Math.max(0.35, 1 - lift / 40))); // (fainter when they leap)
   R.setAdd(false);
-  // the reflection, upside down in the boards (fainter the higher they leap)
-  push();
-  translate(x, y + 1);
-  scaleXY(1, -0.3);
-  translate(-x, -(y + 1) + lift * 2);
-  OUT = withA(mix(acc, col("#140818"), 0.55), 0.22 * dk * Math.max(0, 1 - lift / 30));
-  perfBody(x, y, s, o, p, t);
-  OUT = null;
-  pop();
   // the rim light: a thin edge of coloured light down the side the stage lights are on (it swaps sides slowly)
   const o2 = (retroLook ? 1 / pxScale : 1.1) * 1.3,
     sd = Math.sin(t * 0.35 + x * 0.01) > 0 ? 1 : -1;
@@ -43831,10 +43858,7 @@ function drawStage(t) {
     if (QUAL >= 1 && R.kind !== "CPU") {
       const acc = col(STAGE_ACC),
         dk = 1 - 0.8 * (G.dark || 0);
-      for (const [lag, a] of [
-        [0.12, 0.12],
-        [0.06, 0.22],
-      ]) {
+      for (const [lag, a] of [[0.07, 0.2]]) {
         OUT = withA(acc, a * dk);
         try {
           drawShowAct(t - lag);
@@ -45880,7 +45904,7 @@ function modesMenuText() {
 //  TITLE -> DEMO PLAY -> HALL OF FAME -> MEET THE REGULARS -> TITLE ...   Any input brings the menu back.
 // =====================================================================================
 const ATTRACT          = { on: false, phase: "", t: 0, n: 0, mode: 0, cast: [] }; // mode: 0 = 1 player, 1 = co-op, 2 = versus
-const ATTRACT_LEN = { title: 7, demo: 40, scores: 10, cast: 13, space: 40 },
+const ATTRACT_LEN = { title: 7, demo: 72, scores: 10, cast: 13, space: 40 },
   ATTRACT_NEXT = { space: "demo", demo: "scores", scores: "cast", cast: "title", title: "space" }; // (space: deep space, then the sights one at a time - see spacePlan)
 const CAST = [
   { kind: "green", name: "ZIBBLE", line: "orders mint, tips in moon rocks" },
@@ -45894,11 +45918,42 @@ const CAST = [
   { kind: "tannie", name: "TANNIE SANNIE", line: "kappie on, rusks in her bag" },
 ];
 let lastInput = performance.now();
+// THE QUIET DEMO (v2026.10.04ar): when the demo starts by itself, it plays silently - nobody's there, so no music.
+// The first touch, key or button turns the sound on and the show carries on ("TOUCH AGAIN FOR THE MENU"); the next one
+// brings up the menu. (A demo you start yourself from the menu keeps its sound - you're there.)
 function noteInput() {
-  lastInput = performance.now();
+  const now = performance.now();
+  lastInput = now;
+  if (ATTRACT.on && ATTRACT.quiet) {
+    ATTRACT.quiet = false;
+    ATTRACT.soundAt = ATTRACT.wakeT = now;
+    try {
+      unlockAudio();
+      audio();
+    } catch (e) {
+      /* (no sound on this device - fine) */
+    }
+    return;
+  }
+  if (ATTRACT.on && now - (ATTRACT.wakeT || 0) < 350) return; // (the same touch doesn't also open the menu)
   if (ATTRACT.on) stopAttract();
 }
-function startAttract() {
+// the quiet demo's volume: music and effects fade out while it's quiet, and back in when someone's there
+const QWANT = { music: -1, fx: -1 };
+function attractQuietTick() {
+  if (!AC || !musVol || !fxVol) return;
+  const q = ATTRACT.on && ATTRACT.quiet;
+  for (const which of ["music", "fx"]         ) {
+    const n = which === "music" ? musVol : fxVol,
+      want = q ? 0 : VOL[which];
+    if (Math.abs(QWANT[which] - want) > 0.001) {
+      QWANT[which] = want;
+      n.gain.setTargetAtTime(want, AC.currentTime, q ? 0.4 : 0.15);
+    }
+  }
+}
+function startAttract(quiet = true) {
+  ATTRACT.quiet = quiet;
   ATTRACT.on = true;
   ATTRACT.n = 0;
   setAttractPhase("space");
@@ -46118,6 +46173,7 @@ function setAttractPhase(ph) {
   }
 }
 function attractTick(dt) {
+  attractQuietTick();
   const idle = (performance.now() - lastInput) / 1000;
   if (G.state === "over" && $("nameForm").hidden && idle > 25) {
     toMenu();
@@ -46179,14 +46235,16 @@ window.addEventListener(
     if (ATTRACT.on) {
       e.stopImmediatePropagation();
       e.preventDefault();
+      if (e.repeat) return; // (a key held down counts once)
       noteInput();
       audio();
-      setTimeout(() => {
-        const b = $("bStart");
-        if (b && !$("menu").hidden) b.focus();
-      }, 30);
+      if (!ATTRACT.on)
+        setTimeout(() => {
+          const b = $("bStart");
+          if (b && !$("menu").hidden) b.focus();
+        }, 30);
       return;
-    } // any key: up comes the menu
+    } // any key: the sound comes on (the quiet demo) - or up comes the menu
     lastInput = performance.now();
   },
   true
@@ -46252,7 +46310,7 @@ window.addEventListener("pointerdown", (e) => {
     return;
   }
   if (!$("menu").hidden) {
-    startAttract();
+    startAttract(false);
     setAttractPhase("demo");
   }
 });
@@ -46269,7 +46327,7 @@ window.addEventListener("keydown", (e) => {
     !$("menu").hidden
   ) {
     e.preventDefault();
-    startAttract();
+    startAttract(false);
     setAttractPhase("demo");
   }
 });
@@ -46495,14 +46553,28 @@ function drawAttract(g, s, t) {
     }
     if (ATTRACT.t > 9) neon("...AND YOU: THE SODA JERK!", cssH * 0.9, 16, "#ff8fbf", 12);
   }
-  if (!muted && (!AC || AC.state !== "running")) {
-    g.save();
-    g.textAlign = "center";
-    g.textBaseline = "top";
-    g.font = "700 " + Math.round(13 * s) + "px " + FB;
-    g.fillStyle = "#ffe080";
-    g.fillText("\u{1F50A}  TAP OR PRESS A KEY FOR SOUND", cssW / 2, 10 * s + (cssW < 700 ? 60 * s : 0));
-    g.restore();
+  {
+    const quietNow = !muted && (ATTRACT.quiet || !AC || AC.state !== "running"),
+      woke = !quietNow && ATTRACT.soundAt && performance.now() - ATTRACT.soundAt < 8000;
+    if (quietNow || woke) {
+      g.save();
+      g.textAlign = "center";
+      g.textBaseline = "top";
+      g.font = "700 " + Math.round(13 * s) + "px " + FB;
+      g.fillStyle = woke ? "#7dff9a" : "#ffe080";
+      g.fillText(
+        quietNow
+          ? "\u{1F50A}  TAP OR PRESS A KEY FOR SOUND"
+          : lastDev === "pad"
+            ? "\u{1F50A}  SOUND ON!  PRESS A BUTTON AGAIN FOR THE MENU"
+            : lastDev === "touch" || coarse
+              ? "\u{1F50A}  SOUND ON!  TOUCH AGAIN FOR THE MENU"
+              : "\u{1F50A}  SOUND ON!  PRESS A KEY AGAIN FOR THE MENU",
+        cssW / 2,
+        10 * s + (cssW < 700 ? 60 * s : 0)
+      );
+      g.restore();
+    }
   }
   if (ph === "space") {
     const cur = spaceNow();
@@ -46847,7 +46919,7 @@ function drawEggs(g, s) {
   }
   g.restore();
 }
-const GAME_VERSION = "v2026.10.04ar"; // year.month.day it was made
+const GAME_VERSION = "v2026.10.04as"; // year.month.day it was made
 const FB = '"Chakra Petch", "Segoe UI", sans-serif';
 let FD = '"Bungee", "Impact", sans-serif';
 const HUDB = { w: 0, t: -9, l: 0, b: 0, right: 0, lives: 0, room: 0, under: false };
@@ -48053,6 +48125,7 @@ function setVol(which, v) {
   store.set(which === "music" ? "volMusic" : "volFx", VOL[which]);
   const n = which === "music" ? musVol : fxVol;
   if (AC && n) n.gain.setTargetAtTime(VOL[which], AC.currentTime, 0.03);
+  QWANT[which] = VOL[which];
 }
 const volText = (v) =>
   "▮".repeat(Math.round(v * 4)) + "▯".repeat(4 - Math.round(v * 4)) + " " + Math.round(v * 100) + "%";
@@ -52246,6 +52319,16 @@ profWire();
 //  the game, and where the motion capture, the folk songs and the fonts come from. Both from the menu at any time.
 // =====================================================================================
 const NEWS = [
+  {
+    ver: "v2026.10.04as",
+    title: "A QUIET DEMO",
+    items: [
+      "The demo plays quietly until you touch it - first touch: sound on, second touch: the menu",
+      "The demo plays two planets, twice as long each",
+      "Every customer is lit by the pub's lamps",
+      "Smaller, crisper cars and rockets in the big show",
+    ],
+  },
   {
     ver: "v2026.10.04ar",
     title: "PLAY FROM THE GALAXY MAP",

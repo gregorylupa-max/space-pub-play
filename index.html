@@ -187,7 +187,6 @@ body.retro .table { font-size: 10px; gap: 5px; }
     <button id="bStart" class="primary">START <kbd>Enter</kbd></button>
     <button id="bCont" class="wide" hidden>▶ CONTINUE: <b id="vCont"></b></button>
     <button id="bProf" class="wide">WHO'S PLAYING: <b id="vProf"></b></button>
-    <button id="bLang" class="wide">LANGUAGE: <b id="vLang"></b></button>
     <button id="bPlayers" class="wide">PLAYERS: <b id="vPlayers">1 PLAYER</b> <kbd>2</kbd></button>
     <button id="bDiff" class="wide">DIFFICULTY: <b id="vDiff">NORMAL</b></button>
     <button id="bFrom" class="wide">START AT LEVEL: <b id="vFrom">1</b> <kbd>S</kbd></button>
@@ -213,6 +212,7 @@ body.retro .table { font-size: 10px; gap: 5px; }
     <button id="bLook" class="wide">LOOK: <b id="vLook"></b> <kbd>L</kbd></button>
     <button id="bCrt" class="wide">SCREEN: <b id="vCrt"></b> <kbd>C</kbd></button>
     <button id="bGfx" class="wide">GRAPHICS: <b id="vGfx"></b> <kbd>G</kbd></button>
+    <button id="bLang" class="wide">LANGUAGE: <b id="vLang"></b></button>
     <button id="bSound">SOUND: <b id="vSound"></b> <kbd>M</kbd></button>
     <button id="bMusic">MUSIC: <b id="vMusic"></b> <kbd>N</kbd></button>
     <button id="bVolM">MUSIC VOLUME <b class="vVolM"></b></button>
@@ -1636,7 +1636,13 @@ const escapeHtml = (s) =>
 //  else in the game had to change. The characters' one-off jokes, the history captions and the credits stay in English.
 //  Switching language reloads the game.
 // =====================================================================================
+// ENGLISH unless you choose otherwise (and once, with v2026.10.04aq, everyone went back to English - in case the
+// language had been switched by accident)
 const LANG         = (() => {
+  if (!store.get("langReset1", false)) {
+    store.set("langReset1", true);
+    store.set("lang", "en");
+  }
   const l = store.get("lang", "en");
   return ["en", "af", "pl"].includes(l) ? l : "en";
 })();
@@ -45159,7 +45165,7 @@ function drawEggs(g, s) {
   }
   g.restore();
 }
-const GAME_VERSION = "v2026.10.04ap"; // year.month.day it was made
+const GAME_VERSION = "v2026.10.04aq"; // year.month.day it was made
 const FB = '"Chakra Petch", "Segoe UI", sans-serif';
 let FD = '"Bungee", "Impact", sans-serif';
 const HUDB = { w: 0, t: -9, l: 0, b: 0, right: 0, lives: 0, room: 0, under: false };

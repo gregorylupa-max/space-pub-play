@@ -81,6 +81,22 @@ button.wide { grid-column: 1 / -1; }
 #jbList button.on::before { content: "♪ NOW PLAYING"; font-size: 10px; color: var(--amber, #ffc34d); }
 #jbList .jbHead { grid-column: 1 / -1; font: 700 14px/1.2 var(--body); letter-spacing: .12em; color: var(--amber, #ffc34d); padding: 14px 4px 4px; border-bottom: 1px solid rgba(255,195,77,.4); }
 #jbList .jbJump { grid-column: 1 / -1; }
+#prof { max-height: 92vh; overflow-y: auto; }
+#news { max-height: 92vh; overflow-y: auto; }
+#newsBody h3 { font: 700 13px var(--body); letter-spacing: .08em; color: var(--amber); margin: 14px 0 4px; }
+#newsBody h3.cred { color: var(--cyan); margin-top: 20px; }
+#newsBody ul { margin: 0; padding-left: 18px; font-size: 14px; line-height: 1.45; }
+#newsBody .credit { margin: 6px 0; font-size: 13px; line-height: 1.4; color: var(--ink); }
+#newsBody .credit b { display: block; font-size: 11px; letter-spacing: .1em; color: var(--magenta); }
+#profList { grid-template-columns: 1fr 1fr; }
+#profList button { text-align: left; display: flex; flex-direction: column; gap: 3px; padding: 10px 14px; }
+#profList button small { font-size: 11px; color: var(--muted, #b9a8b8); letter-spacing: .04em; }
+#profList button.on { border-color: var(--amber, #ffc34d); box-shadow: 0 0 16px rgba(255,195,77,.35); }
+#prof h3 { font: 700 13px var(--body); letter-spacing: .1em; color: var(--amber); margin: 14px 0 6px; }
+.profRow { display: flex; gap: 8px; margin: 6px 0; }
+.profRow input { flex: 1; min-width: 0; font: 600 15px var(--body); padding: 9px 10px; border-radius: 8px; border: 1px solid var(--line); background: rgba(10,6,20,.7); color: var(--ink); }
+.profRow button { flex: 1; }
+#profCode { min-height: 70px; width: 100%; box-sizing: border-box; font: 12px monospace; padding: 8px; border-radius: 8px; border: 1px solid var(--line); background: rgba(10,6,20,.7); color: var(--ink); resize: vertical; word-break: break-all; user-select: text; -webkit-user-select: text; }
 #galmap, #cup { width: min(1000px, 96vw); max-height: 96vh; overflow-y: auto; box-sizing: border-box; }
 #gmCanvas { width: 100%; aspect-ratio: 16 / 8; display: block; border-radius: 12px; margin: 6px 0 12px; touch-action: none; }
 @media (max-aspect-ratio: 9/10) { #gmCanvas { aspect-ratio: 3 / 4; } }
@@ -170,6 +186,8 @@ body.retro .table { font-size: 10px; gap: 5px; }
   <div class="buttons">
     <button id="bStart" class="primary">START <kbd>Enter</kbd></button>
     <button id="bCont" class="wide" hidden>▶ CONTINUE: <b id="vCont"></b></button>
+    <button id="bProf" class="wide">WHO'S PLAYING: <b id="vProf"></b></button>
+    <button id="bLang" class="wide">LANGUAGE: <b id="vLang"></b></button>
     <button id="bPlayers" class="wide">PLAYERS: <b id="vPlayers">1 PLAYER</b> <kbd>2</kbd></button>
     <button id="bDiff" class="wide">DIFFICULTY: <b id="vDiff">NORMAL</b></button>
     <button id="bFrom" class="wide">START AT LEVEL: <b id="vFrom">1</b> <kbd>S</kbd></button>
@@ -182,6 +200,7 @@ body.retro .table { font-size: 10px; gap: 5px; }
     <button id="bEndless" class="wide">ENDLESS MODE <b id="vEndless"></b></button>
     <button id="bMap">GALAXY MAP <b id="vMap"></b></button>
     <button id="bCup">CUP TOURNAMENT <b id="vCup"></b></button>
+    <button id="bNews" class="wide">WHAT'S NEW &amp; CREDITS</button>
     <button id="bOneBtn">ONE-BUTTON: <b id="vOneBtn">OFF</b></button>
     <button id="bBreak">BREAK REMINDER: <b id="vBreak">OFF</b></button>
     <button id="bCalm">CALM MODE: <b id="vCalm">OFF</b></button>
@@ -196,6 +215,8 @@ body.retro .table { font-size: 10px; gap: 5px; }
     <button id="bGfx" class="wide">GRAPHICS: <b id="vGfx"></b> <kbd>G</kbd></button>
     <button id="bSound">SOUND: <b id="vSound"></b> <kbd>M</kbd></button>
     <button id="bMusic">MUSIC: <b id="vMusic"></b> <kbd>N</kbd></button>
+    <button id="bVolM">MUSIC VOLUME <b class="vVolM"></b></button>
+    <button id="bVolF">EFFECTS VOLUME <b class="vVolF"></b></button>
     <label class="add" for="musicFiles" tabindex="0">+ ADD YOUR MUSIC</label>
     <button id="bJuke">MUSIC BOX <kbd>J</kbd></button>
     <button id="bFull">FULL SCREEN <kbd>F</kbd></button>
@@ -278,6 +299,26 @@ body.retro .table { font-size: 10px; gap: 5px; }
   <button id="trBack" class="primary">DONE <kbd>Esc</kbd></button>
 </section>
 
+<section id="prof" class="panel side" hidden aria-label="Who's playing">
+  <h2>WHO'S PLAYING?</h2>
+  <p class="tag" id="profTag"></p>
+  <div class="buttons" id="profList"></div>
+  <div class="profRow" id="profNew"><input id="profNewName" maxlength="12" placeholder="NEW PLAYER'S NAME" autocomplete="off" spellcheck="false"><button id="profAdd">+ ADD</button></div>
+  <div class="profRow"><input id="profName" maxlength="12" autocomplete="off" spellcheck="false"><button id="profRen">RENAME</button></div>
+  <button id="profDel" class="wide">DELETE THIS PLAYER</button>
+  <h3>MOVE MY PROGRESS TO ANOTHER DEVICE</h3>
+  <textarea id="profCode" rows="3" placeholder="EXPORT makes a code here - or paste a code and press IMPORT" spellcheck="false"></textarea>
+  <div class="profRow"><button id="profExp">EXPORT (COPY MY CODE)</button><button id="profImp">IMPORT A CODE</button></div>
+  <p class="info" id="profMsg"></p>
+  <button id="profBack" class="primary">DONE <kbd>Esc</kbd></button>
+</section>
+
+<section id="news" class="panel side" hidden aria-label="What's new and credits">
+  <h2>WHAT'S NEW</h2>
+  <div id="newsBody"></div>
+  <button id="newsBack" class="primary">DONE <kbd>Esc</kbd></button>
+</section>
+
 <section id="galmap" class="panel" hidden aria-label="Galaxy map">
   <h2>GALAXY MAP</h2>
   <p class="tag" id="gmTag"></p>
@@ -319,6 +360,8 @@ body.retro .table { font-size: 10px; gap: 5px; }
     <button id="pGfx" class="wide">GRAPHICS: <b id="vGfx2"></b> <kbd>G</kbd></button>
     <button id="pSound">SOUND: <b id="vSound2"></b></button>
     <button id="pMusic">MUSIC: <b id="vMusic2"></b></button>
+    <button id="pVolM">MUSIC VOLUME <b class="vVolM"></b></button>
+    <button id="pVolF">EFFECTS VOLUME <b class="vVolF"></b></button>
     <button id="pFull">FULL SCREEN <kbd>F</kbd></button>
     <button id="pQuit" class="wide">QUIT TO MENU</button>
     <button id="pReset" class="wide">↻ HARD RESET (RELOAD THE GAME)</button>
@@ -339,7 +382,8 @@ body.retro .table { font-size: 10px; gap: 5px; }
   <div class="buttons">
     <button id="oCont" class="primary" hidden>▶ CONTINUE FROM <b id="vOCont"></b></button>
     <button id="oAgain" class="primary">PLAY AGAIN</button>
-    <button id="oMenu" class="wide">MENU</button>
+    <button id="oMenu">MENU</button>
+    <button id="oShare">SHARE ▶</button>
   </div>
 </section>
 
@@ -355,12 +399,50 @@ body.retro .table { font-size: 10px; gap: 5px; }
 //  Drawn on the VIDEO CARD with WebGL, or on the CPU with Canvas 2D (GRAPHICS option).
 // =====================================================================================
 const $ = (id        )         => document.getElementById(id)          ; // (a page element; typed as the most general kind, so form fields and buttons both work)
+// PLAYER PROFILES (v2026.10.04ap): everyone in the family keeps their own progress - stars, hats and pets, coins, stickers,
+// trophies, records, their bartender and their best score. The settings (sound, look, difficulty...) and the family's
+// high-score table are shared. The first profile ("main") keeps the save from before profiles, so nothing is lost.
+const PROFILE_KEYS = new Set([
+  "coins",
+  "trophies",
+  "stats",
+  "inv",
+  "dailyStars",
+  "cont",
+  "char",
+  "unlock",
+  "stickers",
+  "stars",
+  "records",
+  "hi",
+  "decor",
+  "daily",
+  "coach",
+  "blvl",
+  "name",
+  "from",
+  "hat1",
+  "hat2",
+  "pet1",
+  "pet2",
+  "hat",
+  "pet",
+]);
+const PROFILE = (() => {
+  try {
+    return JSON.parse(localStorage.getItem("craterrun.profile")) || "main";
+  } catch (e) {
+    return "main";
+  }
+})();
+const storeKey = (k) =>
+  PROFILE !== "main" && PROFILE_KEYS.has(k) ? "craterrun.p." + PROFILE + "." + k : "craterrun." + k;
 const store = {
   // (a value that can't be read, or has turned into the wrong kind of thing - a number where a list should be - gives the
   //  default instead, so a damaged save can never break the game)
   get(k, d) {
     try {
-      const v = localStorage.getItem("craterrun." + k);
+      const v = localStorage.getItem(storeKey(k));
       if (v === null) return d;
       const p = JSON.parse(v);
       if (
@@ -376,7 +458,7 @@ const store = {
   },
   set(k, v) {
     try {
-      localStorage.setItem("craterrun." + k, JSON.stringify(v));
+      localStorage.setItem(storeKey(k), JSON.stringify(v));
     } catch (e) {}
   },
 };
@@ -1547,6 +1629,540 @@ function updateGfxText() {
 }
 const escapeHtml = (s) =>
   String(s).replace(/[&<>"]/g, (ch) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[ch]);
+// =====================================================================================
+//  LANGUAGE (v2026.10.04ap): English, Afrikaans or Polski. A translator sits between the game and the screen: every
+//  text on the menus and panels (also the ones that change, like ON / OFF), and every text the game draws (READY? GO!,
+//  LEVEL CLEAR, the stars, the coach's tips, the big announcements) is looked up and swapped as it appears - so nothing
+//  else in the game had to change. The characters' one-off jokes, the history captions and the credits stay in English.
+//  Switching language reloads the game.
+// =====================================================================================
+const LANG         = (() => {
+  const l = store.get("lang", "en");
+  return ["en", "af", "pl"].includes(l) ? l : "en";
+})();
+const LANG_NAMES = { en: "ENGLISH", af: "AFRIKAANS", pl: "POLSKI" };
+// [English, Afrikaans, Polski]
+const DICT_ROWS                             = [
+  // ---- the corner buttons and the menu ----
+  ["Full screen", "Volskerm", "Pełny ekran"],
+  ["Pause", "Pouse", "Pauza"],
+  ["↻ Reset", "↻ Herbegin", "↻ Reset"],
+  ["Skip ▶▶", "Slaan oor ▶▶", "Pomiń ▶▶"],
+  [
+    "Four bars, one soda jerk, a galaxy of thirsty customers. Pour, slide, catch the empties, and never let a shake hit the floor.",
+    "Vier toonbanke, een kroegman, 'n sterrestelsel vol dors klante. Skink, gly, vang die leë glase, en moet nooit 'n melkskommel laat val nie.",
+    "Cztery bary, jeden barman, galaktyka spragnionych gości. Nalewaj, przesuwaj, łap puste szklanki i nie pozwól, by koktajl spadł na podłogę.",
+  ],
+  ["START", "BEGIN", "START"],
+  ["▶ CONTINUE:", "▶ GAAN VOORT:", "▶ KONTYNUUJ:"],
+  ["WHO'S PLAYING:", "WIE SPEEL:", "KTO GRA:"],
+  ["PLAYERS:", "SPELERS:", "GRACZE:"],
+  ["1 PLAYER", "1 SPELER", "1 GRACZ"],
+  ["2 · CO-OP", "2 · SAAM", "2 · RAZEM"],
+  ["2 · VERSUS", "2 · TEEN MEKAAR", "2 · POJEDYNEK"],
+  ["DIFFICULTY:", "MOEILIKHEID:", "POZIOM TRUDNOŚCI:"],
+  ["EASY", "MAKLIK", "ŁATWY"],
+  ["NORMAL", "NORMAAL", "NORMALNY"],
+  ["HARD", "MOEILIK", "TRUDNY"],
+  ["KIDS", "KINDERS", "DZIECI"],
+  ["START AT LEVEL:", "BEGIN BY VLAK:", "START OD POZIOMU:"],
+  ["BARTENDER:", "KROEGMAN:", "BARMAN:"],
+  ["DAILY CHALLENGE:", "DAAGLIKSE UITDAGING:", "WYZWANIE DNIA:"],
+  ["HATS & PETS", "HOEDE & TROETELDIERE", "CZAPKI I ZWIERZAKI"],
+  ["STICKER BOOK", "PLAKBOEK", "ALBUM NAKLEJEK"],
+  ["COIN SHOP", "MUNTWINKEL", "SKLEP"],
+  ["TROPHIES", "TROFEË", "TROFEA"],
+  ["ENDLESS MODE", "EINDLOSE SPEL", "TRYB BEZ KOŃCA"],
+  ["GALAXY MAP", "STERRESTELSEL-KAART", "MAPA GALAKTYKI"],
+  ["CUP TOURNAMENT", "BEKERTOERNOOI", "TURNIEJ O PUCHAR"],
+  ["WHAT'S NEW & CREDITS", "WAT IS NUUT & ERKENNINGS", "NOWOŚCI I TWÓRCY"],
+  ["ONE-BUTTON:", "EEN KNOPPIE:", "JEDEN PRZYCISK:"],
+  ["OFF", "AF", "WYŁ."],
+  ["ON", "AAN", "WŁ."],
+  ["BREAK REMINDER:", "POUSE-HERINNERING:", "PRZYPOMNIENIE O PRZERWIE:"],
+  ["CALM MODE:", "RUSTIGE MODUS:", "TRYB SPOKOJNY:"],
+  ["FLAVOUR SHAPES:", "GEURVORMS:", "KSZTAŁTY SMAKÓW:"],
+  ["VIBRATION:", "VIBRASIE:", "WIBRACJE:"],
+  ["HOLIDAY:", "VAKANSIEDAG:", "ŚWIĘTO:"],
+  ["BY DATE", "VOLGENS DATUM", "WEDŁUG DATY"],
+  ["NONE", "GEEN", "BRAK"],
+  ["CHRISTMAS", "KERSFEES", "BOŻE NARODZENIE"],
+  ["NEW YEAR", "NUWEJAAR", "NOWY ROK"],
+  ["EASTER", "PAASFEES", "WIELKANOC"],
+  ["HALLOWEEN", "HALLOWEEN", "HALLOWEEN"],
+  ["ALL SAINTS' DAY", "ALLERHEILIGE", "WSZYSTKICH ŚWIĘTYCH"],
+  ["HERITAGE DAY", "ERFENISDAG", "DZIEŃ DZIEDZICTWA (RPA)"],
+  ["FREEDOM DAY", "VRYHEIDSDAG", "DZIEŃ WOLNOŚCI (RPA)"],
+  ["POLISH INDEPENDENCE", "POOLSE ONAFHANKLIKHEID", "ŚWIĘTO NIEPODLEGŁOŚCI"],
+  ["MAY 3RD", "3 MEI", "3 MAJA"],
+  ["CONTINUE AFTER GAME OVER:", "GAAN VOORT NA SPEL VERBY:", "KONTYNUACJA PO KOŃCU GRY:"],
+  ["POUR:", "SKINK:", "NALEWANIE:"],
+  ["HOLD", "HOU VAS", "PRZYTRZYMAJ"],
+  ["TAP", "TIK", "STUKNIJ"],
+  ["LAYOUT:", "UITLEG:", "UKŁAD:"],
+  ["AUTO", "OUTO", "AUTO"],
+  ["WIDE", "BREED", "SZEROKI"],
+  ["TALL", "HOOG", "WYSOKI"],
+  ["LOOK:", "VOORKOMS:", "WYGLĄD:"],
+  ["ARCADE PIXELS", "ARKADE-PIXELS", "PIKSELE ARCADE"],
+  ["8-BIT", "8-BIS", "8-BIT"],
+  ["SMOOTH HD", "GLAD HD", "GŁADKIE HD"],
+  ["SCREEN:", "SKERM:", "EKRAN:"],
+  ["CRT TV", "OU TV", "TELEWIZOR CRT"],
+  ["FLAT", "PLAT", "PŁASKI"],
+  ["GRAPHICS:", "GRAFIKA:", "GRAFIKA:"],
+  ["GPU · HIGH PERFORMANCE", "GPU · HOË WERKVERRIGTING", "GPU · WYSOKA WYDAJNOŚĆ"],
+  ["GPU · POWER SAVING", "GPU · KRAGBESPARING", "GPU · OSZCZĘDZANIE ENERGII"],
+  ["CPU · SOFTWARE", "CPU · SAGTEWARE", "CPU · PROGRAMOWO"],
+  ["SOUND:", "KLANK:", "DŹWIĘK:"],
+  ["MUSIC:", "MUSIEK:", "MUZYKA:"],
+  ["ORIGINAL", "OORSPRONKLIK", "ORYGINALNA"],
+  ["YOUR MUSIC", "JOU MUSIEK", "TWOJA MUZYKA"],
+  ["MUSIC VOLUME", "MUSIEK-VOLUME", "GŁOŚNOŚĆ MUZYKI"],
+  ["EFFECTS VOLUME", "EFFEKTE-VOLUME", "GŁOŚNOŚĆ EFEKTÓW"],
+  ["+ ADD YOUR MUSIC", "+ VOEG JOU MUSIEK BY", "+ DODAJ SWOJĄ MUZYKĘ"],
+  ["MUSIC BOX", "MUSIEKDOOS", "SZAFA GRAJĄCA"],
+  ["FULL SCREEN", "VOLSKERM", "PEŁNY EKRAN"],
+  ["EXIT GAME", "VERLAAT SPEL", "WYJDŹ Z GRY"],
+  ["LANGUAGE:", "TAAL:", "JĘZYK:"],
+  // ---- the controls card ----
+  ["KEYBOARD", "SLEUTELBORD", "KLAWIATURA"],
+  ["jump to another counter", "spring na 'n ander toonbank", "przeskocz do innego baru"],
+  ["jump straight to that counter", "spring reguit na daardie toonbank", "przeskocz prosto do tego baru"],
+  [
+    "run along the counter (grab tips)",
+    "hardloop langs die toonbank (vat fooitjies)",
+    "biegnij wzdłuż baru (zbieraj napiwki)",
+  ],
+  [
+    "pour - HOLD mode: hold, let go to slide · TAP mode: one press (T switches)",
+    "skink - HOU VAS: hou vas, los om te gly · TIK: een druk (T wissel)",
+    "nalewaj - PRZYTRZYMAJ: trzymaj, puść, by przesunąć · STUKNIJ: jedno naciśnięcie (T przełącza)",
+  ],
+  [
+    "send holy water · show the cross (devils, demons, vampires flee)",
+    "stuur wywater · wys die kruis (duiwels, demone en vampiere vlug)",
+    "wyślij wodę święconą · pokaż krzyż (diabły, demony i wampiry uciekają)",
+  ],
+  [
+    "pause · F, F11 or Alt+Enter full screen",
+    "pouse · F, F11 of Alt+Enter volskerm",
+    "pauza · F, F11 lub Alt+Enter pełny ekran",
+  ],
+  ["2 players", "2 spelers", "2 graczy"],
+  ["Menus", "Kieslyste", "Menu"],
+  [
+    "arrows / D-pad to move, Enter / A to choose, Esc / B back",
+    "pyltjies / D-pad om te beweeg, Enter / A om te kies, Esc / B terug",
+    "strzałki / krzyżak, by się poruszać, Enter / A, by wybrać, Esc / B wstecz",
+  ],
+  ["CONTROLLER", "BEHEERDER", "KONTROLER"],
+  ["change counter", "verander toonbank", "zmień bar"],
+  ["run along the counter", "hardloop langs die toonbank", "biegnij wzdłuż baru"],
+  [
+    "pour (it rumbles when you catch, lose or power up)",
+    "skink (dit dreun as jy vang, verloor of krag kry)",
+    "nalewaj (drży, gdy łapiesz, tracisz życie lub dostajesz moc)",
+  ],
+  ["holy water · show the cross", "wywater · wys die kruis", "woda święcona · pokaż krzyż"],
+  ["start / pause", "begin / pouse", "start / pauza"],
+  ["TOUCH", "AANRAAK", "DOTYK"],
+  ["Tap a counter · swipe ↑ ↓", "Tik 'n toonbank · vee ↑ ↓", "Stuknij bar · przesuń ↑ ↓"],
+  ["POUR or your own counter", "SKINK of jou eie toonbank", "NALEJ lub własny bar"],
+  [
+    "pour (TAP mode is the default on touch screens)",
+    "skink (TIK is die gewone keuse op raakskerms)",
+    "nalewaj (na ekranach dotykowych domyślnie STUKNIJ)",
+  ],
+  ["◀ ▶ · drag sideways", "◀ ▶ · sleep sywaarts", "◀ ▶ · przeciągnij w bok"],
+  ["run", "hardloop", "biegnij"],
+  [
+    "show the cross · send holy water (from level 2)",
+    "wys die kruis · stuur wywater (vanaf vlak 2)",
+    "pokaż krzyż · wyślij wodę święconą (od poziomu 2)",
+  ],
+  [
+    "Tip: turn your phone sideways for a bigger view.",
+    "Wenk: draai jou foon sywaarts vir 'n groter beeld.",
+    "Wskazówka: obróć telefon poziomo, by widzieć więcej.",
+  ],
+  // ---- the panels ----
+  ["CHOOSE YOUR BARTENDER", "KIES JOU KROEGMAN", "WYBIERZ BARMANA"],
+  [
+    "Pick your bartender, then PLAY (or pick the same one again).",
+    "Kies jou kroegman, dan SPEEL (of kies dieselfde een weer).",
+    "Wybierz barmana, potem GRAJ (albo wybierz go jeszcze raz).",
+  ],
+  ["PLAYER 1", "SPELER 1", "GRACZ 1"],
+  ["PLAYER 2", "SPELER 2", "GRACZ 2"],
+  ["DONE", "KLAAR", "GOTOWE"],
+  ["BACK", "TERUG", "WSTECZ"],
+  [
+    "Every new friend, place and adventure you see sticks a sticker in your book. Collect them all!",
+    "Elke nuwe vriend, plek en avontuur plak 'n plakker in jou boek. Versamel hulle almal!",
+    "Każdy nowy przyjaciel, miejsce i przygoda to nowa naklejka w albumie. Zbierz wszystkie!",
+  ],
+  ["HATS", "HOEDE", "CZAPKI"],
+  ["PETS", "TROETELDIERE", "ZWIERZAKI"],
+  [
+    "Earn coins from tips, golden VIPs, bosses, cleared levels, daily challenges and mini-games.",
+    "Verdien munte met fooitjies, goue VIP's, base, voltooide vlakke, daaglikse uitdagings en minispeletjies.",
+    "Zdobywaj monety z napiwków, złotych VIP-ów, bossów, ukończonych poziomów, wyzwań dnia i minigier.",
+  ],
+  ["FOR YOUR NEXT GAME", "VIR JOU VOLGENDE SPEL", "NA NASTĘPNĄ GRĘ"],
+  ["DECORATE YOUR DINER", "VERSIER JOU KAFEE", "UDEKORUJ SWÓJ BAR"],
+  ["TROPHY ROOM", "TROFEEKAMER", "SALA TROFEÓW"],
+  ["WHO'S PLAYING?", "WIE SPEEL?", "KTO GRA?"],
+  ["NEW PLAYER'S NAME", "NUWE SPELER SE NAAM", "IMIĘ NOWEGO GRACZA"],
+  ["+ ADD", "+ VOEG BY", "+ DODAJ"],
+  ["RENAME", "HERNOEM", "ZMIEŃ IMIĘ"],
+  ["DELETE THIS PLAYER", "VEE HIERDIE SPELER UIT", "USUŃ TEGO GRACZA"],
+  [
+    "MOVE MY PROGRESS TO ANOTHER DEVICE",
+    "SKUIF MY VORDERING NA 'N ANDER TOESTEL",
+    "PRZENIEŚ MÓJ POSTĘP NA INNE URZĄDZENIE",
+  ],
+  [
+    "EXPORT makes a code here - or paste a code and press IMPORT",
+    "UITVOER maak hier 'n kode - of plak 'n kode en druk INVOER",
+    "EKSPORT tworzy tu kod - albo wklej kod i naciśnij IMPORT",
+  ],
+  ["EXPORT (COPY MY CODE)", "UITVOER (KOPIEER MY KODE)", "EKSPORT (SKOPIUJ MÓJ KOD)"],
+  ["IMPORT A CODE", "VOER 'N KODE IN", "IMPORTUJ KOD"],
+  ["WHAT'S NEW", "WAT IS NUUT", "NOWOŚCI"],
+  ["TIME FOR A STRETCH!", "TYD OM TE REK!", "CZAS SIĘ ROZCIĄGNĄĆ!"],
+  [
+    "You've been playing for a while. Stand up, stretch your arms up high, wiggle your fingers, look out of the window and have a drink of water!",
+    "Jy speel al 'n rukkie. Staan op, rek jou arms hoog op, wikkel jou vingers, kyk by die venster uit en drink 'n bietjie water!",
+    "Grasz już dłuższą chwilę. Wstań, wyciągnij ręce wysoko, porusz palcami, wyjrzyj przez okno i napij się wody!",
+  ],
+  ["I'M BACK!", "EK IS TERUG!", "WRACAM!"],
+  [
+    "Every planet has its own tune. Pick one and listen. Arrows or D-pad to choose, Enter or A to play, Esc or B to go back.",
+    "Elke planeet het sy eie deuntjie. Kies een en luister. Pyltjies of D-pad om te kies, Enter of A om te speel, Esc of B om terug te gaan.",
+    "Każda planeta ma swoją melodię. Wybierz i słuchaj. Strzałki lub krzyżak, by wybrać, Enter lub A, by zagrać, Esc lub B, by wrócić.",
+  ],
+  ["STOP", "STOP", "STOP"],
+  ["PAUSED", "POUSE", "PAUZA"],
+  [
+    "STILL THERE? The game paused itself so you don't lose a life while you're away. Press FIRE or RESUME to carry on.",
+    "NOG DAAR? Die spel het self gepouseer sodat jy nie 'n lewe verloor terwyl jy weg is nie. Druk VUUR of GAAN VOORT.",
+    "JESTEŚ TAM? Gra sama się zatrzymała, żebyś nie stracił życia. Naciśnij OGIEŃ lub WZNÓW, by grać dalej.",
+  ],
+  ["RESUME", "GAAN VOORT", "WZNÓW"],
+  ["QUIT TO MENU", "TERUG NA KIESLYS", "WYJDŹ DO MENU"],
+  [
+    "↻ HARD RESET (RELOAD THE GAME)",
+    "↻ BEGIN HEELTEMAL OOR (LAAI WEER)",
+    "↻ PEŁNY RESET (WCZYTAJ GRĘ OD NOWA)",
+  ],
+  ["GAME OVER", "SPEL VERBY", "KONIEC GRY"],
+  [
+    "Your initials for the high-score table",
+    "Jou voorletters vir die hoogste tellings",
+    "Twoje inicjały do tabeli wyników",
+  ],
+  ["SAVE", "STOOR", "ZAPISZ"],
+  ["▶ CONTINUE FROM", "▶ GAAN VOORT VANAF", "▶ KONTYNUUJ OD"],
+  ["PLAY AGAIN", "SPEEL WEER", "ZAGRAJ JESZCZE RAZ"],
+  ["MENU", "KIESLYS", "MENU"],
+  ["SHARE ▶", "DEEL ▶", "UDOSTĘPNIJ ▶"],
+  ["BACK TO THE CUP ▶", "TERUG NA DIE BEKER ▶", "WRÓĆ DO TURNIEJU ▶"],
+  ["RUN", "HARDLOOP", "BIEG"],
+  ["FLAVOUR", "GEUR", "SMAK"],
+  ["CROSS", "KRUIS", "KRZYŻ"],
+  ["HOLY", "WY", "WODA"],
+  ["WATER", "WATER", "ŚWIĘCONA"],
+  ["PRESS", "DRUK", "NACIŚNIJ"],
+  ["POUR", "SKINK", "NALEJ"],
+  ["SLIDE", "GLY", "PCHNIJ"],
+  ["THANKS FOR PLAYING!", "DANKIE VIR DIE SPEEL!", "DZIĘKUJEMY ZA GRĘ!"],
+  ["See you next time at Space Pub.", "Sien jou volgende keer by Space Pub.", "Do zobaczenia w Space Pub."],
+  ["You can close this tab now.", "Jy kan nou hierdie oortjie toemaak.", "Możesz już zamknąć tę kartę."],
+  ["BACK TO THE GAME", "TERUG NA DIE SPEL", "WRÓĆ DO GRY"],
+  ["OOPS - THE GAME GOT STUCK", "OEPS - DIE SPEL HET VASGEHAAK", "UPS - GRA SIĘ ZACIĘŁA"],
+  ["↻ RESET", "↻ HERBEGIN", "↻ RESET"],
+  ["BACK TO THE MENU", "TERUG NA DIE KIESLYS", "WRÓĆ DO MENU"],
+  // ---- the cup and the map ----
+  ["START THE CUP ▶", "BEGIN DIE BEKER ▶", "ZACZNIJ TURNIEJ ▶"],
+  ["NEW CUP", "NUWE BEKER", "NOWY TURNIEJ"],
+  ["SHARE THE CHAMPION ▶", "DEEL DIE KAMPIOEN ▶", "UDOSTĘPNIJ MISTRZA ▶"],
+  ["THE CHAMPION!", "DIE KAMPIOEN!", "MISTRZ!"],
+  ["THE FINAL", "DIE EINDSTRYD", "FINAŁ"],
+  ["SEMI-FINALS", "HALFEINDS", "PÓŁFINAŁY"],
+  ["QUARTER-FINALS", "KWARTEINDS", "ĆWIERĆFINAŁY"],
+  ["THE CUP", "DIE BEKER", "PUCHAR"],
+  ["— bye —", "— vrypas —", "— wolny los —"],
+  ["THE SOLAR SYSTEM", "DIE SONNESTELSEL", "UKŁAD SŁONECZNY"],
+  ["BEYOND THE SUN", "VERBY DIE SON", "ZA SŁOŃCEM"],
+  ["THE PA-99-N2 SYSTEM", "DIE PA-99-N2-STELSEL", "UKŁAD PA-99-N2"],
+  ["DEEP ANDROMEDA", "DIEP IN ANDROMEDA", "GŁĘBIA ANDROMEDY"],
+  // ---- in the game ----
+  ["READY?", "GEREED?", "GOTOWY?"],
+  ["GO!", "TRAP!", "START!"],
+  ["PERFECT LEVEL!", "VOLMAAKTE VLAK!", "PERFEKCYJNY POZIOM!"],
+  [
+    "NO LIVES LOST!  4 PERFECT POURS FOR THE 3RD STAR",
+    "GEEN LEWENS VERLOOR!  4 PERFEKTE SKINKE VIR DIE 3DE STER",
+    "BEZ STRATY ŻYCIA!  4 IDEALNE NALANIA = 3. GWIAZDKA",
+  ],
+  [
+    "LOSE NO LIVES FOR MORE STARS",
+    "VERLOOR GEEN LEWENS VIR MEER STERRE",
+    "NIE TRAĆ ŻYĆ, A DOSTANIESZ WIĘCEJ GWIAZDEK",
+  ],
+  ["PRESS ANY KEY", "DRUK ENIGE SLEUTEL", "NACIŚNIJ DOWOLNY KLAWISZ"],
+  ["PRESS ANY BUTTON", "DRUK ENIGE KNOPPIE", "NACIŚNIJ DOWOLNY PRZYCISK"],
+  ["TOUCH THE SCREEN", "RAAK DIE SKERM", "DOTKNIJ EKRANU"],
+  ["TAP TO SKIP", "TIK OM OOR TE SLAAN", "STUKNIJ, BY POMINĄĆ"],
+  ["PRESS ANY KEY TO SKIP", "DRUK ENIGE SLEUTEL OM OOR TE SLAAN", "NACIŚNIJ KLAWISZ, BY POMINĄĆ"],
+  ["PRESS POUR TO START", "DRUK SKINK OM TE BEGIN", "NACIŚNIJ NALEJ, BY ZACZĄĆ"],
+  ["PRESS POUR TO GO ON", "DRUK SKINK OM VOORT TE GAAN", "NACIŚNIJ NALEJ, BY GRAĆ DALEJ"],
+  [
+    "\u{1F50A}  TAP OR PRESS A KEY FOR SOUND",
+    "\u{1F50A}  TIK OF DRUK 'N SLEUTEL VIR KLANK",
+    "\u{1F50A}  STUKNIJ LUB NACIŚNIJ KLAWISZ, BY WŁĄCZYĆ DŹWIĘK",
+  ],
+  ["CATCH THE EMPTY GLASS!", "VANG DIE LEË GLAS!", "ZŁAP PUSTĄ SZKLANKĘ!"],
+  ["STRAWBERRY", "AARBEI", "TRUSKAWKA"],
+  ["CHOCOLATE", "SJOKOLADE", "CZEKOLADA"],
+  ["MINT", "MENT", "MIĘTA"],
+  ["HALL OF FAME", "EREGALERY", "ALEJA SŁAWY"],
+  ["MEET THE REGULARS", "ONTMOET DIE VASTE KLANTE", "POZNAJ STAŁYCH BYWALCÓW"],
+  ["...AND YOU: THE SODA JERK!", "...EN JY: DIE KROEGMAN!", "...I TY: BARMAN!"],
+  [
+    "A SPACE MILKSHAKE BAR ARCADE GAME",
+    "'N RUIMTE-MELKSKOMMELKROEG-ARKADESPEL",
+    "KOSMICZNY BAR Z KOKTAJLAMI - GRA ARCADE",
+  ],
+  [
+    "1 OR 2 PLAYERS  ·  CO-OP OR VERSUS",
+    "1 OF 2 SPELERS  ·  SAAM OF TEEN MEKAAR",
+    "1 LUB 2 GRACZY  ·  RAZEM LUB POJEDYNEK",
+  ],
+  ["FREE PLAY", "SPEEL VERNIET", "GRA ZA DARMO"],
+  ["DID YOU KNOW?", "HET JY GEWEET?", "CZY WIESZ, ŻE...?"],
+  ["YOU ARE HERE", "JY IS HIER", "TU JESTEŚ"],
+  ["RUSH HOUR!", "SPITSUUR!", "GODZINA SZCZYTU!"],
+  ["TURBO!", "TURBO!", "TURBO!"],
+  ["SANDSTORM!", "SANDSTORM!", "BURZA PIASKOWA!"],
+  ["TIME SLOWS DOWN...", "DIE TYD VERTRAAG...", "CZAS ZWALNIA..."],
+  ["PHEW... A BREATHER", "SJOE... 'N BLAASKANS", "UFF... CHWILA ODDECHU"],
+  ["SHIELD SAVED YOU!", "DIE SKILD HET JOU GERED!", "TARCZA CIĘ URATOWAŁA!"],
+  [
+    "PHEW! A FREE SAVE  (ONE EACH LEVEL)",
+    "SJOE! 'N GRATIS REDDING  (EEN PER VLAK)",
+    "UFF! DARMOWY RATUNEK  (JEDEN NA POZIOM)",
+  ],
+  ["OOPS! NO PROBLEM - KEEP GOING!", "OEPS! GEEN PROBLEEM - HOU AAN!", "UPS! NIC NIE SZKODZI - GRAJ DALEJ!"],
+  ["CLUTCH SAVE! +300", "OP DIE NIPPERTJIE! +300", "RATUNEK W OSTATNIEJ CHWILI! +300"],
+  ["LONG SLIDE! +150", "LANG GLY! +150", "DŁUGI ŚLIZG! +150"],
+  ["QUICK HANDS! +200", "VINNIGE HANDE! +200", "SZYBKIE RĘCE! +200"],
+  [
+    "SHAKE FEVER!  DOUBLE POINTS  ·  INSTANT POURS",
+    "SKOMMELKOORS!  DUBBELE PUNTE  ·  DADELIKE SKINK",
+    "GORĄCZKA KOKTAJLI!  PODWÓJNE PUNKTY  ·  NATYCHMIASTOWE NALEWANIE",
+  ],
+  ["FEVER OVER", "KOORS VERBY", "KONIEC GORĄCZKI"],
+  [
+    "DON'T SERVE DEVILS! REFUSE THEM OR SEND HOLY WATER",
+    "MOENIE DUIWELS BEDIEN NIE! WEIER HULLE OF STUUR WYWATER",
+    "NIE OBSŁUGUJ DIABŁÓW! ODMÓW IM ALBO WYŚLIJ WODĘ ŚWIĘCONĄ",
+  ],
+  ["THEY'RE BACKING OFF!", "HULLE STAAN TERUG!", "WYCOFUJĄ SIĘ!"],
+  ["YUM!", "LEKKER!", "MNIAM!"],
+  ["THANKS FOR THE GOOD SERVICE!", "DANKIE VIR DIE GOEIE DIENS!", "DZIĘKUJĘ ZA ŚWIETNĄ OBSŁUGĘ!"],
+  ["EMPTY! IT WAS OVER THERE", "LEEG! DIT WAS DAARDIE KANT", "PUSTO! BYŁO TAM"],
+  ["WHERE IS IT?", "WAAR IS DIT?", "GDZIE TO JEST?"],
+  ["BONUS ROUND: FIND THE ALIEN", "BONUSRONDE: VIND DIE RUIMTEWESE", "RUNDA BONUSOWA: ZNAJDŹ KOSMITĘ"],
+  ["NO SERVICE", "GEEN DIENS", "NIE OBSŁUGUJEMY"],
+  ["SPACE PUB CUSTOMERS ONLY", "SLEGS VIR SPACE PUB-KLANTE", "TYLKO DLA GOŚCI SPACE PUB"],
+  ["OVERFLOW PARKING", "OORLOOPPARKERING", "PARKING DODATKOWY"],
+  ["OI! BACK OF THE QUEUE!", "HEI! AGTER IN DIE RY!", "HEJ! NA KONIEC KOLEJKI!"],
+  ["NO SPACESUIT, NO SHOES,", "GEEN RUIMTEPAK, GEEN SKOENE,", "BEZ SKAFANDRA, BEZ BUTÓW,"],
+  [
+    "DING DING DING - LAST ORDERS!",
+    "DING DING DING - LAASTE BESTELLINGS!",
+    "DZYŃ DZYŃ DZYŃ - OSTATNIE ZAMÓWIENIA!",
+  ],
+  ["PERFECT SERVICE!", "PERFEKTE DIENS!", "PERFEKCYJNA OBSŁUGA!"],
+  [
+    "SERVE 15 IN A ROW WITHOUT A BREAK",
+    "BEDIEN 15 AGTER MEKAAR SONDER OM OP TE HOU",
+    "OBSŁUŻ 15 Z RZĘDU BEZ PRZERWY",
+  ],
+  ["POUR 6 PERFECT SHAKES", "SKINK 6 PERFEKTE MELKSKOMMELS", "NALEJ 6 IDEALNYCH KOKTAJLI"],
+  ["GET A COMBO OF 5", "KRY 'N KOMBO VAN 5", "ZRÓB KOMBO 5"],
+  ["GRAB 2 TIPS", "VAT 2 FOOITJIES", "ZŁAP 2 NAPIWKI"],
+  [
+    "MAKE 8 CUSTOMERS SUPER HAPPY (SERVE THEM EARLY)",
+    "MAAK 8 KLANTE BAIE GELUKKIG (BEDIEN HULLE VROEG)",
+    "UCZYŃ 8 GOŚCI BARDZO SZCZĘŚLIWYMI (OBSŁUŻ ICH SZYBKO)",
+  ],
+  ["SERVE A GOLDEN VIP", "BEDIEN 'N GOUE VIP", "OBSŁUŻ ZŁOTEGO VIP-A"],
+  ["DONE!", "KLAAR!", "ZROBIONE!"],
+  ["✓ DONE TODAY", "✓ VANDAG KLAAR", "✓ DZIŚ ZROBIONE"],
+];
+// the texts that carry numbers or names: patterns
+const DICT_PAT                             = [
+  [
+    /^LEVEL (\d+) CLEAR!(\s+\+\d+)(\s+)PERFECT SERVICE!$/,
+    "VLAK $1 KLAAR!$2$3PERFEKTE DIENS!",
+    "POZIOM $1 UKOŃCZONY!$2$3PERFEKCYJNA OBSŁUGA!",
+  ],
+  [/^NEW STICKER: (.+)$/, "NUWE PLAKKER: $1", "NOWA NAKLEJKA: $1"],
+  [/^DAILY CHALLENGE: (.+)$/, "DAAGLIKSE UITDAGING: $1", "WYZWANIE DNIA: $1"],
+  [/^DAILY: (.+?)(\s+\d+ \/ \d+)$/, "VANDAG: $1$2", "DZIŚ: $1$2"],
+  [/^LEVEL (\d+) CLEAR!(.*)$/, "VLAK $1 KLAAR!$2", "POZIOM $1 UKOŃCZONY!$2"],
+  [
+    /^LEVEL (\d+) \/ (\d+)(\s+)·(\s+)SERVED (\d+) \/ (\d+)$/,
+    "VLAK $1 / $2$3·$4BEDIEN $5 / $6",
+    "POZIOM $1 / $2$3·$4OBSŁUŻONO $5 / $6",
+  ],
+  [/^LEVEL (\d+) OF (\d+)$/, "VLAK $1 VAN $2", "POZIOM $1 Z $2"],
+  [/^LEVEL (\d+)$/, "VLAK $1", "POZIOM $1"],
+  [/^COMBO x(\d+)$/, "KOMBO x$1", "KOMBO x$1"],
+  [/^FLAWLESS x(.+)$/, "FOUTLOOS x$1", "BEZBŁĘDNIE x$1"],
+  [
+    /^FLAWLESS!  SCORE x(.+) FROM NOW ON$/,
+    "FOUTLOOS!  TELLING x$1 VAN NOU AF",
+    "BEZBŁĘDNIE!  WYNIK x$1 OD TERAZ",
+  ],
+  [/^HI (\d+)$/, "BESTE $1", "REKORD $1"],
+  [/^SCORE (\d+)$/, "TELLING $1", "WYNIK $1"],
+  [/^STAGE (\d+)$/, "VLAK $1", "ETAP $1"],
+  [
+    /^PRESS (\w+) TO POUR - LET GO TO SLIDE IT$/,
+    "DRUK $1 OM TE SKINK - LOS OM TE GLY",
+    "NACIŚNIJ $1, BY NALAĆ - PUŚĆ, BY PCHNĄĆ",
+  ],
+  [
+    /^HOLD (\w+) TO POUR - LET GO TO SLIDE IT$/,
+    "HOU $1 OM TE SKINK - LOS OM TE GLY",
+    "PRZYTRZYMAJ $1, BY NALAĆ - PUŚĆ, BY PCHNĄĆ",
+  ],
+  [/^(PRESS|HOLD) (\w+) TO POUR$/, "$1 $2 OM TE SKINK", "$1 $2, BY NALAĆ"],
+  [/^(TAP|HOLD) POUR - LET GO TO SLIDE IT$/, "SKINK - LOS OM TE GLY", "NALEJ - PUŚĆ, BY PCHNĄĆ"],
+  [
+    /^AN EMPTY GLASS! GO TO THAT BAR \((.+)\)$/,
+    "'N LEË GLAS! GAAN NA DAARDIE TOONBANK ($1)",
+    "PUSTA SZKLANKA! IDŹ DO TEGO BARU ($1)",
+  ],
+  [
+    /^A TIP! RUN (.+) TO GRAB IT$/,
+    "'N FOOITJIE! HARDLOOP $1 OM DIT TE VAT",
+    "NAPIWEK! BIEGNIJ $1, BY GO ZŁAPAĆ",
+  ],
+  [
+    /^SOMEONE'S WAITING HERE! CHANGE BAR: (.+)$/,
+    "IEMAND WAG HIER! VERANDER TOONBANK: $1",
+    "KTOŚ TU CZEKA! ZMIEŃ BAR: $1",
+  ],
+  [/^FLAVOUR: (\w+)(.*)$/, "GEUR: $1$2", "SMAK: $1$2"],
+  [/^✔ ORDER ON THIS BAR: (\w+)$/, "✔ BESTELLING BY HIERDIE TOONBANK: $1", "✔ ZAMÓWIENIE NA TYM BARZE: $1"],
+  [
+    /^ORDER ON THIS BAR: (\w+) - SWITCH WITH (.+)$/,
+    "BESTELLING BY HIERDIE TOONBANK: $1 - WISSEL MET $2",
+    "ZAMÓWIENIE NA TYM BARZE: $1 - ZMIEŃ: $2",
+  ],
+  [/^RIGHT ORDER!  (\w+)!$/, "REGTE BESTELLING!  $1!", "DOBRE ZAMÓWIENIE!  $1!"],
+  [/^(\d) PLAYERS$/, "$1 SPELERS", "$1 GRACZY"],
+  [/^★ (\d+) OF (\d+) STARS(.*)$/, "★ $1 VAN $2 STERRE$3", "★ $1 Z $2 GWIAZDEK$3"],
+  [/^(.+) WINS THE MATCH!(.*)$/, "$1 WEN DIE WEDSTRYD!$2", "$1 WYGRYWA MECZ!$2"],
+  [/^(.+) WINS THE SPACE PUB CUP!$/, "$1 WEN DIE SPACE PUB-BEKER!", "$1 WYGRYWA PUCHAR SPACE PUB!"],
+  [/^♪ THE BAND PLAYS: (.+) - A (.+)$/, "♪ DIE ORKES SPEEL: $1", "♪ ZESPÓŁ GRA: $1"],
+  [/^BEST (\d+)$/, "BESTE $1", "REKORD $1"],
+  [
+    /^Everyone keeps their own stars, hats, pets, coins, stickers and trophies\. Playing now: (.+)\.$/,
+    "Elkeen hou sy eie sterre, hoede, troeteldiere, munte, plakkers en trofeë. Speel nou: $1.",
+    "Każdy ma swoje gwiazdki, czapki, zwierzaki, monety, naklejki i trofea. Teraz gra: $1.",
+  ],
+  [/^STREAK (\d+)$/, "REEKS $1", "SERIA $1"],
+  [/^BEST (\d+) SERVED$/, "BESTE $1 BEDIEN", "REKORD $1 OBSŁUŻONYCH"],
+];
+const DICT = new Map                ();
+const DICT_I = LANG === "af" ? 1 : 2;
+if (LANG !== "en") for (const r of DICT_ROWS) DICT.set(r[0], r[DICT_I]);
+const TCACHE = new Map                ();
+// translate one text (exact, a pattern, or piece by piece around " · " and "  ·  ")
+function T(s) {
+  if (LANG === "en" || typeof s !== "string" || !s) return s;
+  const hit = TCACHE.get(s);
+  if (hit !== undefined) return hit;
+  let out = s;
+  const m0 = /^(\s*)([\s\S]*?)(\s*)$/.exec(s),
+    core = m0[2];
+  if (DICT.has(core)) out = m0[1] + DICT.get(core) + m0[3];
+  else {
+    let done = false;
+    for (const [re, af, pl] of DICT_PAT) {
+      const m = re.exec(core);
+      if (m) {
+        // (the pattern's own words in the language - and whatever it carries, translated too)
+        out = m0[1] + (LANG === "af" ? af : pl).replace(/\$(\d)/g, (_, k) => T(m[+k] || "")) + m0[3];
+        done = true;
+        break;
+      }
+    }
+    if (!done && /\s·\s/.test(core)) {
+      const parts = core.split(/(\s+·\s+)/);
+      out = m0[1] + parts.map((p) => (/^\s+·\s+$/.test(p) ? p : T(p))).join("") + m0[3];
+    }
+  }
+  if (TCACHE.size > 4000) TCACHE.clear();
+  TCACHE.set(s, out);
+  return out;
+}
+// ---- the page: translate every text as it appears or changes ----
+function langPage() {
+  if (LANG === "en") return;
+  document.documentElement.lang = LANG;
+  const SKIP = { SCRIPT: 1, STYLE: 1, TEXTAREA: 1, INPUT: 1 };
+  const doNode = (n) => {
+    if (n.nodeType === 3) {
+      const p = n.parentNode;
+      if (p && SKIP[p.nodeName]) return;
+      const v = n.nodeValue,
+        t = T(v);
+      if (t !== v) n.nodeValue = t;
+    } else if (n.nodeType === 1) {
+      if (SKIP[n.nodeName]) {
+        const ph = n.getAttribute("placeholder");
+        if (ph && T(ph) !== ph) n.setAttribute("placeholder", T(ph));
+        return;
+      }
+      for (const c of n.childNodes) doNode(c);
+    }
+  };
+  doNode(document.body);
+  new MutationObserver((ms) => {
+    for (const m of ms) {
+      if (m.type === "characterData") doNode(m.target);
+      else for (const n of m.addedNodes) doNode(n);
+    }
+  }).observe(document.body, { subtree: true, childList: true, characterData: true });
+  // ---- and everything the game draws as text ----
+  const P = CanvasRenderingContext2D.prototype,
+    f0 = P.fillText,
+    s0 = P.strokeText,
+    m0 = P.measureText;
+  P.fillText = function (t, x, y, w ) {
+    return w === undefined ? f0.call(this, T(t), x, y) : f0.call(this, T(t), x, y, w);
+  };
+  P.strokeText = function (t, x, y, w ) {
+    return w === undefined ? s0.call(this, T(t), x, y) : s0.call(this, T(t), x, y, w);
+  };
+  P.measureText = function (t) {
+    return m0.call(this, T(t));
+  };
+}
+function cycleLang() {
+  const order = ["en", "af", "pl"],
+    nx = order[(order.indexOf(LANG) + 1) % order.length];
+  store.set("lang", nx);
+  sfx("click");
+  setTimeout(() => location.reload(), 120);
+}
 // =====================================================================================
 //  SIZES  -  the playfield is 960 x 540 units, centred; the diner fills the rest
 // =====================================================================================
@@ -4574,6 +5190,7 @@ const FLY_SAY = {
   prop: ["whoosh", "UP, UP AND AWAY - SPECIAL DELIVERY!", "#9fd0ff"],
 };
 function update(dt) {
+  dangerUpdate(dt); // (the music feels the danger)
   G.time += dt;
   G.fadeT = Math.max(0, (G.fadeT || 0) - dt);
   if (G.state === "play" && G.fever > 0) {
@@ -36030,7 +36647,7 @@ function drawGlutton(c, t, a) {
 //  BARTENDER LEVELS, DECORATE YOUR DINER, ENDLESS MODE, HOLIDAY EVENTS, STORY SCENES with Bocian Bogdan,
 //  ONE-BUTTON MODE for little ones, and a friendly BREAK REMINDER
 // =====================================================================================
-const FP = { shop: false, trophies: false, map: false, cup: false },
+const FP = { shop: false, trophies: false, map: false, cup: false, prof: false, news: false },
   BRK = { open: false, t: 0 };
 const FLAV_NAMES = ["STRAWBERRY", "CHOCOLATE", "MINT"],
   FLAV_HEX = ["#ff8fbf", "#9a5a3a", "#8ff0c0"],
@@ -37949,14 +38566,24 @@ function funMenuText() {
   if ($k("bDaily") && ev && EVENT_NAMES[ev]) $k("bDaily").title = EVENT_NAMES[ev];
 }
 // the menu's own screens: the coin shop, the trophies, the galaxy map, the cup tournament
-const fpAny = () => FP.shop || FP.trophies || FP.map || FP.cup,
-  fpWhich = () => (FP.shop ? "shop" : FP.trophies ? "trophies" : FP.map ? "map" : "cup"),
-  FP_BTN = { shop: "bShop", trophies: "bTroph", map: "bMap", cup: "bCup" },
-  FP_FIRST = { shop: "shItems", trophies: "trList", map: "gmBack", cup: "cupList" };
+const FP_IDS = ["shop", "trophies", "map", "cup", "prof", "news"],
+  fpAny = () => FP_IDS.some((k) => FP[k]),
+  fpWhich = () => FP_IDS.find((k) => FP[k]) || "shop",
+  FP_BTN = { shop: "bShop", trophies: "bTroph", map: "bMap", cup: "bCup", prof: "bProf", news: "bNews" },
+  FP_FIRST = {
+    shop: "shItems",
+    trophies: "trList",
+    map: "gmBack",
+    cup: "cupList",
+    prof: "profList",
+    news: "newsBack",
+  };
 function openFP(id) {
   if (G.state !== "menu") return;
   FP[id] = true;
-  ({ shop: buildShop, trophies: buildTroph, map: buildMap, cup: buildCup })[id]();
+  ({ shop: buildShop, trophies: buildTroph, map: buildMap, cup: buildCup, prof: buildProf, news: buildNews })[
+    id
+  ]();
   showPanels();
   sfx("click");
   setTimeout(() => {
@@ -38083,6 +38710,8 @@ function funPanelsInit() {
   $k("bMap").onclick = () => openFP("map");
   $k("gmBack").onclick = () => closeFP("map");
   $k("bCup").onclick = () => openFP("cup");
+  $k("bNews").onclick = () => openFP("news");
+  $k("newsBack").onclick = () => closeFP("news");
   $k("cupBack").onclick = () => closeFP("cup");
   $k("bEndless").onclick = () => {
     if (G.state !== "menu") return;
@@ -43376,6 +44005,7 @@ function buildCup() {
   $k("cupTitle").textContent = S.champ ? "THE CHAMPION!" : "CUP TOURNAMENT";
   if (S.champ) {
     $k("cupTag").textContent = S.champ + " WINS THE SPACE PUB CUP!";
+    btn("SHARE THE CHAMPION ▶", () => shareNow("cup"), "primary").style.gridColumn = "1 / -1";
     btn("NEW CUP", () => cupReset(), "wide").style.gridColumn = "1 / -1";
   } else if (nx) {
     const r = S.rounds.findIndex((R0) => R0.includes(nx));
@@ -43593,6 +44223,10 @@ function stopAttract() {
     resetGame(true);
   }
   showPanels();
+  if (!ATTRACT.news) {
+    ATTRACT.news = true;
+    newsCheck();
+  } // (the first time the menu comes up: WHAT'S NEW, once after an update)
 }
 // DEEP SPACE in the attract loop: just stars, galaxies and planets - then one of the space events, a pause with only space,
 // one of the fly-pasts, another pause... then the demo game. Each time round it shows the next ones.
@@ -44525,7 +45159,7 @@ function drawEggs(g, s) {
   }
   g.restore();
 }
-const GAME_VERSION = "v2026.10.04ao"; // year.month.day it was made
+const GAME_VERSION = "v2026.10.04ap"; // year.month.day it was made
 const FB = '"Chakra Petch", "Segoe UI", sans-serif';
 let FD = '"Bungee", "Impact", sans-serif';
 const HUDB = { w: 0, t: -9, l: 0, b: 0, right: 0, lives: 0, room: 0, under: false };
@@ -45661,6 +46295,8 @@ let musLP = null,
   leadEcho = null,
   AC = null,
   master = null,
+  fxVol = null,
+  musVol = null,
   fxBus = null,
   musicBus = null,
   leadBus = null,
@@ -45722,6 +46358,16 @@ for (const ev of ["pointerdown", "pointerup", "touchstart", "touchend", "mousedo
 document.addEventListener("visibilitychange", () => {
   if (!document.hidden && AC && AC.state !== "running") AC.resume().catch(() => {});
 });
+// VOLUME: music and sound effects, each 0 to 1 (in steps of a quarter), remembered
+const VOL = { music: clamp(+store.get("volMusic", 1), 0, 1), fx: clamp(+store.get("volFx", 1), 0, 1) };
+function setVol(which, v) {
+  VOL[which] = clamp(v, 0, 1);
+  store.set(which === "music" ? "volMusic" : "volFx", VOL[which]);
+  const n = which === "music" ? musVol : fxVol;
+  if (AC && n) n.gain.setTargetAtTime(VOL[which], AC.currentTime, 0.03);
+}
+const volText = (v) =>
+  "▮".repeat(Math.round(v * 4)) + "▯".repeat(4 - Math.round(v * 4)) + " " + Math.round(v * 100) + "%";
 function audio() {
   if (AC) {
     if (AC.state !== "running") AC.resume().catch(() => {});
@@ -45739,9 +46385,16 @@ function audio() {
   comp.ratio.value = 4;
   master.connect(comp);
   comp.connect(AC.destination);
+  // the two VOLUME settings (music, effects) - each its own knob between its sound and the speakers
+  fxVol = AC.createGain();
+  fxVol.gain.value = VOL.fx;
+  fxVol.connect(master);
+  musVol = AC.createGain();
+  musVol.gain.value = VOL.music;
+  musVol.connect(master);
   fxBus = AC.createGain();
   fxBus.gain.value = 0.5;
-  fxBus.connect(master);
+  fxBus.connect(fxVol);
   musicBus = AC.createGain();
   musicBus.gain.value = MY.mode === "original" ? 0.3 : 0;
   musLP = AC.createBiquadFilter();
@@ -45756,10 +46409,10 @@ function audio() {
     musicBus.connect(hp);
     hp.connect(musLP);
   }
-  musLP.connect(master); // (NO LOW TONES: a high-pass takes out the deep rumble; the low-pass softens the music in deep space)
+  musLP.connect(musVol); // (NO LOW TONES: a high-pass takes out the deep rumble; the low-pass softens the music in deep space)
   myBus = AC.createGain();
   myBus.gain.value = 0.9;
-  myBus.connect(master);
+  myBus.connect(musVol);
   // the lead line gets a warm echo
   leadBus = AC.createGain();
   leadBus.connect(musicBus);
@@ -45789,7 +46442,7 @@ function audio() {
     wet.gain.value = 0.55;
     revSend.connect(conv);
     conv.connect(wet);
-    wet.connect(master);
+    wet.connect(fxVol);
   } catch (e) {
     revSend = null;
   }
@@ -45816,12 +46469,12 @@ function audio() {
       musLP.connect(d);
       d.connect(gn);
       gn.connect(pn);
-      pn.connect(master);
+      pn.connect(musVol);
     }
     if (revSend) {
       const ms = AC.createGain();
       ms.gain.value = 0.18;
-      musLP.connect(ms);
+      musVol.connect(ms);
       ms.connect(revSend);
     }
   } catch (e) {}
@@ -48354,7 +49007,29 @@ function drum(kind, t, bus, accent = 1) {
     noise(0.08, 0.15, 2500, 1500, bus, t + 0.012, "bandpass");
   } else if (kind === "z") noise(0.05, 0.03, 7000, 5000, bus, t, "bandpass");
 }
+// DANGER MUSIC (v2026.10.04ap): when a customer gets close to your end of the bar, the band plays a touch faster and a
+// tension layer comes in - a ticking hi-hat and a low pulse - and it all relaxes again once the danger is past
+const DNG = { v: 0 };
+function dangerUpdate(dt) {
+  let want = 0;
+  if (G.state === "play" && !G.demo && !(G.readyT > 0))
+    for (const c of customers)
+      if (c.state === "walk" && !c.type.evil) want = Math.max(want, clamp((c.x - (X1 - 190)) / 170, 0, 1));
+  DNG.v += (want - DNG.v) * Math.min(1, dt * (want > DNG.v ? 3 : 1.2)); // (in quickly, out gently)
+  if (G.state !== "play" && G.state !== "paused") DNG.v = 0;
+}
+function tensionStep(t, s, st) {
+  const v = DNG.v;
+  if (v < 0.25 || !musicBus) return;
+  const B2 = musicBus;
+  if (s % 2 === 0 || v > 0.6) drum("h", t, B2, 0.25 + 0.5 * v); // (tick tick tick...)
+  if (s % 4 === 0) {
+    note2("triangle", 33, st * 3, 0.32 * v, B2, t, { att: 0.004 });
+    if (v > 0.6) drum("k", t, B2, 0.5 * v);
+  } // (and a low pulse on every beat)
+}
 function playStep2(tr, t0) {
+  tensionStep(t0, SEQ2.step, 60 / tr.bpm / (tr.folk ? 4 : tr.div || (tr.steps === 12 ? 6 : 4)));
   if (tr.folk) {
     folkStep(tr, t0);
     return;
@@ -48617,12 +49292,13 @@ function playStep2(tr, t0) {
     for (const k of [1, 2.4, 3]) ping(mf(72 + pc) * k, 2.2, 0.03 / k, B2, t);
 }
 function advance2(tr) {
+  const hurry = 1 + 0.12 * DNG.v; // (danger: a little faster)
   if (tr.folk) {
-    SEQ2.next += 60 / tr.bpm / 4; // (folk tunes step in sixteenths)
+    SEQ2.next += 60 / tr.bpm / 4 / hurry; // (folk tunes step in sixteenths)
     SEQ2.step = (SEQ2.step + 1) % tr.len;
     return;
   }
-  SEQ2.next += 60 / tr.bpm / (tr.div || (tr.steps === 12 ? 6 : 4));
+  SEQ2.next += 60 / tr.bpm / (tr.div || (tr.steps === 12 ? 6 : 4)) / hurry;
   SEQ2.step++;
   if (SEQ2.step >= tr.steps) {
     SEQ2.step = 0;
@@ -48890,6 +49566,8 @@ function showPanels() {
   $("trophies").hidden = !FP.trophies;
   $("galmap").hidden = !FP.map;
   $("cup").hidden = !FP.cup;
+  $("prof").hidden = !FP.prof;
+  $("news").hidden = !FP.news;
   $("breakp").hidden = !BRK.open;
   funMenuText();
   $("jukebox").hidden = !JB.open;
@@ -49051,6 +49729,31 @@ $("nameForm").addEventListener("submit", (e) => {
 $("bGfx").onclick = cycleGfx;
 $("pGfx").onclick = cycleGfx;
 $("bSound").onclick = toggleSound;
+// VOLUME: each press steps it down a quarter (and from silent back to full); right-click steps it up
+function volText2() {
+  for (const el of document.querySelectorAll(".vVolM")) el.textContent = volText(VOL.music);
+  for (const el of document.querySelectorAll(".vVolF")) el.textContent = volText(VOL.fx);
+}
+for (const [id, which] of [
+  ["bVolM", "music"],
+  ["pVolM", "music"],
+  ["bVolF", "fx"],
+  ["pVolF", "fx"],
+]         ) {
+  const step = (d) => {
+    audio();
+    const v = VOL[which];
+    setVol(which, d < 0 ? (v <= 0 ? 1 : v - 0.25) : v >= 1 ? 0 : v + 0.25);
+    volText2();
+    sfx("click");
+  };
+  $(id).onclick = () => step(-1);
+  $(id).oncontextmenu = (e) => {
+    e.preventDefault();
+    step(1);
+  };
+}
+volText2();
 $("pSound").onclick = toggleSound;
 $("bFull").onclick = toggleFull;
 $("bMusic").onclick = () => {
@@ -49086,6 +49789,7 @@ $("pResume").onclick = () => pause(false);
 pressTwice("pQuit", "PRESS AGAIN TO QUIT TO THE MENU", toMenu);
 $("oAgain").onclick = startGame;
 $("oMenu").onclick = toMenu;
+$("oShare").onclick = () => shareNow(G.versus && CUP.s && CUP.s.champ && !cupNext() ? "cup" : "game");
 // EXIT GAME: press it twice (so a stray press never quits). In the Windows app it closes the window; in a browser a page
 // can't close its own tab, so the game goes quiet and says goodbye - with a way back in.
 function exitGame() {
@@ -49595,6 +50299,454 @@ window.addEventListener(
   true
 );
 // =====================================================================================
+//  WHO'S PLAYING? (v2026.10.04ap) - the family's player profiles, and moving your progress to another device.
+//  Each profile keeps its own stars, hats, pets, coins, stickers, trophies, records, bartender and best score (see
+//  PROFILE_KEYS in engine.ts); the settings and the family's high-score table are shared. Switching profile reloads
+//  the game, so everything - the coach, the wardrobe, the shop - is that player's own at once.
+//  MOVE MY PROGRESS: EXPORT turns this profile's progress into a code to copy; IMPORT on another device (or another
+//  profile) pastes it back in.
+// =====================================================================================
+                                            
+const profList = ()            => {
+  const L = store.get("profiles", [])             ;
+  return L.length ? L : [{ id: "main", name: "PLAYER 1" }];
+};
+const profNow = () => profList().find((p) => p.id === PROFILE) || profList()[0];
+// read another profile's saved value (without switching to it)
+function profGet(id, k, d) {
+  try {
+    const v = localStorage.getItem(
+      id === "main" || !PROFILE_KEYS.has(k) ? "craterrun." + k : "craterrun.p." + id + "." + k
+    );
+    return v === null ? d : JSON.parse(v);
+  } catch (e) {
+    return d;
+  }
+}
+function profStars(id) {
+  const S = profGet(id, "stars", {});
+  let n = 0;
+  for (const k in S) n += S[k] | 0;
+  return n + (profGet(id, "dailyStars", 0) | 0);
+}
+function profSwitch(id) {
+  try {
+    localStorage.setItem("craterrun.profile", JSON.stringify(id));
+  } catch (e) {}
+  location.reload();
+}
+const profClean = (s) =>
+  String(s || "")
+    .replace(/[^\p{L}\p{N} .'-]/gu, "")
+    .trim()
+    .toUpperCase()
+    .slice(0, 12);
+function buildProf() {
+  const list = $k("profList"),
+    L = profList(),
+    me = profNow();
+  list.innerHTML = "";
+  $k("profTag").textContent =
+    "Everyone keeps their own stars, hats, pets, coins, stickers and trophies. Playing now: " + me.name + ".";
+  for (const p of L) {
+    const b = document.createElement("button");
+    b.className = p.id === me.id ? "on" : "";
+    b.innerHTML =
+      (p.id === me.id ? "▶ " : "") +
+      p.name +
+      "<small>★ " +
+      profStars(p.id) +
+      "  ·  ● " +
+      (profGet(p.id, "coins", 0) | 0) +
+      "  ·  BEST " +
+      (profGet(p.id, "hi", 0) | 0) +
+      "</small>";
+    b.onclick = () => {
+      if (p.id === me.id) {
+        closeFP("prof");
+        return;
+      }
+      sfx("click");
+      profSwitch(p.id);
+    };
+    list.appendChild(b);
+  }
+  $k("profNew").hidden = L.length >= 8;
+  ($k("profName")                               ).value = me.name;
+  $k("profDel").hidden = me.id === "main"; // (the first profile stays - it holds the save from before profiles)
+  ($k("profCode")                                  ).value = "";
+  $k("profMsg").textContent = "";
+}
+function profAdd() {
+  const L = profList(),
+    nm = profClean(($k("profNewName")                               ).value);
+  if (!nm) {
+    $k("profMsg").textContent = "Type a name for the new player first.";
+    return;
+  }
+  if (L.length >= 8) return;
+  const id = "u" + Date.now().toString(36);
+  L.push({ id, name: nm });
+  store.set("profiles", L);
+  sfx("chime", undefined, 1);
+  profSwitch(id);
+}
+function profRename() {
+  const nm = profClean(($k("profName")                               ).value);
+  if (!nm) return;
+  const L = profList();
+  for (const p of L) if (p.id === profNow().id) p.name = nm;
+  store.set("profiles", L);
+  sfx("click");
+  buildProf();
+}
+function profDelete() {
+  const me = profNow();
+  if (me.id === "main") return;
+  try {
+    const pre = "craterrun.p." + me.id + ".",
+      gone = [];
+    for (let i = 0; i < localStorage.length; i++) {
+      const k = localStorage.key(i);
+      if (k && k.startsWith(pre)) gone.push(k);
+    }
+    for (const k of gone) localStorage.removeItem(k);
+  } catch (e) {}
+  store.set(
+    "profiles",
+    profList().filter((p) => p.id !== me.id)
+  );
+  profSwitch("main");
+}
+// ---- MOVE MY PROGRESS: a code made of this profile's progress (squeezed small when the browser can) ----
+const b64u = (bytes            ) => {
+  let s = "";
+  for (let i = 0; i < bytes.length; i++) s += String.fromCharCode(bytes[i]);
+  return btoa(s).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
+};
+const unb64u = (s        ) => {
+  const t = atob(s.replace(/-/g, "+").replace(/_/g, "/"));
+  const out = new Uint8Array(t.length);
+  for (let i = 0; i < t.length; i++) out[i] = t.charCodeAt(i);
+  return out;
+};
+async function squeeze(bytes            , out         ) {
+  const CS = out ? window["CompressionStream"] : window["DecompressionStream"];
+  const s = new Blob([bytes            ]).stream().pipeThrough(new CS("deflate-raw"));
+  return new Uint8Array(await new Response(s).arrayBuffer());
+}
+async function profExport() {
+  const data = {};
+  for (const k of PROFILE_KEYS) {
+    const v = store.get(k, undefined);
+    if (v !== undefined) data[k] = v;
+  }
+  const raw = new TextEncoder().encode(JSON.stringify({ v: 1, name: profNow().name, data }));
+  let code;
+  try {
+    code = "SPUB1." + b64u(await squeeze(raw, true));
+  } catch (e) {
+    code = "SPUB0." + b64u(raw); // (no squeezing in this browser - a longer code, but the same)
+  }
+  const ta = $k("profCode")                                  ;
+  ta.value = code;
+  ta.select();
+  let copied = false;
+  try {
+    await navigator.clipboard.writeText(code);
+    copied = true;
+  } catch (e) {
+    try {
+      copied = document.execCommand("copy");
+    } catch (e2) {}
+  }
+  $k("profMsg").textContent =
+    (copied ? "COPIED! " : "") +
+    "Paste this code on the other device: WHO'S PLAYING? → IMPORT. (" +
+    code.length +
+    " letters)";
+  sfx("chime", undefined, 0);
+}
+async function profImport() {
+  const code = (($k("profCode")                                  ).value || "").replace(/\s+/g, "");
+  try {
+    const m = /^SPUB([01])\.([A-Za-z0-9_-]+)$/.exec(code);
+    if (!m) throw new Error("not a code");
+    let bytes = unb64u(m[2]);
+    if (m[1] === "1") bytes = await squeeze(bytes, false);
+    const o = JSON.parse(new TextDecoder().decode(bytes));
+    if (!o || o.v !== 1 || typeof o.data !== "object") throw new Error("bad");
+    for (const k of PROFILE_KEYS)
+      if (k in o.data) store.set(k, o.data[k]);
+      else
+        try {
+          localStorage.removeItem(storeKey(k));
+        } catch (e) {} // (the code holds the whole of a player's progress: anything not in it starts fresh)
+    $k("profMsg").textContent = "DONE! " + (o.name || "The") + "'s progress is in this profile now.";
+    sfx("chime", undefined, 2);
+    setTimeout(() => location.reload(), 1200);
+  } catch (e) {
+    $k("profMsg").textContent =
+      "That code doesn't work - copy the whole code (it starts with SPUB) and try again.";
+    sfx("tick");
+  }
+}
+function profWire() {
+  $k("bProf").onclick = () => openFP("prof");
+  $k("profBack").onclick = () => closeFP("prof");
+  $k("profAdd").onclick = profAdd;
+  $k("profRen").onclick = profRename;
+  pressTwice("profDel", "PRESS AGAIN: DELETE THIS PLAYER'S PROGRESS", profDelete);
+  $k("profExp").onclick = () => profExport();
+  pressTwice("profImp", "PRESS AGAIN: REPLACE THIS PROFILE'S PROGRESS", () => profImport());
+  $k("vProf").textContent = profNow().name;
+}
+profWire();
+// =====================================================================================
+//  WHAT'S NEW & CREDITS (v2026.10.04ap): after an update, the menu shows once what's new; and the CREDITS - who made
+//  the game, and where the motion capture, the folk songs and the fonts come from. Both from the menu at any time.
+// =====================================================================================
+const NEWS = [
+  {
+    ver: "v2026.10.04ap",
+    title: "WHO'S PLAYING?",
+    items: [
+      "WHO'S PLAYING? - everyone in the family keeps their own stars, hats, pets, coins, stickers and trophies",
+      "MOVE MY PROGRESS - a code to carry your progress to another phone, tablet or computer",
+      "LANGUAGE - play in English, Afrikaans or Polski",
+      "MUSIC VOLUME and EFFECTS VOLUME in the settings",
+      "The music speeds up and gets tense when a customer is about to reach your end of the bar!",
+      "SHARE - a picture card of your game to send to family and friends",
+    ],
+  },
+  {
+    ver: "v2026.10.04ao",
+    title: "THE GALAXY MAP AND THE CUP",
+    items: [
+      "GALAXY MAP - all 40 stops from Mercury to the heart of Andromeda",
+      "CUP TOURNAMENT - a knockout cup for 2 to 8 players",
+      "CALM MODE and FLAVOUR SHAPES for comfortable, colour-friendly play",
+      "Install the game like an app from its website - it even plays offline",
+    ],
+  },
+];
+const CREDITS = [
+  ["GAME, IDEAS AND TASTE TESTING", "GL"],
+  ["PROGRAMMING AND PIXELS", "Claude (Anthropic), with GL"],
+  [
+    "MOTION CAPTURE",
+    "NUS mocap · MocapFlow (CC BY) · CMU Graphics Lab Motion Capture Database (mocap.cs.cmu.edu), subject 7 - created with funding from NSF EIA-0196217",
+  ],
+  ["MUSIC", "All the planet tunes are our own. The folk songs are traditional and free for all to play"],
+  [
+    "FOLK SONGS",
+    'Polish: Sto lat, Hej sokoły, Szła dzieweczka, Płynie Wisła, Krakowiaczek. South African: Sarie Marais, Shosholoza - and 56 Afrikaanse volksliedjies (traditional tunes, and old tunes by G.F. Root, S.C. Foster, W. Kittredge, A. Owen and C.M. von Weber), from the songbook "Afrikaanse Volksliedjies" - the melodies only',
+  ],
+  ["FONTS", "Bungee, Press Start 2P and Chakra Petch (Google Fonts, SIL Open Font License)"],
+  [
+    "THE UNIVERSE",
+    "The real places of the tour - the planets, the stars and the Andromeda galaxy - with a true fact about each",
+  ],
+  ["SPECIAL THANKS", "The Wawel Dragon, Bocian Bogdan, Oom Koos, Tannie Sannie and every regular"],
+];
+function buildNews() {
+  const box = $k("newsBody");
+  box.innerHTML = "";
+  const h = (tag, txt, cls ) => {
+    const el = document.createElement(tag);
+    el.textContent = txt;
+    if (cls) el.className = cls;
+    box.appendChild(el);
+    return el;
+  };
+  for (const n of NEWS) {
+    h("h3", "NEW IN " + n.ver + " - " + n.title);
+    const ul = document.createElement("ul");
+    for (const it of n.items) {
+      const li = document.createElement("li");
+      li.textContent = it;
+      ul.appendChild(li);
+    }
+    box.appendChild(ul);
+  }
+  h("h3", "CREDITS", "cred");
+  for (const [k, v] of CREDITS) {
+    const p = document.createElement("p");
+    p.className = "credit";
+    const b = document.createElement("b");
+    b.textContent = k;
+    p.appendChild(b);
+    p.appendChild(document.createTextNode(v));
+    box.appendChild(p);
+  }
+  h("p", GAME_VERSION + "  ·  BAIE DANKIE · DZIĘKUJĘ · NGIYABONGA · ENKOSI", "info");
+  store.set("seenVer", GAME_VERSION);
+}
+// once after an update (not on the very first visit - there's the coach for that), the news shows by itself
+function newsCheck() {
+  const seen = store.get("seenVer", "");
+  if (seen === GAME_VERSION) return;
+  const played = (store.get("hi", 0) | 0) > 0 || Object.keys(store.get("stars", {})).length > 0;
+  if (!seen && !played) {
+    store.set("seenVer", GAME_VERSION);
+    return;
+  }
+  setTimeout(() => {
+    if (G.state === "menu" && !ATTRACT.on && !fpAny()) openFP("news");
+  }, 600);
+}
+// =====================================================================================
+//  SHARE (v2026.10.04ap): a picture card of your game - the score, the stage you reached, your stars, who played - to
+//  send to family and friends. On a phone it opens the phone's own share menu (WhatsApp, messages...); on a computer it
+//  saves the picture. After a cup final, the card crowns the champion instead.
+// =====================================================================================
+function shareCard(kind                ) {
+  const N = 1080,
+    c = document.createElement("canvas");
+  c.width = c.height = N;
+  const g = c.getContext("2d");
+  // the night sky of the pub, with stars and a far-off Andromeda
+  const bg = g.createLinearGradient(0, 0, 0, N);
+  bg.addColorStop(0, "#0b0820");
+  bg.addColorStop(1, "#1a0a22");
+  g.fillStyle = bg;
+  g.fillRect(0, 0, N, N);
+  for (let i = 0; i < 260; i++) {
+    g.fillStyle = "rgba(255,243,226," + (0.2 + hash(i * 5.3) * 0.6).toFixed(2) + ")";
+    const r = hash(i * 2.1) < 0.1 ? 2.5 : 1.3;
+    g.fillRect(hash(i * 3.7) * N, hash(i * 9.1) * N, r, r);
+  }
+  {
+    g.save();
+    g.translate(N * 0.8, N * 0.17);
+    g.rotate(-0.5);
+    g.scale(1, 0.32);
+    const ag = g.createRadialGradient(0, 0, 0, 0, 0, 170);
+    ag.addColorStop(0, "rgba(255,236,200,.85)");
+    ag.addColorStop(0.25, "rgba(220,200,240,.35)");
+    ag.addColorStop(1, "rgba(120,140,230,0)");
+    g.fillStyle = ag;
+    g.beginPath();
+    g.arc(0, 0, 170, 0, 6.283);
+    g.fill();
+    g.restore();
+  }
+  // a neon frame
+  g.strokeStyle = "#ff5fa8";
+  g.lineWidth = 8;
+  g.shadowColor = "#ff5fa8";
+  g.shadowBlur = 30;
+  g.strokeRect(40, 40, N - 80, N - 80);
+  g.shadowBlur = 0;
+  const neon = (txt, y, size, colr, blur = 24) => {
+    g.font = "400 " + size + "px Bungee, Impact, sans-serif";
+    g.textAlign = "center";
+    g.textBaseline = "middle";
+    let s2 = size;
+    while (g.measureText(txt).width > N - 160 && s2 > 20)
+      g.font = "400 " + (s2 -= 4) + "px Bungee, Impact, sans-serif";
+    g.shadowColor = colr;
+    g.shadowBlur = blur;
+    g.fillStyle = colr;
+    g.fillText(txt, N / 2, y);
+    g.shadowBlur = 0;
+  };
+  const plain = (txt, y, size, colr) => {
+    g.font = "700 " + size + "px 'Chakra Petch', 'Segoe UI', sans-serif";
+    g.textAlign = "center";
+    g.textBaseline = "middle";
+    g.fillStyle = colr;
+    g.fillText(txt, N / 2, y);
+  };
+  neon("SPACE PUB", 150, 104, "#ff5fa8");
+  plain("A SPACE MILKSHAKE BAR ARCADE GAME", 225, 28, "#5ff5c8");
+  // a big milkshake in the middle
+  {
+    const cx = N / 2,
+      top = 380,
+      bot = 585,
+      wt = 150,
+      wb = 100;
+    g.fillStyle = "#ff8fbf";
+    g.beginPath();
+    g.moveTo(cx - wt / 2, top);
+    g.lineTo(cx + wt / 2, top);
+    g.lineTo(cx + wb / 2, bot);
+    g.lineTo(cx - wb / 2, bot);
+    g.closePath();
+    g.fill();
+    g.fillStyle = "#5ff5c8";
+    g.fillRect(cx - wb / 2 - 14, bot, wb + 28, 22);
+    g.fillStyle = "#fff1d6";
+    for (const [dx, dy, r] of [
+      [-45, 0, 38],
+      [0, -18, 44],
+      [45, 0, 38],
+    ]) {
+      g.beginPath();
+      g.arc(cx + dx, top + dy, r, 0, 6.283);
+      g.fill();
+    }
+    g.fillStyle = "#ff3b4f";
+    g.beginPath();
+    g.arc(cx, top - 62, 20, 0, 6.283);
+    g.fill();
+    g.strokeStyle = "#5ff5c8";
+    g.lineWidth = 16;
+    g.beginPath();
+    g.moveTo(cx + 22, top - 10);
+    g.lineTo(cx + 58, top - 92);
+    g.stroke();
+  }
+  const who = profNow().name,
+    date = new Date().toLocaleDateString();
+  if (kind === "cup" && CUP.s && CUP.s.champ) {
+    neon("🏆 " + CUP.s.champ, 680, 92, "#ffd24d", 30);
+    plain("WINS THE SPACE PUB CUP!", 770, 44, "#fff3e2");
+    plain(CUP.s.names.length + " PLAYERS  ·  " + date, 830, 30, "#b9a8b8");
+  } else {
+    neon(String(G.score).padStart(6, "0"), 680, 120, "#ffd24d", 30);
+    plain(
+      G.won ? "CONQUERED THE GALAXY!" : "REACHED LEVEL " + G.level + "  ·  " + here().name,
+      780,
+      34,
+      "#fff3e2"
+    );
+    plain("★ " + totalStars() + " STARS  ·  " + who + "  ·  " + date, 840, 30, "#b9a8b8");
+  }
+  plain("CAN YOU BEAT IT?", 940, 40, "#5ff5c8");
+  return c;
+}
+async function shareNow(kind                ) {
+  sfx("click");
+  const c = shareCard(kind),
+    blob       = await new Promise((res) => c.toBlob((b) => res(b), "image/png")),
+    name = "space-pub-" + (kind === "cup" ? "cup" : String(G.score)) + ".png",
+    text =
+      kind === "cup" && CUP.s && CUP.s.champ
+        ? CUP.s.champ + " won the Space Pub Cup!"
+        : "I scored " + G.score + " in Space Pub! Can you beat it?";
+  try {
+    const file = new File([blob], name, { type: "image/png" });
+    if (navigator.canShare && navigator.canShare({ files: [file] })) {
+      await navigator.share({ files: [file], text });
+      return;
+    }
+  } catch (e) {
+    if (e && e.name === "AbortError") return; // (you closed the share menu - fine)
+  }
+  // no share menu here: save the picture instead
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(blob);
+  a.download = name;
+  document.body.appendChild(a);
+  a.click();
+  setTimeout(() => {
+    URL.revokeObjectURL(a.href);
+    a.remove();
+  }, 2000);
+}
+// =====================================================================================
 //  MAIN LOOP
 // =====================================================================================
 let last = performance.now(),
@@ -49734,7 +50886,7 @@ function crashed(e) {
       for (const k of ["open"]) {
         SB[k] = WD[k] = CS[k] = JB[k] = BRK[k] = false;
       }
-      FP.shop = FP.trophies = FP.map = FP.cup = false;
+      for (const k of FP_IDS) FP[k] = false;
       ATTRACT.on = false;
       toMenu();
       callout("SORRY - SOMETHING WENT WRONG. BACK TO THE MENU!", "#ff5fa8", 3);
@@ -49826,6 +50978,9 @@ window.addEventListener(
   },
   true
 ); // F8: hard reset, whatever is going on
+langPage(); // (Afrikaans or Polski: the translator goes in before anything is drawn)
+$("vLang").textContent = LANG_NAMES[LANG];
+$("bLang").onclick = cycleLang;
 createRenderer(gfx);
 updateLookText();
 $("vSound").textContent = $("vSound2").textContent = muted ? "OFF" : "ON";

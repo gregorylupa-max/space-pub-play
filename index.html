@@ -81,7 +81,19 @@ button.wide { grid-column: 1 / -1; }
 #jbList button.on::before { content: "♪ NOW PLAYING"; font-size: 10px; color: var(--amber, #ffc34d); }
 #jbList .jbHead { grid-column: 1 / -1; font: 700 14px/1.2 var(--body); letter-spacing: .12em; color: var(--amber, #ffc34d); padding: 14px 4px 4px; border-bottom: 1px solid rgba(255,195,77,.4); }
 #jbList .jbJump { grid-column: 1 / -1; }
+#jukebox .buttons:last-child { grid-template-columns: 1fr 1fr; }
 #prof { max-height: 92vh; overflow-y: auto; }
+#keys { width: min(860px, 96vw); max-height: 94vh; overflow-y: auto; box-sizing: border-box; }
+#kmList { grid-template-columns: 1fr 1fr; }
+#kmList .jbHead { grid-column: 1 / -1; font: 700 13px var(--body); letter-spacing: .1em; color: var(--amber); padding: 10px 2px 2px; }
+#kmList button { text-align: left; display: flex; flex-direction: column; gap: 3px; padding: 9px 14px; }
+#kmList button small { font-size: 12px; color: var(--cyan); letter-spacing: .04em; }
+#kmList button.on { border-color: var(--amber); box-shadow: 0 0 16px rgba(255,195,77,.45); }
+body.txt1 .panel { zoom: 1.12; }
+body.txt2 .panel { zoom: 1.25; }
+body.txt1 .panel, body.txt2 .panel { max-height: 80vh; overflow-y: auto; }
+body.lefty #touch { flex-direction: row-reverse; }
+body.lefty #touch .grp { flex-direction: row-reverse; }
 #news { max-height: 92vh; overflow-y: auto; }
 #newsBody h3 { font: 700 13px var(--body); letter-spacing: .08em; color: var(--amber); margin: 14px 0 4px; }
 #newsBody h3.cred { color: var(--cyan); margin-top: 20px; }
@@ -197,14 +209,20 @@ body.retro .table { font-size: 10px; gap: 5px; }
     <button id="bShop">COIN SHOP <b id="vShop"></b></button>
     <button id="bTroph">TROPHIES <b id="vTroph"></b></button>
     <button id="bEndless" class="wide">ENDLESS MODE <b id="vEndless"></b></button>
+    <button id="bTa">TIME ATTACK <b id="vTa"></b></button>
+    <button id="bRush">BOSS RUSH <b id="vRush"></b></button>
     <button id="bMap">GALAXY MAP <b id="vMap"></b></button>
     <button id="bCup">CUP TOURNAMENT <b id="vCup"></b></button>
+    <button id="bKeys" class="wide">CONTROLS: CHOOSE YOUR KEYS</button>
     <button id="bNews" class="wide">WHAT'S NEW &amp; CREDITS</button>
     <button id="bOneBtn">ONE-BUTTON: <b id="vOneBtn">OFF</b></button>
     <button id="bBreak">BREAK REMINDER: <b id="vBreak">OFF</b></button>
     <button id="bCalm">CALM MODE: <b id="vCalm">OFF</b></button>
     <button id="bShapes">FLAVOUR SHAPES: <b id="vShapes">OFF</b></button>
-    <button id="bBuzz" class="wide">VIBRATION: <b id="vBuzz">ON</b></button>
+    <button id="bBuzz">VIBRATION: <b id="vBuzz">ON</b></button>
+    <button id="bVoice">VOICE: <b id="vVoice">OFF</b></button>
+    <button id="bTxt">TEXT SIZE: <b id="vTxt">NORMAL</b></button>
+    <button id="bLefty">LEFT-HANDED: <b id="vLefty">OFF</b></button>
     <button id="bHoliday" class="wide">HOLIDAY: <b id="vHoliday">BY DATE</b></button>
     <button id="bContSet" class="wide">CONTINUE AFTER GAME OVER: <b id="vContSet">ON</b></button>
     <button id="bPour">POUR: <b id="vPour">HOLD</b> <kbd>T</kbd></button>
@@ -319,11 +337,18 @@ body.retro .table { font-size: 10px; gap: 5px; }
   <button id="newsBack" class="primary">DONE <kbd>Esc</kbd></button>
 </section>
 
+<section id="keys" class="panel" hidden aria-label="Controls">
+  <h2>CONTROLS</h2>
+  <p class="tag">Pick an action, then press the key you want for it. The usual keys keep working too.</p>
+  <div class="buttons" id="kmList"></div>
+  <div class="profRow"><button id="kmReset">RESET TO THE USUAL KEYS</button><button id="kmBack" class="primary">DONE <kbd>Esc</kbd></button></div>
+</section>
+
 <section id="galmap" class="panel" hidden aria-label="Galaxy map">
   <h2>GALAXY MAP</h2>
   <p class="tag" id="gmTag"></p>
   <canvas id="gmCanvas"></canvas>
-  <button id="gmBack" class="primary">DONE <kbd>Esc</kbd></button>
+  <div class="profRow"><button id="gmPlay" class="primary"></button><button id="gmBack">DONE <kbd>Esc</kbd></button></div>
 </section>
 
 <section id="cup" class="panel" hidden aria-label="Cup tournament">
@@ -345,7 +370,7 @@ body.retro .table { font-size: 10px; gap: 5px; }
   <p class="tag">Every planet has its own tune. Pick one and listen. Arrows or D-pad to choose, Enter or A to play, Esc or B to go back.</p>
   <canvas id="jbViz" width="640" height="64"></canvas>
   <div class="buttons" id="jbList"></div>
-  <div class="buttons"><button id="jbStop">STOP</button><button id="jbBack">BACK <kbd>Esc</kbd></button></div>
+  <div class="buttons"><button id="jbShuffle">SHUFFLE ▶</button><button id="jbAllVolks">PLAY ALL VOLKSLIEDJIES ▶</button><button id="jbStop">STOP</button><button id="jbBack">BACK <kbd>Esc</kbd></button></div>
 </section>
 
 <section id="pause" class="panel" hidden aria-label="Paused">
@@ -427,6 +452,8 @@ const PROFILE_KEYS = new Set([
   "pet2",
   "hat",
   "pet",
+  "taBest",
+  "rushBest",
 ]);
 const PROFILE = (() => {
   try {
@@ -1528,11 +1555,22 @@ const canBuzz = () => {
     return false;
   }
 };
+// TEXT SIZE (normal, big, huge) for the menus and everything the game writes on the screen; LEFT-HANDED touch buttons
+const TXT_SIZES = [1, 1.2, 1.4],
+  TXT_NAMES = ["NORMAL", "BIG", "HUGE"],
+  TXT = () => TXT_SIZES[COMFORT.txt] || 1;
+function comfortBody() {
+  document.body.classList.toggle("txt1", COMFORT.txt === 1);
+  document.body.classList.toggle("txt2", COMFORT.txt === 2);
+  document.body.classList.toggle("lefty", COMFORT.lefty);
+}
 // the comfort settings, read once (they're switched in the menu)
 const COMFORT = {
   calm: !!store.get("calm", false),
   shapes: !!store.get("shapes", false),
   buzz: store.get("buzz", true) !== false,
+  txt: clamp(store.get("txt", 0) | 0, 0, 2),
+  lefty: !!store.get("lefty", false),
 }; // (how many times the video card was lost and the game fell back to the processor)
 const stage = $("stage"),
   hud = $("hud"),
@@ -1689,6 +1727,12 @@ const DICT_ROWS                             = [
   ["CALM MODE:", "RUSTIGE MODUS:", "TRYB SPOKOJNY:"],
   ["FLAVOUR SHAPES:", "GEURVORMS:", "KSZTAŁTY SMAKÓW:"],
   ["VIBRATION:", "VIBRASIE:", "WIBRACJE:"],
+  ["VOICE:", "STEM:", "GŁOS:"],
+  ["TEXT SIZE:", "TEKSGROOTTE:", "ROZMIAR TEKSTU:"],
+  ["BIG", "GROOT", "DUŻY"],
+  ["HUGE", "BAIE GROOT", "BARDZO DUŻY"],
+  ["LEFT-HANDED:", "LINKSHANDIG:", "DLA LEWORĘCZNYCH:"],
+  ["GAME OVER", "SPEL VERBY", "KONIEC GRY"],
   ["HOLIDAY:", "VAKANSIEDAG:", "ŚWIĘTO:"],
   ["BY DATE", "VOLGENS DATUM", "WEDŁUG DATY"],
   ["NONE", "GEEN", "BRAK"],
@@ -2008,9 +2052,123 @@ const DICT_ROWS                             = [
   ["SERVE A GOLDEN VIP", "BEDIEN 'N GOUE VIP", "OBSŁUŻ ZŁOTEGO VIP-A"],
   ["DONE!", "KLAAR!", "ZROBIONE!"],
   ["✓ DONE TODAY", "✓ VANDAG KLAAR", "✓ DZIŚ ZROBIONE"],
+  // v2026.10.04ar: challenge modes, controls, the music box, the galaxy map
+  ["TIME ATTACK", "TYDJAG", "NA CZAS"],
+  ["BOSS RUSH", "BAAS-STORMLOOP", "SZTURM NA BOSSÓW"],
+  ["CONTROLS: CHOOSE YOUR KEYS", "KONTROLES: KIES JOU SLEUTELS", "STEROWANIE: WYBIERZ KLAWISZE"],
+  ["CONTROLS", "KONTROLES", "STEROWANIE"],
+  [
+    "Pick an action, then press the key you want for it. The usual keys keep working too.",
+    "Kies 'n aksie en druk dan die sleutel wat jy daarvoor wil hê. Die gewone sleutels werk steeds ook.",
+    "Wybierz czynność, a potem naciśnij klawisz, którego chcesz do niej używać. Zwykłe klawisze też dalej działają.",
+  ],
+  ["RESET TO THE USUAL KEYS", "TERUG NA DIE GEWONE SLEUTELS", "PRZYWRÓĆ ZWYKŁE KLAWISZE"],
+  ["PLAYER 1 (OR PLAYING ALONE)", "SPELER 1 (OF ALLEEN)", "GRACZ 1 (LUB GRA W POJEDYNKĘ)"],
+  ["UP (CHANGE BAR)", "OP (VERANDER TOONBANK)", "W GÓRĘ (ZMIEŃ BAR)"],
+  ["DOWN (CHANGE BAR)", "AF (VERANDER TOONBANK)", "W DÓŁ (ZMIEŃ BAR)"],
+  ["RUN LEFT", "HARDLOOP LINKS", "BIEGNIJ W LEWO"],
+  ["RUN RIGHT", "HARDLOOP REGS", "BIEGNIJ W PRAWO"],
+  ["HOLY WATER", "WYWATER", "WODA ŚWIĘCONA"],
+  ["THE CROSS", "DIE KRUIS", "KRZYŻ"],
+  ["SPACE", "SPASIE", "SPACJA"],
+  [
+    "PRESS A KEY... (Esc: cancel)",
+    "DRUK 'N SLEUTEL... (Esc: kanselleer)",
+    "NACIŚNIJ KLAWISZ... (Esc: anuluj)",
+  ],
+  ["SHUFFLE ▶", "SKOMMEL ▶", "LOSOWO ▶"],
+  ["PLAY ALL VOLKSLIEDJIES ▶", "SPEEL AL DIE VOLKSLIEDJIES ▶", "ZAGRAJ WSZYSTKIE VOLKSLIEDJIES ▶"],
+  ["THE MILKY WAY", "DIE MELKWEG", "DROGA MLECZNA"],
+  ["OUR HOME GALAXY", "ONS TUISSTERRESTELSEL", "NASZA GALAKTYKA"],
+  ["THE ANDROMEDA GALAXY", "DIE ANDROMEDA-STERRESTELSEL", "GALAKTYKA ANDROMEDY"],
+  ["2.5 MILLION LIGHT-YEARS AWAY", "2,5 MILJOEN LIGJARE VER", "2,5 MILIONA LAT ŚWIETLNYCH STĄD"],
+  ["2.5 MILLION LIGHT-YEARS", "2,5 MILJOEN LIGJARE", "2,5 MILIONA LAT ŚWIETLNYCH"],
+  ["THE SUN", "DIE SON", "SŁOŃCE"],
+  [
+    "DON'T FANCY IT?  PRESS B TO SKIP THIS BONUS ROUND",
+    "LUS NIE?  DRUK B OM HIERDIE BONUSRONDTE OOR TE SLAAN",
+    "NIE MASZ OCHOTY?  NACIŚNIJ B, BY POMINĄĆ TĘ RUNDĘ BONUSOWĄ",
+  ],
+  [
+    "DON'T FANCY IT?  TAP  SKIP ▶▶  TO SKIP THIS BONUS ROUND",
+    "LUS NIE?  TIK  SLAAN OOR ▶▶  OM HIERDIE BONUSRONDTE OOR TE SLAAN",
+    "NIE MASZ OCHOTY?  STUKNIJ  POMIŃ ▶▶, BY POMINĄĆ TĘ RUNDĘ BONUSOWĄ",
+  ],
+  [
+    "DON'T FANCY IT?  PRESS ESC TO SKIP THIS BONUS ROUND",
+    "LUS NIE?  DRUK ESC OM HIERDIE BONUSRONDTE OOR TE SLAAN",
+    "NIE MASZ OCHOTY?  NACIŚNIJ ESC, BY POMINĄĆ TĘ RUNDĘ BONUSOWĄ",
+  ],
+  [
+    "DON'T FANCY IT?  PRESS B TO SKIP THIS MINI-GAME",
+    "LUS NIE?  DRUK B OM HIERDIE MINISPELETJIE OOR TE SLAAN",
+    "NIE MASZ OCHOTY?  NACIŚNIJ B, BY POMINĄĆ TĘ MINIGRĘ",
+  ],
+  [
+    "DON'T FANCY IT?  TAP  SKIP ▶▶  TO SKIP THIS MINI-GAME",
+    "LUS NIE?  TIK  SLAAN OOR ▶▶  OM HIERDIE MINISPELETJIE OOR TE SLAAN",
+    "NIE MASZ OCHOTY?  STUKNIJ  POMIŃ ▶▶, BY POMINĄĆ TĘ MINIGRĘ",
+  ],
+  [
+    "DON'T FANCY IT?  PRESS ESC (OR K) TO SKIP THIS MINI-GAME",
+    "LUS NIE?  DRUK ESC (OF K) OM HIERDIE MINISPELETJIE OOR TE SLAAN",
+    "NIE MASZ OCHOTY?  NACIŚNIJ ESC (LUB K), BY POMINĄĆ TĘ MINIGRĘ",
+  ],
+  [
+    "BOSS RUSH!  ALL SIX BOSSES, ONE AFTER ANOTHER",
+    "BAAS-STORMLOOP!  AL SES BASE, EEN NA DIE ANDER",
+    "SZTURM NA BOSSÓW!  WSZYSTKICH SZEŚCIU, JEDEN PO DRUGIM",
+  ],
 ];
 // the texts that carry numbers or names: patterns
 const DICT_PAT                             = [
+  [
+    /^★ (\d+) OF (\d+) STARS  ·  (\d+) OF (\d+) STOPS VISITED  ·  TAP A STOP, THEN PLAY$/,
+    "★ $1 VAN $2 STERRE  ·  $3 VAN $4 HALTES BESOEK  ·  TIK 'N HALTE, DAN SPEEL",
+    "★ $1 Z $2 GWIAZDEK  ·  ODWIEDZONE PRZYSTANKI: $3 Z $4  ·  STUKNIJ PRZYSTANEK, POTEM GRAJ",
+  ],
+  [/^▶ PLAY STOP (\d+): (.+)$/, "▶ SPEEL HALTE $1: $2", "▶ GRAJ PRZYSTANEK $1: $2"],
+  [/^STOP (\d+): (.+)$/, "HALTE $1: $2", "PRZYSTANEK $1: $2"],
+  [/^\(USUAL: (.+)\)$/, "(GEWOONLIK: $1)", "(ZWYKLE: $1)"],
+  [
+    /^TIME ATTACK!  SERVE (\d+) AS FAST AS YOU CAN$/,
+    "TYDJAG!  BEDIEN $1 SO VINNIG AS JY KAN",
+    "NA CZAS!  OBSŁUŻ $1 JAK NAJSZYBCIEJ",
+  ],
+  [
+    /^FIFTY SERVED IN ([\d:.]+)!  A NEW BEST TIME!$/,
+    "VYFTIG BEDIEN IN $1!  'N NUWE BESTE TYD!",
+    "PIĘĆDZIESIĘCIU OBSŁUŻONYCH W $1!  NOWY REKORD!",
+  ],
+  [
+    /^FIFTY SERVED IN ([\d:.]+)!  BEST ([\d:.]+)$/,
+    "VYFTIG BEDIEN IN $1!  BESTE $2",
+    "PIĘĆDZIESIĘCIU OBSŁUŻONYCH W $1!  REKORD $2",
+  ],
+  [
+    /^ALL SIX BOSSES BEATEN IN ([\d:.]+)!  A NEW BEST TIME!$/,
+    "AL SES BASE VERSLAAN IN $1!  'N NUWE BESTE TYD!",
+    "WSZYSCY SZEŚCIU BOSSOWIE POKONANI W $1!  NOWY REKORD!",
+  ],
+  [
+    /^ALL SIX BOSSES BEATEN IN ([\d:.]+)!$/,
+    "AL SES BASE VERSLAAN IN $1!",
+    "WSZYSCY SZEŚCIU BOSSOWIE POKONANI W $1!",
+  ],
+  [/^BOSS (\d+) \/ (\d+)$/, "BAAS $1 / $2", "BOSS $1 / $2"],
+  [/^TIME ATTACK: 50 SERVED IN ([\d:.]+)$/, "TYDJAG: 50 BEDIEN IN $1", "NA CZAS: 50 OBSŁUŻONYCH W $1"],
+  [/^TIME ATTACK: (\d+) \/ (\d+) SERVED$/, "TYDJAG: $1 / $2 BEDIEN", "NA CZAS: OBSŁUŻONO $1 / $2"],
+  [
+    /^BOSS RUSH: ALL SIX BOSSES IN ([\d:.]+)$/,
+    "BAAS-STORMLOOP: AL SES BASE IN $1",
+    "SZTURM NA BOSSÓW: WSZYSCY SZEŚCIU W $1",
+  ],
+  [
+    /^BOSS RUSH: (\d+) OF (\d+) BOSSES BEATEN$/,
+    "BAAS-STORMLOOP: $1 VAN $2 BASE VERSLAAN",
+    "SZTURM NA BOSSÓW: POKONANO $1 Z $2",
+  ],
+  [/^BEST (\d+:[\d.]+)$/, "BESTE $1", "REKORD $1"],
   [
     /^LEVEL (\d+) CLEAR!(\s+\+\d+)(\s+)PERFECT SERVICE!$/,
     "VLAK $1 KLAAR!$2$3PERFEKTE DIENS!",
@@ -2168,6 +2326,162 @@ function cycleLang() {
   store.set("lang", nx);
   sfx("click");
   setTimeout(() => location.reload(), 120);
+}
+// =====================================================================================
+//  CONTROLS - CHOOSE YOUR OWN KEYS (v2026.10.04ar). For each player: up, down, run left, run right, pour, holy water,
+//  the cross. A key you choose stands in for the usual one: the game sees the usual key, so everything (menus too)
+//  works with it - and the usual key still works as well. Remembered on this device; RESET puts the usual keys back.
+//  (Controllers and touch buttons stay as they are.)
+// =====================================================================================
+const KM_ACTIONS = [
+  ["up", "UP (CHANGE BAR)"],
+  ["down", "DOWN (CHANGE BAR)"],
+  ["left", "RUN LEFT"],
+  ["right", "RUN RIGHT"],
+  ["pour", "POUR"],
+  ["holy", "HOLY WATER"],
+  ["cross", "THE CROSS"],
+]         ;
+const KM_DEFAULT = {
+  1: { up: "KeyW", down: "KeyS", left: "KeyA", right: "KeyD", pour: "Space", holy: "KeyH", cross: "KeyQ" },
+  2: {
+    up: "ArrowUp",
+    down: "ArrowDown",
+    left: "ArrowLeft",
+    right: "ArrowRight",
+    pour: "Enter",
+    holy: "Period",
+    cross: "Comma",
+  },
+};
+const KM                                                                                     = {
+  bind: store.get("keymap", {}),
+  map: {},
+  wait: null,
+};
+function kmBuild() {
+  KM.map = {};
+  for (const id in KM.bind) {
+    const [p, a] = id.split("."),
+      canon = KM_DEFAULT[p] && KM_DEFAULT[p][a],
+      phys = KM.bind[id];
+    if (canon && phys && phys !== canon) KM.map[phys] = canon;
+  }
+}
+kmBuild();
+const keyName = (code) =>
+  !code
+    ? "?"
+    : {
+        Space: "SPACE",
+        ArrowUp: "↑",
+        ArrowDown: "↓",
+        ArrowLeft: "←",
+        ArrowRight: "→",
+        Enter: "ENTER",
+        Period: ".",
+        Comma: ",",
+        Slash: "/",
+        Semicolon: ";",
+        Quote: "'",
+        BracketLeft: "[",
+        BracketRight: "]",
+        Backslash: "\\",
+        Minus: "-",
+        Equal: "=",
+        ShiftLeft: "LEFT SHIFT",
+        ShiftRight: "RIGHT SHIFT",
+        ControlLeft: "LEFT CTRL",
+        ControlRight: "RIGHT CTRL",
+        AltLeft: "LEFT ALT",
+        AltRight: "RIGHT ALT",
+        Tab: "TAB",
+        Backspace: "BACKSPACE",
+      }[code] ||
+      code
+        .replace(/^Key/, "")
+        .replace(/^Digit/, "")
+        .replace(/^Numpad/, "NUM ")
+        .toUpperCase();
+// the door every key goes through first: a chosen key passes on as the usual one
+function kmDoor(e) {
+  if (KM.wait && e.type === "keydown") {
+    e.preventDefault();
+    e.stopImmediatePropagation();
+    if (e.code !== "Escape") {
+      KM.bind[KM.wait] = e.code;
+      store.set("keymap", KM.bind);
+      kmBuild();
+      sfx("chime", undefined, 1);
+    }
+    KM.wait = null;
+    if (typeof buildKeys === "function") buildKeys();
+    return;
+  }
+  if (KM.wait) {
+    e.stopImmediatePropagation();
+    return;
+  }
+  if (!e.isTrusted) return; // (the ones passed on below)
+  const tg = e.target               ;
+  if (tg && (tg.tagName === "INPUT" || tg.tagName === "TEXTAREA")) return;
+  const canon = KM.map[e.code];
+  if (!canon) return;
+  e.preventDefault();
+  e.stopImmediatePropagation();
+  window.dispatchEvent(
+    new KeyboardEvent(e.type, {
+      code: canon,
+      key: e.key,
+      repeat: e.repeat,
+      altKey: e.altKey,
+      shiftKey: e.shiftKey,
+      ctrlKey: e.ctrlKey,
+      bubbles: true,
+      cancelable: true,
+    })
+  );
+}
+window.addEventListener("keydown", kmDoor, true);
+window.addEventListener("keyup", kmDoor, true);
+// ---- the CONTROLS screen ----
+function buildKeys() {
+  const list = $("kmList");
+  if (!list) return;
+  list.innerHTML = "";
+  for (const p of [1, 2]) {
+    const h = document.createElement("div");
+    h.className = "jbHead";
+    h.textContent = p === 1 ? "PLAYER 1 (OR PLAYING ALONE)" : "PLAYER 2";
+    list.appendChild(h);
+    for (const [a, label] of KM_ACTIONS) {
+      const id = p + "." + a,
+        b = document.createElement("button"),
+        mine = KM.bind[id];
+      b.innerHTML =
+        label +
+        "<small>" +
+        (KM.wait === id
+          ? "PRESS A KEY... (Esc: cancel)"
+          : keyName(mine || KM_DEFAULT[p][a]) +
+            (mine && mine !== KM_DEFAULT[p][a] ? "  ·  (USUAL: " + keyName(KM_DEFAULT[p][a]) + ")" : "")) +
+        "</small>";
+      if (KM.wait === id) b.className = "on";
+      b.onclick = () => {
+        KM.wait = id;
+        sfx("click");
+        buildKeys();
+      };
+      list.appendChild(b);
+    }
+  }
+}
+function keysReset() {
+  KM.bind = {};
+  store.set("keymap", KM.bind);
+  kmBuild();
+  buildKeys();
+  sfx("click");
 }
 // =====================================================================================
 //  SIZES  -  the playfield is 960 x 540 units, centred; the diner fills the rest
@@ -4595,7 +4909,11 @@ window.addEventListener("keydown", (e) => {
     if (["Space", "KeyX", "KeyK", "Enter", "ControlLeft", "ControlRight"].includes(k)) pickDome(bonus.sel);
     return;
   }
-  if (["play", "lost", "clear", "bonus", "mini"].includes(G.state) && (k === "KeyP" || k === "Escape")) {
+  if (
+    ["play", "lost", "clear", "bonus", "mini"].includes(G.state) &&
+    (k === "KeyP" || (k === "Escape" && G.state !== "mini" && G.state !== "bonus"))
+  ) {
+    // (in a mini-game or the bonus round Esc SKIPS it - P pauses)
     pause(true);
     return;
   }
@@ -4655,11 +4973,11 @@ function readPads() {
     if (b(3) && !pd.y) edge.holy = true;
     pd.y = b(3); // Y / triangle: holy water
     if (b(1) && !pd.bx) {
-      if (G.state === "mini") skipMini();
+      if (G.state === "mini" || G.state === "bonus") skipMini();
       else edge.cross = true;
     }
     pd.bx = b(1); // B / circle: show the cross (in a mini-game: skip it)
-    if (b(8) && !pd.bk && G.state === "mini" && !b(9)) skipMini();
+    if (b(8) && !pd.bk && (G.state === "mini" || G.state === "bonus") && !b(9)) skipMini();
     pd.bk = b(8); // BACK / SELECT: skip a mini-game too
     if (lb && !pd.lb) edge.lu = true;
     if (rb && !pd.rb) edge.ld = true;
@@ -5197,6 +5515,8 @@ const FLY_SAY = {
 };
 function update(dt) {
   dangerUpdate(dt); // (the music feels the danger)
+  voiceUpdate();
+  modesUpdate(dt);
   G.time += dt;
   G.fadeT = Math.max(0, (G.fadeT || 0) - dt);
   if (G.state === "play" && G.fever > 0) {
@@ -5291,6 +5611,10 @@ function update(dt) {
         gameOver();
         return;
       } // (a cup match lasts up to three levels)
+      if (G.brush && !G.demo) {
+        rushNext();
+        return;
+      } // (boss rush: straight on to the next boss)
       if (G.demo) {
         G.level = (G.level % 4) + 1;
         startLevel();
@@ -9199,6 +9523,7 @@ function endFired() {
 function gameOver() {
   G.state = "over";
   const cupM = cupResult(); // (a cup match: the result goes into the bracket)
+  say("GAME OVER", true);
   contRemember();
   if (twoP()) G.score = G.versus ? Math.max(P1.score, P2.score) : P1.score + P2.score;
   const best = G.score > G.hi;
@@ -9315,6 +9640,7 @@ function addScore(n, x , y ) {
 }
 function callout(text, c, sec) {
   if (text) G.callouts.push({ text, c, life: sec, max: sec });
+  say(text); // (the reading voice, if it's on)
 }
 
 // =====================================================================================
@@ -11685,8 +12011,11 @@ function poster(x, y, v, seed) {
 }
 // spills and drips that pile up during a level (they're stored in the game state)
 function drawSpills(t, lane) {
-  for (const s of spills) {
-    if (s.kind !== "puddle" || s.lane !== lane) continue;
+  for (const s of spills) if (s.kind === "puddle" && s.lane === lane) drawPuddle(s);
+}
+// one puddle of spilt shake on the floor, with bits of broken glass
+function drawPuddle(s) {
+  {
     const y = LY(s.lane, s.x) + 44,
       c = FLAVORS[s.flavor][1];
     blob(s.x, y, 13 * Math.min(1, s.age * 3 + 0.3), withA(c, 0.5), 0.3, s.seed);
@@ -19981,6 +20310,12 @@ const VNEAR = TAPX + 70,
   VFAR = X0 - 70;
 const VSIDE = { c: -40, p: 40, bar: 0 },
   VSPR = 1.42; // (people and things are drawn a third bigger in the tall view)                              // customers walk on the left of their bar, you on the right
+// THE BACK WALL IN THE TALL VIEW (v2026.10.04ar): everything on the pub's back wall in the wide view - tonight's show on
+// the stage, the chandeliers, the bunting, the holiday decorations, the neon sign, the disco ball, the bell, the braai and
+// the generator outside, the minibus taxi racing past - is drawn up above the far end of the bars, a little smaller (it's
+// further away). The front of the room (plants, the fish tank, the Christmas tree...) runs along the bottom.
+// VPANEL: where it went this frame (the stage's words in the HUD follow it). The wide view's back wall spans x 150..810.
+const VPANEL = { on: false, ok: false, x0: 0, y0: 0, rx: 150, ry: 0, sc: 1 };
 const vView = () =>
   !(G.state === "bonus" && bonus) &&
   !CS.open &&
@@ -20056,6 +20391,49 @@ function drawVert(V, t) {
     up = (x, sd) => vpt(1.5, x, 30 - GLASS, sd),
     deckFar = farX - 70,
     deckNear = VNEAR + 400;
+  // ---- the back wall, up above the far end: the stage show and all the decorations ----
+  VPANEL.ok = false;
+  if (vView() && G.state !== "ending")
+    safeDraw("tallBackWall", () => {
+      const [a1x, a1y] = up(deckFar, -EDGE),
+        [b1x] = up(deckFar, EDGE),
+        skyTop = -oy + 64 / Math.max(0.3, u),
+        sc = Math.max(0.2, Math.min((Rr - L - 20) / 660, (a1y - skyTop) / 150)),
+        P = VPANEL;
+      P.sc = sc;
+      P.x0 = (a1x + b1x) / 2 - (480 - P.rx) * sc;
+      P.y0 = a1y - 150 * sc;
+      P.ok = true;
+      push();
+      translate(P.x0, P.y0);
+      scaleBy(sc);
+      translate(-P.rx, 0);
+      // a frame of girders to hang it all from, with glass between
+      quad4(
+        150,
+        0,
+        810,
+        0,
+        810,
+        150,
+        150,
+        150,
+        withA(col("#9fd8ff"), 0.04),
+        withA(col("#9fd8ff"), 0.04),
+        withA(col("#9fd8ff"), 0.09),
+        withA(col("#9fd8ff"), 0.09)
+      );
+      rect(146, -6, 668, 7, V.trim);
+      line(146, 1, 814, 1, 1.2, withA(C.white, 0.25));
+      for (const gx of [150, 810]) rect(gx - 3, -6, 6, 156, C.chromeDk);
+      P.on = true;
+      try {
+        funDecor(V, t, "back");
+      } finally {
+        P.on = false;
+      }
+      pop();
+    });
   // the far wall (with the doors): a band of panelling between the glass walls, a neon strip along the top
   {
     const [a1x, a1y] = up(deckFar, -EDGE),
@@ -20192,14 +20570,76 @@ function drawVert(V, t) {
       R.setAdd(false);
     } // lamp gleam
   }
+  // ---- the front of the room, along the bottom: the plants, the fish tank, the Christmas tree... ----
+  if (vView() && G.state !== "ending")
+    safeDraw("tallFront", () => {
+      const sc = (Rr - L) / 660;
+      push();
+      translate(L, B - 545 * sc);
+      scaleBy(sc);
+      translate(-150, 0);
+      VPANEL.on = true;
+      try {
+        funDecor(V, t, "front");
+      } finally {
+        VPANEL.on = false;
+      }
+      pop();
+      if (GENPOS) GENPOS = [L + (GENPOS[0] - 150) * sc, B - 545 * sc + GENPOS[1] * sc]; // (the generator's lamp, where it is on the screen)
+    });
   // ---- everything on and around the bars, far things first ----
   const list = [];
+  // (the extras the wide view draws on each bar: holiday things at the door end, Easter eggs, the detective's footprints,
+  //  puddles and drips, the geyser)
+  for (let l = 0; l < LANES; l++)
+    if (G.event) list.push({ x: X0 + 30, f: () => vAt(l, X0 + 30, 0, () => holidayLane(G.event, l, t)) });
+  for (const e of G.eggs || [])
+    if (!e.got) list.push({ x: e.x, f: () => vAt(e.lane, e.x, 0, () => funEgg(e, t)) });
+  if (G.case)
+    for (const p of G.case.prints)
+      list.push({ x: p.x - 0.5, f: () => vAt(p.lane, p.x, VSIDE.c, () => funPrint(p, t)) });
+  for (const s of spills)
+    list.push({
+      x: s.x - 0.4,
+      f: () =>
+        s.kind === "puddle"
+          ? vAt(s.lane, s.x, VSIDE.p, () => drawPuddle(s))
+          : vAt(s.lane, s.x, 0, () => {
+              const a = Math.min(1, s.life / 3);
+              disc(
+                s.x,
+                LY(s.lane, s.x) - 4 + s.dy,
+                1.6 + s.r,
+                withA(FLAVORS[s.flavor][1], 0.4 * a),
+                0.6 + s.r * 0.3
+              );
+            }),
+    });
+  if (G.geyser)
+    list.push({ x: G.geyser.x, f: () => vAt(G.geyser.lane, G.geyser.x, 0, () => drawGeyser(G.geyser, t)) });
   for (let l = 0; l < LANES; l++) {
     list.push({ x: X0 - 40, f: () => vAt(l, X0 - 40, 48, () => drawDoor(l, t, V)) });
-    list.push({ x: -1e6 + l, f: () => vAt(l, TAPX + 50, -6, () => drawTap(l, t, V)) }); // (drawn first, so it never hides the bartender)
+    list.push({
+      x: -1e6 + l,
+      f: () =>
+        vAt(l, TAPX + 50, -6, () => {
+          drawTap(l, t, V);
+          funTapLight(l, t);
+        }),
+    }); // (drawn first, so it never hides the bartender)
   }
   for (const c of customers)
-    list.push({ x: c.x, f: () => vAt(c.lane, c.x, VSIDE.c, () => drawCustomer(c, t)) });
+    list.push({
+      x: c.x,
+      f: () =>
+        vAt(c.lane, c.x, VSIDE.c, () => {
+          drawCustomer(c, t);
+          if (c.gold) kidDrawVip(c, t);
+          if (c.want !== undefined) funOrderBubble(c, t);
+          if (c.thief) funThiefFx(c, t);
+          funRobWarn(c, t);
+        }),
+    });
   for (const tp of tips) list.push({ x: tp.x, f: () => vAt(tp.lane, tp.x, 0, () => drawTip(tp, t)) });
   for (const u of powerups) list.push({ x: u.x, f: () => vAt(u.lane, u.x, 0, () => drawPowerup(u, t)) });
   for (const m of empties)
@@ -20230,6 +20670,8 @@ function drawVert(V, t) {
       x: x + 1,
       f: () => {
         vAt(pl.lane, x, VSIDE.p, () => {
+          kidDrawPet(pl, t);
+          funPerks(pl, t);
           P = pl;
           drawPlayer(t);
           P = P1;
@@ -23873,174 +24315,514 @@ SCENES.push({ name: "THE MOONQUAKE MONSTER SAVES THE DAY", len: 15, fn: (S) => s
 // =====================================================================================
 //  THE HOLIDAY CONVOY (v2026.10.04ah): old-school family cars, our own designs in the spirit of the cars a Polish
 //  family drove to the seaside in the 70s and 80s, chugging across space on a floating road - roof racks piled with
-//  suitcases, a beach umbrella and a bike, kids waving out of the windows, black number plates with white letters.
+//  suitcases, a beach umbrella and a bike, kids waving out of the windows.
 //      the TINY CAR  - a little round city car, flat out and smoking at the back of the queue
 //      the SALOON    - a big boxy four-door, the family's pride, chrome bumpers
 //      the FIFTIES   - a rounded old two-tone with whitewall tyres, grandad driving
 //      the WEDGE     - a sharp 80s hatchback, overtaking everyone
 //  They drive right to left; the exhaust smoke, the bike's flag and the scarves stream out behind them.
 // =====================================================================================
+// =====================================================================================
+//  VEHICLE FINISH (v2026.10.04ar): the bits that make the show's cars, the taxi and the rockets look solid and shiny in
+//  the big full-screen show - spinning wheels with hubcaps, layered rocket flames (orange, yellow, a white-hot core) with
+//  sparks, smoke puffs, a glint sweeping across the glass, headlight beams, a polished-metal sheen.
+// =====================================================================================
+// a wheel at (x, y), r round: a tyre, a rim, five spokes turning, a shiny hubcap (white: a whitewall tyre)
+function vWheel(x, y, r, t, spin = 14, white = false, rim = "#c8ccd6") {
+  disc(x, y, r, col("#121216"));
+  disc(x, y, r * 0.88, col("#26262e"));
+  if (white) disc(x, y, r * 0.74, col("#f4f2ea"));
+  disc(x, y, r * 0.6, col("#4a4e58"));
+  disc(x, y, r * 0.54, col(rim));
+  const a = -t * spin;
+  for (let i = 0; i < 5; i++) {
+    const b = a + i * 1.2566;
+    line(x, y, x + Math.cos(b) * r * 0.5, y + Math.sin(b) * r * 0.5, r * 0.13, col("#6a6e78"));
+  }
+  disc(x, y, r * 0.2, col("#eef0f4"));
+  disc(x - r * 0.24, y - r * 0.26, r * 0.13, withA(C.white, 0.85)); // (a glint that stays put while the wheel turns)
+}
+// a rocket flame from (x, y) pointing along dir (-1 left, +1 right), len long, w half-wide at the nozzle: three layers
+// (outer, middle, white-hot core), flickering, a glow, and a few sparks flying off
+const FLAME_HOT = ["#ff5a1a", "#ffc23a", "#fff8e0"],
+  FLAME_ICE = ["#2a5aff", "#7fd0ff", "#f4fdff"];
+function vFlame(x, y, dir, len, w, t, pal = FLAME_HOT, seed = 0) {
+  R.setAdd(true);
+  const fl = 1 + Math.sin(t * 37 + seed * 3) * 0.12 + Math.sin(t * 23 + seed) * 0.08;
+  for (let L = 0; L < 3; L++) {
+    const f = [1, 0.7, 0.4][L] * len * fl,
+      ww = [1, 0.66, 0.36][L] * w,
+      c = col(pal[L]),
+      a = [0.5, 0.75, 0.95][L],
+      mx = x + dir * f * 0.45;
+    quad4(
+      x,
+      y - ww,
+      mx,
+      y - ww * 0.75,
+      mx,
+      y + ww * 0.75,
+      x,
+      y + ww,
+      withA(c, a),
+      withA(c, a * 0.8),
+      withA(c, a * 0.8),
+      withA(c, a)
+    );
+    quad4(
+      mx,
+      y - ww * 0.75,
+      x + dir * f,
+      y,
+      x + dir * f,
+      y,
+      mx,
+      y + ww * 0.75,
+      withA(c, a * 0.8),
+      withA(c, 0),
+      withA(c, 0),
+      withA(c, a * 0.8)
+    );
+  }
+  glowE(x + dir * len * 0.35, y, len * 0.7, w * 2.4, withA(col(pal[1]), 0.35));
+  glow(x, y, w * 2.6, withA(col(pal[2]), 0.55));
+  for (let j = 0; j < 4; j++) {
+    const f = (t * 2.6 + j / 4 + seed * 0.37) % 1;
+    disc(
+      x + dir * len * (0.3 + f * 1.1),
+      y + Math.sin(j * 7.3 + seed + t * 3) * w * f * 1.6,
+      0.9 * (1 - f) + 0.2,
+      withA(col(pal[1]), 1 - f)
+    );
+  }
+  R.setAdd(false);
+}
+// puffs of smoke streaming out behind (dir: the way they stream), growing and fading
+function vSmoke(x, y, dir, t, n, len, size, hex = "#9a9ca6", a = 0.4, seed = 0) {
+  for (let j = 0; j < n; j++) {
+    const f = (t * 1.3 + j / n + seed * 0.29) % 1;
+    disc(
+      x + dir * f * len,
+      y - f * size * 1.2 + Math.sin(j * 5 + seed) * f * size * 0.5,
+      size * (0.35 + f),
+      withA(col(hex), a * (1 - f) * Math.min(1, f * 6))
+    );
+  }
+}
+// a glint on glass in the box x0..x1, y0..y1: two slanted streaks sweeping slowly across now and then
+function vGlare(x0, y0, x1, y1, t, seed = 0) {
+  const w = x1 - x0,
+    h = y1 - y0,
+    p = ((t * 0.32 + seed * 0.21) % 1.8) - 0.4;
+  R.setAdd(true);
+  for (const [o, sw, a] of [
+    [0, 0.22, 0.32],
+    [0.32, 0.09, 0.22],
+  ]) {
+    const cx = x0 + (p + o) * w,
+      sl = h * 0.45;
+    const L1 = clamp(cx + sl, x0, x1),
+      R1 = clamp(cx + sl + sw * w, x0, x1),
+      L2 = clamp(cx - sl, x0, x1),
+      R2 = clamp(cx - sl + sw * w, x0, x1);
+    if (R1 > L1 || R2 > L2) quad4(L1, y0, R1, y0, R2, y1, L2, y1, withA(C.white, a));
+  }
+  // and a steady soft sheen across the top
+  quad4(
+    x0,
+    y0,
+    x1,
+    y0,
+    x1,
+    y0 + h * 0.35,
+    x0,
+    y0 + h * 0.35,
+    withA(C.white, 0.14),
+    withA(C.white, 0.14),
+    withA(C.white, 0),
+    withA(C.white, 0)
+  );
+  R.setAdd(false);
+}
+// a headlight beam from (x, y) along dir, len long, spreading to half-width sp
+function vBeam(x, y, dir, len, sp, hex = "#fff4c0", a = 0.28) {
+  R.setAdd(true);
+  const c = col(hex);
+  quad4(
+    x,
+    y - 1,
+    x + dir * len,
+    y - sp,
+    x + dir * len,
+    y + sp,
+    x,
+    y + 1,
+    withA(c, a),
+    withA(c, 0),
+    withA(c, 0),
+    withA(c, a)
+  );
+  glow(x, y, 6, withA(c, 0.7));
+  R.setAdd(false);
+}
 const CONVOY_CARS = [
   { kind: "wedge", c: "#c8302a", plate: "WA 8841" },
   { kind: "saloon", c: "#e8e0c8", plate: "KR 7702" },
   { kind: "fifties", c: "#6a9ac0", c2: "#f0ece0", plate: "GD 5517" },
   { kind: "tiny", c: "#f0c040", plate: "PO 1975" },
 ];
-// one car, facing left (the way it drives), its wheels on the road at (x, y)
-function drawOldCar(x, y, q, t, car, i) {
-  const A = (h) => col(h),
-    body = col(car.c),
-    dk = shade(body, 0.75),
-    lt = shade(body, 1.15),
-    glass = col("#9fc8e0"),
-    chrome = col("#d8dce4");
-  const bounce =
-      Math.abs(Math.sin(t * (car.kind === "tiny" ? 14 : 9) + i)) * (car.kind === "tiny" ? 1.6 : 0.8) * q,
-    wheel = (wx, r, ww) => {
-      disc(x + wx * q, y - r * q, r * q, A("#1a1a1e"));
-      disc(x + wx * q, y - r * q, r * 0.6 * q, ww ? A("#f4f2ea") : A("#8a8e98"));
-      disc(x + wx * q, y - r * q, r * 0.3 * q, chrome);
-      const a = t * 12;
-      line(
-        x + wx * q + Math.cos(a) * r * 0.5 * q,
-        y - r * q + Math.sin(a) * r * 0.5 * q,
-        x + wx * q - Math.cos(a) * r * 0.5 * q,
-        y - r * q - Math.sin(a) * r * 0.5 * q,
-        0.4 * q,
-        A("#3a3a42")
-      );
-    };
-  push();
-  translate(0, -bounce);
-  const Y = (v) => y + v * q,
-    X = (v) => x + v * q;
-  if (car.kind === "tiny") {
-    // a little round bubble of a city car
-    quad4(X(-14), Y(-5), X(14), Y(-5), X(13), Y(-13), X(-13), Y(-13), body, body, lt, lt);
-    disc(X(0), Y(-13), 12 * q, body, 8 * q);
-    quad4(X(-8), Y(-14), X(-1), Y(-19), X(-1), Y(-14), X(-8), Y(-14), glass);
-    quad4(X(1), Y(-19), X(8), Y(-15), X(8), Y(-14), X(1), Y(-14), glass);
-    disc(X(-13), Y(-9), 1.4 * q, A("#fff4c0"));
-    rect(X(-15), Y(-6), 4 * q, 1.4 * q, chrome);
-    rect(X(11), Y(-6), 4 * q, 1.4 * q, chrome);
-    wheel(-8, 3.6, false);
-    wheel(8, 3.6, false);
-  } else if (car.kind === "saloon") {
-    // a big boxy four-door saloon
-    quad4(X(-24), Y(-5), X(24), Y(-5), X(24), Y(-13), X(-24), Y(-13), body, body, lt, lt);
-    line(X(-24), Y(-9.5), X(24), Y(-9.5), 0.5 * q, dk);
-    quad4(X(-12), Y(-13), X(13), Y(-13), X(10), Y(-21), X(-8), Y(-21), body);
-    quad4(X(-10), Y(-13.5), X(-1), Y(-13.5), X(-1), Y(-20), X(-7), Y(-20), glass);
-    quad4(X(1), Y(-13.5), X(11), Y(-13.5), X(9), Y(-20), X(1), Y(-20), glass);
-    rect(X(-26), Y(-7), 5 * q, 2 * q, chrome);
-    rect(X(21), Y(-7), 5 * q, 2 * q, chrome);
-    rect(X(-25), Y(-12), 3 * q, 2.6 * q, A("#fff4c0"));
-    rect(X(23), Y(-12), 2 * q, 2.6 * q, A("#e83a2a"));
-    wheel(-15, 4, false);
-    wheel(15, 4, false);
-  } else if (car.kind === "fifties") {
-    // a rounded old two-tone with whitewall tyres
-    disc(X(0), Y(-10), 24 * q, body, 6 * q);
-    disc(X(2), Y(-16), 12 * q, col(car.c2 || "#f0ece0"), 7 * q);
-    quad4(X(-7), Y(-15), X(1), Y(-21), X(1), Y(-15), X(-7), Y(-15), glass);
-    quad4(X(3), Y(-21), X(11), Y(-16), X(11), Y(-15), X(3), Y(-15), glass);
-    line(X(-22), Y(-7), X(22), Y(-7), 1.4 * q, chrome);
-    disc(X(-22), Y(-10), 1.8 * q, A("#fff4c0"));
-    disc(X(-24), Y(-6), 2 * q, chrome, 1.4 * q);
-    wheel(-14, 4.2, true);
-    wheel(14, 4.2, true);
-  } else {
-    // a sharp 80s wedge hatchback
-    poly([X(-25), Y(-5), X(23), Y(-5), X(24), Y(-14), X(14), Y(-22), X(-6), Y(-22), X(-25), Y(-12)], body);
-    line(X(-25), Y(-9), X(24), Y(-9), 0.6 * q, A("#2a2a32"));
-    quad4(X(-4), Y(-14), X(4), Y(-14), X(4), Y(-21), X(-3), Y(-21), glass);
-    quad4(X(6), Y(-14), X(15), Y(-14), X(13), Y(-21), X(6), Y(-21), glass);
-    rect(X(-26), Y(-8), 5 * q, 3 * q, A("#2a2a32"));
-    rect(X(-25), Y(-12.6), 4 * q, 2.4 * q, A("#fff4c0"));
-    rect(X(21), Y(-8), 4 * q, 3 * q, A("#2a2a32"));
-    wheel(-15, 4.2, false);
-    wheel(14, 4.2, false);
+// a shaded car-body panel from a side profile: rows of [x, top, bottom] (left to right) - lit along the top, the body
+// colour through the middle, darker low down (like sunlight on paint)
+function vPanel(rows, cT, cM, cB, mid = 0.45) {
+  for (let j = 0; j + 1 < rows.length; j++) {
+    const [x1, t1, b1] = rows[j],
+      [x2, t2, b2] = rows[j + 1],
+      m1 = t1 + (b1 - t1) * mid,
+      m2 = t2 + (b2 - t2) * mid;
+    quad4(x1, t1, x2, t2, x2, m2, x1, m1, cT, cT, cM, cM);
+    quad4(x1, m1, x2, m2, x2, b2, x1, b1, cM, cM, cB, cB);
   }
-  // the number plate: black with white letters, the way they were
-  const px = car.kind === "tiny" ? 12 : car.kind === "saloon" ? 22 : car.kind === "fifties" ? 20 : 21;
-  rect(X(px - 4), Y(-7.6), 7 * q, 2.6 * q, A("#14141a"));
-  for (let j = 0; j < 5; j++) rect(X(px - 3.2 + j * 1.2), Y(-7), 0.6 * q, 1.4 * q, A("#f4f4f0"));
-  // the family inside, waving; a scarf streaming out of the back window
-  const hw =
-    car.kind === "tiny"
-      ? [
-          [-4, -16],
-          [4, -16],
-        ]
-      : car.kind === "fifties"
-        ? [
-            [-3, -18],
-            [6, -18],
-          ]
-        : [
-            [-5, -17],
-            [6, -17],
-          ];
-  for (const [hx, hy] of hw) {
-    disc(X(hx), Y(hy), 1.8 * q, A(["#f0c8a0", "#d8a070", "#e8b890"][(i + hx) & 1 ? 1 : 0]));
-    disc(X(hx), Y(hy - 1.4), 1.9 * q, A(["#3a2a1a", "#e8c060", "#8a3a1a"][(i + Math.abs(hx)) % 3]), 1 * q);
+}
+// a smooth profile: n+1 rows from x0 to x1, top(x) and bottom(x)
+const vRows = (x0, x1, n, top, bot) => {
+  const o = [];
+  for (let j = 0; j <= n; j++) {
+    const x = x0 + ((x1 - x0) * j) / n;
+    o.push([x, top(x), bot(x)]);
+  }
+  return o;
+};
+// the four cars, side on, facing left, wheels on the ground at y = 0 (about 50 long). Each: the lower body, the cabin,
+// the glass (with pillars), where the wheels go, the family's heads, the roof for the rack, the back for the exhaust.
+const sq = (v) => Math.sqrt(Math.max(0, v));
+const OLD_CARS = {
+  // a big boxy four-door saloon: a long bonnet, a long boot, a proud upright cabin
+  saloon: {
+    body: [
+      [-27.4, -10.4, -5],
+      [-26.6, -11.9, -3.8],
+      [-24, -12.4, -3.2],
+      [-14, -12.7, -3],
+      [14, -12.9, -3],
+      [24.6, -12.6, -3.3],
+      [26.6, -11.6, -4.4],
+    ],
+    cab: [
+      [-13.4, -12.7, -12.7],
+      [-7.4, -21.6, -12.7],
+      [9.4, -21.6, -12.9],
+      [15.4, -12.9, -12.9],
+    ],
+    glass: [
+      [-11.4, -13.5, -13.5],
+      [-6.8, -20.5, -13.5],
+      [8.8, -20.5, -13.7],
+      [13.2, -13.7, -13.7],
+    ],
+    pillars: [0.6],
+    wheels: [-16, 15.4],
+    r: 4.5,
+    heads: [
+      [-5, -16.6],
+      [6, -16.6],
+    ],
+    roof: -21.6,
+    rw: 12,
+    back: 26.6,
+    lamp: [-27, -10],
+    tail: [26.2, -11.4],
+    trim: -8.4,
+  },
+  // a rounded old two-tone with whitewall tyres: fat fenders, a curved roof in cream, a chrome spear down the side
+  fifties: {
+    body: vRows(
+      -26.5,
+      26.5,
+      26,
+      (x) => -11.4 + 4.2 * Math.pow(Math.abs(x / 26.5), 5) - (x > 16 ? (x - 16) * 0.12 : 0),
+      (x) => -3.2 - 1.6 * Math.pow(Math.abs(x / 26.5), 8)
+    ),
+    cab: vRows(
+      -11,
+      15,
+      14,
+      (x) => -11.4 - 9.4 * sq(1 - ((x - 2) / 13) ** 2),
+      () => -11.4
+    ),
+    glass: vRows(
+      -8.6,
+      12.6,
+      12,
+      (x) => -12.2 - 7.8 * sq(1 - ((x - 2) / 10.8) ** 2),
+      () => -12.2
+    ),
+    pillars: [3],
+    wheels: [-15.5, 15.5],
+    r: 4.4,
+    white: true,
+    heads: [
+      [-3, -15.8],
+      [8, -15.8],
+    ],
+    roof: -20.6,
+    rw: 11,
+    back: 26,
+    lamp: [-26, -9.4],
+    tail: [25.6, -12],
+    trim: -7.6,
+    two: true,
+  },
+  // a little round bubble of a city car
+  tiny: {
+    body: vRows(
+      -15.5,
+      15.5,
+      16,
+      (x) => -6.8 - 4 * sq(1 - (x / 15.5) ** 2),
+      (x) => -3 - 1.6 * Math.pow(Math.abs(x / 15.5), 6)
+    ),
+    cab: vRows(
+      -12,
+      13,
+      14,
+      (x) => -10.6 - 7.6 * Math.pow(sq(1 - ((x + 0.4) / 12.6) ** 2), 0.7),
+      () => -10.4
+    ),
+    glass: vRows(
+      -9.2,
+      10.4,
+      12,
+      (x) => -11.2 - 5.8 * Math.pow(sq(1 - ((x + 0.4) / 9.8) ** 2), 0.7),
+      () => -11.2
+    ),
+    pillars: [1],
+    wheels: [-9.2, 9.2],
+    r: 3.8,
+    heads: [
+      [-4, -13.8],
+      [5, -13.8],
+    ],
+    roof: -18.2,
+    rw: 7.6,
+    back: 15.4,
+    lamp: [-15, -8.6],
+    tail: [15, -8.8],
+    trim: -6.4,
+  },
+  // a sharp 80s wedge hatchback: a low pointed nose, a raked windscreen, a flat roof, a steep hatch, black bumpers
+  wedge: {
+    body: [
+      [-26, -8.6, -4.6],
+      [-25, -10.6, -3.4],
+      [-14, -12.2, -3],
+      [6, -13, -3],
+      [22, -13.6, -3],
+      [24.4, -13.4, -3.6],
+      [25, -10.6, -4.6],
+    ],
+    cab: [
+      [-11, -12.4, -12.4],
+      [1.6, -21.6, -12.9],
+      [17.6, -21.8, -13.5],
+      [23.4, -13.4, -13.5],
+    ],
+    glass: [
+      [-8.8, -13.2, -13.2],
+      [1.8, -20.6, -13.6],
+      [17, -20.8, -14.2],
+      [21.4, -14.2, -14.2],
+    ],
+    pillars: [5.4],
+    wheels: [-15.5, 14.5],
+    r: 4.4,
+    heads: [
+      [-1, -16.8],
+      [10, -16.8],
+    ],
+    roof: -21.8,
+    rw: 11,
+    back: 24.6,
+    lamp: [-25.4, -9.2],
+    tail: [24.2, -12],
+    trim: -8.6,
+    black: true,
+  },
+};
+// one car, facing left (the way it drives), its wheels on the road at (x0, y0), q big
+function drawOldCar(x0, y0, q, t, car, i) {
+  const S = OLD_CARS[car.kind],
+    A = (h) => col(h),
+    body = col(car.c),
+    lt = shade(body, 1.3),
+    dk = shade(body, 0.62),
+    chrome = col("#f0f2f8"),
+    chromeD = col("#7a808c"),
+    tiny = car.kind === "tiny";
+  const bounce = Math.abs(Math.sin(t * (tiny ? 14 : 9) + i)) * (tiny ? 1.4 : 0.7);
+  // a soft shadow on the road (it stays down when the car bounces)
+  disc(x0, y0 - 0.4 * q, (S.back + 2) * q, withA(C.black, 0.45), 2 * q);
+  push();
+  translate(x0, y0 - bounce * q);
+  scaleBy(q);
+  // the cabin (cream on the two-tone), then the body in front of it
+  const roofC = S.two ? col(car.c2 || "#f0ece0") : body;
+  vPanel(S.cab, shade(roofC, 1.25), roofC, shade(roofC, 0.85), 0.3);
+  vPanel(S.body, lt, body, dk, 0.4);
+  // the glass, lighter at the top, with the pillars between the windows
+  vPanel(S.glass, A("#b8e0f4"), A("#6a98bc"), A("#2a4a66"), 0.35);
+  // the family inside, waving
+  for (const [hx, hy] of S.heads) {
+    disc(hx, hy + 2.6, 2.6, A(["#c8302a", "#3a6ad8", "#e8c040", "#2a8a4a"][(i + Math.abs(hx)) % 4]), 1.6);
+    disc(hx, hy, 1.9, A(["#f0c8a0", "#d8a070", "#e8b890"][(i + Math.abs(hx)) % 3]));
+    disc(hx + 0.3, hy - 1.3, 2, A(["#3a2a1a", "#e8c060", "#8a3a1a"][(i + Math.abs(hx)) % 3]), 1.1);
   }
   {
-    const w = Math.sin(t * 9 + i) * 2;
-    line(X(hw[1][0] + 2), Y(hw[1][1]), X(hw[1][0] + 4), Y(hw[1][1] - 3 + w * 0.3), 0.8 * q, A("#f0c8a0"));
-    polyline(
-      [
-        X(hw[1][0] + 4),
-        Y(hw[1][1] + 1),
-        X(hw[1][0] + 7),
-        Y(hw[1][1] + 0.5 + w * 0.4),
-        X(hw[1][0] + 10),
-        Y(hw[1][1] + w * 0.8),
-        X(hw[1][0] + 13),
-        Y(hw[1][1] + 0.6 - w * 0.5),
-      ],
-      0.8 * q,
-      A(["#e83a5a", "#3a8ae0", "#ffd24d", "#5ac08a"][i])
+    const w = Math.sin(t * 9 + i) * 2,
+      [hx, hy] = S.heads[1];
+    line(hx + 1.6, hy + 1, hx + 3.6, hy - 2.6 + w * 0.3, 0.8, A("#f0c8a0"));
+  } // (a hand waving)
+  const g = S.glass;
+  vGlare(g[0][0], g[1][1], g[g.length - 1][0], g[0][2], t, i * 3);
+  for (const px of S.pillars) {
+    const top = (S.cab.length > 4 ? S.roof + 0.6 : S.roof + 0.4) - 0.2;
+    quad4(
+      px - 0.9,
+      top,
+      px + 0.9,
+      top,
+      px + 0.9,
+      g[0][2] + 0.4,
+      px - 0.9,
+      g[0][2] + 0.4,
+      shade(roofC, 1.1),
+      shade(roofC, 1.1),
+      roofC,
+      roofC
     );
-  } // (a hand waving, a scarf flying)
-  // the roof rack, piled high for the holidays
-  const roof = car.kind === "tiny" ? -21 : car.kind === "saloon" ? -21 : car.kind === "fifties" ? -22 : -22,
-    rw = car.kind === "tiny" ? 8 : 12;
-  rect(X(-rw), Y(roof - 1), rw * 2 * q, 1 * q, A("#3a3a42"));
-  rect(X(-rw + 1), Y(roof - 6), 7 * q, 5 * q, A(["#8a5a30", "#3a5a8a", "#6a3a5a", "#5a6a3a"][i]));
-  rect(X(-rw + 1), Y(roof - 4), 7 * q, 0.6 * q, A("#2a1a10"));
-  if (car.kind !== "tiny") {
-    rect(X(-rw + 9), Y(roof - 4.6), 6 * q, 3.6 * q, A("#c8a060"));
   }
+  // shine: a bright crease along the waist and along the roof
+  polyline(
+    S.body.flatMap(([x, tp]) => [x, tp + 0.5]),
+    0.5,
+    withA(C.white, 0.75)
+  );
+  polyline(
+    S.cab.slice(1, -1).flatMap(([x, tp]) => [x, tp + 0.4]),
+    0.45,
+    withA(C.white, 0.6)
+  );
+  // trim down the side: chrome (black rubber on the 80s one), the doors, a handle, a wing mirror
+  const x0b = S.body[0][0] + 1.4,
+    x1b = S.body[S.body.length - 1][0] - 1.4;
+  if (S.black) rect(x0b, S.trim - 0.8, x1b - x0b, 1.6, A("#1e1e24"));
+  else
+    quad4(
+      x0b,
+      S.trim - 0.5,
+      x1b,
+      S.trim - 0.5,
+      x1b,
+      S.trim + 0.5,
+      x0b,
+      S.trim + 0.5,
+      chrome,
+      chrome,
+      chromeD,
+      chromeD
+    );
+  if (!tiny) for (const dx of S.pillars) line(dx, g[0][2] + 0.6, dx, -4, 0.35, withA(dk, 0.9));
+  line(S.cab[0][0] + 0.8, g[0][2] + 0.6, S.cab[0][0] + 1.6, -4, 0.35, withA(dk, 0.9));
+  rect(S.pillars[0] - 3.4, g[0][2] + 1.6, 2.2, 0.7, chrome);
+  disc(S.cab[0][0] + 0.4, g[0][2] - 0.6, 1.1, S.black ? A("#1e1e24") : chrome, 0.8);
+  // the bumpers, lights
+  const bf = S.body[0][0],
+    bb = S.back;
+  const bump = (bx, w) =>
+    S.black
+      ? rect(bx, -6.4, w, 2.6, A("#1e1e24"))
+      : quad4(bx, -6.4, bx + w, -6.4, bx + w, -3.8, bx, -3.8, chrome, chrome, chromeD, chromeD);
+  bump(bf - 1.4, 4.4);
+  bump(bb - 3, 4.4);
+  if (S.black) rect(S.lamp[0] - 0.3, S.lamp[1] - 1, 2.8, 2, A("#fff8d8"));
+  else disc(S.lamp[0] + 0.6, S.lamp[1], 1.5, A("#fff8d8"), 1.3);
+  rect(S.tail[0] - 0.6, S.tail[1] - 1, 1.2, 2.6, A("#e82a2a"));
+  vBeam(S.lamp[0] - 0.4, S.lamp[1], -1, tiny ? 34 : 48, tiny ? 7 : 9);
+  // the wheels, tucked into dark arches
+  for (const wx of S.wheels) {
+    disc(wx, -S.r - 0.4, S.r * 1.3, A("#121216"), S.r * 1.22);
+    vWheel(wx, -S.r, S.r, t, 16 + (tiny ? 6 : 0), !!S.white);
+  }
+  // the roof rack, piled high for the holidays
+  const roof = S.roof,
+    rw = S.rw;
+  quad4(-rw, roof - 1, rw, roof - 1, rw, roof, -rw, roof, chrome, chrome, chromeD, chromeD);
+  for (const rx of [-rw + 1, rw - 1]) line(rx, roof - 1, rx, roof + 0.6, 0.6, chromeD);
+  const cs = A(["#8a5a30", "#3a5a8a", "#6a3a5a", "#5a6a3a"][i]);
+  quad4(
+    -rw + 1,
+    roof - 6,
+    -rw + 8,
+    roof - 6,
+    -rw + 8,
+    roof - 1,
+    -rw + 1,
+    roof - 1,
+    shade(cs, 1.3),
+    shade(cs, 1.3),
+    shade(cs, 0.8),
+    shade(cs, 0.8)
+  );
+  rect(-rw + 1, roof - 4, 7, 0.6, A("#2a1a10"));
+  rect(-rw + 4, roof - 6.8, 1.6, 0.8, A("#2a1a10")); // (a handle)
+  if (!tiny)
+    quad4(
+      -rw + 9,
+      roof - 4.6,
+      -rw + 15,
+      roof - 4.6,
+      -rw + 15,
+      roof - 1,
+      -rw + 9,
+      roof - 1,
+      A("#d8b070"),
+      A("#d8b070"),
+      A("#a88040"),
+      A("#a88040")
+    );
   if (i === 1) {
-    line(X(4), Y(roof - 1), X(8), Y(roof - 12), 0.6 * q, A("#c8ccd6"));
+    line(4, roof - 1, 8, roof - 12, 0.6, A("#c8ccd6"));
     for (let j = 0; j < 4; j++)
-      tri(
-        X(8),
-        Y(roof - 12),
-        X(2 + j * 4),
-        Y(roof - 9),
-        X(4 + j * 4),
-        Y(roof - 9),
-        A(j % 2 ? "#ffffff" : "#e83a3a")
-      );
+      tri(8, roof - 12, 2 + j * 4, roof - 9, 4 + j * 4, roof - 9, A(j % 2 ? "#ffffff" : "#e83a3a"));
   } // a beach umbrella
   if (i === 0) {
-    arc(X(2), Y(roof - 4), 3.4 * q, 0, 6.283, 0.6 * q, A("#2a2a32"), 10);
-    arc(X(10), Y(roof - 4), 3.4 * q, 0, 6.283, 0.6 * q, A("#2a2a32"), 10);
-    line(X(2), Y(roof - 4), X(10), Y(roof - 4), 0.6 * q, A("#c8302a"));
+    arc(2, roof - 4, 3.4, 0, 6.283, 0.6, A("#2a2a32"), 10);
+    arc(10, roof - 4, 3.4, 0, 6.283, 0.6, A("#2a2a32"), 10);
+    line(2, roof - 4, 10, roof - 4, 0.6, A("#c8302a"));
   } // a bicycle
-  pop();
-  // the exhaust: a puff of smoke trailing out behind (more from the little one, flat out)
-  for (let j = 0; j < (car.kind === "tiny" ? 6 : 3); j++) {
-    const f = (t * 1.4 + j / 6 + i * 0.3) % 1;
-    disc(
-      X(px + 4 + f * 26),
-      Y(-5 - f * 6),
-      (1.4 + f * 4) * q,
-      withA(col(car.kind === "tiny" ? "#7a7a84" : "#b8bcc6"), (car.kind === "tiny" ? 0.6 : 0.35) * (1 - f))
+  {
+    const w = Math.sin(t * 9 + i) * 2,
+      sx = S.cab[S.cab.length - 1][0] - 2,
+      sy = S.trim - 6;
+    polyline(
+      [sx, sy, sx + 4, sy - 0.5 + w * 0.4, sx + 8, sy + w * 0.8, sx + 12, sy + 0.6 - w * 0.5],
+      0.9,
+      A(["#e83a5a", "#3a8ae0", "#ffd24d", "#5ac08a"][i])
     );
-  }
+  } // a scarf flying out of the back window
+  // the exhaust: puffs of smoke trailing out behind (more from the little one, flat out)
+  vSmoke(
+    bb + 1,
+    -3.4,
+    1,
+    t,
+    tiny ? 7 : 4,
+    30,
+    tiny ? 3.2 : 2.4,
+    tiny ? "#6a6a74" : "#b8bcc6",
+    tiny ? 0.6 : 0.35,
+    i
+  );
+  pop();
 }
 // THE CONVOY drifting across the screen on its own little floating road (f: 0 = coming in on the right, 1 = gone off the left)
 function drawConvoy(f, L, Rr, y, k, t) {
@@ -24058,8 +24840,13 @@ function drawConvoy(f, L, Rr, y, k, t) {
     y + 9 * q,
     roadL + 8 * q,
     y + 9 * q,
-    col("#3a3a42")
+    col("#4a4a54"),
+    col("#4a4a54"),
+    col("#2a2a32"),
+    col("#2a2a32")
   );
+  for (let j = 0; j < 30; j++)
+    rect(roadL + 2 * q + j * 13.9 * q, y + 0.2 * q, 7 * q, 1.2 * q, col(j % 2 ? "#f4f0e8" : "#d83a2a")); // the kerb, red and white
   for (let j = 0; j < 14; j++) rect(roadL + 14 * q + j * 28 * q, y + 4.4 * q, 12 * q, 1 * q, col("#e8e4d8"));
   poly(
     [
@@ -25563,6 +26350,7 @@ function drawTwistFx(t) {
       const [lx, ly] = projL(sh.lane, sh.x, LY(sh.lane, sh.x) - 10, 0);
       lights.push([lx, ly, 55]);
     }
+    if (GENPOS && G.ls && (G.ls.gen || G.ls.t > 4.2)) lights.push([GENPOS[0] + 30, GENPOS[1] + 40, 150]); // (the generator's work lamp)
     const cs = 48,
       nx = Math.ceil(w / cs) + 1,
       ny = Math.ceil(h / cs) + 1,
@@ -26294,10 +27082,10 @@ function drawDeepSpace(t) {
         drawRetroCruiser(x, cy, k, t);
         break;
       case "taxi":
-        drawTaxiRace(f, L, Rr, cy, k * 1.6, t, true, true);
+        drawTaxiRace(f, L, Rr, cy + 6 * k, k * 0.95, t, true, true); // (smaller - further away, out in space)
         break;
       case "convoy":
-        drawConvoy(f, L, Rr, cy, k, t);
+        drawConvoy(f, L, Rr, cy - 20 * k, k * 0.6, t); // (smaller - further away)
         break; // the holiday convoy of old family cars (cars.ts)   // the minibus taxi overtakes the super rocket race car
       case "retro2":
         drawRetroScout(xr, cy, k, t, 0);
@@ -36653,7 +37441,7 @@ function drawGlutton(c, t, a) {
 //  BARTENDER LEVELS, DECORATE YOUR DINER, ENDLESS MODE, HOLIDAY EVENTS, STORY SCENES with Bocian Bogdan,
 //  ONE-BUTTON MODE for little ones, and a friendly BREAK REMINDER
 // =====================================================================================
-const FP = { shop: false, trophies: false, map: false, cup: false, prof: false, news: false },
+const FP = { shop: false, trophies: false, map: false, cup: false, prof: false, news: false, keys: false },
   BRK = { open: false, t: 0 };
 const FLAV_NAMES = ["STRAWBERRY", "CHOCOLATE", "MINT"],
   FLAV_HEX = ["#ff8fbf", "#9a5a3a", "#8ff0c0"],
@@ -36907,6 +37695,7 @@ function funGameStart() {
     G.shoes = invUse("shoes");
     G.charm = invUse("save");
   }
+  modesGameStart(); // (TIME ATTACK, BOSS RUSH)
 }
 function funLevelStart() {
   G.petUsed = {};
@@ -36914,6 +37703,7 @@ function funLevelStart() {
   if (G.endless) {
     G.total = 1e9;
   }
+  modesLevelStart();
   G.event = funEvent();
   G.eggs = [];
   // FOLK SONGS: on Polish holidays the band plays Polish folk songs, on South African ones South African songs - and on any
@@ -36991,6 +37781,7 @@ function funServe(c, s, demo) {
   }
   if (demo) return;
   fStat("served");
+  modesServed();
   if (c.type.bot || ["robot", "bots", "robogob"].includes(c.type.kind)) fStat("robots");
   if (G.endless) {
     G.endServed++;
@@ -37196,6 +37987,7 @@ function funPerfect() {
   fStat("perfects");
 }
 function funGameOver() {
+  modesGameOver();
   if (G.endless) {
     const b = fStats().endlessBest || 0;
     $k("overInfo").textContent += "   ·   ENDLESS: SERVED " + G.endServed + "  (BEST " + b + ")";
@@ -37292,10 +38084,20 @@ function startMiniGame() {
 }
 // SKIP A MINI-GAME: the on-screen SKIP button, Esc / Backspace / K, or B / BACK on a controller - straight on with the tour (no coins)
 function skipMini() {
+  if (G.state === "bonus" && bonus) return skipBonus(); // (the bonus round - FIND THE ALIEN - is skipped the same way)
   if (G.state !== "mini" || !G.mini) return;
   G.mini = null;
   sfx("click");
   funNext();
+}
+// SKIP THE BONUS ROUND (v2026.10.04ar): straight on, no bonus - the same keys and buttons as a mini-game
+function skipBonus() {
+  if (G.state !== "bonus" || !bonus) return;
+  sfx("click");
+  G.callouts = [];
+  if (G.level >= LAST_LEVEL) return startEnding("final");
+  if (G.level === MW_LAST && !G.endless) return startEnding("mw");
+  funAfterBonus();
 }
 function newRecipe(M) {
   const pool = ["strawberry", "banana", "choc", "icecream", "mint"];
@@ -37377,15 +38179,7 @@ function funMiniUpdate(dt) {
           sfx("chime", 200, M.score % 4);
           M.fx.push({ kind: "star", x: it.x, y: it.y, t: 0 });
         } // a burst of little stars
-        else if (DF().kid) {
-          if (M.hurt <= 0) {
-            M.hurt = 1.2;
-            M.score = Math.max(0, M.score - 1);
-            sfx("bonk");
-            G.shake = 6;
-            M.fx.push({ kind: "bump", x: (it.x + 200) / 2, y: (it.y + M.y) / 2, t: 0 });
-          }
-        } // (KID MODE: a bump costs a star)
+        // (an asteroid ends the delivery on every difficulty, kid mode too - v2026.10.04ar)
         else {
           M.crashed = true;
           it.dead = true;
@@ -37928,30 +38722,33 @@ function funTapLight(lane, t) {
 }
 function funLaneDraw(lane, t) {
   funPrints(lane, t);
-  if (!VERT && G.event) holidayLane(G.event, lane, t);
-  for (const e of G.eggs || [])
-    if (!e.got && e.lane === lane) {
-      const y = LY(lane, e.x) - 8 + Math.sin(t * 3 + e.x) * 1.5;
-      disc(e.x, y, 6, col(e.c), 8);
-      for (let i = 0; i < 3; i++)
-        line(e.x - 5, y - 3 + i * 3, e.x + 5, y - 3 + i * 3, 1, col(i % 2 ? "#ffffff" : "#5a3a8a"));
-      R.setAdd(true);
-      glow(e.x, y, 14, withA(col(e.c), 0.3));
-      R.setAdd(false);
-    }
-  for (const c of customers)
-    if (
-      c.lane === lane &&
-      c.state === "walk" &&
-      c.robWarn &&
-      c.x > X1 - 170 &&
-      active().some((p) => kidPetFor(p) === "robot") &&
-      Math.sin(t * 12) > 0
-    ) {
-      const y = LY(lane, c.x) - 150;
-      rect(c.x + 8, y, 6, 14, col("#ff3b4f"));
-      disc(c.x + 11, y + 19, 3, col("#ff3b4f"));
-    }
+  if (G.event) holidayLane(G.event, lane, t);
+  for (const e of G.eggs || []) if (!e.got && e.lane === lane) funEgg(e, t);
+  for (const c of customers) if (c.lane === lane) funRobWarn(c, t);
+}
+// one Easter egg on a bar
+function funEgg(e, t) {
+  const y = LY(e.lane, e.x) - 8 + Math.sin(t * 3 + e.x) * 1.5;
+  disc(e.x, y, 6, col(e.c), 8);
+  for (let i = 0; i < 3; i++)
+    line(e.x - 5, y - 3 + i * 3, e.x + 5, y - 3 + i * 3, 1, col(i % 2 ? "#ffffff" : "#5a3a8a"));
+  R.setAdd(true);
+  glow(e.x, y, 14, withA(col(e.c), 0.3));
+  R.setAdd(false);
+}
+// the robot pet's warning light over a customer who's nearly at your end
+function funRobWarn(c, t) {
+  if (
+    c.state === "walk" &&
+    c.robWarn &&
+    c.x > X1 - 170 &&
+    active().some((p) => kidPetFor(p) === "robot") &&
+    Math.sin(t * 12) > 0
+  ) {
+    const y = LY(c.lane, c.x) - 150;
+    rect(c.x + 8, y, 6, 14, col("#ff3b4f"));
+    disc(c.x + 11, y + 19, 3, col("#ff3b4f"));
+  }
 }
 function funPerks(pl, t) {
   const x = pl.x + 8,
@@ -38024,7 +38821,7 @@ function drawPubBell(t) {
   pop();
 }
 function funDecor(V, t, layer) {
-  if (VERT) return;
+  if (VERT && !VPANEL.on) return; // (the tall view draws it too - on the back wall above the bars, see tall.ts)
   const D0 = decor(),
     D                         = {};
   for (const k in D0) if (D0[k] === 1) D[k] = 1;
@@ -38162,6 +38959,7 @@ function funDecor(V, t, layer) {
       R.setAdd(false);
     }
   } else {
+    drawBigGen(t); // (the backup generator, wheeled in when the power is out)
     if (D.plants)
       for (const x of [205, 760]) {
         quad4(
@@ -38286,12 +39084,37 @@ function funDecor(V, t, layer) {
       });
   }
 }
+// how to skip a mini-game, in the words of whatever you're playing with (v2026.10.04ar)
+const miniSkipText = () =>
+  lastDev === "pad"
+    ? "DON'T FANCY IT?  PRESS B TO SKIP THIS MINI-GAME"
+    : lastDev === "touch" || matchMedia("(pointer: coarse)").matches
+      ? "DON'T FANCY IT?  TAP  SKIP ▶▶  TO SKIP THIS MINI-GAME"
+      : "DON'T FANCY IT?  PRESS ESC (OR K) TO SKIP THIS MINI-GAME";
 // ---- HUD bits ----
 function funHud(g, s, t, fD, sx, sy) {
   g.textAlign = "center";
   g.textBaseline = "middle";
+  if (G.state === "bonus" && bonus && bonus.phase !== "reveal") {
+    g.save();
+    g.font = "600 " + Math.round(12 * s * TXT()) + "px " + FB;
+    g.fillStyle = "rgba(255,243,226,.6)";
+    g.fillText(
+      miniSkipText().replace(" (OR K)", "").replace("MINI-GAME", "BONUS ROUND"),
+      cssW / 2,
+      cssH - 30 * s
+    );
+    g.restore();
+  }
   if (G.state === "mini" && G.mini) {
     const M = G.mini;
+    if (M.phase !== "done") {
+      g.save();
+      g.font = "600 " + Math.round(12 * s * TXT()) + "px " + FB;
+      g.fillStyle = M.phase === "intro" ? "rgba(255,243,226,.9)" : "rgba(255,243,226,.55)";
+      g.fillText(miniSkipText(), cssW / 2, cssH - 30 * s);
+      g.restore();
+    }
     if (M.phase === "intro") {
       neon2(g, "MINI-GAME!", cssW / 2, cssH * 0.22, 30 * s, "#ff5fa8");
       neon2(g, MINI_NAMES[M.kind], cssW / 2, cssH * 0.32, 22 * s, "#ffc34d");
@@ -38496,6 +39319,7 @@ function funHud(g, s, t, fD, sx, sy) {
       g.fillStyle = "#ff5fa8";
       g.fillText("ENDLESS  ·  SERVED " + G.endServed + "  ·  SPEED " + G.endLvl, cssW / 2, 84 * s);
     }
+    modesHud(g, s, fD);
   }
   g.textBaseline = "top";
 }
@@ -38511,7 +39335,7 @@ const contOn = () => store.get("contOn", true),
     return c && c.level >= 1 && c.level <= VENUES.length ? c : null;
   };
 function contRemember() {
-  if (G.demo || G.daily || G.endless) return;
+  if (G.demo || G.daily || G.endless || G.ta || G.brush) return;
   if (G.won) {
     store.set("cont", null);
     return;
@@ -38539,10 +39363,13 @@ function funMenuText() {
   if ($k("vShop")) $k("vShop").textContent = "● " + fCoins();
   if ($k("vTroph")) $k("vTroph").textContent = got + "/" + TROPHIES.length + "  ·  LV " + lv;
   if ($k("vEndless")) $k("vEndless").textContent = "BEST " + (s.endlessBest || 0) + " SERVED";
+  modesMenuText();
   if ($k("vOneBtn")) $k("vOneBtn").textContent = store.get("onebtn", false) ? "ON" : "OFF";
   // the comfort settings: CALM MODE, FLAVOUR SHAPES, VIBRATION (only where the device can buzz)
   if ($k("vCalm")) $k("vCalm").textContent = COMFORT.calm ? "ON" : "OFF";
   if ($k("vShapes")) $k("vShapes").textContent = COMFORT.shapes ? "ON" : "OFF";
+  if ($k("vTxt")) $k("vTxt").textContent = TXT_NAMES[COMFORT.txt];
+  if ($k("vLefty")) $k("vLefty").textContent = COMFORT.lefty ? "ON" : "OFF";
   if ($k("vBuzz")) {
     $k("vBuzz").textContent = COMFORT.buzz ? "ON" : "OFF";
     $k("bBuzz").hidden = !canBuzz();
@@ -38572,24 +39399,39 @@ function funMenuText() {
   if ($k("bDaily") && ev && EVENT_NAMES[ev]) $k("bDaily").title = EVENT_NAMES[ev];
 }
 // the menu's own screens: the coin shop, the trophies, the galaxy map, the cup tournament
-const FP_IDS = ["shop", "trophies", "map", "cup", "prof", "news"],
+const FP_IDS = ["shop", "trophies", "map", "cup", "prof", "news", "keys"],
   fpAny = () => FP_IDS.some((k) => FP[k]),
   fpWhich = () => FP_IDS.find((k) => FP[k]) || "shop",
-  FP_BTN = { shop: "bShop", trophies: "bTroph", map: "bMap", cup: "bCup", prof: "bProf", news: "bNews" },
+  FP_BTN = {
+    shop: "bShop",
+    trophies: "bTroph",
+    map: "bMap",
+    cup: "bCup",
+    prof: "bProf",
+    news: "bNews",
+    keys: "bKeys",
+  },
   FP_FIRST = {
     shop: "shItems",
     trophies: "trList",
-    map: "gmBack",
+    map: "gmPlay",
     cup: "cupList",
     prof: "profList",
     news: "newsBack",
+    keys: "kmList",
   };
 function openFP(id) {
   if (G.state !== "menu") return;
   FP[id] = true;
-  ({ shop: buildShop, trophies: buildTroph, map: buildMap, cup: buildCup, prof: buildProf, news: buildNews })[
-    id
-  ]();
+  ({
+    shop: buildShop,
+    trophies: buildTroph,
+    map: buildMap,
+    cup: buildCup,
+    prof: buildProf,
+    news: buildNews,
+    keys: buildKeys,
+  })[id]();
   showPanels();
   sfx("click");
   setTimeout(() => {
@@ -38715,8 +39557,15 @@ function funPanelsInit() {
   $k("trBack").onclick = () => closeFP("trophies");
   $k("bMap").onclick = () => openFP("map");
   $k("gmBack").onclick = () => closeFP("map");
+  $k("gmPlay").onclick = () => gmPlay();
   $k("bCup").onclick = () => openFP("cup");
   $k("bNews").onclick = () => openFP("news");
+  $k("bKeys").onclick = () => openFP("keys");
+  $k("kmBack").onclick = () => {
+    KM.wait = null;
+    closeFP("keys");
+  };
+  $k("kmReset").onclick = () => keysReset();
   $k("newsBack").onclick = () => closeFP("news");
   $k("cupBack").onclick = () => closeFP("cup");
   $k("bEndless").onclick = () => {
@@ -38726,6 +39575,8 @@ function funPanelsInit() {
     startGame();
     callout("ENDLESS MODE!  HOW MANY CAN YOU SERVE?", "#ff5fa8", 2.6);
   };
+  $k("bTa").onclick = () => modeStart("ta");
+  $k("bRush").onclick = () => modeStart("rush");
   $k("bHoliday").onclick = () => {
     const cur = store.get("eventPick", "auto");
     store.set("eventPick", HOLIDAY_ORDER[(HOLIDAY_ORDER.indexOf(cur) + 1) % HOLIDAY_ORDER.length]);
@@ -38743,6 +39594,20 @@ function funPanelsInit() {
   $k("bCalm").onclick = () => {
     COMFORT.calm = !COMFORT.calm;
     store.set("calm", COMFORT.calm);
+    funMenuText();
+    sfx("click");
+  };
+  $k("bTxt").onclick = () => {
+    COMFORT.txt = (COMFORT.txt + 1) % 3;
+    store.set("txt", COMFORT.txt);
+    comfortBody();
+    funMenuText();
+    sfx("click");
+  };
+  $k("bLefty").onclick = () => {
+    COMFORT.lefty = !COMFORT.lefty;
+    store.set("lefty", COMFORT.lefty);
+    comfortBody();
     funMenuText();
     sfx("click");
   };
@@ -39695,65 +40560,146 @@ function funThiefFx(c, t) {
 }
 function funPrints(lane, t) {
   if (!G.case) return;
+  for (const p of G.case.prints) if (p.lane === lane) funPrint(p, t);
+}
+// one glowing footprint (the detective case)
+function funPrint(p, t) {
+  const a = Math.min(1, (6 - p.age) / 2) * (0.6 + 0.3 * Math.sin(t * 6 + p.x)),
+    y = LY(p.lane, p.x) + 24 + p.s * 2.5;
   R.setAdd(true);
-  for (const p of G.case.prints)
-    if (p.lane === lane) {
-      const a = Math.min(1, (6 - p.age) / 2) * (0.6 + 0.3 * Math.sin(t * 6 + p.x)),
-        y = LY(lane, p.x) + 24 + p.s * 2.5;
-      disc(p.x, y, 2.6, withA(col("#5ff5ff"), a), 1.4);
-      disc(p.x + 3, y - 1, 1, withA(col("#5ff5ff"), a));
-      disc(p.x + 3, y + 1, 1, withA(col("#5ff5ff"), a));
-    }
+  disc(p.x, y, 2.6, withA(col("#5ff5ff"), a), 1.4);
+  disc(p.x + 3, y - 1, 1, withA(col("#5ff5ff"), a));
+  disc(p.x + 3, y + 1, 1, withA(col("#5ff5ff"), a));
   R.setAdd(false);
 }
 
 // =====================================================================================
 //  RETRO SPACESHIPS (in the space show): chunky 80s-style comic-book ships of our own design
 // =====================================================================================
+// an arc of an oval (arc() is always round)
+function arcE(cx, cy, rx, ry, a0, a1, w, c, n = 12) {
+  const pts = [];
+  for (let i = 0; i <= n; i++) {
+    const a = a0 + ((a1 - a0) * i) / n;
+    pts.push(cx + Math.cos(a) * rx, cy + Math.sin(a) * ry);
+  }
+  polyline(pts, w, c);
+}
 // the RETRO CRUISER: a long angular hull in cream with red bands, a big round bubble cockpit, stubby fins, three round engines
+// (v2026.10.04ar: polished - a metal sheen, panel lines and rivets, brass portholes, a pilot in the bubble, a chrome nose
+//  cone, blinking navigation lights and layered engine flames)
 function drawRetroCruiser(x, y, k, t) {
   push();
   translate(x, y + Math.sin(t * 0.8) * 4 * k);
   scaleBy(k * 1.3);
-  R.setAdd(true);
+  for (let i = 0; i < 3; i++) vFlame(50, -8 + i * 8, 1, 30, 3, t, FLAME_ICE, i);
+  const cream = col("#ece4d0"),
+    creamD = col("#a8a088"),
+    red = col("#d8402e"),
+    redD = col("#8a2216");
+  // the fins (behind the hull)
+  quad4(10, -16, 28, -16, 42, -31, 22, -28, red, red, col("#ff7050"), col("#ff7050"));
+  line(22, -28, 42, -31, 0.8, withA(C.white, 0.7));
+  quad4(10, 16, 28, 16, 42, 31, 22, 28, redD, redD, col("#5a140c"), col("#5a140c"));
+  // the hull, top lit and the underside in shadow
+  poly([-60, 0, -40, -14, 30, -16, 46, -12, 46, 12, 30, 16, -40, 14], cream);
+  quad4(
+    -40,
+    -14,
+    30,
+    -16,
+    30,
+    -5,
+    -46,
+    -5,
+    withA(C.white, 0.55),
+    withA(C.white, 0.55),
+    withA(C.white, 0),
+    withA(C.white, 0)
+  );
+  quad4(-46, 4, 30, 4, 30, 16, -40, 14, withA(creamD, 0), withA(creamD, 0), creamD, creamD);
+  quad4(30, 4, 46, 4, 46, 12, 30, 16, withA(creamD, 0), withA(creamD, 0), creamD, creamD);
+  line(-52, -6, 30, -10.6, 0.8, withA(C.white, 0.85)); // a bright line of light along the top
+  for (const px of [-28, 16, 36]) line(px, -15, px, 15, 0.4, withA(creamD, 0.8)); // panel lines
+  // the red bands, shaded round the hull
+  for (const bx of [-20, 4]) {
+    quad4(bx, -15.5, bx + 8, -15.6, bx + 8, 0, bx, 0, col("#ff6a50"), col("#ff6a50"), red, red);
+    quad4(bx, 0, bx + 8, 0, bx + 8, 15.6, bx, 15, red, red, redD, redD);
+    for (let j = 0; j < 6; j++) {
+      disc(bx + 0.9, -12 + j * 5, 0.45, col("#f4d8c8"));
+      disc(bx + 7.1, -12 + j * 5, 0.45, col("#f4d8c8"));
+    } // rivets
+  }
+  // a chrome nose cone
+  quad4(-60, 0, -50, -7.6, -50, 0, -60, 0, col("#f4f6fa"), col("#f4f6fa"), col("#9aa0ac"), col("#9aa0ac"));
+  quad4(-60, 0, -50, 0, -50, 7.4, -60, 0, col("#9aa0ac"), col("#9aa0ac"), col("#5a606c"), col("#5a606c"));
+  // the engines: three round nozzles with metal rims
   for (let i = 0; i < 3; i++) {
-    const ey = -8 + i * 8,
-      fl = 18 + Math.sin(t * 30 + i) * 4;
-    quad4(
-      46,
-      ey - 3,
-      46,
-      ey + 3,
-      46 + fl,
-      ey + 1,
-      46 + fl,
-      ey - 1,
-      withA(col("#9fd0ff"), 0.9),
-      withA(col("#9fd0ff"), 0.9),
-      withA(col("#3a5aff"), 0),
-      withA(col("#3a5aff"), 0)
-    );
-    glow(48, ey, 7, withA(col("#9fd0ff"), 0.7));
+    const ey = -8 + i * 8;
+    disc(46, ey, 4.4, col("#8a8e9a"));
+    disc(46, ey, 3.6, col("#4a4e5a"));
+    disc(46.6, ey, 2.4, col("#1a1a24"));
+    disc(45, ey - 2.2, 1, withA(C.white, 0.7));
+  }
+  // the bubble cockpit with the pilot inside
+  disc(-38, -8, 12, col("#1a3a66"), 9);
+  disc(-37, -6.5, 10, col("#2a6aa8"), 7);
+  // the pilot: a white spacesuit, a helmet with a gold visor, looking ahead
+  disc(-35, 0.6, 7, col("#c8ccd6"), 3.2);
+  rect(-37, -1.6, 4, 1.4, col("#d8402e")); // (a red collar)
+  disc(-35, -5.4, 4.6, col("#f4f4f0"));
+  quad4(
+    -39.6,
+    -7.4,
+    -35.4,
+    -7.6,
+    -35.4,
+    -3.4,
+    -39.4,
+    -3.4,
+    col("#ffe08a"),
+    col("#e8a830"),
+    col("#a86a10"),
+    col("#c88a20")
+  );
+  line(-39, -6.6, -37.4, -6.8, 0.6, withA(C.white, 0.9));
+  rect(-33.6, -9.6, 1.2, 8, col("#d8402e")); // (a red stripe over the helmet)
+  disc(-44, -12.4, 3.6, withA(C.white, 0.4), 1.6);
+  disc(-31, -2.6, 2.4, withA(C.white, 0.16), 1.1); // the glass's reflections
+  arcE(-38, -8, 12, 9, Math.PI, Math.PI * 2, 1.6, col("#c8ccd6"), 16);
+  arcE(-38, -8, 10.6, 7.8, Math.PI * 1.12, Math.PI * 1.45, 0.7, withA(C.white, 0.85), 8);
+  // portholes: brass rims, lit windows (the lights go on and off inside)
+  for (let i = 0; i < 5; i++) {
+    const on = Math.sin(t * 2 + i) > 0,
+      hx = -14 + i * 8;
+    disc(hx, 6, 2.6, col("#c89a40"));
+    disc(hx, 6, 1.9, col(on ? "#ffe8a0" : "#3a3a48"));
+    disc(hx - 0.6, 5.4, 0.6, withA(C.white, 0.8));
+    if (on) {
+      R.setAdd(true);
+      glow(hx, 6, 5, withA(col("#ffd060"), 0.35));
+      R.setAdd(false);
+    }
+  }
+  // an antenna with a blinking light, and navigation lights on the fin tips (red one side, green the other)
+  line(-60, 0, -74, -2, 1, col("#8a8a96"));
+  const blink = Math.sin(t * 6) > 0,
+    nav = Math.sin(t * 3.1) > 0.3;
+  disc(-75, -2, 1.6, col(blink ? "#ff3b4f" : "#5a1a1a"));
+  disc(41, -30.4, 1.2, col(nav ? "#ff3b4f" : "#5a1a1a"));
+  disc(41, 30.4, 1.2, col(nav ? "#3bff7a" : "#1a4a2a"));
+  R.setAdd(true);
+  if (blink) glow(-75, -2, 7, withA(col("#ff3b4f"), 0.6));
+  if (nav) {
+    glow(41, -30.4, 6, withA(col("#ff3b4f"), 0.6));
+    glow(41, 30.4, 6, withA(col("#3bff7a"), 0.6));
   }
   R.setAdd(false);
-  poly([-60, 0, -40, -14, 30, -16, 46, -12, 46, 12, 30, 16, -40, 14], col("#e8e0cc"));
-  poly([-60, 0, -40, 2, 30, 4, 46, 12, 30, 16, -40, 14], col("#c8c0a8"));
-  for (const bx of [-20, 4]) quad4(bx, -15.5, bx + 8, -15.6, bx + 8, 15.6, bx, 15, col("#c83a2a"));
-  for (let i = 0; i < 3; i++) {
-    disc(46, -8 + i * 8, 4, col("#5a5a66"));
-    disc(46, -8 + i * 8, 2.4, col("#2a2a36"));
-  }
-  poly([10, -16, 28, -16, 40, -30, 22, -28], col("#c83a2a"));
-  poly([10, 16, 28, 16, 40, 30, 22, 28], col("#a82a1a")); // fins
-  disc(-38, -8, 12, col("#2a6aa0"), 9);
-  disc(-41, -11, 5, withA(C.white, 0.5), 3);
-  arc(-38, -8, 12, Math.PI, Math.PI * 2, 1.4, col("#8a8a96"), 12); // the bubble cockpit
-  for (let i = 0; i < 5; i++) disc(-14 + i * 8, 6, 2, col(Math.sin(t * 2 + i) > 0 ? "#ffe8a0" : "#5a5040")); // portholes
-  line(-60, 0, -74, -2, 1, col("#8a8a96"));
-  disc(-75, -2, 1.6, col(Math.sin(t * 6) > 0 ? "#ff3b4f" : "#5a1a1a"));
   pop();
 }
 // the RETRO SCOUT: a saucer with swept wings, a glass dome with a pilot, an antenna dish and blinking lights
+// (v2026.10.04ar: polished - a metal sheen, a glowing engine ring underneath, chase lights round the rim, a dome with
+//  reflections, and the dish turning)
 function drawRetroScout(x, y, k, t, beam) {
   push();
   translate(x, y + Math.sin(t * 1.3) * 3 * k);
@@ -39776,18 +40722,53 @@ function drawRetroScout(x, y, k, t, beam) {
     );
     R.setAdd(false);
   }
-  poly([-40, 2, -14, -6, 14, -6, 40, 2, 14, 8, -14, 8], col("#9aa4b8"));
-  poly([-40, 2, 40, 2, 14, 8, -14, 8], col("#6a7488"));
-  poly([-14, -2, -36, -16, -30, -2], col("#e0b030"));
-  poly([14, -2, 36, -16, 30, -2], col("#c89820"));
-  disc(0, -8, 11, col("#3a8ad0"), 8);
-  disc(-3, -11, 4, withA(C.white, 0.5), 3);
-  disc(0, -6, 3, col("#f0c090"));
-  disc(0, -8.4, 3.2, col("#e8e8f0"), 2);
-  for (let i = 0; i < 6; i++)
-    disc(-25 + i * 10, 4, 1.6, col((Math.floor(t * 4) + i) % 3 === 0 ? "#ff5fa8" : "#5ff5c8"));
-  line(8, -15, 14, -24, 0.8, col("#8a8a96"));
-  arc(15, -25, 4, Math.PI * 1.1, Math.PI * 1.9, 1, col("#c8ccd6"), 6);
+  // the engine ring glowing underneath, pulsing
+  {
+    const p = 0.7 + Math.sin(t * 5) * 0.3;
+    R.setAdd(true);
+    glowE(0, 9, 22, 6, withA(col("#5ff5ff"), 0.45 * p));
+    glowE(0, 8, 12, 3, withA(col("#e0ffff"), 0.6 * p));
+    R.setAdd(false);
+  }
+  // the wings, lit on their leading edges
+  quad4(-14, -2, -36, -16, -30, -2, -14, -2, col("#ffd050"), col("#ffe890"), col("#b88a10"), col("#b88a10"));
+  quad4(14, -2, 36, -16, 30, -2, 14, -2, col("#e0b030"), col("#ffe890"), col("#a07808"), col("#a07808"));
+  line(-14, -2, -36, -16, 0.6, withA(C.white, 0.7));
+  line(14, -2, 36, -16, 0.6, withA(C.white, 0.7));
+  disc(-36, -16, 1.2, col(Math.sin(t * 3) > 0 ? "#ff3b4f" : "#5a1a1a"));
+  disc(36, -16, 1.2, col(Math.sin(t * 3) > 0 ? "#3bff7a" : "#1a4a2a"));
+  // the saucer: a shiny top, a darker rim, the underside
+  poly([-40, 2, -14, -6, 14, -6, 40, 2, 14, 8, -14, 8], col("#aab4c8"));
+  quad4(-14, -6, 14, -6, 40, 2, -40, 2, col("#eef2fa"), col("#eef2fa"), col("#8a94a8"), col("#8a94a8"));
+  quad4(-40, 2, 40, 2, 14, 8, -14, 8, col("#6a7488"), col("#6a7488"), col("#3a4254"), col("#3a4254"));
+  line(-40, 2, 40, 2, 0.8, col("#d8e0ec"));
+  line(-24, -2.8, 8, -5, 0.8, withA(C.white, 0.85)); // (a streak of light on the top)
+  // chase lights round the rim
+  R.setAdd(true);
+  for (let i = 0; i < 8; i++) {
+    const on = (Math.floor(t * 8) + i) % 4 === 0,
+      lx = -28 + i * 8,
+      c = col(i % 2 ? "#ff5fa8" : "#5ff5c8");
+    disc(lx, 4.4, 1.5, withA(c, on ? 1 : 0.4));
+    if (on) glow(lx, 4.4, 6, withA(c, 0.55));
+  }
+  R.setAdd(false);
+  // the glass dome, the pilot inside
+  disc(0, -8, 11, col("#1e5a9a"), 8);
+  disc(0, -7, 9.4, col("#3a8ad0"), 6.6);
+  disc(0, -5.6, 3, col("#f0c090"));
+  disc(0, -8.2, 3.2, col("#e8e8f0"), 2);
+  rect(-2.2, -6.6, 4.4, 1.2, col("#2a2a36")); // (goggles)
+  disc(-3.6, -11.6, 4, withA(C.white, 0.5), 2.2);
+  disc(4.4, -4.6, 1.8, withA(C.white, 0.2), 0.9);
+  arcE(0, -8, 9.8, 7, Math.PI * 1.12, Math.PI * 1.45, 0.7, withA(C.white, 0.85), 8);
+  // the antenna dish, turning to listen
+  {
+    const sw = Math.sin(t * 1.4) * 0.5;
+    line(8, -15, 14, -24, 0.8, col("#8a8a96"));
+    arc(15, -25, 4, Math.PI * 1.1 + sw, Math.PI * 1.9 + sw, 1, col("#d8dce4"), 6);
+    disc(15, -25, 0.8, col(Math.sin(t * 7) > 0 ? "#ffe060" : "#6a5a20"));
+  }
   pop();
 }
 
@@ -40503,17 +41484,58 @@ function drawTaxi(x, y, k, t, dir = -1) {
   push();
   translate(x, y);
   scaleXY(dir * k, k); // (drawn heading RIGHT, then mirrored)
-  R.setAdd(true);
+  // the rockets bolted on the back: two shiny booster tubes with flared nozzles, roaring
+  vSmoke(-60, -6, -1, t, 6, 50, 4.5, "#8a8c96", 0.32, 1);
   for (let i = 0; i < 2; i++) {
-    const fl = 22 + Math.sin(t * 40 + i) * 5;
-    tri(-34, -12 + i * 10, -34, -6 + i * 10, -34 - fl, -9 + i * 10, withA(col("#ffb030"), 0.85));
-    glow(-36, -9 + i * 10, 8, withA(col("#ff7a20"), 0.6));
+    const ry = -11.5 + i * 10;
+    vFlame(-47, ry, -1, 30, 3.2, t, FLAME_HOT, i);
+    quad4(
+      -43,
+      ry - 2.4,
+      -47.5,
+      ry - 3.6,
+      -47.5,
+      ry + 3.6,
+      -43,
+      ry + 2.4,
+      col("#5a5e68"),
+      col("#3a3e48"),
+      col("#24262e"),
+      col("#3a3e48")
+    ); // the nozzle
+    quad4(
+      -43,
+      ry - 3,
+      -26,
+      ry - 3,
+      -26,
+      ry + 3,
+      -43,
+      ry + 3,
+      col("#f0f2f8"),
+      col("#f0f2f8"),
+      col("#6a6e7a"),
+      col("#6a6e7a")
+    ); // the tube
+    quad4(
+      -29,
+      ry - 3,
+      -25,
+      ry - 3,
+      -25,
+      ry + 3,
+      -29,
+      ry + 3,
+      col("#e84040"),
+      col("#e84040"),
+      col("#8a1a1a"),
+      col("#8a1a1a")
+    ); // a red band
+    line(-42, ry - 1.8, -27, ry - 1.8, 0.7, withA(C.white, 0.8)); // (its shine)
+    for (let j = 0; j < 4; j++) disc(-40 + j * 3.4, ry + 1.6, 0.45, col("#3a3e48")); // rivets
   }
-  R.setAdd(false); // the rockets
-  rect(-35, -15, 4, 7, col("#8a8e98"));
-  rect(-35, -5, 4, 7, col("#8a8e98"));
   for (let i = 0; i < 4; i++)
-    line(-46 - i * 9, -20 + i * 6, -66 - i * 12, -20 + i * 6, 1, withA(C.white, 0.5)); // speed lines
+    line(-62 - i * 9, -20 + i * 6, -84 - i * 12, -20 + i * 6, 1, withA(C.white, 0.5)); // speed lines
   // the roof rack, piled high: suitcases, a striped bag, a rolled-up mattress
   rect(-30, -31, 46, 1.6, col("#5a5a64"));
   for (const rx of [-28, -14, 0, 14]) line(rx, -31, rx, -29, 1, col("#5a5a64"));
@@ -40526,6 +41548,35 @@ function drawTaxi(x, y, k, t, dir = -1) {
   line(-28, -36, 14, -38, 0.8, col("#e8c040")); // and a rope over the lot
   // the body: tall and boxy, a short sloping nose
   poly([-32, 4, -32, -27, -30, -29, 18, -29, 29, -14, 34, -8, 34, 4], col("#f6f6f2"));
+  quad4(-30, -29, 18, -29, 18, -27, -32, -27, col("#ffffff"), col("#ffffff"), col("#d8dce4"), col("#d8dce4")); // (the roof's edge)
+  quad4(
+    -32,
+    -4,
+    34,
+    -4,
+    34,
+    4,
+    -32,
+    4,
+    withA(C.black, 0),
+    withA(C.black, 0),
+    withA(C.black, 0.32),
+    withA(C.black, 0.32)
+  ); // shade low down
+  quad4(
+    29,
+    -14,
+    34,
+    -8,
+    34,
+    -4,
+    26,
+    -4,
+    withA(col("#c8ccd6"), 0.6),
+    withA(col("#c8ccd6"), 0.6),
+    withA(col("#c8ccd6"), 0.2),
+    withA(col("#c8ccd6"), 0.2)
+  ); // (the nose turning away from the light)
   rect(-32, -9, 66, 3, col("#2a8a4a"));
   rect(-32, -6, 66, 1.2, col("#e8c040")); // a green and gold stripe
   for (let i = 0; i < 16; i++) rect(-32 + i * 4.1, 0, 2.05, 2, col(i % 2 ? "#141414" : "#e03030"));
@@ -40538,7 +41589,7 @@ function drawTaxi(x, y, k, t, dir = -1) {
   // windows, PACKED with passengers (three to a window - it's a minibus taxi)
   for (let i = 0; i < 3; i++) {
     const wx = -30 + i * 11;
-    rect(wx, -26, 9.6, 11, col("#2a3a4a"));
+    vgrad(wx, -26, 9.6, 11, col("#40586e"), col("#1a2632"));
     for (let j = 0; j < 3; j++) {
       const hx = wx + 1.8 + j * 3.1,
         hy = -19 + Math.sin(t * 9 + i * 2 + j) * 0.7,
@@ -40555,18 +41606,26 @@ function drawTaxi(x, y, k, t, dir = -1) {
         disc(hx, hy - 1.6, 1.9, col(["#e8501a", "#d81a6a", "#ffd040"][(i + j) % 3]), 1.2);
     }
   } // (some in doeks)
+  for (let i = 0; i < 3; i++) {
+    const wx = -30 + i * 11;
+    vGlare(wx, -26, wx + 9.6, -15, t, i);
+    polyline([wx, -26, wx + 9.6, -26, wx + 9.6, -15, wx, -15, wx, -26], 0.7, col("#9aa0aa")); // (the window frames)
+  }
   {
     const wv = Math.sin(t * 8) * 0.5;
     line(-19, -25, -17 + wv * 2, -33, 1.4, col(TAXI_SKINS[2]));
     disc(-17 + wv * 2, -34, 1.4, col(TAXI_SKINS[2]));
   } // an arm out of a window, waving
-  quad4(19, -26, 26, -26, 31, -13, 19, -13, col("#2a3a4a"));
+  quad4(19, -26, 26, -26, 31, -13, 19, -13, col("#40586e"), col("#40586e"), col("#1a2632"), col("#1a2632"));
   disc(22, -19, 2.3, col(TAXI_SKINS[1]));
   rect(20.5, -21.8, 3.4, 1.2, col("#e03030"));
   line(19, -13, 28, -17, 0.8, col("#14141a")); // the driver, in his cap, at the wheel
   line(21, -14, 21, -23, 1.3, col(TAXI_SKINS[1]));
   disc(21, -24, 1.2, col(TAXI_SKINS[1]));
   line(21, -24, 21, -27, 0.7, col(TAXI_SKINS[1])); // ...his hand out of the window: one finger up - "to town!"
+  vGlare(22, -26, 31, -13, t, 5);
+  rect(30, -16, 3, 2.4, col("#2a2a32"));
+  disc(32.6, -15, 1.4, col("#c8ccd6"), 1); // a wing mirror
   // THE GAATJIE - the taxi's guard - hanging out of the open door: one hand on the door frame, leaning right out into the
   // wind, his other arm up calling for passengers, his shirt flapping
   {
@@ -40592,14 +41651,15 @@ function drawTaxi(x, y, k, t, dir = -1) {
     pop();
   }
   for (const wx of [-20, 22]) {
-    disc(wx, 5, 5.4, col("#14141a"));
-    disc(wx, 5, 2.6, col("#c8ccd6"));
-    rect(wx - 7, 2, 2, 5, col("#141414"));
+    disc(wx, 3.4, 7, col("#1a1a20"), 5.6); // the wheel arch
+    vWheel(wx, 5, 5.4, t, 20);
+    rect(wx - 7.4, 2, 2, 5.4, col("#141414"));
   } // wheels, chrome hubs, mud flaps
-  disc(34, -4, 2, col("#fff4b0"));
-  R.setAdd(true);
-  glow(35, -4, 8, withA(col("#fff4b0"), 0.6));
-  R.setAdd(false); // a headlight
+  quad4(30, 1.4, 36, 1.4, 36, 4.4, 30, 4.4, col("#f0f2f8"), col("#f0f2f8"), col("#7a808c"), col("#7a808c")); // a chrome bumper
+  for (let j = 0; j < 3; j++) rect(31, -2.6 + j * 1.2, 3, 0.6, col("#3a3e48")); // the grille
+  rect(-33.5, -8, 2, 3, col("#e02a2a")); // a tail light
+  disc(34, -6, 2, col("#fff4b0"));
+  vBeam(35, -6, 1, 80, 16); // a headlight
   pop();
   // the writing (never mirrored): PSALM 23 big on the side, and the joke underneath
   const wx = (lx) => x + dir * k * lx;
@@ -40615,28 +41675,81 @@ function drawTaxi(x, y, k, t, dir = -1) {
     ); // the gaatjie calling the destination (in the big show)
 }
 function drawRocketCar(x, y, k, t, dir = -1) {
-  // a sleek red super rocket race car - of our own design, no badge on it
+  // a sleek red super rocket race car - of our own design, no badge on it: a long low wedge, a bubble canopy with the
+  // driver's helmet, a rear wing on struts, a front wing, side pods, and a blue-white rocket flame
   push();
   translate(x, y);
   scaleXY(dir * k, k);
-  R.setAdd(true);
-  {
-    const fl = 14 + Math.sin(t * 35) * 4;
-    tri(-26, -7, -26, -1, -26 - fl, -4, withA(col("#9fe8ff"), 0.85));
-    glow(-27, -4, 7, withA(col("#5fb0ff"), 0.6));
-  }
-  R.setAdd(false);
-  poly([-26, 2, -26, -8, -10, -10, 0, -16, 12, -16, 30, -3, 30, 2], col("#d8202a"));
-  poly([-2, -10, 2, -15, 11, -15, 18, -9], col("#1a2a3a")); // a low red wedge, a dark canopy
-  rect(-26, -12, 6, 4, col("#a01820"));
-  rect(-24, -2, 50, 1.4, col("#f4f4f0"));
-  disc(-4, -5, 3.4, col("#f4f4f0"));
-  rect(-5, -7, 2, 4, col("#d8202a")); // a spoiler, a white stripe, a racing number
-  for (const wx of [-16, 20]) {
-    disc(wx, 3, 4, col("#14141a"));
-    disc(wx, 3, 1.8, col("#c8ccd6"));
-  }
+  vFlame(-30, -4.5, -1, 26, 3, t, FLAME_ICE, 2);
+  quad4(
+    -28,
+    -7.5,
+    -31,
+    -8.5,
+    -31,
+    -0.5,
+    -28,
+    -1.5,
+    col("#6a6e78"),
+    col("#3a3e48"),
+    col("#24262e"),
+    col("#3a3e48")
+  ); // the nozzle
+  const red = col("#d8202a"),
+    redD = col("#8a1018"),
+    redL = col("#ff5a50");
+  // the rear wing on its struts
+  line(-24, -8, -22, -14, 1.2, col("#2a2a32"));
+  quad4(-31, -17, -19, -17, -19, -14, -31, -14, redL, redL, redD, redD);
+  rect(-31.5, -18, 1.4, 6, col("#1a1a22"));
+  // the body: a long low wedge
+  poly([-28, 3, -28, -8, -12, -9, -3, -15, 10, -15, 20, -8, 38, -2, 38, 2], red);
+  quad4(
+    -28,
+    -8,
+    -12,
+    -9,
+    20,
+    -8,
+    -28,
+    -5,
+    withA(redL, 0.9),
+    withA(redL, 0.9),
+    withA(redL, 0),
+    withA(redL, 0)
+  ); // light along the top
+  quad4(20, -8, 38, -2, 38, -0.5, 18, -5, withA(redL, 0.7), withA(redL, 0.5), withA(redL, 0), withA(redL, 0));
+  quad4(-28, -1, 38, -1, 38, 2, -28, 3, withA(redD, 0), withA(redD, 0), withA(redD, 0.9), withA(redD, 0.9)); // dark underneath
+  quad4(-8, -6, 6, -6, 4, -1.5, -8, -1.5, col("#1a1a22")); // a side-pod air intake
+  line(-8, -6, 6, -6, 0.5, withA(C.white, 0.5));
+  // the canopy, the driver in a white helmet
+  quad4(
+    -2,
+    -10,
+    2,
+    -14.6,
+    11,
+    -14.6,
+    18,
+    -8.6,
+    col("#3a5a78"),
+    col("#3a5a78"),
+    col("#14202c"),
+    col("#14202c")
+  );
+  disc(5, -11.4, 2.6, col("#f4f4f0"));
+  rect(5.4, -12.6, 2.4, 1.2, col("#2a2a32")); // (the visor)
+  vGlare(1, -14.6, 16, -9, t, 7);
+  // a white stripe, a racing number on a roundel
+  quad4(-24, -3.2, 34, -1.6, 34, -0.6, -24, -1.8, col("#f4f4f0"));
+  disc(-16, -4.8, 3.4, col("#f4f4f0"));
+  // the front wing, low down
+  quad4(28, 1.6, 42, 1.6, 42, 3.2, 28, 3.2, col("#3a3a44"), col("#3a3a44"), col("#14141a"), col("#14141a"));
+  rect(41, -0.6, 1.4, 4, col("#d8202a"));
+  disc(36.6, -2, 1, col("#fff4b0"));
+  for (const wx of [-17, 22]) vWheel(wx, 3.4, 4.6, t, 30, false, "#e8c040");
   pop();
+  pixText("7", x + dir * k * -16, y - 4.8 * k, 0.6 * k, col("#d8202a"));
 }
 // the taxi overtaking the race car: f = 0..1 across the screen (right to left), L..Rr wide, at height y, size k
 function drawTaxiRace(f, L, Rr, y, k, t, talk = true, more = false) {
@@ -40877,6 +41990,112 @@ function drawChandeliers(t) {
 //  load-sheds, the generator is cranked - black smoke - then it rattles and hums away, exhaust puffing; the solar panels
 //  glint in the light and keep the shake taps going.
 // =====================================================================================
+// THE BACKUP GENERATOR, UP CLOSE (v2026.10.04ar): when Eskom cuts the power it's wheeled in at the front of the pub -
+// a big yellow generator on a trolley, its work lamp lighting it up in the dark. It's cranked (black smoke, the lamp
+// flickering), it catches - and then it shakes and hums away, grey smoke puffing, the needle on the fuel gauge slowly
+// dropping, a cable snaking off to the bars - until the power's back, when it splutters to a stop and is wheeled away.
+// GENPOS: where its lamp is (in the room), so the dark lets its light through.
+let GENPOS                  = null;
+function drawBigGen(t) {
+  const L0 = G.ls;
+  GENPOS = null;
+  if (!L0 || L0.t < 2.6) return;
+  const T0 = L0.t,
+    inF = clamp((T0 - 2.6) / 1.4, 0, 1),
+    outF = clamp((T0 - 26.2) / 0.8, 0, 1),
+    slide = (1 - ease(inF)) * -260 + ease(outF) * -260, // (wheeled in from the left, and away again)
+    crank = T0 > 4.2 && T0 < 5.6,
+    run = !!L0.gen && !L0.back,
+    jig = run ? Math.sin(t * 60) * 0.7 : crank ? Math.sin(t * 25) * 1.6 : 0,
+    x = 560 + slide,
+    y = 512,
+    k = 1.7;
+  // the cable, snaking off to the bars
+  if (inF >= 1 && outF <= 0) {
+    const pts = [];
+    for (let i = 0; i <= 10; i++) {
+      const f = i / 10;
+      pts.push(x + 40 * k - f * 120, y - 4 - f * 34 + Math.sin(f * 9 + 1) * 4);
+    }
+    polyline(pts, 2.2, col("#14141a"));
+  }
+  push();
+  translate(x + jig, y);
+  scaleBy(k);
+  disc(0, 0, 34, withA(C.black, 0.45), 4); // its shadow
+  // the trolley: a frame, two wheels, a handle
+  rect(-30, -8, 60, 4, col("#3a3a42"));
+  line(-30, -8, -40, -30, 2, col("#3a3a42"));
+  line(-42, -30, -36, -32, 2.4, col("#1a1a20"));
+  for (const wx of [-20, 20]) vWheel(wx, -4, 5, t, run ? 0 : 0, false, "#8a8e98");
+  // the box: yellow, shaded, vents, a stencilled name
+  quad4(-26, -36, 26, -36, 26, -8, -26, -8, col("#ffd860"), col("#ffd860"), col("#b8861a"), col("#b8861a"));
+  rect(-26, -38, 52, 3, col("#fff0a0"));
+  for (let i = 0; i < 6; i++) rect(6 + i * 3, -31, 1.4, 16, col("#7a5a10"));
+  rect(-23, -31, 24, 14, col("#24242c")); // the control panel
+  // the fuel gauge: the needle drops while it runs
+  {
+    const fuel = run ? 1 - clamp((T0 - 5.6) / 21, 0, 1) * 0.7 : 1;
+    disc(-16, -24, 4.4, col("#f4f0e4"));
+    arc(-16, -24, 4.4, Math.PI, Math.PI * 2, 0.6, col("#1a1a20"), 10);
+    const a = Math.PI + Math.PI * fuel;
+    line(-16, -24, -16 + Math.cos(a) * 3.6, -24 + Math.sin(a) * 3.6, 0.7, col("#e02a2a"));
+    rect(-17, -21.6, 2, 0.8, col("#1a1a20"));
+  }
+  // lights on the panel: amber while it's cranked, green while it runs
+  disc(-7, -27, 1.6, col(crank ? "#ffb030" : "#4a3010"));
+  disc(-3, -27, 1.6, col(run ? "#5aff7a" : "#1a3a1a"));
+  disc(-5, -21, 1.6, col(run && Math.sin(t * 7) > 0 ? "#ff5a3a" : "#3a1a1a"));
+  // the exhaust pipe, hot at the tip
+  rect(18, -50, 4, 14, col("#5a5a62"));
+  rect(17, -52, 6, 2.4, col("#3a3a42"));
+  // the work lamp on its pole, lighting everything up
+  line(-22, -38, -22, -58, 1.4, col("#5a5a62"));
+  quad4(-28, -64, -16, -64, -18, -58, -26, -58, col("#3a3a42"));
+  const lampOn = run || (crank && Math.sin(t * 30) > 0);
+  disc(-22, -58, 2.4, col(lampOn ? "#fff4c0" : "#5a5040"));
+  if (lampOn) {
+    R.setAdd(true);
+    quad4(
+      -26,
+      -58,
+      -18,
+      -58,
+      20,
+      -2,
+      -64,
+      -2,
+      withA(col("#fff0b0"), 0.22),
+      withA(col("#fff0b0"), 0.22),
+      withA(col("#fff0b0"), 0),
+      withA(col("#fff0b0"), 0)
+    );
+    glow(-22, -58, 26, withA(col("#ffe8a0"), 0.6));
+    R.setAdd(false);
+  }
+  pop();
+  // smoke: black clouds while it's cranked, grey puffs while it runs
+  if (run || crank)
+    for (let i = 0; i < 7; i++) {
+      const f = (t * (crank ? 1.5 : 0.9) + i / 7) % 1;
+      disc(
+        x + jig + (20 + f * 16) * k,
+        y + (-54 - f * 46) * k,
+        ((crank ? 4.4 : 2.6) + f * 7) * k,
+        withA(col(crank ? "#141414" : "#9a9aa2"), (crank ? 0.75 : 0.42) * (1 - f))
+      );
+    }
+  if (T0 > 3.4 && outF <= 0) {
+    pixText(
+      run ? "BACKUP GENERATOR: ON" : crank ? "STARTING..." : "BACKUP GENERATOR",
+      x,
+      y - 74 * k,
+      1.25,
+      col(run ? "#7dff9a" : "#ffd24d")
+    );
+  }
+  GENPOS = [x - 22 * k, y - 50 * k];
+}
 function drawGenSolar(t) {
   const y = 128,
     L0 = G.ls,
@@ -41039,7 +42258,41 @@ const showBpm = () => {
 // middle, the body keeps its depth (side-on she's narrower, never paper-thin), arms reaching out shorten as they point
 // at us, the far arm passes BEHIND the body, the face slides round to the side into profile - and facing away we see
 // the back of her head and her hair.
+// STAGE LIGHTING ON EVERY PERFORMER (v2026.10.04ar): a pool of the show's coloured light on the boards at their feet,
+// their reflection in the polished boards, and a rim of coloured light down one side from the stage lights (the
+// performer is drawn once in the light's colour, nudged towards the light, then for real on top). Struggling machines
+// skip it. STAGE_ACC: tonight's light colour.
+let STAGE_ACC = "#ff5fa8";
 function perf(x        , y        , s        , o      , p      , t        ) {
+  if (OUT || (R.kind === "CPU" && QUAL < 1) || QUAL < 1) return perfBody(x, y, s, o, p, t);
+  const acc = col(STAGE_ACC),
+    dk = 1 - 0.8 * (G.dark || 0),
+    lift = p.lift || 0;
+  R.setAdd(true);
+  glowE(x + (p.sway || 0) * s, y + 1, 15 * s, 3.6 * s, withA(acc, 0.28 * dk));
+  R.setAdd(false);
+  // the reflection, upside down in the boards (fainter the higher they leap)
+  push();
+  translate(x, y + 1);
+  scaleXY(1, -0.3);
+  translate(-x, -(y + 1) + lift * 2);
+  OUT = withA(mix(acc, col("#140818"), 0.55), 0.22 * dk * Math.max(0, 1 - lift / 30));
+  perfBody(x, y, s, o, p, t);
+  OUT = null;
+  pop();
+  // the rim light: a thin edge of coloured light down the side the stage lights are on (it swaps sides slowly)
+  const o2 = (retroLook ? 1 / pxScale : 1.1) * 1.3,
+    sd = Math.sin(t * 0.35 + x * 0.01) > 0 ? 1 : -1;
+  M[4] += sd * o2;
+  M[5] -= o2 * 0.7;
+  OUT = withA(mix(acc, C.white, 0.18), 0.9 * dk);
+  perfBody(x, y, s, o, p, t);
+  OUT = null;
+  M[4] -= sd * o2;
+  M[5] += o2 * 0.7;
+  perfBody(x, y, s, o, p, t);
+}
+function perfBody(x        , y        , s        , o      , p      , t        ) {
   const sk = col(o.skin),
     A = (h) => col(h),
     lift = p.lift || 0,
@@ -41189,6 +42442,22 @@ function perf(x        , y        , s        , o      , p      , t        ) {
     shade(A(o.top), 0.85)
   );
   quad4(tw - 2 * depth, sh, tw, sh, tw - 1, 0, tw - 1 - 2 * depth, 0, shade(A(o.top), 0.78)); // (the side in shadow, so the body looks round)
+  quad4(
+    -tw,
+    sh,
+    tw,
+    sh,
+    tw - 0.5,
+    sh + 4,
+    -tw + 0.5,
+    sh + 4,
+    withA(C.white, 0.2),
+    withA(C.white, 0.2),
+    withA(C.white, 0),
+    withA(C.white, 0)
+  ); // (light across the shoulders)
+  line(-tw + 1, -1, tw - 1, -1, 1, shade(A(o.top), 0.6)); // (the waistline)
+  rect(-1.7, sh - 3.2, 3.4, 3.6, shade(sk, 0.88)); // the neck
   if (o.sparkle && Math.sin(t * 5 + x) > 0.2) {
     R.setAdd(true);
     for (let i = 0; i < 3; i++)
@@ -41264,7 +42533,19 @@ function perf(x        , y        , s        , o      , p      , t        ) {
       const exx = ex * cw + fx;
       if (cw < 0.45 && ex * sn < 0) continue;
       if (blink) line(exx - 1, -0.6, exx + 1, -0.6, 0.7, A("#10081c"));
-      else disc(exx, -0.6, 1, A("#10081c"));
+      else {
+        disc(exx, -0.6, 1, A("#10081c"));
+        disc(exx + 0.35, -0.95, 0.38, C.white); // (a glint in the eye)
+      }
+      line(
+        exx - 1.3,
+        -2.9 - (p.sing ? 0.5 : 0),
+        exx + 1.3,
+        -3.1 - (p.sing ? 0.5 : 0),
+        0.6,
+        shade(A(o.hair || o.beard || "#3a2418"), 0.8)
+      ); // eyebrows (up when singing)
+      disc(exx + ex * 0.35, 1.5, 1.3, withA(col("#ff7a8a"), 0.3)); // rosy cheeks
     }
     if (cw < 0.6) disc(fx + sn * 3.6, 1, 1.2, shade(sk, 0.9)); // (in profile: the nose)
     if (p.sing) disc(fx, 3, 1.6, A("#4a1020"), 1.8 + Math.abs(Math.sin(t * 9)) * 0.8);
@@ -41294,6 +42575,7 @@ function perf(x        , y        , s        , o      , p      , t        ) {
         hc
       );
     } else disc(-fx * 0.3, -4, 6.8, hc, 3.4);
+    if (!away) disc(-fx * 0.3 - 2.2, -6.2, 2.4, withA(C.white, 0.22), 0.9); // (a shine on the hair)
   }
   if (o.hat === "kappie") {
     disc(0, -2, 8.6, A(o.hatC || "#f8f6f0"), 8);
@@ -42516,8 +43798,19 @@ function showBand(t, y, bt, bi, hit, alien) {
 
 // the whole stage, in the pub's back layer
 function drawStage(t) {
-  if (G.state === "ending" || VERT) return;
+  if (G.state === "ending" || (VERT && !VPANEL.on)) return;
   const S = showNow();
+  STAGE_ACC = {
+    shaolin: "#ffb030",
+    dancers: "#ff5fa8",
+    zulu: "#ffb030",
+    volkspele: "#7ab0e0",
+    boereorkes: "#ffd24d",
+    comedy: "#fff4d0",
+    magic: "#c08aff",
+    powers: S.alien ? "#c08aff" : "#5fe0ff",
+    band: "#5ff5c8",
+  }[S.kind];
   drawStageSet(
     t,
     {
@@ -42532,11 +43825,43 @@ function drawStage(t) {
       band: "#5ff5c8",
     }[S.kind]
   );
-  safeDraw(S.kind, () => outlined(() => drawShowAct(t), withA(INK, 0.85 * (1 - 0.6 * (G.dark || 0))))); // (a crisp ink outline round every performer, like everyone else in the pub)
+  safeDraw(S.kind, () => {
+    // MOTION TRAILS (v2026.10.04ar): the act a moment ago, faint in the stage light's colour - every kick, spin and leap
+    // leaves a little streak of light behind it (the parts that stay still are hidden behind the performer)
+    if (QUAL >= 1 && R.kind !== "CPU") {
+      const acc = col(STAGE_ACC),
+        dk = 1 - 0.8 * (G.dark || 0);
+      for (const [lag, a] of [
+        [0.12, 0.12],
+        [0.06, 0.22],
+      ]) {
+        OUT = withA(acc, a * dk);
+        try {
+          drawShowAct(t - lag);
+        } finally {
+          OUT = null;
+        }
+      }
+    }
+    outlined(() => drawShowAct(t), withA(INK, 0.85 * (1 - 0.6 * (G.dark || 0))));
+  }); // (a crisp ink outline round every performer, like everyone else in the pub)
 }
 // ---- the words: the name of tonight's act on a board at the front of the stage, the Shaolin shouts, the comedian's jokes ----
 function stageHud(g, s, t, fD, sx, sy) {
-  if (VERT || !["play", "lost", "clear"].includes(G.state)) return;
+  if (!["play", "lost", "clear"].includes(G.state)) return;
+  if (VERT) {
+    // the tall view: the stage is up on the back wall, smaller - the words go where it is
+    const P = VPANEL,
+      sx0 = sx,
+      sy0 = sy,
+      fD0 = fD,
+      k = Math.max(0.8, P.sc * 1.3);
+    if (!P.ok) return;
+    sx = (x) => sx0(P.x0 + (x - P.rx) * P.sc);
+    sy = (y) => sy0(P.y0 + (y - P.ry) * P.sc);
+    fD = (n) => fD0(n * k);
+    s = s * k;
+  }
   const S = showNow(),
     cx = sx((STAGE.x0 + STAGE.x1) / 2);
   g.textAlign = "center";
@@ -43501,6 +44826,7 @@ function coachHud(g, s, t, fD, sx, sy) {
     };
   }
   if (!tip) return;
+  say(tip.text); // (read out for the youngest players, when VOICE is on)
   const [x, y] = at(tip.lane, tip.x, tip.y),
     b = Math.abs(Math.sin(t * 5)) * 10 * s;
   g.save();
@@ -43608,13 +44934,17 @@ function flawHud(g, s, pad, fD) {
   g.fillText("FLAWLESS x" + flawMul().toFixed(1), pad + 150 * s, pad + 24 * s);
 }
 // =====================================================================================
-//  THE GALAXY MAP (v2026.10.04ao): the whole tour on one page - the 40 stops from Mercury out to the heart of the Andromeda
-//  galaxy, as a winding route through four regions: THE SOLAR SYSTEM, BEYOND THE SUN (the rest of the Milky Way), THE
-//  PA-99-N2 SYSTEM and DEEP ANDROMEDA. The stops you've cleared shine gold with their stars, your ship sits on the stop
-//  you're at, and Andromeda glows at the far end. It's in the menu (GALAXY MAP), and after every level the map slides in
-//  under the stars and the ship hops on to the next stop.
+//  THE GALAXY MAP (v2026.10.04ao, the two galaxies v2026.10.04ar): the whole tour on one page - drawn on the two real
+//  galaxies it crosses. In OUR MILKY WAY (a barred spiral, seen from above): the Solar System's twelve stops circle the
+//  Sun out in a spiral arm, and the stops BEYOND THE SUN lead in round the bar to Sagittarius A*, the black hole at the
+//  centre. A long dashed jump - 2.5 MILLION LIGHT-YEARS - crosses to THE ANDROMEDA GALAXY (tilted, as we see it), where
+//  the PA-99-N2 system's twelve worlds circle their star in the disk, and the deep-Andromeda stops sit where they really
+//  are: the little companion galaxies M32 and M110, the star cloud NGC 206 in the disk, the Giant Stream, the nova, S
+//  Andromedae and the globular cluster Mayall II - and last of all the bright core. The stops you've cleared shine gold
+//  (with a gold dot for each star), your little flying diner waits at the next one. In the menu (GALAXY MAP) you can pick
+//  any stop and PLAY it; after every level the map slides in under the stars and the ship hops on.
 // =====================================================================================
-const GMV = { hover: -1, t0: 0, cur: 0 };
+const GMV = { hover: -1, t0: 0, cur: 0, sel: 0 };
 const GM_REGIONS = [
   { from: 0, to: 11, name: "THE SOLAR SYSTEM", c: "#ffb060" },
   { from: 12, to: 19, name: "BEYOND THE SUN", c: "#6fb4ff" },
@@ -43632,124 +44962,299 @@ function gmStars() {
   }
   return out;
 }
-// where each stop sits: a snake of rows, left to right then back again (more rows on a tall screen)
+// the two galaxies: side by side on a wide screen, one above the other on a tall one
+function gmFrames(w, h) {
+  const wide = w >= h * 0.9;
+  return wide
+    ? {
+        mw: { x: w * 0.26, y: h * 0.53, R: Math.min(w * 0.22, h * 0.4) },
+        m31: { x: w * 0.75, y: h * 0.53, R: Math.min(w * 0.22, h * 0.4) },
+        wide,
+      }
+    : {
+        mw: { x: w * 0.5, y: h * 0.27, R: Math.min(w * 0.4, h * 0.21) },
+        m31: { x: w * 0.5, y: h * 0.76, R: Math.min(w * 0.4, h * 0.21) },
+        wide,
+      };
+}
+const SUN_A = 2.45, // (the Sun: out in a spiral arm, a bit more than halfway from the centre)
+  SUN_R = 0.7,
+  PA_A = -2.55, // (PA-99-N2: a star out in Andromeda's disk)
+  PA_R = 0.6;
+// where each stop sits
 function gmLayout(w, h) {
-  const N = VENUES.length,
-    rows = w < h * 0.9 ? 8 : 4,
-    cols = Math.ceil(N / rows),
-    mx = w * 0.07,
-    my = h * 0.13,
-    dx = (w - mx * 2) / (cols - 1),
-    dy = (h - my * 2) / (rows - 1),
-    pts = [];
-  for (let i = 0; i < N; i++) {
-    const r = Math.floor(i / cols),
-      c = i % cols,
-      cc = r % 2 ? cols - 1 - c : c;
-    pts.push([mx + cc * dx, my + r * dy + Math.sin(i * 1.7) * dy * 0.12]);
+  const F = gmFrames(w, h),
+    pol = (fr, a, r) => [fr.x + Math.cos(a) * r * fr.R, fr.y + Math.sin(a) * r * fr.R],
+    pts = [],
+    sun = pol(F.mw, SUN_A, SUN_R),
+    pa = pol(F.m31, PA_A, PA_R);
+  // THE SOLAR SYSTEM: Mercury to the comet, spiralling out round the Sun
+  for (let i = 0; i < 12; i++) {
+    const a = -Math.PI / 2 + i * ((Math.PI * 2) / 12) * 0.96,
+      r = (0.09 + i * 0.014) * F.mw.R;
+    pts.push([sun[0] + Math.cos(a) * r, sun[1] + Math.sin(a) * r]);
   }
-  return { pts, r: Math.max(5, Math.min(dx, dy) * 0.17), dy };
+  // BEYOND THE SUN: round the galaxy and in towards the black hole at the centre
+  for (let k = 0; k < 8; k++) {
+    const f = k / 7;
+    pts.push(pol(F.mw, SUN_A + 0.95 + f * 2.7, 0.64 * Math.pow(1 - f, 0.85)));
+  }
+  // THE PA-99-N2 SYSTEM: twelve worlds round their star
+  for (let i = 0; i < 12; i++) {
+    const a = Math.PI / 2 + i * ((Math.PI * 2) / 12) * 0.96,
+      r = (0.09 + i * 0.014) * F.m31.R;
+    pts.push([pa[0] + Math.cos(a) * r, pa[1] + Math.sin(a) * r]);
+  }
+  // DEEP ANDROMEDA, where each really is: M32, M110, NGC 206, the Giant Stream, the nova, S Andromedae, Mayall II, the core
+  for (const [a, r] of [
+    [1.75, 0.62],
+    [0.25, 0.98],
+    [-0.75, 0.48],
+    [-1.6, 0.92],
+    [2.95, 0.38],
+    [-2.0, 0.2],
+    [3.45, 0.98],
+    [0, 0],
+  ])
+    pts.push(pol(F.m31, a, r));
+  return { pts, r: Math.max(3.5, Math.min(w, h) / 85), F, sun, pa };
+}
+// a spiral galaxy seen from above (ours) - a glowing disk, a bar, two great arms and two smaller ones
+function gmMilkyWay(g, fr, t) {
+  const R = fr.R;
+  const disk = g.createRadialGradient(fr.x, fr.y, 0, fr.x, fr.y, R * 1.05);
+  disk.addColorStop(0, "rgba(255,226,170,.55)");
+  disk.addColorStop(0.18, "rgba(240,210,190,.28)");
+  disk.addColorStop(0.55, "rgba(140,160,240,.12)");
+  disk.addColorStop(1, "rgba(80,100,200,0)");
+  g.fillStyle = disk;
+  g.beginPath();
+  g.arc(fr.x, fr.y, R * 1.05, 0, 6.283);
+  g.fill();
+  // the bar
+  g.save();
+  g.translate(fr.x, fr.y);
+  g.rotate(0.45);
+  g.scale(1, 0.35);
+  const bar = g.createRadialGradient(0, 0, 0, 0, 0, R * 0.3);
+  bar.addColorStop(0, "rgba(255,236,190,.9)");
+  bar.addColorStop(1, "rgba(255,210,150,0)");
+  g.fillStyle = bar;
+  g.beginPath();
+  g.arc(0, 0, R * 0.3, 0, 6.283);
+  g.fill();
+  g.restore();
+  // the arms: stars and glowing pink nebulae along logarithmic spirals
+  for (let arm = 0; arm < 4; arm++) {
+    const major = arm % 2 === 0,
+      a0 = 0.45 + arm * (Math.PI / 2) + (arm > 1 ? 0.25 : 0);
+    for (let i = 0; i < (major ? 170 : 90); i++) {
+      const f = i / (major ? 170 : 90),
+        rr = R * (0.2 + f * 0.85),
+        a = a0 + f * 3.9 + (hash(i * 3.1 + arm) - 0.5) * 0.35,
+        sx = fr.x + Math.cos(a) * rr + (hash(i * 7.7 + arm) - 0.5) * R * 0.05,
+        sy = fr.y + Math.sin(a) * rr + (hash(i * 5.3 + arm) - 0.5) * R * 0.05,
+        knot = hash(i * 9.1 + arm * 3) > 0.93;
+      g.fillStyle = knot
+        ? "rgba(255,140,200,.8)"
+        : "rgba(" +
+          (190 + hash(i) * 60) +
+          "," +
+          (205 + hash(i * 2) * 40) +
+          ",255," +
+          (0.35 + (1 - f) * 0.45) +
+          ")";
+      const s = knot ? 2.4 : 1 + hash(i * 1.3) * 1.2;
+      g.fillRect(sx, sy, s, s);
+    }
+  }
+  // the black hole at the very centre
+  g.fillStyle = "#fff6e0";
+  g.beginPath();
+  g.arc(fr.x, fr.y, Math.max(2, R * 0.025), 0, 6.283);
+  g.fill();
+}
+// Andromeda, tilted as we see it: a long oval, a golden core, dust lanes, and its two companions
+function gmAndromeda(g, fr) {
+  const R = fr.R,
+    rot = -0.45,
+    q = 0.4;
+  g.save();
+  g.translate(fr.x, fr.y);
+  g.rotate(rot);
+  g.scale(1, q);
+  for (const [r, c] of [
+    [1.2, "rgba(110,135,230,.22)"],
+    [0.9, "rgba(170,180,245,.26)"],
+    [0.6, "rgba(235,215,200,.32)"],
+    [0.3, "rgba(255,225,170,.6)"],
+  ]         ) {
+    const gr = g.createRadialGradient(0, 0, 0, 0, 0, R * r);
+    gr.addColorStop(0, c);
+    gr.addColorStop(1, c.replace(/[\d.]+\)$/, "0)"));
+    g.fillStyle = gr;
+    g.beginPath();
+    g.arc(0, 0, R * r, 0, 6.283);
+    g.fill();
+  }
+  for (let i = 0; i < 420; i++) {
+    const r = Math.min(1.1, -Math.log(1 - hash(i * 1.31) * 0.98) * 0.3),
+      a = hash(i * 2.77) * 6.283;
+    g.fillStyle = r < 0.4 ? "rgba(255,232,200,.5)" : "rgba(200,215,255,.45)";
+    g.fillRect(Math.cos(a) * r * R, Math.sin(a) * r * R, 1.4, 3);
+  }
+  g.strokeStyle = "rgba(20,8,6,.32)";
+  for (const r of [0.46, 0.64]) {
+    g.lineWidth = R * 0.018;
+    g.beginPath();
+    g.arc(0, 0, R * r, 0.25, 2.9);
+    g.stroke();
+  }
+  g.restore();
+  const core = g.createRadialGradient(fr.x, fr.y, 0, fr.x, fr.y, R * 0.12);
+  core.addColorStop(0, "rgba(255,248,230,.95)");
+  core.addColorStop(1, "rgba(255,220,160,0)");
+  g.fillStyle = core;
+  g.beginPath();
+  g.arc(fr.x, fr.y, R * 0.12, 0, 6.283);
+  g.fill();
 }
 // draw the map into a 2D canvas: cur = the stop you're at, hop = 0..1 as the ship flies on to the next stop
-function drawGalaxyMap(g, w, h, cur, hop, t, opts                                      = {}) {
+function drawGalaxyMap(g, w, h, cur, hop, t, opts                                                    = {}) {
   const L = gmLayout(w, h),
     P = L.pts,
+    F = L.F,
     st = gmStars(),
-    a0 = opts.alpha ?? 1;
+    rN = L.r;
   g.save();
-  g.globalAlpha = a0;
-  // the sky: deep blue at the top (our Milky Way), violet-pink at the bottom (Andromeda), with stars
-  const bg = g.createLinearGradient(0, 0, 0, h);
-  bg.addColorStop(0, "#070a1c");
-  bg.addColorStop(1, "#14061c");
+  g.globalAlpha = opts.alpha ?? 1;
+  // deep space, with stars
+  const bg = g.createLinearGradient(0, 0, w, h);
+  bg.addColorStop(0, "#060a1c");
+  bg.addColorStop(1, "#140618");
   g.fillStyle = bg;
   g.beginPath();
   g.rect(0, 0, w, h);
   g.fill();
   g.clip();
-  for (let i = 0; i < 140; i++) {
-    const x = hash(i * 3.1) * w,
-      y = hash(i * 7.7) * h,
-      tw = 0.4 + 0.6 * Math.abs(Math.sin(t * (0.6 + hash(i) * 1.4) + i));
-    g.fillStyle = "rgba(255,243,226," + (0.15 + 0.5 * tw * hash(i * 2.3)).toFixed(2) + ")";
-    g.fillRect(x, y, 1.5, 1.5);
+  for (let i = 0; i < 160; i++) {
+    const tw = 0.4 + 0.6 * Math.abs(Math.sin(t * (0.6 + hash(i) * 1.4) + i));
+    g.fillStyle = "rgba(255,243,226," + (0.12 + 0.4 * tw * hash(i * 2.3)).toFixed(2) + ")";
+    g.fillRect(hash(i * 3.1) * w, hash(i * 7.7) * h, 1.3, 1.3);
   }
-  // the Milky Way's glow behind the first half, Andromeda's tilted oval behind the end
-  const glowAt = (x, y, rx, ry, rot, c, al) => {
+  gmMilkyWay(g, F.mw, t);
+  gmAndromeda(g, F.m31);
+  for (const [i, rr, sq] of [
+    [32, 0.07, 1],
+    [33, 0.11, 0.55],
+  ]         ) {
+    const [x, y] = P[i],
+      r0 = F.m31.R * rr;
     g.save();
     g.translate(x, y);
-    g.rotate(rot);
-    g.scale(1, ry / rx);
-    const gr = g.createRadialGradient(0, 0, 0, 0, 0, rx);
-    gr.addColorStop(0, c.replace("A", String(al)));
-    gr.addColorStop(1, c.replace("A", "0"));
+    g.scale(1, sq);
+    const gr = g.createRadialGradient(0, 0, 0, 0, 0, r0);
+    gr.addColorStop(0, "rgba(255,236,210,.55)");
+    gr.addColorStop(1, "rgba(255,220,190,0)");
     g.fillStyle = gr;
     g.beginPath();
-    g.arc(0, 0, rx, 0, 6.283);
+    g.arc(0, 0, r0, 0, 6.283);
     g.fill();
     g.restore();
+  } // (the two little companion galaxies, M32 and M110, round their stops)
+  // the galaxies' names
+  const title = (txt, sub, fr, up) => {
+    g.textAlign = "center";
+    g.textBaseline = "middle";
+    g.font = "700 " + Math.round(Math.max(10, rN * 2.4)) + "px " + FB;
+    g.fillStyle = "#e8ecff";
+    const y = up ? fr.y - fr.R * 1.08 : fr.y + fr.R * 1.08;
+    g.fillText(txt, fr.x, y);
+    g.font = "600 " + Math.round(Math.max(8, rN * 1.7)) + "px " + FB;
+    g.fillStyle = "#9fb0d8";
+    g.fillText(sub, fr.x, y + rN * 2.4 * (up ? 1 : 1));
   };
-  const mid = (i) => P[Math.min(P.length - 1, i)];
-  glowAt(mid(4)[0], mid(4)[1], w * 0.35, h * 0.16, -0.2, "rgba(150,170,255,A)", 0.16);
-  glowAt(mid(36)[0], mid(36)[1], w * 0.3, h * 0.12, -0.35, "rgba(255,190,230,A)", 0.22);
-  glowAt(mid(36)[0], mid(36)[1], w * 0.06, h * 0.04, -0.35, "rgba(255,236,200,A)", 0.5);
-  // the route: dotted ahead, solid gold where you've been
+  title("THE MILKY WAY", "OUR HOME GALAXY", F.mw, true);
+  title("THE ANDROMEDA GALAXY", "2.5 MILLION LIGHT-YEARS AWAY", F.m31, F.wide);
+  // the Sun and PA-99-N2: two stars, each with its system's name
+  for (const [p, c, name, above] of [
+    [L.sun, "#ffd870", "THE SUN", true],
+    [L.pa, "#ffb0e0", "PA-99-N2", false],
+  ]         ) {
+    const gl = g.createRadialGradient(p[0], p[1], 0, p[0], p[1], rN * 3);
+    gl.addColorStop(0, c);
+    gl.addColorStop(1, "rgba(0,0,0,0)");
+    g.fillStyle = gl;
+    g.beginPath();
+    g.arc(p[0], p[1], rN * 3, 0, 6.283);
+    g.fill();
+    g.font = "700 " + Math.round(Math.max(8, rN * 1.6)) + "px " + FB;
+    g.fillStyle = c;
+    g.textAlign = "center";
+    g.fillText(name, p[0], p[1] + (above ? -1 : 1) * rN * 8.5);
+  }
+  // the route: dotted ahead, solid gold where you've been - and the great jump between the galaxies
   g.lineCap = "round";
   for (let i = 0; i + 1 < P.length; i++) {
-    const done = i < cur;
-    g.strokeStyle = done ? "rgba(255,210,77,.75)" : "rgba(200,190,255,.28)";
-    g.lineWidth = done ? 3 : 2;
-    g.setLineDash(done ? [] : [3, 6]);
+    const done = i < cur,
+      jump = i === 19;
+    g.strokeStyle = done ? "rgba(255,210,77,.75)" : jump ? "rgba(255,190,240,.45)" : "rgba(200,190,255,.32)";
+    g.lineWidth = done ? 2.2 : 1.4;
+    g.setLineDash(done ? [] : jump ? [8, 8] : [2, 4]);
     g.beginPath();
+    if (jump) {
+      // (a long arc from the black hole in the middle of our galaxy across to Andromeda)
+      const mx = (P[i][0] + P[i + 1][0]) / 2,
+        my = (P[i][1] + P[i + 1][1]) / 2,
+        bend = F.wide ? -h * 0.32 : -w * 0.32;
+      g.moveTo(P[i][0], P[i][1]);
+      if (F.wide) g.quadraticCurveTo(mx, my + bend, P[i + 1][0], P[i + 1][1]);
+      else g.quadraticCurveTo(mx + bend, my, P[i + 1][0], P[i + 1][1]);
+      g.stroke();
+      g.setLineDash([]);
+      g.font = "700 " + Math.round(Math.max(8, rN * 1.5)) + "px " + FB;
+      g.fillStyle = "rgba(255,200,240,.85)";
+      g.textAlign = "center";
+      g.fillText("2.5 MILLION LIGHT-YEARS", F.wide ? mx : mx + bend * 0.55, F.wide ? my + bend * 0.55 : my);
+      continue;
+    }
     g.moveTo(P[i][0], P[i][1]);
     g.lineTo(P[i + 1][0], P[i + 1][1]);
     g.stroke();
   }
   g.setLineDash([]);
-  // region names, at the first stop of each
-  g.textAlign = "left";
-  g.textBaseline = "bottom";
-  g.font = "700 " + Math.round(Math.max(9, L.r * 1.05)) + "px " + FB;
-  for (const R0 of GM_REGIONS) {
-    const p = P[R0.from];
-    g.fillStyle = R0.c;
-    g.fillText(R0.name, Math.min(p[0] - L.r, w - g.measureText(R0.name).width - 8), p[1] - L.r * 2.1);
-  }
   // the stops
+  const sel = opts.sel ?? -1;
   for (let i = 0; i < P.length; i++) {
     const [x, y] = P[i],
-      rc = gmRegion(i).c,
-      got = st[i],
-      here = i === cur;
-    g.fillStyle = got ? "#ffd24d" : i <= cur ? rc : "rgba(120,110,150,.55)";
+      got = st[i];
+    g.fillStyle = got ? "#ffd24d" : i <= cur ? gmRegion(i).c : "rgba(150,140,190,.6)";
     g.beginPath();
-    g.arc(x, y, L.r * (got ? 1 : 0.8), 0, 6.283);
+    g.arc(x, y, rN * (got ? 1 : 0.8), 0, 6.283);
     g.fill();
-    if (got) {
-      g.fillStyle = "#3a2400";
-      g.font = "700 " + Math.round(L.r * 0.95) + "px sans-serif";
-      g.textAlign = "center";
-      g.textBaseline = "middle";
-      g.fillText(String(i + 1), x, y + 0.5);
-      g.font = Math.round(L.r * 0.8) + "px sans-serif";
-      g.fillStyle = "#ffd24d";
-      g.fillText("★".repeat(got), x, y + L.r * 1.75); // its stars, under it
-    }
-    if (here) {
-      const pu = 1 + 0.25 * Math.sin(t * 5);
+    g.strokeStyle = "rgba(10,6,20,.8)";
+    g.lineWidth = 1;
+    g.stroke();
+    for (let k = 0; k < got; k++) {
+      g.fillStyle = "#fff3b0";
+      g.beginPath();
+      g.arc(x + (k - (got - 1) / 2) * rN * 0.9, y - rN * 1.7, rN * 0.32, 0, 6.283);
+      g.fill();
+    } // (a little gold dot for each star won)
+    if (i === cur) {
       g.strokeStyle = "#5ff5c8";
-      g.lineWidth = 2.5;
+      g.lineWidth = 2;
       g.beginPath();
-      g.arc(x, y, L.r * 1.6 * pu, 0, 6.283);
+      g.arc(x, y, rN * 1.9 * (1 + 0.22 * Math.sin(t * 5)), 0, 6.283);
       g.stroke();
     }
-    if (i === P.length - 1) {
-      g.strokeStyle = "rgba(255,190,230,.8)";
-      g.lineWidth = 1.5;
+    if (i === sel && sel !== cur) {
+      g.strokeStyle = "#ffffff";
+      g.lineWidth = 2;
       g.beginPath();
-      g.arc(x, y, L.r * 2.2 + Math.sin(t * 2) * 2, 0, 6.283);
+      g.arc(x, y, rN * 1.7, 0, 6.283);
       g.stroke();
-    } // (the heart of Andromeda: the end of the road)
+    }
   }
   // your ship: a little flying diner with a pink dome, hopping along the route
   {
@@ -43759,10 +45264,10 @@ function drawGalaxyMap(g, w, h, cur, hop, t, opts                               
       y =
         P[cur][1] +
         (P[nx][1] - P[cur][1]) * e -
-        L.r * 2.2 -
-        Math.sin(e * Math.PI) * L.r * 2.5 +
-        Math.sin(t * 3) * 1.5,
-      s = L.r * 0.11;
+        rN * 2.6 -
+        Math.sin(e * Math.PI) * rN * 3 +
+        Math.sin(t * 3) * 1.2,
+      s = rN * 0.13;
     g.fillStyle = "rgba(95,245,200,.35)";
     g.beginPath();
     g.ellipse(x, y + 7 * s, 9 * s, 3 * s, 0, 0, 6.283);
@@ -43778,34 +45283,34 @@ function drawGalaxyMap(g, w, h, cur, hop, t, opts                               
     g.fillStyle = "#ffd24d";
     for (let k = -2; k <= 2; k++) g.fillRect(x + k * 4 * s - s, y + 0.5 * s, 2 * s, 1.5 * s);
   }
-  // a name: the stop under your finger or mouse, or else where you are
+  // a name: the stop under your finger or mouse (or picked), or else where you are
   {
-    const i = GMV.hover >= 0 && opts.panel ? GMV.hover : cur,
+    const i = opts.panel && GMV.hover >= 0 ? GMV.hover : sel >= 0 ? sel : cur,
       [x, y] = P[i],
-      txt = VENUES[i].name,
-      sub = VENUES[i].place === VENUES[i].name ? "" : VENUES[i].place;
-    g.font = "700 " + Math.round(Math.max(11, L.r * 1.25)) + "px " + FB;
-    const tw = g.measureText(txt).width,
+      txt = "STOP " + (i + 1) + ": " + VENUES[i].name,
+      stars = st[i] ? "  " + "★".repeat(st[i]) + "☆".repeat(3 - st[i]) : "";
+    g.font = "700 " + Math.round(Math.max(10, rN * 2)) + "px " + FB;
+    const tw = g.measureText(txt + stars).width,
+      bh = Math.max(16, rN * 3.6),
       bx = clamp(x - tw / 2 - 8, 4, w - tw - 20),
-      by = clamp(y + L.r * 2.4, 4, h - L.r * 3.4);
-    g.fillStyle = "rgba(10,6,20,.85)";
-    g.fillRect(bx, by, tw + 16, L.r * 2.6);
+      by = clamp(y + rN * 2.6, 4, h - bh - 4);
+    g.fillStyle = "rgba(10,6,20,.88)";
+    g.fillRect(bx, by, tw + 16, bh);
     g.strokeStyle = gmRegion(i).c;
     g.lineWidth = 1;
-    g.strokeRect(bx, by, tw + 16, L.r * 2.6);
+    g.strokeRect(bx, by, tw + 16, bh);
     g.fillStyle = "#fff3e2";
     g.textAlign = "left";
     g.textBaseline = "middle";
-    g.fillText(txt, bx + 8, by + L.r * 1.3);
-    if (sub && opts.panel) {
-      g.font = "600 " + Math.round(Math.max(9, L.r)) + "px " + FB;
-      g.fillStyle = gmRegion(i).c;
-      g.fillText(sub, bx + 8, by + L.r * 3.4);
+    g.fillText(txt, bx + 8, by + bh / 2);
+    if (stars) {
+      g.fillStyle = "#ffd24d";
+      g.fillText(stars, bx + 8 + g.measureText(txt).width, by + bh / 2);
     }
   }
   g.restore();
 }
-// ---- the GALAXY MAP screen in the menu ----
+// ---- the GALAXY MAP screen in the menu: look round, pick any stop and PLAY it ----
 function buildMap() {
   const st = gmStars(),
     got = st.reduce((a, b) => a + b, 0),
@@ -43813,6 +45318,8 @@ function buildMap() {
     cur = clamp(best, 0, VENUES.length - 1);
   GMV.hover = -1;
   GMV.t0 = performance.now();
+  GMV.cur = cur;
+  GMV.sel = cur;
   $k("gmTag").textContent =
     "★ " +
     got +
@@ -43822,9 +45329,19 @@ function buildMap() {
     st.filter((n) => n > 0).length +
     " OF " +
     VENUES.length +
-    " STOPS VISITED  ·  NEXT STOP: " +
-    VENUES[cur].name;
-  GMV.cur = cur;
+    " STOPS VISITED  ·  TAP A STOP, THEN PLAY";
+  gmPlayText();
+}
+function gmPlayText() {
+  const el = $k("gmPlay");
+  if (el) el.textContent = "▶ PLAY STOP " + (GMV.sel + 1) + ": " + VENUES[GMV.sel].name;
+}
+function gmPlay() {
+  fromLevel = GMV.sel + 1;
+  store.set("from", fromLevel);
+  closeFP("map");
+  fromText();
+  beginGame();
 }
 function drawMapPanel() {
   if (!FP.map) return;
@@ -43839,18 +45356,21 @@ function drawMapPanel() {
   const g = c.getContext("2d");
   g.setTransform(dpr, 0, 0, dpr, 0, 0);
   g.clearRect(0, 0, r.width, r.height);
-  drawGalaxyMap(g, r.width, r.height, GMV.cur || 0, 0, (performance.now() - GMV.t0) / 1000, { panel: true });
+  drawGalaxyMap(g, r.width, r.height, GMV.cur || 0, 0, (performance.now() - GMV.t0) / 1000, {
+    panel: true,
+    sel: GMV.sel,
+  });
 }
 {
   const c = document.getElementById("gmCanvas");
   if (c) {
-    const pick = (e) => {
+    const near = (e) => {
       const r = c.getBoundingClientRect(),
         L = gmLayout(r.width, r.height),
         x = e.clientX - r.left,
         y = e.clientY - r.top;
       let best = -1,
-        bd = (L.r * 3) ** 2;
+        bd = (L.r * 3.2) ** 2;
       L.pts.forEach(([px, py], i) => {
         const d = (px - x) ** 2 + (py - y) ** 2;
         if (d < bd) {
@@ -43858,19 +45378,53 @@ function drawMapPanel() {
           best = i;
         }
       });
-      GMV.hover = best;
+      return best;
     };
-    c.addEventListener("pointermove", pick);
-    c.addEventListener("pointerdown", pick);
+    c.addEventListener("pointermove", (e) => (GMV.hover = near(e)));
+    c.addEventListener("pointerleave", () => (GMV.hover = -1));
+    c.addEventListener("pointerdown", (e) => {
+      const i = near(e);
+      if (i < 0) return;
+      if (i === GMV.sel && e.pointerType !== "mouse") {
+        gmPlay();
+        return;
+      } // (tap the picked stop again to play it)
+      GMV.sel = i;
+      gmPlayText();
+      sfx("click");
+    });
+    c.addEventListener("dblclick", (e) => {
+      if (near(e) === GMV.sel) gmPlay();
+    });
   }
 }
+// with the arrow keys / D-pad on the map: step along the route, Enter plays (the PLAY button has the focus)
+window.addEventListener(
+  "keydown",
+  (e) => {
+    if (!FP.map) return;
+    const d =
+      e.code === "ArrowLeft" || e.code === "ArrowUp"
+        ? -1
+        : e.code === "ArrowRight" || e.code === "ArrowDown"
+          ? 1
+          : 0;
+    if (!d) return;
+    e.preventDefault();
+    e.stopImmediatePropagation();
+    GMV.sel = clamp(GMV.sel + d, 0, VENUES.length - 1);
+    gmPlayText();
+    sfx("tick");
+  },
+  true
+);
 // ---- after a level: the map slides in under the stars, and the ship hops on to the next stop ----
 function gmClearHud(g, s) {
   if (G.state !== "clear" || G.demo || !(G.starsT >= 0) || G.versus) return;
   const k = clamp((G.starsT - 1.7) / 0.4, 0, 1);
   if (k <= 0) return;
   const w = Math.min(cssW * 0.9, 900 * s),
-    h = Math.min(cssH * 0.34, w * 0.42),
+    h = Math.min(cssH * 0.36, w * 0.45),
     x = (cssW - w) / 2,
     y = cssH * 0.6 + (1 - k) * 30 * s;
   g.save();
@@ -44192,6 +45746,134 @@ function drawCupPanel() {
     g.fillStyle = S.champ ? "#ffd24d" : "#b9a8b8";
     g.fillText(S.champ || "THE CUP", cx, cy + 42 * k);
   }
+}
+// =====================================================================================
+//  CHALLENGE MODES (v2026.10.04ar)
+//    TIME ATTACK - serve 50 customers as fast as you can. The clock runs while you play (not while paused); lose all
+//                  your lives and it's over. Your best time is kept (each player profile has its own).
+//    BOSS RUSH   - the six bosses back to back: the Baby Blob, the Moon Giant, Robo-Gob, the Gulper, the Rogue King and
+//                  the Hydra - straight from one boss level to the next (no bonus rounds in between). Your best time too.
+// =====================================================================================
+const TA_GOAL = 50,
+  RUSH_LEVELS = Object.keys(BOSS_AT)
+    .map(Number)
+    .sort((a, b) => a - b);
+const fmtTime = (t) => {
+  const m = Math.floor(t / 60),
+    s = t - m * 60;
+  return m + ":" + (s < 10 ? "0" : "") + s.toFixed(1);
+};
+function modeStart(which               ) {
+  if (G.state !== "menu") return;
+  sfx("click");
+  const keep = fromLevel;
+  fromLevel = which === "ta" ? 1 : RUSH_LEVELS[0];
+  G[which === "ta" ? "taNext" : "brushNext"] = true;
+  G.introShown = true;
+  startGame();
+  fromLevel = keep;
+  callout(
+    which === "ta"
+      ? "TIME ATTACK!  SERVE " + TA_GOAL + " AS FAST AS YOU CAN"
+      : "BOSS RUSH!  ALL SIX BOSSES, ONE AFTER ANOTHER",
+    "#ff5fa8",
+    2.8
+  );
+}
+// ---- hooks from the game ----
+function modesGameStart() {
+  G.ta = G.taNext ? { served: 0, t: 0, endT: 0 } : null;
+  G.brush = G.brushNext ? { i: 0, t: 0 } : null;
+  G.taNext = G.brushNext = false;
+}
+function modesLevelStart() {
+  if (G.ta) G.total = 1e9; // (time attack: the customers keep coming until you've served fifty)
+}
+function modesServed() {
+  if (!G.ta || G.ta.endT) return;
+  G.ta.served++;
+  if (G.ta.served >= TA_GOAL) {
+    const best = store.get("taBest", 0),
+      nb = !best || G.ta.t < best;
+    if (nb) store.set("taBest", +G.ta.t.toFixed(1));
+    callout(
+      "FIFTY SERVED IN " + fmtTime(G.ta.t) + (nb ? "!  A NEW BEST TIME!" : "!  BEST " + fmtTime(best)),
+      "#ffd24d",
+      3
+    );
+    sfx("clear");
+    G.ta.endT = 3; // (a moment to enjoy it - then the results)
+  }
+}
+function modesUpdate(dt) {
+  if (G.demo) return;
+  const playing = ["play", "lost", "clear", "bonus"].includes(G.state) && !(G.readyT > 0);
+  if (G.ta && playing && !G.ta.endT) G.ta.t += dt;
+  if (G.brush && playing) G.brush.t += dt;
+  if (G.ta && G.ta.endT > 0) {
+    G.ta.endT -= dt;
+    if (G.ta.endT <= 0 && G.state !== "over") {
+      G.ta.endT = -1;
+      gameOver();
+    }
+  }
+}
+// boss rush: a boss level cleared - on to the next boss, or the finish
+function rushNext() {
+  const R0 = G.brush;
+  R0.i++;
+  if (R0.i >= RUSH_LEVELS.length) {
+    const best = store.get("rushBest", 0),
+      nb = !best || R0.t < best;
+    if (nb) store.set("rushBest", +R0.t.toFixed(1));
+    R0.done = true;
+    callout("ALL SIX BOSSES BEATEN IN " + fmtTime(R0.t) + (nb ? "!  A NEW BEST TIME!" : "!"), "#ffd24d", 3);
+    gameOver();
+    return;
+  }
+  G.level = RUSH_LEVELS[R0.i] - 1; // (the jump takes you to the next boss's level)
+  startJump();
+}
+function modesHud(g, s, fD) {
+  if (G.demo || !["play", "lost", "clear", "bonus", "jump", "approach"].includes(G.state)) return;
+  let txt = "";
+  if (G.ta)
+    txt = "TIME ATTACK  ·  " + Math.min(G.ta.served, TA_GOAL) + " / " + TA_GOAL + "  ·  " + fmtTime(G.ta.t);
+  else if (G.brush)
+    txt = "BOSS RUSH  ·  BOSS " + (G.brush.i + 1) + " / " + RUSH_LEVELS.length + "  ·  " + fmtTime(G.brush.t);
+  if (!txt) return;
+  g.save();
+  g.textAlign = "center";
+  g.textBaseline = "top";
+  g.font = fD(14);
+  g.fillStyle = "#ff5fa8";
+  g.shadowColor = "#ff5fa8";
+  g.shadowBlur = 8 * s;
+  g.fillText(txt, cssW / 2, 84 * s);
+  g.restore();
+}
+function modesGameOver() {
+  const add = (t) => ($k("overInfo").textContent = t + "   ·   " + $k("overInfo").textContent);
+  if (G.ta)
+    add(
+      G.ta.served >= TA_GOAL
+        ? "TIME ATTACK: 50 SERVED IN " + fmtTime(G.ta.t)
+        : "TIME ATTACK: " + G.ta.served + " / " + TA_GOAL + " SERVED"
+    );
+  if (G.brush)
+    add(
+      G.brush.done
+        ? "BOSS RUSH: ALL SIX BOSSES IN " + fmtTime(G.brush.t)
+        : "BOSS RUSH: " + G.brush.i + " OF " + RUSH_LEVELS.length + " BOSSES BEATEN"
+    );
+}
+function modesMenuText() {
+  const ta = store.get("taBest", 0),
+    ru = store.get("rushBest", 0),
+    a = document.getElementById("vTa"),
+    b = document.getElementById("vRush");
+  if (a) a.textContent = ta ? "BEST " + fmtTime(ta) : "";
+  if (b) b.textContent = ru ? "BEST " + fmtTime(ru) : "";
 }
 // =====================================================================================
 //  ATTRACT MODE  -  what an arcade cabinet does when nobody is playing:
@@ -45165,7 +46847,7 @@ function drawEggs(g, s) {
   }
   g.restore();
 }
-const GAME_VERSION = "v2026.10.04aq"; // year.month.day it was made
+const GAME_VERSION = "v2026.10.04ar"; // year.month.day it was made
 const FB = '"Chakra Petch", "Segoe UI", sans-serif';
 let FD = '"Bungee", "Impact", sans-serif';
 const HUDB = { w: 0, t: -9, l: 0, b: 0, right: 0, lives: 0, room: 0, under: false };
@@ -45254,8 +46936,8 @@ function drawHud(fps) {
     t = G.time,
     ending = G.state === "ending" && G.end,
     inGame = G.state !== "menu" && !ending;
-  const fD = (px) => Math.round(px * s) + "px " + FD,
-    fB = (px, w = 600) => w + " " + Math.round(px * s) + "px " + FB;
+  const fD = (px) => Math.round(px * s * TXT()) + "px " + FD,
+    fB = (px, w = 600) => w + " " + Math.round(px * s * TXT()) + "px " + FB; // (TEXT SIZE in the settings makes it all bigger)
   const sx = (wx) => (wx + ox) * u,
     sy = (wy) => (wy + oy) * u;
   g.textBaseline = "top";
@@ -49320,7 +51002,11 @@ function advance2(tr) {
   }
 }
 // which tune should be playing right now
-const JB = { open: false, sel: 0, playing: -1 };
+const JB                                                                                        = {
+  open: false,
+  sel: 0,
+  playing: -1,
+};
 function musicWanted() {
   if (JB.open) return JB.playing;
   if (G.state === "ending") return VICTORY_TRACK;
@@ -49574,6 +51260,7 @@ function showPanels() {
   $("cup").hidden = !FP.cup;
   $("prof").hidden = !FP.prof;
   $("news").hidden = !FP.news;
+  $("keys").hidden = !FP.keys;
   $("breakp").hidden = !BRK.open;
   funMenuText();
   $("jukebox").hidden = !JB.open;
@@ -49853,7 +51540,10 @@ $("tSkip").onclick = (e) => {
 window.addEventListener(
   "keydown",
   (e) => {
-    if (G.state === "mini" && ["Escape", "Backspace", "KeyK"].includes(e.code)) {
+    if (
+      (G.state === "mini" && ["Escape", "Backspace", "KeyK"].includes(e.code)) ||
+      (G.state === "bonus" && ["Escape", "Backspace"].includes(e.code)) // (in the bonus round K picks a cup)
+    ) {
       e.preventDefault();
       e.stopImmediatePropagation();
       skipMini();
@@ -49907,7 +51597,10 @@ function buildJukebox() {
     b.dataset.i = String(i);
     b.innerHTML =
       String(i + 1).padStart(2, "0") + "  " + tr.title + "<small>" + tr.where + " · " + tr.mood + "</small>";
-    b.onclick = () => jbPlay(i);
+    b.onclick = () => {
+      JB.auto = null; // (a tune picked by hand: the radio stops choosing)
+      jbPlay(i);
+    };
     list.appendChild(b);
   });
   jbRefresh();
@@ -49968,7 +51661,47 @@ $("bJuke").onclick = openJukebox;
 $("jbBack").onclick = closeJukebox;
 $("jbStop").onclick = () => {
   JB.playing = -2;
+  JB.auto = null;
   jbRefresh();
+};
+// SHUFFLE and PLAY ALL VOLKSLIEDJIES: the music box plays on by itself, like a radio - each tune once through (a planet
+// tune for a minute), then the next
+const volksIdx = () =>
+  TRACKS.map((t, i) => (t.group === "AFRIKAANSE VOLKSLIEDJIES" ? i : -1)).filter((i) => i >= 0);
+function jbTuneSecs(i) {
+  const tr = TRACKS[i];
+  return tr && tr.folk ? (tr.len * 60) / tr.bpm / 4 + 1.2 : 60;
+}
+function jbNextAuto() {
+  let i;
+  if (JB.auto === "volks") {
+    const L = volksIdx(),
+      k = L.indexOf(JB.playing);
+    i = L[(k + 1) % L.length];
+  } else {
+    do i = Math.floor(Math.random() * TRACKS.length);
+    while (i === JB.playing && TRACKS.length > 1);
+  }
+  jbPlay(i);
+  JB.auto = JB.auto || "shuffle";
+  JB.until = performance.now() + jbTuneSecs(i) * 1000;
+  const b = $("jbList").querySelector('button[data-i="' + i + '"]')               ;
+  if (b) b.scrollIntoView({ block: "nearest" });
+}
+function jbAutoTick() {
+  if (!JB.open || !JB.auto || performance.now() < (JB.until || 0)) return;
+  jbNextAuto();
+}
+$("jbShuffle").onclick = () => {
+  JB.auto = "shuffle";
+  jbNextAuto();
+};
+$("jbAllVolks").onclick = () => {
+  JB.auto = "volks";
+  JB.playing = -1;
+  const L = volksIdx();
+  jbPlay(L[0]);
+  JB.until = performance.now() + jbTuneSecs(L[0]) * 1000;
 };
 
 // =====================================================================================
@@ -50514,6 +52247,24 @@ profWire();
 // =====================================================================================
 const NEWS = [
   {
+    ver: "v2026.10.04ar",
+    title: "PLAY FROM THE GALAXY MAP",
+    items: [
+      "THE GALAXY MAP shows the real Milky Way and the Andromeda Galaxy - tap any stop you've reached and PLAY it",
+      "TIME ATTACK - serve 50 customers as fast as you can",
+      "BOSS RUSH - all six bosses, one after another",
+      "CONTROLS - choose your own keys",
+      "VOICE - the coach's tips and the big announcements read out loud",
+      "TEXT SIZE and LEFT-HANDED touch buttons in the settings",
+      "MUSIC BOX - SHUFFLE, and PLAY ALL VOLKSLIEDJIES",
+      "Shinier taxi, cars and rockets in the big show",
+      "The tall (phone) view now has the stage shows and all the decorations too",
+      "Stage lights, sparkle and motion on every show",
+      "Load shedding: watch the backup generator start up and run",
+      "Skip any mini-game or bonus round - Esc, B on a controller, or the SKIP button",
+    ],
+  },
+  {
     ver: "v2026.10.04ap",
     title: "WHO'S PLAYING?",
     items: [
@@ -50755,6 +52506,86 @@ async function shareNow(kind                ) {
   }, 2000);
 }
 // =====================================================================================
+//  VOICE (v2026.10.04ar): a reading voice for children who can't read yet - the coach's tips, READY? GO!, the big
+//  announcements and GAME OVER are read out loud, in the game's language, by the voice built into the phone or computer.
+//  (English and Polish voices are on nearly every device; an Afrikaans voice only on some - without one it reads in
+//  the device's own voice.) Switched on in the settings: VOICE.
+// =====================================================================================
+const VOICE = { on: !!store.get("voice", false), last: "", lastT: 0 };
+const VOICE_LANG = { en: "en-GB", af: "af-ZA", pl: "pl-PL" };
+function voiceFor(lang) {
+  try {
+    const vs = speechSynthesis.getVoices(),
+      want = VOICE_LANG[lang] || "en-GB";
+    return (
+      vs.find((v) => v.lang === want) ||
+      vs.find((v) => v.lang && v.lang.slice(0, 2) === want.slice(0, 2)) ||
+      null
+    );
+  } catch (e) {
+    return null;
+  }
+}
+// read one text out (translated; quietly skipped if the same was just said, or if something more important is talking)
+function say(text, important = false) {
+  if (!VOICE.on || !text || (typeof G !== "undefined" && G.demo) || !("speechSynthesis" in window)) return;
+  try {
+    let s = String(T(text))
+      .replace(/[★☆▶◀✔✓♪·]/g, " ")
+      .replace(/\s+-\s+/g, ", ")
+      .replace(/\s+/g, " ")
+      .trim();
+    if (!s) return;
+    const now = performance.now();
+    if (s === VOICE.last && now - VOICE.lastT < 6000) return;
+    if (speechSynthesis.speaking && !important) return;
+    if (important) speechSynthesis.cancel();
+    VOICE.last = s;
+    VOICE.lastT = now;
+    s = s.toLowerCase().replace(/(^|[.!?]\s+)([a-ząćęłńóśźżêôë])/g, (m, a, b) => a + b.toUpperCase()); // (sentences, not shouting)
+    const u = new SpeechSynthesisUtterance(s),
+      v = voiceFor(LANG);
+    u.lang = VOICE_LANG[LANG] || "en-GB";
+    if (v) u.voice = v;
+    u.rate = 1.02;
+    u.pitch = 1.1;
+    u.volume = clamp(VOL.fx, 0.3, 1);
+    speechSynthesis.speak(u);
+  } catch (e) {
+    /* (no voice on this device - fine) */
+  }
+}
+// READY? GO! as a level starts (said once each time)
+function voiceUpdate() {
+  if (!VOICE.on) return;
+  if (G.state === "play" && G.readyT > 1.2 && !G.saidReady) {
+    G.saidReady = true;
+    say(T("READY?") + " " + T("GO!"), true);
+  }
+  if (!(G.readyT > 0)) G.saidReady = false;
+}
+function voiceText() {
+  const el = document.getElementById("vVoice");
+  if (el) el.textContent = VOICE.on ? "ON" : "OFF";
+  const b = document.getElementById("bVoice");
+  if (b) b.hidden = !("speechSynthesis" in window);
+}
+function toggleVoice() {
+  VOICE.on = !VOICE.on;
+  store.set("voice", VOICE.on);
+  voiceText();
+  sfx("click");
+  if (VOICE.on) {
+    const was = G.demo;
+    G.demo = false;
+    say(LANG === "pl" ? "Głos włączony!" : LANG === "af" ? "Stem is aan!" : "Voice is on!", true);
+    G.demo = was;
+  } else
+    try {
+      speechSynthesis.cancel();
+    } catch (e) {}
+}
+// =====================================================================================
 //  MAIN LOOP
 // =====================================================================================
 let last = performance.now(),
@@ -50813,7 +52644,7 @@ const PADRESET = { t: 0 };
 setInterval(() => {
   {
     const sk = $("tSkip");
-    if (sk) sk.hidden = G.state !== "mini";
+    if (sk) sk.hidden = G.state !== "mini" && G.state !== "bonus";
   } // (the SKIP button only shows during a mini-game)
   let held = false;
   try {
@@ -50948,6 +52779,7 @@ function frameWork(ts) {
   draw();
   drawHud(fps);
   drawJukebox();
+  jbAutoTick();
   drawMapPanel();
   drawCupPanel();
 }
@@ -50989,6 +52821,9 @@ window.addEventListener(
 langPage(); // (Afrikaans or Polski: the translator goes in before anything is drawn)
 $("vLang").textContent = LANG_NAMES[LANG];
 $("bLang").onclick = cycleLang;
+$("bVoice").onclick = toggleVoice;
+comfortBody();
+voiceText();
 createRenderer(gfx);
 updateLookText();
 $("vSound").textContent = $("vSound2").textContent = muted ? "OFF" : "ON";

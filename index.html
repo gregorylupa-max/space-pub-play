@@ -186,11 +186,11 @@ body.retro .table { font-size: 10px; gap: 5px; }
   <button id="tFull">Full screen</button>
   <button id="tSkip" hidden title="Skip the mini-game (Esc, or B on a controller)">Skip ▶▶</button>
   <button id="tPause">Pause</button>
-  <button id="tReset" title="Restart the game (F8)">↻ Reset</button>
+  <button id="tReset" title="Cold start: back to the demo, like switching it on (F8)">↻ Cold start</button>
 </div>
 <div id="padReset" hidden></div>
 <div id="bye" hidden><h1>THANKS FOR PLAYING!</h1><p>See you next time at Space Pub.<br>You can close this tab now.</p><button id="byeBack">BACK TO THE GAME</button></div>
-<div id="crash" hidden><div class="box"><h2>OOPS - THE GAME GOT STUCK</h2><p>Sorry! Something went wrong. Press RESET to start again - your stars, stickers, coins and high scores are kept.</p><button id="crashReset" class="primary">↻ RESET</button><button id="crashMenu">BACK TO THE MENU</button><small id="crashMsg"></small></div></div>
+<div id="crash" hidden><div class="box"><h2>OOPS - THE GAME GOT STUCK</h2><p>Sorry! Something went wrong. Press COLD START to start again - your stars, stickers, coins and high scores are kept.</p><button id="crashReset" class="primary">↻ COLD START</button><button id="crashMenu">BACK TO THE MENU</button><small id="crashMsg"></small></div></div>
 
 <section id="menu" class="panel" aria-label="Space Pub menu">
   <h1 class="logo">SPACE<span>PUB</span></h1>
@@ -239,6 +239,7 @@ body.retro .table { font-size: 10px; gap: 5px; }
     <button id="bJuke">MUSIC BOX <kbd>J</kbd></button>
     <button id="bFull">FULL SCREEN <kbd>F</kbd></button>
     <button id="bExit">EXIT GAME</button>
+    <button id="bCold" class="wide" title="Start again from the very beginning, like switching it on: back to the demo (F8). Your stars, coins and settings are kept.">↻ COLD START</button>
   </div>
   <input id="musicFiles" type="file" accept="audio/*,.mp3,.m4a,.ogg,.wav" multiple hidden>
   <p class="info" id="musicInfo" style="min-height:0" hidden></p>
@@ -389,7 +390,7 @@ body.retro .table { font-size: 10px; gap: 5px; }
     <button id="pVolF">EFFECTS VOLUME <b class="vVolF"></b></button>
     <button id="pFull">FULL SCREEN <kbd>F</kbd></button>
     <button id="pQuit" class="wide">QUIT TO MENU</button>
-    <button id="pReset" class="wide">↻ HARD RESET (RELOAD THE GAME)</button>
+    <button id="pReset" class="wide">↻ COLD START (BACK TO THE DEMO)</button>
   </div>
   <p class="info" id="gfxInfo2"></p>
   <p class="info">Keyboard: ↑ ↓ or 1-4 counters · ← → run · Space pour · T pour mode · P resume. Controller: D-pad or LB/RB · A pour · Start resume. Touch: tap or swipe the counters, POUR button.</p>
@@ -1704,6 +1705,12 @@ const DICT_ROWS                             = [
   ["Full screen", "Volskerm", "Pełny ekran"],
   ["Pause", "Pouse", "Pauza"],
   ["↻ Reset", "↻ Herbegin", "↻ Reset"],
+  ["↻ Cold start", "↻ Begin van voor af", "↻ Od nowa"],
+  [
+    "Tap again for a cold start",
+    "Tik weer om van voor af te begin",
+    "Stuknij jeszcze raz, by zacząć od nowa",
+  ],
   ["Skip ▶▶", "Slaan oor ▶▶", "Pomiń ▶▶"],
   [
     "Four bars, one soda jerk, a galaxy of thirsty customers. Pour, slide, catch the empties, and never let a shake hit the floor.",
@@ -1918,6 +1925,22 @@ const DICT_ROWS                             = [
     "↻ HARD RESET (RELOAD THE GAME)",
     "↻ BEGIN HEELTEMAL OOR (LAAI WEER)",
     "↻ PEŁNY RESET (WCZYTAJ GRĘ OD NOWA)",
+  ],
+  ["↻ COLD START", "↻ BEGIN VAN VOOR AF", "↻ OD NOWA"],
+  [
+    "↻ COLD START (BACK TO THE DEMO)",
+    "↻ BEGIN VAN VOOR AF (TERUG NA DIE DEMO)",
+    "↻ OD NOWA (Z POWROTEM DO DEMA)",
+  ],
+  [
+    "PRESS AGAIN FOR A COLD START",
+    "DRUK WEER OM VAN VOOR AF TE BEGIN",
+    "NACIŚNIJ JESZCZE RAZ, BY ZACZĄĆ OD NOWA",
+  ],
+  [
+    "PRESS AGAIN: BACK TO THE DEMO",
+    "DRUK WEER: TERUG NA DIE DEMO",
+    "NACIŚNIJ JESZCZE RAZ: Z POWROTEM DO DEMA",
   ],
   ["GAME OVER", "SPEL VERBY", "KONIEC GRY"],
   [
@@ -47002,7 +47025,7 @@ function drawEggs(g, s) {
   }
   g.restore();
 }
-const GAME_VERSION = "v2026.10.05a"; // year.month.day it was made
+const GAME_VERSION = "v2026.10.05b"; // year.month.day it was made
 const FB = '"Chakra Petch", "Segoe UI", sans-serif';
 let FD = '"Bungee", "Impact", sans-serif';
 const HUDB = { w: 0, t: -9, l: 0, b: 0, right: 0, lives: 0, room: 0, under: false };
@@ -52411,6 +52434,7 @@ const NEWS = [
     ver: "v2026.10.05a",
     title: "A POLISH",
     items: [
+      "↻ COLD START on the menu - back to the very beginning, like switching the game on",
       "Mini-games and the bonus round fit a phone held upright",
       "Tidier words everywhere - instructions, announcements, the demo",
       "Time attack and boss rush: the clock is in the top left",
@@ -52981,13 +53005,17 @@ document.getElementById("tReset").onclick = (e) => {
     return;
   }
   b.dataset.sure = "1";
-  b.textContent = "Tap again to reset";
+  b.textContent = "Tap again for a cold start";
   setTimeout(() => {
     b.dataset.sure = "";
-    b.textContent = "↻ Reset";
+    b.textContent = "↻ Cold start";
   }, 2500);
 };
-pressTwice("pReset", "PRESS AGAIN TO RELOAD THE GAME", hardReset);
+pressTwice("pReset", "PRESS AGAIN FOR A COLD START", hardReset);
+// COLD START on the main menu (v2026.10.05b): back to the very beginning - the demo, quiet until you touch it - like
+// switching the cabinet on. (The same as F8, ↻ Cold start at the top during a game and COLD START in the pause menu;
+// progress and settings are kept.)
+pressTwice("bCold", "PRESS AGAIN: BACK TO THE DEMO", hardReset);
 window.addEventListener(
   "keydown",
   (e) => {

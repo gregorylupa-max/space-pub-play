@@ -82,6 +82,11 @@ button.wide { grid-column: 1 / -1; }
 #jbList .jbHead { grid-column: 1 / -1; font: 700 14px/1.2 var(--body); letter-spacing: .12em; color: var(--amber, #ffc34d); padding: 14px 4px 4px; border-bottom: 1px solid rgba(255,195,77,.4); }
 #jbList .jbJump { grid-column: 1 / -1; }
 #jukebox .buttons:last-child { grid-template-columns: 1fr 1fr; }
+/* LANGUAGE: pick one straight away (v2026.10.05c) - the one in use is lit */
+.langRow { grid-column: 1 / -1; display: flex; gap: 6px; align-items: center; }
+.langRow .lbl { font-size: 12px; font-weight: 700; letter-spacing: .08em; opacity: .85; padding: 0 4px; white-space: nowrap; }
+.langRow button { flex: 1; min-width: 0; padding-left: 4px; padding-right: 4px; }
+.langRow button.on { border-color: var(--amber, #ffc34d); box-shadow: 0 0 16px rgba(255,195,77,.4); color: var(--amber, #ffc34d); }
 #prof { max-height: 92vh; overflow-y: auto; }
 #keys { width: min(860px, 96vw); max-height: 94vh; overflow-y: auto; box-sizing: border-box; }
 #kmList { grid-template-columns: 1fr 1fr; }
@@ -230,7 +235,7 @@ body.retro .table { font-size: 10px; gap: 5px; }
     <button id="bLook" class="wide">LOOK: <b id="vLook"></b> <kbd>L</kbd></button>
     <button id="bCrt" class="wide">SCREEN: <b id="vCrt"></b> <kbd>C</kbd></button>
     <button id="bGfx" class="wide">GRAPHICS: <b id="vGfx"></b> <kbd>G</kbd></button>
-    <button id="bLang" class="wide">LANGUAGE: <b id="vLang"></b></button>
+    <div id="langRow" class="langRow"><span class="lbl">LANGUAGE:</span><button data-lang="en" lang="en">ENGLISH</button><button data-lang="af" lang="af">AFRIKAANS</button><button data-lang="pl" lang="pl">POLSKI</button></div>
     <button id="bSound">SOUND: <b id="vSound"></b> <kbd>M</kbd></button>
     <button id="bMusic">MUSIC: <b id="vMusic"></b> <kbd>N</kbd></button>
     <button id="bVolM">MUSIC VOLUME <b class="vVolM"></b></button>
@@ -2120,6 +2125,43 @@ const DICT_ROWS                             = [
   ["2.5 MILLION LIGHT-YEARS AWAY", "2,5 MILJOEN LIGJARE VER", "2,5 MILIONA LAT ŚWIETLNYCH STĄD"],
   ["2.5 MILLION LIGHT-YEARS", "2,5 MILJOEN LIGJARE", "2,5 MILIONA LAT ŚWIETLNYCH"],
   ["THE SUN", "DIE SON", "SŁOŃCE"],
+  // the neutron star's story (v2026.10.05c)
+  [
+    "A SUPERGIANT STAR - MANY TIMES HEAVIER THAN THE SUN",
+    "'N REUSESTER - BAIE KEER SWAARDER AS DIE SON",
+    "NADOLBRZYM - GWIAZDA WIELE RAZY CIĘŻSZA OD SŁOŃCA",
+  ],
+  [
+    "INSIDE: LAYER UPON LAYER - AND AN IRON CORE THAT CAN'T BURN",
+    "BINNE: LAAG OP LAAG - EN 'N YSTERKERN WAT NIE KAN BRAND NIE",
+    "W ŚRODKU: WARSTWA NA WARSTWIE - I ŻELAZNE JĄDRO, KTÓRE NIE MOŻE PŁONĄĆ",
+  ],
+  [
+    "THE CORE COLLAPSES IN A FRACTION OF A SECOND...",
+    "DIE KERN TUIMEL INEEN IN 'N BREUKDEEL VAN 'N SEKONDE...",
+    "JĄDRO ZAPADA SIĘ W UŁAMKU SEKUNDY...",
+  ],
+  [
+    "...AND BOUNCES! A SHOCK WAVE RACES OUT",
+    "...EN BONS TERUG! 'N SKOKGOLF JAAG UIT",
+    "...I ODBIJA SIĘ! FALA UDERZENIOWA PĘDZI NA ZEWNĄTRZ",
+  ],
+  ["SUPERNOVA!", "SUPERNOVA!", "SUPERNOWA!"],
+  [
+    "LEFT BEHIND: A NEUTRON STAR - HEAVIER THAN THE SUN, BUT ONLY ABOUT 20 KM ACROSS",
+    "WAT OORBLY: 'N NEUTRONSTER - SWAARDER AS DIE SON, MAAR NET SOWAT 20 KM BREED",
+    "ZOSTAJE GWIAZDA NEUTRONOWA - CIĘŻSZA OD SŁOŃCA, A MA TYLKO OKOŁO 20 KM ŚREDNICY",
+  ],
+  [
+    "A SUGAR CUBE OF IT WOULD WEIGH ABOUT A BILLION TONNES",
+    "'N SUIKERKLONTJIE DAARVAN SOU SOWAT 'N MILJARD TON WEEG",
+    "KOSTKA CUKRU Z NIEJ WAŻYŁABY OKOŁO MILIARDA TON",
+  ],
+  [
+    "IT SPINS, FLASHING LIKE A LIGHTHOUSE: A PULSAR",
+    "DIT TOL EN FLITS SOOS 'N VUURTORING: 'N PULSAR",
+    "WIRUJE I BŁYSKA JAK LATARNIA MORSKA: TO PULSAR",
+  ],
   ["NEW NAME", "NUWE NAAM", "NOWE IMIĘ"],
   [
     "\u{1F50A}  SOUND ON!  PRESS A BUTTON AGAIN FOR THE MENU",
@@ -2372,11 +2414,12 @@ function langPage() {
     return m0.call(this, T(t));
   };
 }
-function cycleLang() {
-  const order = ["en", "af", "pl"],
-    nx = order[(order.indexOf(LANG) + 1) % order.length];
-  store.set("lang", nx);
+// choose a language straight away (it restarts the game in it - the whole page is translated as it loads)
+function setLang(l) {
+  if (!LANG_NAMES[l]) return;
   sfx("click");
+  if (l === LANG) return;
+  store.set("lang", l);
   setTimeout(() => location.reload(), 120);
 }
 // =====================================================================================
@@ -12801,54 +12844,20 @@ function skyTraffic(L, Rr, y0, yb, t, v) {
         if (Math.abs(s - 5.02) < 0.05) once("heist", c.n, () => sfx("beam", x));
       }
       if (hover) {
-        R.setAdd(true);
         const bb = heist ? y + 70 : yb(x) - 4;
-        quad4(
-          x - 6,
-          y + 6,
-          x + 6,
-          y + 6,
-          x + 22,
-          bb,
-          x - 22,
-          bb,
-          withA(col("#9fffb0"), 0.35),
-          withA(col("#9fffb0"), 0.35),
-          withA(col("#9fffb0"), 0.08),
-          withA(col("#9fffb0"), 0.08)
-        );
-        for (let i = 0; i < 5; i++) {
-          const f = (t * 0.8 + i / 5) % 1;
-          rect(x - 8 + hash(i) * 16, bb - f * (bb - y - 6), 1.5, 1.5, withA(C.white, 0.7 * (1 - f)));
-        }
-        R.setAdd(false);
+        drawEerieBeam(x, y + 6, 1, bb, t, 1, c.n); // (a cold, rippling beam)
       }
       push();
       translate(x, y);
       rotate(tilt);
-      scaleBy(1.5);
-      disc(0, -4, 8, withA(col("#9fe8ff"), 0.85), 6);
-      disc(0, -3, 2.5, col("#7dff9a"));
-      disc(-1, -4, 0.8, INK);
-      disc(1.2, -4, 0.8, INK); // the pilot under the dome
-      disc(0, 0, 20, col("#8a90a8"), 5);
-      disc(0, -1, 19, col("#c8ccdd"), 3.5);
-      disc(-6, -2, 6, withA(C.white, 0.5), 1.2);
-      R.setAdd(true);
-      for (let i = 0; i < 5; i++) {
-        const a = t * 5 + i * 1.26,
-          lx = Math.cos(a) * 16;
-        if (Math.sin(a) > -0.2)
-          glow(lx, 2.5, 3.5, withA(col(["#ff5f5f", "#ffc34d", "#5ff5c8", "#5fb0ff", "#ff5fa8"][i]), 0.95));
-      }
-      R.setAdd(false);
+      drawEerieSaucer(0, 0, 1.5, t, 1, c.n); // (dark, quiet and strange - see ending.ts)
       pop();
       list.push({
         x,
         y,
         r: hover ? 170 : 110,
-        c: hover ? col("#9fffb0") : col("#c8ccff"),
-        a: hover ? 0.3 : 0.16,
+        c: hover ? col("#9fffd8") : col("#7fe8c8"),
+        a: hover ? 0.26 : 0.1,
       });
     }
   }
@@ -21289,10 +21298,12 @@ const SCENES          = [
     name: "THE PILGRIMAGE TO THE STAR SHRINE",
     len: PILGRIM_LEN,
     fn: (S) => pilgrimage(S.L, S.Rr, S.y0, S.yb, S.t, S.big ? S.k * 1.22 : S.k, S.tall, S.ph),
+    far: 0.62,
+    eerie: true,
   },
-  { name: "PRAYERS AT THE STAR SHRINE", len: 15, fn: (S) => prayers(S) },
+  { name: "PRAYERS AT THE STAR SHRINE", len: 15, fn: (S) => prayers(S), far: 0.42, eerie: true },
   { name: "THE CATHOLIC PILGRIMAGE TO THE STAR BASILICA", len: 22, fn: (S) => basilica(S) },
-  { name: "A UFO HIJACKS THE PILGRIMS!", len: 24, fn: (S) => hijack(S) },
+  { name: "A UFO HIJACKS THE PILGRIMS!", len: 24, fn: (S) => hijack(S), far: 0.7, eerie: true },
   { name: "BUILDING THE SPACE FREEWAY", len: 24, fn: (S) => freeway(S) },
   { name: "ROAD WORKS ON THE SPACE HIGHWAY", len: 15, fn: (S) => roadWorks(S) },
   { name: "THE ASTEROID OIL RIG", len: 15, fn: (S) => oilRig(S) },
@@ -24994,41 +25005,152 @@ function drawConvoy(f, L, Rr, y, k, t) {
 //  turns), and later sheepishly brings them back. And aliens with a projector put on a show as a "god" - until it glitches.
 // =====================================================================================
 const ABDUCT = new Set();
-function drawSaucer(x, y, k, fade, t, beam) {
-  const A = (c) => withA(col(c), fade);
-  if (beam > 0) {
-    R.setAdd(true);
-    quad4(
-      x - 8 * k,
-      y + 4 * k,
-      x + 8 * k,
-      y + 4 * k,
-      x + 22 * k,
-      y + 60 * k,
-      x - 22 * k,
-      y + 60 * k,
-      withA(col("#9fffc8"), 0.45 * beam * fade),
-      withA(col("#9fffc8"), 0.45 * beam * fade),
-      withA(col("#9fffc8"), 0.08 * beam * fade),
-      withA(col("#9fffc8"), 0.08 * beam * fade)
-    );
-    R.setAdd(false);
-  }
-  disc(x, y + 1 * k, 20 * k, A("#8a90a8"), 5 * k);
-  disc(x, y - 1 * k, 18 * k, A("#c8ccdd"), 4 * k);
-  disc(x, y - 4 * k, 8 * k, withA(col("#9fe8ff"), 0.85 * fade), 6 * k);
-  disc(x - 2 * k, y - 4 * k, 2.2 * k, A("#7dff9a"));
-  disc(x + 3 * k, y - 4 * k, 2.2 * k, A("#7dff9a")); // two little pilots
+// THE EERIE VEIL (v2026.10.05c): the Star Shrine scenes in the full-screen show are far off and mysterious - a cold
+// mist drifts round the floating temple, a dark veil dims the gold, its beacon breathes slowly, and a few faint
+// will-o'-the-wisps wander round it
+function eerieVeil(S, t) {
+  const [sx, sy] = shrineSpot(S.L, S.Rr, S.y0, S.yb, S.tall),
+    k = S.k,
+    f = S.fade,
+    br = 0.5 + 0.5 * Math.sin(t * 0.8);
+  // a dark veil over the scene (heaviest round the edges), so the gold glows dimly through it
+  for (const [rx, ry, a] of [
+    [300, 170, 0.34],
+    [190, 110, 0.26],
+    [90, 60, 0.18],
+  ])
+    disc(sx - 40 * k, sy + 10 * k, rx * k, withA(col("#06081a"), a * f), ry * k);
+  R.setAdd(true);
+  // a cold mist, slowly drifting in layers
   for (let i = 0; i < 6; i++) {
-    R.setAdd(true);
-    glow(
-      x - 15 * k + i * 6 * k,
-      y + 2 * k,
-      2.6 * k,
-      withA(col(["#ff5050", "#ffd040", "#50ff90"][(i + Math.floor(t * 6)) % 3]), 0.9 * fade)
+    const dx = Math.sin(t * 0.12 + i * 1.7) * 60 * k,
+      dy = Math.cos(t * 0.09 + i * 2.3) * 14 * k;
+    glowE(
+      sx - 70 * k + i * 30 * k + dx,
+      sy + 30 * k + dy,
+      90 * k,
+      22 * k,
+      withA(col(i % 2 ? "#6fd8c8" : "#8a7aff"), 0.12 * f)
     );
+  }
+  // the beacon: a slow, cold breath of light above the temple
+  glow(sx, sy - 46 * k, (30 + 18 * br) * k, withA(col("#bfffe8"), (0.12 + 0.18 * br) * f));
+  // will-o'-the-wisps wandering round the island
+  for (let i = 0; i < 5; i++) {
+    const a = t * (0.18 + i * 0.03) + i * 1.3,
+      wx = sx + Math.cos(a) * (60 + i * 14) * k,
+      wy = sy - 10 * k + Math.sin(a * 1.4) * (18 + i * 4) * k,
+      tw = 0.4 + 0.6 * Math.pow(0.5 + 0.5 * Math.sin(t * 1.7 + i * 2.1), 2);
+    glow(wx, wy, 9 * k, withA(col("#9fffe0"), 0.35 * tw * f));
+    disc(wx, wy, 1.2 * k, withA(col("#ffffff"), 0.8 * tw * f));
+  }
+  R.setAdd(false);
+}
+// THE EERIE SAUCER (v2026.10.05c): the UFOs as they should be - mysterious. A dark gunmetal disc with only a thin edge of
+// cold light on its rim, a smoked-glass dome with a faint green glow inside (and, now and then, two dark eyes looking
+// out), a few pale lights creeping slowly round the rim, a breathing glow underneath, a mist round it - and every so
+// often it flickers, as if it isn't quite there. (x, y): its middle; k: its size (1 = about 40 across).
+function drawEerieSaucer(x, y, k, t, fade = 1, seed = 0) {
+  const flick = Math.sin(t * 0.9 + seed * 5) > 0.97 ? 0.45 + 0.55 * Math.abs(Math.sin(t * 40)) : 1, // (a shiver now and then)
+    a = fade * flick,
+    breathe = 0.5 + 0.5 * Math.sin(t * 1.3 + seed),
+    C2 = (h, al) => withA(col(h), al * a);
+  // the mist round it, and the glow underneath, breathing
+  R.setAdd(true);
+  glowE(x, y + 2 * k, 46 * k, 20 * k, C2("#5fe8c0", 0.07 + 0.05 * breathe));
+  glowE(x, y + 6 * k, 22 * k, 6 * k, C2("#9fffe0", 0.25 + 0.3 * breathe));
+  R.setAdd(false);
+  // the hull: dark underneath, a cold metal top, a thin bright edge where the light catches it
+  quad4(
+    x - 21 * k,
+    y + 1 * k,
+    x + 21 * k,
+    y + 1 * k,
+    x + 12 * k,
+    y + 6 * k,
+    x - 12 * k,
+    y + 6 * k,
+    C2("#2a2e3c", 1),
+    C2("#2a2e3c", 1),
+    C2("#0c0d14", 1),
+    C2("#0c0d14", 1)
+  );
+  disc(x, y, 21 * k, C2("#1c1f2a", 1), 4.4 * k);
+  disc(x, y - 1.2 * k, 19 * k, C2("#3a4054", 1), 3.2 * k);
+  disc(x - 4 * k, y - 2.2 * k, 11 * k, C2("#5a6278", 0.8), 1.4 * k); // (a dull sheen)
+  arcE(x, y, 20.6 * k, 4.2 * k, Math.PI * 1.05, Math.PI * 1.95, 0.7 * k, C2("#bfe8ff", 0.55));
+  // a ring of slow pale lights under the rim, creeping round
+  R.setAdd(true);
+  for (let i = 0; i < 9; i++) {
+    const an = t * 0.6 + seed + (i / 9) * 6.283,
+      front = Math.sin(an);
+    if (front < -0.15) continue;
+    const lx = x + Math.cos(an) * 18 * k,
+      ly = y + 2 * k + front * 1.6 * k,
+      pulse = 0.35 + 0.65 * Math.pow(0.5 + 0.5 * Math.sin(t * 2 - i * 0.9 + seed), 3);
+    disc(lx, ly, 0.9 * k, C2("#e8fff8", pulse));
+    glow(lx, ly, 4 * k, C2("#7fffd8", 0.5 * pulse));
+  }
+  R.setAdd(false);
+  // the dome: smoked glass, a faint green glow inside - and sometimes something looking out
+  disc(x, y - 4.4 * k, 8.6 * k, C2("#06101a", 0.95), 6.2 * k);
+  R.setAdd(true);
+  glow(x, y - 4 * k, 7 * k, C2("#3aff9a", 0.18 + 0.12 * breathe));
+  R.setAdd(false);
+  const look = Math.sin(t * 0.37 + seed * 2.3);
+  if (look > 0.55) {
+    const e = Math.min(1, (look - 0.55) * 5),
+      gx = Math.sin(t * 0.5 + seed) * 1.2 * k;
+    disc(x - 2.2 * k + gx, y - 5 * k, 1.5 * k, C2("#000000", 0.9 * e), 0.8 * k);
+    disc(x + 2.2 * k + gx, y - 5 * k, 1.5 * k, C2("#000000", 0.9 * e), 0.8 * k); // two dark almond eyes
+    R.setAdd(true);
+    disc(x - 1.8 * k + gx, y - 5.2 * k, 0.35 * k, C2("#9fffd0", 0.8 * e));
+    disc(x + 2.6 * k + gx, y - 5.2 * k, 0.35 * k, C2("#9fffd0", 0.8 * e));
     R.setAdd(false);
   }
+  disc(x - 3.2 * k, y - 7.6 * k, 2.6 * k, C2("#ffffff", 0.22), 1.1 * k); // (the glass's cold glint)
+}
+// its beam: cold and pale, soft at the edges, with slow ripples running down it and motes drifting up
+function drawEerieBeam(x, y, k, bottom, t, fade = 1, seed = 0) {
+  const len = bottom - y,
+    f0 = 0.85 + 0.15 * Math.sin(t * 7 + seed),
+    C2 = (h, al) => withA(col(h), al * fade * f0);
+  R.setAdd(true);
+  for (const [w0, w1, al] of [
+    [10, 30, 0.12],
+    [6, 18, 0.22],
+  ])
+    quad4(
+      x - w0 * k,
+      y,
+      x + w0 * k,
+      y,
+      x + w1 * k,
+      bottom,
+      x - w1 * k,
+      bottom,
+      C2("#b8ffe8", al),
+      C2("#b8ffe8", al),
+      C2("#7fffd0", al * 0.25),
+      C2("#7fffd0", al * 0.25)
+    );
+  for (let i = 0; i < 4; i++) {
+    const f = (t * 0.45 + i / 4 + seed) % 1,
+      yy = y + f * len,
+      hw = (6 + 12 * f) * k;
+    line(x - hw, yy, x + hw, yy, 0.6 * k, C2("#e8fff8", 0.1 * Math.sin(f * Math.PI)));
+  } // (ripples running down)
+  for (let i = 0; i < 9; i++) {
+    const f = (t * 0.25 + hash(i + seed)) % 1,
+      yy = bottom - f * len,
+      xx = x + (hash(i * 3.1 + seed) - 0.5) * (8 + 14 * (1 - f)) * k * 2 + Math.sin(t + i) * 2 * k;
+    disc(xx, yy, 0.7 * k, C2("#ffffff", 0.7 * Math.sin(f * Math.PI)));
+  } // (motes drifting up)
+  R.setAdd(false);
+}
+function drawSaucer(x, y, k, fade, t, beam) {
+  if (beam > 0) drawEerieBeam(x, y + 4 * k, k, y + 60 * k, t, beam * fade, 1.3);
+  drawEerieSaucer(x, y, k, t, fade, 1.3);
 }
 // a pilgrim, small, as drawn in the scenes - floating (and turning slowly) in a tractor beam
 function floatingPilgrim(x, y, k, fade, t, i, rot) {
@@ -27133,10 +27255,24 @@ function drawDeepSpace(t) {
     S.yb2 = (x) => S.yb(x) - 6 * k;
     S.my = (x) => (S.yt + S.yb2(x)) / 2;
     S.big = true;
+    // (v2026.10.05c: the whole scene a size smaller, round the middle of the screen - further off, out in space)
+    const SCN_FAR = 0.72 * (sc.far || 1),
+      scx = L + w / 2;
+    push();
+    translate(scx, cy);
+    scaleBy(SCN_FAR);
+    translate(-scx, -cy);
     safeDraw(sc.name, () => outlined(() => sc.fn(S), withA(INK, S.fade))); // (full screen: a crisp dark outline round everything)
+    if (sc.eerie) safeDraw("eerie", () => eerieVeil(S, t)); // (the Star Shrine: far off, veiled, mysterious)
+    pop();
   } else if (cur && cur.item.kind === "fly") {
     const f = cur.ph / cur.item.len,
-      d0 = cur.item.what in ICON_FNS || cur.item.what === "flags" ? 1 : (cur.item.depth ?? 1),
+      d0 =
+        cur.item.what in ICON_FNS
+          ? 0.62 // (the monuments: smaller, far off in the distance - v2026.10.05c)
+          : cur.item.what === "flags"
+            ? 1
+            : (cur.item.depth ?? 1),
       k = (Math.min(w, h) / 220) * d0,
       cy = T + h * (0.45 + (d0 !== 1 ? (cur.item.dy ?? 0) : 0) + Math.sin(f * 3) * 0.05),
       x = Rr + 120 * k - f * (w + 240 * k),
@@ -27241,6 +27377,9 @@ function drawDeepSpace(t) {
         break;
       case "supernova":
         drawSupernova(L, Rr, T, B, f, t);
+        break;
+      case "nstar":
+        drawNeutronBirth(L, Rr, T, B, f, t);
         break;
       case "pulsar":
         drawPulsarScene(L, Rr, T, B, f, t);
@@ -27457,6 +27596,194 @@ function drawSN(cx, cy, Rd, f, t, fade) {
     }
   }
   R.setAdd(false);
+}
+// ---- A NEUTRON STAR IS BORN (v2026.10.05c): the whole story, in stages (the captions are in attract.ts, NSTAR_CAPS):
+//      a supergiant boiling away, then a cut-away look inside - layer on layer, an iron core at the heart; the core
+//      collapses in a blink, BOUNCES, a shock wave races out - SUPERNOVA - and what's left is a neutron star: a dead star
+//      about 20 km across, spinning, its magnetic field looping round it, sweeping two beams like a lighthouse ----
+const NSTAR_CAPS                     = [
+  [0, "A SUPERGIANT STAR - MANY TIMES HEAVIER THAN THE SUN"],
+  [0.16, "INSIDE: LAYER UPON LAYER - AND AN IRON CORE THAT CAN'T BURN"],
+  [0.3, "THE CORE COLLAPSES IN A FRACTION OF A SECOND..."],
+  [0.4, "...AND BOUNCES! A SHOCK WAVE RACES OUT"],
+  [0.46, "SUPERNOVA!"],
+  [0.66, "LEFT BEHIND: A NEUTRON STAR - HEAVIER THAN THE SUN, BUT ONLY ABOUT 20 KM ACROSS"],
+  [0.81, "A SUGAR CUBE OF IT WOULD WEIGH ABOUT A BILLION TONNES"],
+  [0.91, "IT SPINS, FLASHING LIKE A LIGHTHOUSE: A PULSAR"],
+];
+function drawNeutronBirth(L, Rr, T, B, f, t) {
+  const w = Rr - L,
+    h = B - T,
+    fade = Math.min(1, f * 10, (1 - f) * 8),
+    cx = L + w * 0.54,
+    cy = T + h * 0.44,
+    R0 = Math.min(w, h) * 0.24,
+    seg = (a, b) => clamp((f - a) / (b - a), 0, 1),
+    C2 = (hx, a) => withA(col(hx), a * fade);
+  const collapse = seg(0.3, 0.4),
+    bounce = seg(0.4, 0.46),
+    blast = seg(0.44, 0.7),
+    after = seg(0.66, 1);
+  // 1. THE SUPERGIANT: a huge red-orange star, its surface boiling - it shrinks a little and dims as the core gives way
+  if (f < 0.47) {
+    const rS = R0 * (1 - 0.18 * collapse * collapse) * (1 + 0.02 * Math.sin(t * 1.3)),
+      dim = 1 - 0.5 * collapse - bounce * 0.5;
+    R.setAdd(true);
+    glow(cx, cy, rS * 2.2, C2("#ff6a2a", 0.22 * dim));
+    R.setAdd(false);
+    disc(cx, cy, rS, C2("#b8341a", dim));
+    disc(cx - rS * 0.08, cy - rS * 0.08, rS * 0.92, C2("#e0581e", dim));
+    R.setAdd(true);
+    for (let i = 0; i < 26; i++) {
+      const a = hash(i * 1.7) * 6.283 + t * 0.03 * (i % 2 ? 1 : -1),
+        d = rS * Math.sqrt(hash(i * 3.3)) * 0.85,
+        pz = 0.5 + 0.5 * Math.sin(t * (0.6 + hash(i) * 0.8) + i);
+      glow(
+        cx + Math.cos(a) * d,
+        cy + Math.sin(a) * d,
+        rS * (0.12 + hash(i * 5) * 0.12),
+        C2("#ffb05a", 0.18 * pz * dim)
+      );
+    } // (the boiling surface)
+    R.setAdd(false);
+    // 2. THE CUT-AWAY: a slice of the star opens up - shells of lighter and heavier stuff, iron grey at the centre
+    const open = seg(0.13, 0.22) * (1 - seg(0.36, 0.42));
+    if (open > 0) {
+      const shells                     = [
+        [0.86, "#ff8a3a"],
+        [0.66, "#ffd060"],
+        [0.5, "#f4f0d0"],
+        [0.36, "#9fd8ff"],
+        [0.24, "#c0a0ff"],
+        [0.13 * (1 - collapse * 0.92), "#8a8e98"],
+      ];
+      const a0 = -0.9,
+        a1 = a0 + 1.6 * open; // (the wedge opens like a slice of cake)
+      for (const [fr, hx] of shells) {
+        const r = rS * fr,
+          pts = [cx, cy];
+        for (let i = 0; i <= 16; i++) {
+          const a = a0 + ((a1 - a0) * i) / 16;
+          pts.push(cx + Math.cos(a) * r, cy + Math.sin(a) * r);
+        }
+        poly(pts, C2(hx, 0.95));
+      }
+      // the iron core: a heavy grey ball, shrinking as it collapses
+      disc(cx, cy, rS * 0.13 * (1 - collapse * 0.92), C2("#6a6e78", 1));
+      disc(cx - rS * 0.03, cy - rS * 0.03, rS * 0.06 * (1 - collapse * 0.9), C2("#b8bcc8", 0.8));
+    }
+    // falling in: streaks of the outer layers rushing towards the middle
+    if (collapse > 0 && bounce < 1) {
+      R.setAdd(true);
+      for (let i = 0; i < 28; i++) {
+        const a = (i / 28) * 6.283 + hash(i) * 0.2,
+          p = (collapse * 2.2 + hash(i * 7)) % 1,
+          d0 = rS * (1 - p * 0.85);
+        line(
+          cx + Math.cos(a) * d0,
+          cy + Math.sin(a) * d0,
+          cx + Math.cos(a) * (d0 + rS * 0.12),
+          cy + Math.sin(a) * (d0 + rS * 0.12),
+          R0 * 0.008,
+          C2("#ffd8a0", 0.45 * (1 - bounce))
+        );
+      }
+      R.setAdd(false);
+    }
+  }
+  // 3. BOUNCE: a white-hot flash at the heart, and a shock wave racing out
+  if (bounce > 0 && blast < 1) {
+    R.setAdd(true);
+    glow(cx, cy, R0 * (0.2 + bounce * 0.5), C2("#ffffff", 0.9 * (1 - blast)));
+    const rr = R0 * (0.05 + bounce * 1.1 + blast * 1.6);
+    ring(cx, cy, rr, R0 * 0.012, C2("#dff4ff", 0.8 * (1 - blast)));
+    ring(cx, cy, rr * 0.93, R0 * 0.02, C2("#9fd0ff", 0.4 * (1 - blast)));
+    R.setAdd(false);
+  }
+  // 4. SUPERNOVA: the flash fills the sky, then a glowing shell of star-stuff blows outwards, ragged and many-coloured
+  if (f > 0.445 && f < 0.5) {
+    R.setAdd(true);
+    rect(L, T, w, h, withA(C.white, 0.65 * FLASH() * (1 - (f - 0.445) / 0.055) * fade));
+    R.setAdd(false);
+  }
+  if (blast > 0) {
+    const rr = R0 * (0.3 + 2.1 * Math.sqrt(blast) + after * 0.5),
+      fo = Math.max(0.25, 1 - after * 0.6);
+    R.setAdd(true);
+    glow(cx, cy, rr * 1.2, C2("#ff7ad0", 0.1 * fo));
+    for (let i = 0; i < 90; i++) {
+      const a = (i / 90) * 6.283,
+        n = 1 + 0.12 * Math.sin(a * 6 + 1.1) + 0.08 * Math.sin(a * 13 + 2) + (hash(i * 2.3) - 0.5) * 0.1,
+        d = rr * n;
+      glow(
+        cx + Math.cos(a) * d,
+        cy + Math.sin(a) * d * 0.94,
+        R0 * (0.06 + hash(i) * 0.06),
+        C2(["#9fe8ff", "#ff8ad0", "#ffd080"][i % 3], 0.2 * fo)
+      );
+    }
+    for (let ring2 = 0; ring2 < 3; ring2++) {
+      const r0 = rr * (0.96 - ring2 * 0.13),
+        pts = [];
+      for (let i = 0; i <= 64; i++) {
+        const a = (i / 64) * 6.283,
+          n = 1 + 0.07 * Math.sin(a * 7 + ring2 * 2 + t * 0.2) + 0.04 * Math.sin(a * 17 - ring2);
+        pts.push(cx + Math.cos(a) * r0 * n, cy + Math.sin(a) * r0 * n * 0.94);
+      }
+      polyline(pts, R0 * 0.006, C2(["#ffb0e0", "#9fd8ff", "#fff0b0"][ring2], 0.3 * fo));
+    }
+    R.setAdd(false);
+  }
+  // 5. THE NEUTRON STAR: tiny, white-blue, spinning - its magnetic field looping round it, two beams sweeping
+  if (f > 0.6) {
+    const k = seg(0.6, 0.7),
+      spin = t * 2.4,
+      rN = R0 * 0.035;
+    R.setAdd(true);
+    glow(cx, cy, R0 * 0.3, C2("#9fd8ff", 0.35 * k));
+    // the beams, like a lighthouse (each time one points at us, the sky blinks)
+    for (const sg of [0, Math.PI]) {
+      const a = spin + sg,
+        ln = R0 * 1.9;
+      quad4(
+        cx,
+        cy - rN * 0.3,
+        cx + Math.cos(a - 0.05) * ln,
+        cy + Math.sin(a - 0.05) * ln,
+        cx + Math.cos(a + 0.05) * ln,
+        cy + Math.sin(a + 0.05) * ln,
+        cx,
+        cy + rN * 0.3,
+        C2("#e0f4ff", 0.55 * k),
+        C2("#e0f4ff", 0),
+        C2("#e0f4ff", 0),
+        C2("#e0f4ff", 0.55 * k)
+      );
+    }
+    const blink = Math.pow(Math.max(0, Math.cos(spin * 2)), 40);
+    if (blink > 0.02) rect(L, T, w, h, withA(col("#cfe8ff"), 0.08 * blink * k * fade * FLASH()));
+    // the magnetic field: loops from pole to pole, turning with it
+    for (let i = 0; i < 4; i++) {
+      const s = 0.4 + i * 0.22,
+        pts = [];
+      for (let j = 0; j <= 24; j++) {
+        const an = (j / 24) * Math.PI * 2,
+          r = R0 * 0.32 * s * Math.sin(an / 2) ** 2;
+        const x0 = Math.sin(an) * r,
+          y0 = Math.cos(an) * r * 0.6;
+        pts.push(
+          cx + x0 * Math.cos(spin * 0.5) - y0 * Math.sin(spin * 0.5) * 0.3,
+          cy + y0 + x0 * Math.sin(spin * 0.5) * 0.3
+        );
+      }
+      polyline(pts, R0 * 0.004, C2("#b8a0ff", 0.35 * k));
+    }
+    R.setAdd(false);
+    disc(cx, cy, rN, C2("#f4fbff", k));
+    R.setAdd(true);
+    glow(cx, cy, rN * 3, C2("#ffffff", 0.8 * k));
+    R.setAdd(false);
+  }
 }
 function drawSupernova(L, Rr, T, B, f, t) {
   const w = Rr - L,
@@ -31211,7 +31538,7 @@ function drawSubmarine(x, y, k, t) {
 function drawGag(kind, f, L, Rr, T, B, t) {
   const w = Rr - L,
     h = B - T,
-    k = Math.min(w, h) / 260,
+    k = Math.min(w, h) / 360, // (v2026.10.05c: smaller - further off; it was / 260)
     x = Rr + 60 * k - f * (w + 120 * k),
     y = T + h * (0.3 + 0.08 * Math.sin(f * 5)),
     xr = L - 60 * k + f * (w + 120 * k);
@@ -31250,7 +31577,7 @@ function drawGag(kind, f, L, Rr, T, B, t) {
     helmet(-16 * ck, -5 * ck, 10 * ck);
   } else if (kind === "braai") {
     // an Afrikaans family braaing on a little floating rock, smoke trailing behind
-    const a = k * 1.5;
+    const a = k * 1.15; // (a little further off than the other gags)
     disc(xr, y + 6 * a, 70 * a, col("#5a4a3e"), 12 * a);
     disc(xr - 6 * a, y + 3 * a, 62 * a, col("#7a6a58"), 7 * a);
     disc(xr, y + 1 * a, 66 * a, col("#4a7a3a"), 3 * a); // the rock, with a bit of lawn
@@ -44000,12 +44327,12 @@ function stageHud(g, s, t, fD, sx, sy) {
     if (ph < 0.33 && (t * 2.6) % 1 < 0.3) {
       g.font = fD(10);
       g.fillStyle = "#ffd24d";
-      g.fillText("HA!", cx + (Math.floor(t * 2.6) % 2 ? 50 : -50) * s, sy(STAGE.top + 30));
+      g.fillText("HA!", cx + (Math.floor(t * 2.6) % 2 ? 50 : -50) * s, sy(STAGE.top + 46));
     }
     if (ph > 0.86 && ph < 0.97) {
       g.font = fD(13);
       g.fillStyle = "#ff7a3d";
-      g.fillText("HAAAA!", cx + 20 * s, sy(STAGE.top + 26));
+      g.fillText("HAAAA!", cx + 20 * s, sy(STAGE.top + 46));
       if (G.kiaiK !== k && G.state === "play") {
         G.kiaiK = k;
         sfx("kiai");
@@ -44027,7 +44354,7 @@ function stageHud(g, s, t, fD, sx, sy) {
       g.font = fD(9);
       const w = Math.min(g.measureText(line1).width + 16 * s, sx(STAGE.x1 + 120) - sx(STAGE.x0 - 120)),
         bx = cx,
-        by = sy(STAGE.top + 22);
+        by = sy(STAGE.top + 44); // (low enough to keep clear of the level line above the stage)
       g.fillStyle = "rgba(255,250,240,.92)";
       roundRect(g, bx - w / 2, by - 10 * s, w, 20 * s, 8 * s);
       g.fill();
@@ -44036,7 +44363,7 @@ function stageHud(g, s, t, fD, sx, sy) {
     } else {
       g.font = fD(11);
       g.fillStyle = "#ffd24d";
-      g.fillText("HA HA HA!", cx + Math.sin(t * 20) * 3, sy(STAGE.top + 24));
+      g.fillText("HA HA HA!", cx + Math.sin(t * 20) * 3, sy(STAGE.top + 46));
       if (G.laughK !== k && G.state === "play") {
         G.laughK = k;
         sfx("laugh");
@@ -46139,7 +46466,10 @@ function spacePlan(n)             {
       len: 0,
     } /* (the very first is always South Africa winning the Rugby World Cup; after that any, at random) */,
     { kind: "space", len: 9 },
-    { kind: "fly", what: ["eclipse", "pulsar", "sunrise", "blackhole", "supernova"][n % 5], len: 28 },
+    (() => {
+      const what = ["eclipse", "pulsar", "sunrise", "blackhole", "supernova", "nstar"][n % 6];
+      return { kind: "fly", what, len: what === "nstar" ? 34 : 28 };
+    })(),
     { kind: "space", len: 12 },
     { kind: "scene", sc, len: sc.len },
     { kind: "space", len: 18, gag: gag(1) },
@@ -46748,6 +47078,22 @@ function drawAttract(g, s, t) {
       neon(cur.item.sc.name, cssH * 0.88, 13, "#9fd0ff", 8);
       g.globalAlpha = 1;
     } // a quiet caption
+    if (cur && cur.item.kind === "fly" && cur.item.what === "nstar") {
+      // the neutron star's story, a caption for each stage (each fades in and out)
+      const f = cur.ph / cur.item.len;
+      for (let i = 0; i < NSTAR_CAPS.length; i++) {
+        const a = NSTAR_CAPS[i][0],
+          b = i + 1 < NSTAR_CAPS.length ? NSTAR_CAPS[i + 1][0] : 1;
+        if (f < a || f >= b) continue;
+        const tIn = (f - a) * cur.item.len,
+          tOut = (b - f) * cur.item.len;
+        g.globalAlpha = clamp(Math.min(tIn, tOut) * 2, 0, 1) * 0.9;
+        const txt = T(NSTAR_CAPS[i][1]),
+          sz = Math.min(15, (cssW * 0.92) / Math.max(1, txt.length) / 0.62 / s);
+        neon(txt, cssH * 0.86, sz, i === 4 ? "#ffd0f0" : "#bfe4ff", 8);
+        g.globalAlpha = 1;
+      }
+    }
     if (blink) {
       g.globalAlpha = 0.35;
       neon(pressText(), cssH * 0.95, 11, "#ffffff", 6);
@@ -47025,7 +47371,7 @@ function drawEggs(g, s) {
   }
   g.restore();
 }
-const GAME_VERSION = "v2026.10.05b"; // year.month.day it was made
+const GAME_VERSION = "v2026.10.05c"; // year.month.day it was made
 const FB = '"Chakra Petch", "Segoe UI", sans-serif';
 let FD = '"Bungee", "Impact", sans-serif';
 const HUDB = { w: 0, t: -9, l: 0, b: 0, right: 0, lives: 0, room: 0, under: false };
@@ -47600,7 +47946,9 @@ function drawHud(fps) {
   g.textBaseline = "bottom";
   g.fillStyle = "rgba(185,168,184,.85)";
   const dev = R.kind === "GPU" ? "GPU · " + R.device : "CPU · software";
-  if (!(lift && cssW < 1000))
+  // (only on the menu and in a game - not over the full-screen shows, the trips between planets or the mini-games)
+  const techLine = !ATTRACT.on && ["menu", "play", "lost", "clear", "paused", "over"].includes(G.state);
+  if (techLine && !(lift && cssW < 1000))
     g.fillText(
       (dev.length > 60 ? dev.slice(0, 58) + "…" : dev) +
         "  ·  " +
@@ -51205,16 +51553,48 @@ function musicWanted() {
 }
 
 let curTrack = -1;
+// SMOOTH TUNE CHANGES (v2026.10.05c): when the tune changes, the old one KEEPS PLAYING while it fades away on a gentle
+// curve (it used to stop dead and leave a silence), then the new one starts and swells in on a matching curve. If the
+// old tune is wanted back while it's fading, it simply swells back up. (In the music box a pick changes quickly.)
+const MFADE                                    = { to: null, at: 0 };
+const musTarget = (tr) => (tr >= 0 ? (tr === DEEP_TRACK ? 0.2 : 0.3) : 0);
+function musRamp(from, to, start, dur) {
+  if (!musicBus) return;
+  const g = musicBus.gain,
+    n = 32,
+    curve = new Float32Array(n);
+  for (let i = 0; i < n; i++) {
+    const x = i / (n - 1),
+      e = 0.5 - 0.5 * Math.cos(Math.PI * x); // (an S-curve: eases out of the old level and into the new one)
+    curve[i] = Math.max(0.0001, from + (to - from) * e);
+  }
+  g.cancelScheduledValues(start);
+  g.setValueAtTime(Math.max(0.0001, g.value), start);
+  try {
+    g.setValueCurveAtTime(curve, start + 0.01, Math.max(0.05, dur));
+  } catch (e) {
+    g.linearRampToValueAtTime(Math.max(0.0001, to), start + dur);
+  }
+}
 function schedule() {
   if (!AC) return;
   const now = AC.currentTime,
     on = (MY.mode === "original" || JB.open) && !muted && JB.playing !== -2;
   const want = on ? musicWanted() : -1;
-  if (want !== curTrack) {
-    // switch tunes: start the new one from its top
-    const had = curTrack >= 0,
-      fadeOut = had ? 0.7 : 0,
-      gap = had ? 0.15 : 0; // a smooth change: the old tune fades away, then the new one fades in
+  if (want !== curTrack && curTrack >= 0 && want !== MFADE.to) {
+    // start fading the old tune out - it carries on playing meanwhile
+    const fadeOut = JB.open ? 0.45 : want < 0 ? 0.9 : 2.2;
+    MFADE.to = want;
+    MFADE.at = now + fadeOut;
+    musRamp(musicBus ? musicBus.gain.value : 0, 0.0001, now, fadeOut);
+  } else if (want === curTrack && MFADE.to !== null) {
+    // changed its mind: the old tune is wanted after all - swell it back
+    MFADE.to = null;
+    musRamp(musicBus ? musicBus.gain.value : 0, musTarget(curTrack), now, 0.8);
+  }
+  if (want !== curTrack && (curTrack < 0 || (MFADE.to === want && now >= MFADE.at))) {
+    // switch tunes: start the new one from its top, swelling in
+    MFADE.to = null;
     curTrack = want;
     mus.sec = 0;
     mus.bar = 0;
@@ -51224,17 +51604,13 @@ function schedule() {
     SEQ2.bar = 0;
     SEQ2.step = 0;
     SEQ2.loop = 0;
-    mus.next = SEQ2.next = now + 0.08 + fadeOut + gap;
-    if (musicBus) {
-      const g = musicBus.gain,
-        target = want >= 0 ? (want === DEEP_TRACK ? 0.2 : 0.3) : 0;
-      g.cancelScheduledValues(now);
-      g.setValueAtTime(g.value, now);
-      if (had) g.linearRampToValueAtTime(0.0001, now + fadeOut);
-      g.setValueAtTime(0.0001, now + fadeOut + gap);
-      g.linearRampToValueAtTime(target, now + fadeOut + gap + (want === DEEP_TRACK ? 2.2 : 1.2));
+    mus.next = SEQ2.next = now + 0.12;
+    if (musicBus && want >= 0) {
+      musicBus.gain.cancelScheduledValues(now);
+      musicBus.gain.setValueAtTime(0.0001, now);
+      musRamp(0.0001, musTarget(want), now + 0.1, JB.open ? 0.6 : want === DEEP_TRACK ? 3.2 : 2);
     }
-    if (musLP) musLP.frequency.setTargetAtTime(want === DEEP_TRACK ? 1100 : 20000, now, 0.4); // deep space: gentle and muffled, like it's coming from far away
+    if (musLP) musLP.frequency.setTargetAtTime(want === DEEP_TRACK ? 1100 : 20000, now, 0.8); // deep space: gentle and muffled, like it's coming from far away
     if (leadEcho && want >= 0) {
       const tr = TRACKS[want],
         div = tr.div || (tr.steps === 12 ? 6 : 4),
@@ -51248,15 +51624,16 @@ function schedule() {
       );
     }
   }
-  if (want < 0) return;
-  if (want === 0) {
+  const play = curTrack; // (while a change is fading, the old tune plays on)
+  if (play < 0) return;
+  if (play === 0) {
     if (mus.next < now - 0.25) mus.next = now + 0.05;
     while (mus.next < now + 0.15) {
       playStep(mus.next);
       advance();
     }
   } else {
-    const tr = TRACKS[want];
+    const tr = TRACKS[play];
     if (SEQ2.next < now - 0.25) SEQ2.next = now + 0.05;
     while (SEQ2.next < now + 0.15) {
       playStep2(tr, SEQ2.next);
@@ -52431,6 +52808,17 @@ profWire();
 // =====================================================================================
 const NEWS = [
   {
+    ver: "v2026.10.05c",
+    title: "A NEUTRON STAR IS BORN",
+    items: [
+      "A neutron star is born - a new event in the deep-space show",
+      "Eerie, mysterious UFOs",
+      "The full-screen show is farther off in space",
+      "Smoother music when the tune changes",
+      "LANGUAGE: pick English, Afrikaans or Polski straight away",
+    ],
+  },
+  {
     ver: "v2026.10.05a",
     title: "A POLISH",
     items: [
@@ -53027,8 +53415,11 @@ window.addEventListener(
   true
 ); // F8: hard reset, whatever is going on
 langPage(); // (Afrikaans or Polski: the translator goes in before anything is drawn)
-$("vLang").textContent = LANG_NAMES[LANG];
-$("bLang").onclick = cycleLang;
+// LANGUAGE: three buttons - pick one (the one in use is lit); a new one restarts the game in that language
+for (const b of document.querySelectorAll("#langRow button")                                 ) {
+  b.classList.toggle("on", b.dataset.lang === LANG);
+  b.onclick = () => setLang(b.dataset.lang);
+}
 $("bVoice").onclick = toggleVoice;
 comfortBody();
 voiceText();

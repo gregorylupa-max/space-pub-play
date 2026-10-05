@@ -250,6 +250,7 @@ body.retro .table { font-size: 10px; gap: 5px; }
   <p class="tag">Other ways to play - and everything you've collected.</p>
   <div class="buttons">
     <h3 class="sec">MORE WAYS TO PLAY</h3>
+    <button id="bFree" class="wide">FREE PLAY MODE <b>NO LOSING, NO TIMER</b></button>
     <button id="bEndless" class="wide">ENDLESS MODE <b id="vEndless"></b></button>
     <button id="bTa">TIME ATTACK <b id="vTa"></b></button>
     <button id="bRush">BOSS RUSH <b id="vRush"></b></button>
@@ -514,6 +515,9 @@ const PROFILE_KEYS = new Set([
   "pet",
   "taBest",
   "rushBest",
+  "mice",
+  "petGrow",
+  "petGrowInit",
 ]);
 const PROFILE = (() => {
   try {
@@ -1866,6 +1870,323 @@ const DICT_ROWS                             = [
   ["MUSIC VOLUME", "MUSIEK-VOLUME", "GŁOŚNOŚĆ MUZYKI"],
   ["EFFECTS VOLUME", "EFFEKTE-VOLUME", "GŁOŚNOŚĆ EFEKTÓW"],
   ["BACKGROUND SOUNDS", "AGTERGRONDGELUIDE", "DŹWIĘKI TŁA"],
+  ["FREE PLAY MODE", "VRYE SPEL", "TRYB SWOBODNY"],
+  ["NO LOSING, NO TIMER", "GEEN VERLOOR, GEEN HORLOSIE", "BEZ PRZEGRYWANIA, BEZ ZEGARA"],
+  [
+    "FREE PLAY!  NO LOSING - JUST HAVE FUN",
+    "VRYE SPEL!  GEEN VERLOOR NIE - NET PRET",
+    "SWOBODNA GRA!  BEZ PRZEGRYWANIA - PO PROSTU ZABAWA",
+  ],
+  ["SPLASH! A PUDDLE", "PLONS! 'N PLAS", "CHLUP! KAŁUŻA"],
+  ["OOPS!  BACK YOU GO", "OEPS!  TERUG JY GAAN", "UPS!  WRACAJ"],
+  ["SQUEAK!", "PIEP!", "PII-PII!"],
+  ["SPLASH!", "PLONS!", "CHLUP!"],
+  ["SPLOSH!", "PLOEIES!", "PLUSK!"],
+  ["WHEEE!", "JIEEEE!", "JUHUU!"],
+  ["YOU FOUND THE SPACE MOUSE!", "JY HET DIE RUIMTEMUIS GEVIND!", "ZNALAZŁEŚ KOSMICZNĄ MYSZ!"],
+  ["THE SPACE MOUSE", "DIE RUIMTEMUIS", "KOSMICZNA MYSZ"],
+  ["SPACE MOUSE", "RUIMTEMUIS", "KOSMICZNA MYSZ"],
+  [
+    "It hides somewhere on every level...",
+    "Dit kruip op elke vlak êrens weg...",
+    "Chowa się gdzieś na każdym poziomie...",
+  ],
+  ["SPIN", "DRAAI", "OBRÓT"],
+  ["BIG JUMP", "GROOT SPRONG", "WIELKI SKOK"],
+  ["BACKFLIP", "AGTERSALTO", "SALTO W TYŁ"],
+  ["DANCE", "DANS", "TANIEC"],
+  ["SPARKLES", "VONKELS", "ISKIERKI"],
+  ["SOMERSAULT", "BOLLEMAKIESIE", "FIKOŁEK"],
+  [
+    "All the rocks in the asteroid belt squashed together would weigh less than a twentieth of our Moon.",
+    "Al die rotse in die asteroïdegordel saamgedruk sou minder as 'n twintigste van ons Maan weeg.",
+    "Wszystkie skały pasa planetoid zgniecione razem ważyłyby mniej niż jedna dwudziesta naszego Księżyca.",
+  ],
+  [
+    "The footprints left on the Moon in 1969 are still there - there is no wind to blow them away.",
+    "Die voetspore wat in 1969 op die Maan gelaat is, is nog daar - daar is geen wind om hulle weg te waai nie.",
+    "Ślady stóp zostawione na Księżycu w 1969 roku wciąż tam są - nie ma wiatru, który by je zwiał.",
+  ],
+  [
+    "Our Milky Way galaxy has somewhere between 100 and 400 billion stars.",
+    "Ons Melkwegstelsel het tussen 100 en 400 miljard sterre.",
+    "Nasza Droga Mleczna ma od 100 do 400 miliardów gwiazd.",
+  ],
+  [
+    "Jupiter is so big that more than 1,300 Earths could fit inside it.",
+    "Jupiter is so groot dat meer as 1 300 Aardes daarin sou pas.",
+    "Jowisz jest tak wielki, że zmieściłoby się w nim ponad 1300 Ziem.",
+  ],
+  [
+    "Rogue planets wander through space with no star at all. Some were found by the way they bend starlight.",
+    "Swerfplanete dwaal sonder 'n ster deur die ruimte. Party is gevind deur hoe hulle sterlig buig.",
+    "Planety swobodne wędrują przez kosmos bez żadnej gwiazdy. Niektóre odkryto dzięki temu, jak zaginają światło gwiazd.",
+  ],
+  [
+    "For a few weeks, one exploding star - a supernova - can outshine a whole galaxy of stars.",
+    "Vir 'n paar weke kan een ontploffende ster - 'n supernova - helderder skyn as 'n hele sterrestelsel.",
+    "Przez kilka tygodni jedna wybuchająca gwiazda - supernowa - może świecić jaśniej niż cała galaktyka.",
+  ],
+  [
+    "The black hole at the centre of our galaxy is about 4 million times heavier than the Sun.",
+    "Die swart gat in die middel van ons sterrestelsel is omtrent 4 miljoen keer swaarder as die Son.",
+    "Czarna dziura w środku naszej galaktyki jest około 4 miliony razy cięższa od Słońca.",
+  ],
+  [
+    "Table Mountain's rock is hundreds of millions of years old - far older than the Himalayas.",
+    "Tafelberg se rots is honderde miljoene jare oud - baie ouer as die Himalajas.",
+    "Skały Góry Stołowej mają setki milionów lat - są dużo starsze niż Himalaje.",
+  ],
+  [
+    "Sailors once called the tip of the Cape the Cape of Storms, because of its wild seas and winds.",
+    "Seemanne het die punt van die Kaap eens die Stormkaap genoem, oor sy wilde see en winde.",
+    "Żeglarze nazywali kiedyś cypel Przylądkiem Burz - z powodu dzikiego morza i wiatrów.",
+  ],
+  [
+    "Drakensberg means Dragon Mountain. Its caves hold thousands of San rock paintings.",
+    "Drakensberg beteken Drakeberg. Sy grotte het duisende San-rotstekeninge.",
+    "Drakensberg znaczy Smocza Góra. W jej jaskiniach są tysiące malowideł ludu San.",
+  ],
+  [
+    "The African elephant is the biggest animal that lives on land.",
+    "Die Afrika-olifant is die grootste dier wat op land leef.",
+    "Słoń afrykański to największe zwierzę żyjące na lądzie.",
+  ],
+  [
+    "The Bo-Kaap's brightly painted houses line cobbled streets on the slopes of Signal Hill.",
+    "Die Bo-Kaap se helder geverfde huise staan langs klipstrate teen die hange van Seinheuwel.",
+    "Kolorowe domy Bo-Kaap stoją przy brukowanych uliczkach na zboczach Signal Hill.",
+  ],
+  [
+    "Warsaw's Old Town was rebuilt brick by brick after the Second World War.",
+    "Warskou se Ou Stad is ná die Tweede Wêreldoorlog baksteen vir baksteen herbou.",
+    "Stare Miasto w Warszawie odbudowano cegła po cegle po II wojnie światowej.",
+  ],
+  [
+    "The legend says a dragon lived in a cave under Wawel Hill - you can still visit the Dragon's Den.",
+    "Die legende sê 'n draak het in 'n grot onder Wawel-heuwel gewoon - jy kan steeds die Drakegrot besoek.",
+    "Legenda mówi, że pod Wawelem w jaskini mieszkał smok - Smoczą Jamę można zwiedzać do dziś.",
+  ],
+  [
+    "Malbork Castle, built of brick, is the biggest castle in the world by the land it covers.",
+    "Malbork-kasteel, van baksteen gebou, is die grootste kasteel ter wêreld volgens die grond wat dit beslaan.",
+    "Zamek w Malborku, zbudowany z cegły, to największy zamek świata pod względem powierzchni.",
+  ],
+  [
+    "The Tatras are the highest mountains of the long Carpathian range.",
+    "Die Tatras is die hoogste berge van die lang Karpate-reeks.",
+    "Tatry to najwyższe góry w długim łańcuchu Karpat.",
+  ],
+  [
+    "Gdansk is famous for amber - tree resin millions of years old, washed up by the Baltic Sea.",
+    "Gdańsk is bekend vir amber - boomhars miljoene jare oud, wat deur die Oossee uitgespoel word.",
+    "Gdańsk słynie z bursztynu - żywicy drzew sprzed milionów lat, wyrzucanej przez Bałtyk.",
+  ],
+  [
+    "Real space mice: mice have flown to the International Space Station, and quickly learned to float about.",
+    "Regte ruimtemuise: muise het al na die Internasionale Ruimtestasie gevlieg en gou leer rondsweef.",
+    "Prawdziwe kosmiczne myszy: myszy poleciały na Międzynarodową Stację Kosmiczną i szybko nauczyły się unosić.",
+  ],
+  [
+    "Mercury is the closest planet to the Sun. A year there lasts only 88 days!",
+    "Mercurius is die naaste planeet aan die Son. 'n Jaar daar duur net 88 dae!",
+    "Merkury to planeta najbliżej Słońca. Rok trwa tam tylko 88 dni!",
+  ],
+  [
+    "Venus is the hottest planet of all - even hotter than Mercury - under thick clouds.",
+    "Venus is die warmste planeet van almal - selfs warmer as Mercurius - onder dik wolke.",
+    "Wenus to najgorętsza planeta - gorętsza nawet od Merkurego - pod grubymi chmurami.",
+  ],
+  [
+    "The Moon is Earth's only natural moon. People first walked on it in 1969.",
+    "Die Maan is die Aarde se enigste natuurlike maan. Mense het in 1969 die eerste keer daarop geloop.",
+    "Księżyc to jedyny naturalny księżyc Ziemi. Ludzie pierwszy raz chodzili po nim w 1969 roku.",
+  ],
+  [
+    "Mars is red because of rusty dust. Olympus Mons there is the tallest volcano in the solar system.",
+    "Mars is rooi oor roesterige stof. Olympus Mons daar is die hoogste vulkaan in die sonnestelsel.",
+    "Mars jest czerwony od rdzawego pyłu. Olympus Mons to najwyższy wulkan w Układzie Słonecznym.",
+  ],
+  [
+    "Ceres is the biggest world in the asteroid belt, between Mars and Jupiter.",
+    "Ceres is die grootste wêreld in die asteroïdegordel, tussen Mars en Jupiter.",
+    "Ceres to największy świat w pasie planetoid, między Marsem a Jowiszem.",
+  ],
+  [
+    "Jupiter is the biggest planet. Its moon Europa hides an ocean under its ice.",
+    "Jupiter is die grootste planeet. Sy maan Europa versteek 'n oseaan onder sy ys.",
+    "Jowisz to największa planeta. Jego księżyc Europa skrywa ocean pod lodem.",
+  ],
+  [
+    "Saturn's rings are made of ice and rock. Saturn is so light it would float in water!",
+    "Saturnus se ringe is van ys en rots. Saturnus is so lig dat dit op water sou dryf!",
+    "Pierścienie Saturna są z lodu i skał. Saturn jest tak lekki, że unosiłby się na wodzie!",
+  ],
+  [
+    "Titan is Saturn's biggest moon. It has seas and lakes - of liquid methane, not water.",
+    "Titan is Saturnus se grootste maan. Dit het seë en mere - van vloeibare metaan, nie water nie.",
+    "Tytan to największy księżyc Saturna. Ma morza i jeziora - z ciekłego metanu, nie z wody.",
+  ],
+  [
+    "Uranus is an ice giant that spins on its side, like a ball rolling around the Sun.",
+    "Uranus is 'n ysreus wat op sy sy draai, soos 'n bal wat om die Son rol.",
+    "Uran to lodowy olbrzym, który kręci się na boku, jak piłka tocząca się wokół Słońca.",
+  ],
+  [
+    "Neptune is the windiest planet: its storms blow faster than the speed of sound.",
+    "Neptunus is die winderigste planeet: sy storms waai vinniger as die spoed van klank.",
+    "Neptun to najbardziej wietrzna planeta: jego burze wieją szybciej niż dźwięk.",
+  ],
+  [
+    "Pluto is a dwarf planet with a big heart-shaped glacier, far out in the Kuiper Belt.",
+    "Pluto is 'n dwergplaneet met 'n groot hartvormige gletser, ver in die Kuipergordel.",
+    "Pluton to planeta karłowata z wielkim lodowcem w kształcie serca, daleko w Pasie Kuipera.",
+  ],
+  [
+    "Comets are dirty snowballs from the edge of the solar system. Their tails always point away from the Sun.",
+    "Komete is vuil sneeuballe van die rand van die sonnestelsel. Hul sterte wys altyd weg van die Son.",
+    "Komety to brudne śnieżki z krańca Układu Słonecznego. Ich warkocze zawsze wskazują od Słońca.",
+  ],
+  [
+    "Alpha Centauri A and B are the nearest Sun-like stars: 4.4 light-years away.",
+    "Alpha Centauri A en B is die naaste sonagtige sterre: 4,4 ligjare ver.",
+    "Alfa Centauri A i B to najbliższe gwiazdy podobne do Słońca: 4,4 roku świetlnego stąd.",
+  ],
+  [
+    "Proxima Centauri is the closest star to the Sun. It is a small red star that flares.",
+    "Proxima Centauri is die naaste ster aan die Son. Dit is 'n klein rooi ster wat opvlam.",
+    "Proxima Centauri to gwiazda najbliższa Słońcu. To mała czerwona gwiazda, która rozbłyska.",
+  ],
+  [
+    "Sirius is the brightest star in our night sky, 8.6 light-years away. It has a tiny partner star, Sirius B - a white dwarf.",
+    "Sirius is die helderste ster in ons naghemel, 8,6 ligjare ver. Dit het 'n piepklein maatster, Sirius B - 'n wit dwerg.",
+    "Syriusz to najjaśniejsza gwiazda nocnego nieba, 8,6 roku świetlnego stąd. Ma malutką towarzyszkę, Syriusza B - białego karła.",
+  ],
+  [
+    "TRAPPIST-1 is a small cool star with seven Earth-sized planets going round it.",
+    "TRAPPIST-1 is 'n klein koel ster met sewe planete so groot soos die Aarde wat om hom draai.",
+    "TRAPPIST-1 to mała chłodna gwiazda, wokół której krąży siedem planet wielkości Ziemi.",
+  ],
+  [
+    "Kepler-452b is called Earth's cousin. It goes round a star very like our Sun.",
+    "Kepler-452b word die Aarde se neef genoem. Dit draai om 'n ster baie soos ons Son.",
+    "Kepler-452b nazywa się kuzynką Ziemi. Krąży wokół gwiazdy bardzo podobnej do Słońca.",
+  ],
+  [
+    "The Orion Nebula is a giant cloud where new stars are born. You can see it from Earth without a telescope!",
+    "Die Orion-newel is 'n reuse wolk waar nuwe sterre gebore word. Jy kan dit sonder 'n teleskoop van die Aarde af sien!",
+    "Mgławica Oriona to olbrzymi obłok, w którym rodzą się gwiazdy. Widać ją z Ziemi bez teleskopu!",
+  ],
+  [
+    "The Crab Pulsar is what is left of an exploded star. It spins about 30 times every second.",
+    "Die Krappulsar is wat oorbly van 'n ontplofte ster. Dit draai omtrent 30 keer elke sekonde.",
+    "Pulsar w Krabie to pozostałość po wybuchłej gwieździe. Obraca się około 30 razy na sekundę.",
+  ],
+  [
+    "Sagittarius A* is the giant black hole at the very centre of our Milky Way galaxy.",
+    "Sagittarius A* is die reuse swart gat in die middel van ons Melkweg.",
+    "Sagittarius A* to olbrzymia czarna dziura w samym środku naszej Drogi Mlecznej.",
+  ],
+  [
+    "Some planets orbit so close to their star that the rock melts. 55 Cancri e, in our own galaxy, may have oceans of lava!",
+    "Party planete wentel so naby aan hul ster dat die rots smelt. 55 Cancri e, in ons eie sterrestelsel, het dalk oseane van lawa!",
+    "Niektóre planety krążą tak blisko gwiazdy, że skały się topią. 55 Cancri e w naszej galaktyce może mieć oceany lawy!",
+  ],
+  [
+    "On the real planet WASP-76b it is so hot that iron turns to vapour - and falls at night as iron rain!",
+    "Op die regte planeet WASP-76b is dit so warm dat yster damp word - en snags as ysterreën val!",
+    "Na prawdziwej planecie WASP-76b jest tak gorąco, że żelazo paruje - a nocą spada jako żelazny deszcz!",
+  ],
+  [
+    "The deep blue planet HD 189733b has winds of about 8,700 km/h - and it may rain glass, sideways!",
+    "Die diepblou planeet HD 189733b het winde van omtrent 8 700 km/h - en dit reën dalk glas, sywaarts!",
+    "Ciemnoniebieska planeta HD 189733b ma wiatry około 8700 km/h - i może tam padać szkło, w bok!",
+  ],
+  [
+    "Many planets always show the same face to their star: one side has endless day, the other endless night.",
+    "Baie planete wys altyd dieselfde kant na hul ster: een kant het eindelose dag, die ander eindelose nag.",
+    "Wiele planet zawsze zwraca do gwiazdy tę samą stronę: po jednej jest wieczny dzień, po drugiej wieczna noc.",
+  ],
+  [
+    "Some planets may be covered by water hundreds of kilometres deep - ocean worlds with no land anywhere.",
+    "Party planete is dalk bedek met water honderde kilometer diep - oseaanwêrelde sonder enige land.",
+    "Niektóre planety mogą być pokryte wodą głęboką na setki kilometrów - to oceaniczne światy bez lądu.",
+  ],
+  [
+    "Planets made mostly of carbon could hide thick layers of diamond deep inside them.",
+    "Planete wat meestal van koolstof gemaak is, kan dik lae diamant diep binne-in versteek.",
+    "Planety zbudowane głównie z węgla mogą skrywać głęboko w środku grube warstwy diamentu.",
+  ],
+  [
+    "The 'super-puff' planets of Kepler-51 are so fluffy that they are about as dense as candyfloss!",
+    "Die 'superpof'-planete van Kepler-51 is so donsig dat hulle omtrent so dig soos spookasem is!",
+    "Planety 'superpuch' Kepler-51 są tak puszyste, że ich gęstość jest jak u waty cukrowej!",
+  ],
+  [
+    "In 2009 astronomers may have spotted a giant planet round the star PA-99-N2 - the first hint of a planet in another galaxy!",
+    "In 2009 het sterrekundiges dalk 'n reuseplaneet om die ster PA-99-N2 raakgesien - die eerste teken van 'n planeet in 'n ander sterrestelsel!",
+    "W 2009 roku astronomowie mogli dostrzec olbrzymią planetę przy gwieździe PA-99-N2 - pierwszy ślad planety w innej galaktyce!",
+  ],
+  [
+    "Saturn's moon Enceladus shoots fountains of ice and water into space from a hidden ocean under its crust.",
+    "Saturnus se maan Enceladus skiet fonteine van ys en water die ruimte in uit 'n versteekte oseaan onder sy kors.",
+    "Księżyc Saturna Enceladus wystrzeliwuje w kosmos fontanny lodu i wody z ukrytego oceanu pod skorupą.",
+  ],
+  [
+    "The planet J1407b may have a ring system about 200 times wider than Saturn's!",
+    "Die planeet J1407b het dalk 'n ringstelsel omtrent 200 keer wyer as Saturnus s'n!",
+    "Planeta J1407b może mieć pierścienie około 200 razy szersze niż Saturn!",
+  ],
+  [
+    "Deep inside ice giants like Uranus and Neptune, it may rain diamonds!",
+    "Diep binne-in ysreuse soos Uranus en Neptunus reën dit dalk diamante!",
+    "Głęboko we wnętrzu lodowych olbrzymów, jak Uran i Neptun, może padać deszcz diamentów!",
+  ],
+  [
+    "Rogue planets drift through space with no star at all - there may be billions of them.",
+    "Swerfplanete dryf deur die ruimte sonder enige ster - daar is dalk miljarde van hulle.",
+    "Planety swobodne dryfują przez kosmos bez żadnej gwiazdy - może ich być miliardy.",
+  ],
+  [
+    "Andromeda is the nearest big galaxy to ours. M32 is a small galaxy that goes round it.",
+    "Andromeda is die naaste groot sterrestelsel aan ons s'n. M32 is 'n klein sterrestelsel wat om hom draai.",
+    "Andromeda to najbliższa nam duża galaktyka. M32 to mała galaktyka, która krąży wokół niej.",
+  ],
+  [
+    "M110 is a small elliptical galaxy that goes round Andromeda. Most of its stars are billions of years old.",
+    "M110 is 'n klein elliptiese sterrestelsel wat om Andromeda draai. Die meeste van sy sterre is miljarde jare oud.",
+    "M110 to mała galaktyka eliptyczna krążąca wokół Andromedy. Większość jej gwiazd ma miliardy lat.",
+  ],
+  [
+    "NGC 206 is the brightest star cloud in Andromeda, packed with hot, young, blue stars.",
+    "NGC 206 is die helderste sterwolk in Andromeda, vol warm, jong, blou sterre.",
+    "NGC 206 to najjaśniejszy obłok gwiazd w Andromedzie, pełen gorących, młodych, niebieskich gwiazd.",
+  ],
+  [
+    "The Giant Stellar Stream is a river of stars - what is left of a smaller galaxy that Andromeda swallowed.",
+    "Die Reuse-sterstroom is 'n rivier van sterre - wat oorbly van 'n kleiner sterrestelsel wat Andromeda ingesluk het.",
+    "Wielki Strumień Gwiazd to rzeka gwiazd - resztki mniejszej galaktyki połkniętej przez Andromedę.",
+  ],
+  [
+    "The star M31N 2008-12a in Andromeda flares up as a nova about once a year - more often than any other we know.",
+    "Die ster M31N 2008-12a in Andromeda vlam omtrent een keer per jaar as 'n nova op - meer gereeld as enige ander wat ons ken.",
+    "Gwiazda M31N 2008-12a w Andromedzie rozbłyska jako nowa mniej więcej raz w roku - częściej niż jakakolwiek znana.",
+  ],
+  [
+    "In 1885 a supernova, S Andromedae, blazed in Andromeda - the first exploding star ever seen in another galaxy.",
+    "In 1885 het 'n supernova, S Andromedae, in Andromeda opgevlam - die eerste ontploffende ster ooit in 'n ander sterrestelsel gesien.",
+    "W 1885 roku w Andromedzie rozbłysła supernowa S Andromedae - pierwsza wybuchająca gwiazda widziana w innej galaktyce.",
+  ],
+  [
+    "Mayall II is a huge ball of about a million stars going round the Andromeda galaxy.",
+    "Mayall II is 'n reuse bal van omtrent 'n miljoen sterre wat om die Andromeda-sterrestelsel draai.",
+    "Mayall II to olbrzymia kula około miliona gwiazd krążąca wokół galaktyki Andromedy.",
+  ],
+  [
+    "In about 4.5 billion years Andromeda and our Milky Way will meet and become one galaxy!",
+    "Oor omtrent 4,5 miljard jaar sal Andromeda en ons Melkweg ontmoet en een sterrestelsel word!",
+    "Za około 4,5 miliarda lat Andromeda i nasza Droga Mleczna spotkają się i staną się jedną galaktyką!",
+  ],
   ["LOADING…", "LAAI…", "WCZYTYWANIE…"],
   ["+ ADD YOUR MUSIC", "+ VOEG JOU MUSIEK BY", "+ DODAJ SWOJĄ MUZYKĘ"],
   ["MUSIC BOX", "MUSIEKDOOS", "SZAFA GRAJĄCA"],
@@ -2381,6 +2702,34 @@ const DICT_ROWS                             = [
 ];
 // the texts that carry numbers or names: patterns
 const DICT_PAT                             = [
+  [/^(\d+) tricks?$/, "$1 truuks", "sztuczki: $1"],
+  [
+    /^YOU FOUND THE SPACE MOUSE!  \((\d+) TIMES\)$/,
+    "JY HET DIE RUIMTEMUIS GEVIND!  ($1 KEER)",
+    "ZNALAZŁEŚ KOSMICZNĄ MYSZ!  (RAZEM: $1)",
+  ],
+  [
+    /^FREE PLAY  ·  SERVED (\d+)  ·  NO LOSING!$/,
+    "VRYE SPEL  ·  $1 BEDIEN  ·  GEEN VERLOOR NIE!",
+    "SWOBODNA GRA  ·  OBSŁUŻONO $1  ·  BEZ PRZEGRYWANIA!",
+  ],
+  [/^CRACK!  YOUR (.+) HATCHED!$/, "KRAK!  JOU $1 HET UITGEBROEI!", "KRAK!  TWÓJ $1 SIĘ WYKLUŁ!"],
+  [
+    /^(.+) LEARNED A NEW TRICK: (.+)!$/,
+    "$1 HET 'N NUWE TRUUK GELEER: $2!",
+    "$1 NAUCZYŁ SIĘ NOWEJ SZTUCZKI: $2!",
+  ],
+  [
+    /^YOUR (.+) IS STILL AN EGG - SERVE (\d+) SHAKES TO HATCH IT$/,
+    "JOU $1 IS NOG 'N EIER - BEDIEN $2 SKOMMELS OM DIT UIT TE BROEI",
+    "TWÓJ $1 TO JESZCZE JAJKO - PODAJ $2 KOKTAJLI, BY SIĘ WYKLUŁ",
+  ],
+  [/^MOUSE FRIEND x(\d+)$/, "MUISVRIEND x$1", "PRZYJACIEL MYSZY x$1"],
+  [
+    /^an egg - hatches after (\d+) more shakes$/,
+    "'n eier - broei uit ná nog $1 skommels",
+    "jajko - wykluje się po $1 kolejnych koktajlach",
+  ],
   [
     /^★ (\d+) OF (\d+) STARS  ·  (\d+) OF (\d+) STOPS VISITED  ·  TAP A STOP, THEN PLAY$/,
     "★ $1 VAN $2 STERRE  ·  $3 VAN $4 HALTES BESOEK  ·  TIK 'N HALTE, DAN SPEEL",
@@ -4673,7 +5022,7 @@ const DIFFS = {
   },
 };
 let difficulty = DIFFS[store.get("diff", "normal")] ? store.get("diff", "normal") : "normal";
-const DF = () => DIFFS[G.demo ? "normal" : difficulty];
+const DF = () => DIFFS[G.demo ? "normal" : G.free ? "kid" : difficulty]; // (FREE PLAY is always gentle)
 function cycleDiff() {
   difficulty = { kid: "easy", easy: "normal", normal: "hard", hard: "kid" }[difficulty];
   store.set("diff", difficulty);
@@ -5523,6 +5872,7 @@ function bindPointer(canvas) {
     if (e.pointerType === "touch") setDev("touch");
     const [wx, wy] = world(e);
     if (funPointer("down", wx, wy)) return;
+    if (mouseTap(wx, wy)) return; // (found the space mouse!)
     if (G.state === "fired" && G.fire) {
       G.fire.skip = true;
       return;
@@ -9357,7 +9707,7 @@ function lose(why, lane, x) {
     sparkle(x, LY(lane, x) - 20, [0.4, 1, 0.8, 1], 20, lane);
     return;
   }
-  if (funSave(why, lane, x) || freeSave(why, lane, x)) {
+  if (freeLose(why, lane, x) || funSave(why, lane, x) || freeSave(why, lane, x)) {
     LOSER = null;
     return;
   }
@@ -20896,6 +21246,13 @@ function drawVert(V, t) {
     if (G.event) list.push({ x: X0 + 30, f: () => vAt(l, X0 + 30, 0, () => holidayLane(G.event, l, t)) });
   for (const e of G.eggs || [])
     if (!e.got) list.push({ x: e.x, f: () => vAt(e.lane, e.x, 0, () => funEgg(e, t)) });
+  if (G.mouse) {
+    const m = G.mouse;
+    list.push({
+      x: m.x,
+      f: () => vAt(m.lane, m.x, 0, () => drawSpaceMouse(m, t, m.x, LY(m.lane, m.x) - 1, 1.7)),
+    });
+  }
   if (G.case)
     for (const p of G.case.prints)
       list.push({ x: p.x - 0.5, f: () => vAt(p.lane, p.x, VSIDE.c, () => funPrint(p, t)) });
@@ -36141,7 +36498,11 @@ function drawCreature(x, y, q, A, W2, t, o) {
 //  streak, up to THREE STARS on every level, happy customers and golden VIP guests, a magnifying glass in the cups
 //  round, a gentle KID mode, and a BOSS at the end of each world
 // =====================================================================================
-const SB                                                          = { open: false, tab: 0, sel: 0 },
+const SB                                                                       = {
+    open: false,
+    tab: 0,
+    sel: 0,
+  },
   WD = { open: false, who: 0 };
 const kidOn = () => !G.demo && DF().kid;
 const todayStr = () => {
@@ -36312,12 +36673,17 @@ function stickerCats()                                       {
   return [
     {
       name: "FRIENDS",
-      items: TYPES.filter((t) => !BOSS_KINDS.includes(t.kind)).map((t) => ({
-        key: "c:" + t.kind,
-        name: NICE[t.kind] || t.kind.toUpperCase(),
-        kind: "cust",
-        type: t,
-      })),
+      items: TYPES.filter((t) => !BOSS_KINDS.includes(t.kind))
+        .map(
+          (t) =>
+            ({
+              key: "c:" + t.kind,
+              name: NICE[t.kind] || t.kind.toUpperCase(),
+              kind: "cust",
+              type: t,
+            })           
+        )
+        .concat([{ key: "m:mouse", name: "THE SPACE MOUSE", kind: "mouse" }]),
     },
     {
       name: "BOSSES",
@@ -36450,6 +36816,7 @@ const BOSS_AT = { 5: "babyblob", 12: "moongiant", 20: "robogob", 28: "gulper", 3
 // ---- hooks called from the game ----
 function kidLevelStart() {
   mechLevelStart();
+  kids2LevelStart();
   G.nfIntro = false;
   G.style = 0;
   G.lvlPerf = 0;
@@ -36463,6 +36830,7 @@ function kidLevelStart() {
 }
 function kidGameStart() {
   mechGameStart();
+  kids2GameStart();
   G.daily = G.dailyNext || null;
   G.dailyNext = null;
 }
@@ -36533,6 +36901,7 @@ function kidServe(c, s, demo) {
       c: [1, 0.36 + Math.random() * 0.3, 0.6, 1],
     });
   if (demo) return;
+  kids2Served(c, s, demo);
   if (early) {
     sfx("boing", c.x);
     dailyAdd("happy", 1);
@@ -36562,6 +36931,7 @@ function kidServe(c, s, demo) {
   }
 }
 function kidUpdate(dt, demo) {
+  kids2Update(dt, demo);
   for (const c of customers) {
     if (c.joy > 0) c.joy = Math.max(0, c.joy - dt);
     if (!demo && G.state === "play" && c.state === "walk") stick("c:" + c.type.kind, true);
@@ -36933,13 +37303,7 @@ function kidDrawPet(pl, t) {
   else if (Math.abs(tx - pl.petX) < 4) pl.petFace = pl.face || 1;
   const px = pl.petX,
     py = LY(pl.lane, pl.petX) + 30;
-  outlined(() => {
-    push();
-    translate(px, py);
-    scaleBy(1.4);
-    drawKidPet(pet, 0, 0, t, mv, pl.petJoy || 0, pl.petFace || 1);
-    pop();
-  }, INK);
+  drawGrowPet(pl, pet, px, py, t, mv); // (an egg, or the pet at its size - doing a trick, now and then)
 }
 // a golden VIP: a floating crown, a sparkle and a soft golden glow
 function kidDrawVip(c, t) {
@@ -37030,6 +37394,13 @@ function drawStickerStage(V, t) {
     arc(x, fl - 120, 70, 0, 6.283, 4, withA(col("#ff9fe0"), 0.6 + 0.2 * Math.sin(t * 3)), 40);
     return;
   } // ("?" written over it)
+  if (it.kind === "mouse") {
+    disc(x, fl + 2, 50, withA(C.black, 0.45), 8);
+    const m = SB.mouse || (SB.mouse = { lane: 0, x, t: 0, peek: 3.6, got: false, gotT: 0, duck: 0 });
+    m.t = t;
+    drawSpaceMouse(m, t, x - 20, fl, 3.4);
+    return;
+  }
   if (it.kind === "bar") {
     disc(x, fl - 120, 80, withA(col("#1a1030"), 0.85));
     arc(x, fl - 120, 80, 0, 6.283, 4, col("#ffd24d"), 40);
@@ -37189,7 +37560,16 @@ function kidHud(g, s, t, fD, sx, sy) {
       g.shadowBlur = 0;
       g.font = "600 " + Math.round(13 * s) + "px " + FB;
       g.fillStyle = "rgba(255,243,226,.8)";
-      g.fillText(got ? it.sub || cat.name : "Keep playing and watching to find it!", tx, ty + 26 * s);
+      g.fillText(
+        got
+          ? it.sub || cat.name
+          : it.kind === "mouse"
+            ? "It hides somewhere on every level..."
+            : "Keep playing and watching to find it!",
+        tx,
+        ty + 26 * s
+      );
+      if (got) drawStickerFact(g, s, it, tx, (VERT ? 58 : 46) * s); // (at the top, above the spotlight)
     }
   }
   g.textBaseline = "top";
@@ -37312,7 +37692,7 @@ function buildWard() {
       el.innerHTML =
         (ok ? h.name : "🔒 " + h.name) +
         "<small>" +
-        (ok ? h.line : "★ " + h.need + " to unlock") +
+        (ok ? (key === "pet" ? petGrowLine(h) : h.line) : "★ " + h.need + " to unlock") +
         "</small>";
       el.onclick = () => {
         if (!ok) {
@@ -38113,6 +38493,520 @@ function drawGlutton(c, t, a) {
     pop();
   }
   pop();
+}
+// =====================================================================================
+//  MORE FOR THE KIDS (v1.3.0):
+//    THE SPACE MOUSE  - on every level a tiny mouse in a bubble helmet hides behind a wedge of cheese somewhere on the
+//                       bars. Tap it (or walk your bartender up to it) and it pops out with a squeak.
+//    A PET THAT GROWS - a new pet starts as an EGG that hatches once you've served some shakes; then it grows a little
+//                       with every shake and learns a new TRICK every ten (spin, big jump, backflip...).
+//    FREE PLAY        - no losing and no timer: customers just keep coming, and a spilt shake is a puddle for your pet
+//                       to splash in.
+//    SPACE FACTS      - the sticker book tells you a true fact about every boss, place and stop you've collected.
+// =====================================================================================
+
+// ---- THE SPACE MOUSE ----
+const miceFound = () => store.get("mice", 0) | 0;
+function mouseLevelStart() {
+  G.mouse = null;
+  if (G.demo || G.ta || G.brush || G.versus) return;
+  G.mouse = {
+    lane: Math.floor(Math.random() * LANES),
+    x: rnd(X0 + 120, X1 - 100),
+    t: 0,
+    peek: Math.random() * 5,
+    got: false,
+    gotT: 0,
+    duck: 0,
+  };
+}
+// how far up the mouse is: 0 hidden behind its cheese (only the tips of its ears show), 1 right up
+function mouseUp(m) {
+  if (m.got) return 1;
+  const p = (m.t + m.peek) % 6.5,
+    up = p < 3.4 ? 0 : p < 3.7 ? (p - 3.4) / 0.3 : p < 5.9 ? 1 : p < 6.2 ? 1 - (p - 5.9) / 0.3 : 0;
+  return up * (1 - m.duck);
+}
+function mouseFound(by ) {
+  const m = G.mouse;
+  if (!m || m.got || G.demo || G.state !== "play") return;
+  m.got = true;
+  m.gotT = 0;
+  const n = miceFound() + 1;
+  store.set("mice", n);
+  stick("m:mouse", true);
+  bgSfx("squeak", m.x);
+  sfx("chime", m.x, 2);
+  SCORER = by || P1;
+  addScore(200, m.x, LY(m.lane, m.x) - 40);
+  SCORER = null;
+  addCoins(n % 10 === 0 ? 30 : 3, n % 10 === 0 ? "MOUSE FRIEND x" + n : "SPACE MOUSE");
+  sparkle(m.x, LY(m.lane, m.x) - 14, [1, 0.85, 0.4, 1], 14, m.lane);
+  callout(
+    n === 1 ? "YOU FOUND THE SPACE MOUSE!" : "YOU FOUND THE SPACE MOUSE!  (" + n + " TIMES)",
+    "#ffe070",
+    2.2
+  );
+  if (kidOn()) worldText("SQUEAK!", { lane: m.lane, x: m.x }, "#ffe070");
+}
+function mouseUpdate(dt) {
+  const m = G.mouse;
+  if (!m) return;
+  m.t += dt;
+  if (m.got) {
+    m.gotT += dt;
+    if (m.gotT > 0.9) m.x -= dt * 340; // (a happy wave - then off it scurries, to the door end)
+    if (m.x < X0 - 30) G.mouse = null;
+    return;
+  }
+  // it ducks down when a glass comes sliding past
+  const near =
+    shakes.some((s) => s.lane === m.lane && Math.abs(s.x - m.x) < 70) ||
+    empties.some((e) => e.lane === m.lane && Math.abs(e.x - m.x) < 70);
+  m.duck = clamp(m.duck + (near ? dt * 8 : -dt * 3), 0, 1);
+  if (G.state !== "play") return;
+  for (const p of active())
+    if (p.lane === m.lane && Math.abs(p.x - m.x) < 30) {
+      mouseFound(p);
+      return;
+    }
+}
+// a tap or click: on the mouse (or its cheese)? (wx, wy in the game's coordinates)
+function mouseTap(wx, wy) {
+  const m = G.mouse;
+  if (!m || m.got || G.state !== "play" || G.demo) return false;
+  const [px, py] = projL(m.lane, m.x, LY(m.lane, m.x) - 10),
+    r = 34 * pS(m.lane, m.x) * (VERT ? 1.7 : 1);
+  if (Math.hypot(wx - px, wy - py) > Math.max(26, r)) return false;
+  mouseFound(P1);
+  return true;
+}
+// the mouse and its cheese, sitting on the bar (drawn in the bar's own space)
+function drawSpaceMouse(m, t, x = m.x, y = LY(m.lane, m.x) - 1, big = 1) {
+  const up = mouseUp(m),
+    jump = m.got ? Math.abs(Math.sin(Math.min(m.gotT, 0.9) * 7)) * 10 * (m.gotT < 0.9 ? 1 : 0) : 0,
+    run = m.got && m.gotT > 0.9;
+  outlined(() => {
+    push();
+    translate(x, y);
+    scaleBy(1.25 * big);
+    const hy = -4 - up * 9 - jump,
+      hx = run ? 0 : 7,
+      wig = Math.sin(t * 9) * 0.6 * up;
+    if (run) {
+      // scurrying off: body, tail and little legs
+      disc(0, -5, 6, col("#a8a0b0"), 7.5);
+      line(6, -4, 14, -7 + Math.sin(t * 20) * 2, 1, col("#ff9fb8"));
+      for (const lx of [-3, 2]) line(lx, -1, lx + Math.sin(t * 30 + lx) * 2, 1, 1, col("#ff9fb8"));
+    }
+    // the head (behind the cheese until it peeks up)
+    const H = () => {
+      for (const s of [-1, 1]) {
+        disc(hx + s * 4.2, hy - 4.6, 3.4, col("#a8a0b0"));
+        disc(hx + s * 4.2, hy - 4.6, 2, col("#ff9fb8"));
+      }
+      disc(hx, hy, 5, col("#b8b0c0"));
+      disc(hx - 1.8, hy - 0.6, 1.1, col("#14101c"));
+      disc(hx + 1.8, hy - 0.6, 1.1, col("#14101c"));
+      disc(hx - 1.5, hy - 1, 0.4, col("#ffffff"));
+      disc(hx + 2.1, hy - 1, 0.4, col("#ffffff"));
+      disc(hx, hy + 1.6 + wig * 0.3, 1, col("#ff7aa0"));
+      for (const s of [-1, 1]) {
+        line(hx + s * 1.4, hy + 1.6, hx + s * 6.5, hy + 0.6 + wig, 0.35, col("#f0f0f0"));
+        line(hx + s * 1.4, hy + 2, hx + s * 6.5, hy + 2.6 - wig, 0.35, col("#f0f0f0"));
+      }
+    };
+    if (run) {
+      push();
+      translate(-hx - 6, 4);
+      H();
+      pop();
+    } else H();
+    if (!run) {
+      // the wedge of cheese, with holes
+      poly([-3, 0, 15, 0, 15, -10, -3, -4], col("#ffc21a"));
+      poly([-3, -4, 15, -10, 12, -11, -4, -5], col("#fff0a0"));
+      for (const [cx, cy, cr] of [
+        [3, -3, 1.6],
+        [9, -5, 1.3],
+        [12, -2, 1],
+        [6, -7, 0.9],
+      ])
+        disc(cx, cy, cr, col("#d8a828"));
+      if (m.got && m.gotT < 0.9) {
+        // a little wave
+        line(hx + 5, hy + 3, hx + 9, hy - 3 + Math.sin(t * 18) * 2, 1.2, col("#a8a0b0"));
+      }
+    }
+    pop();
+  }, INK);
+  // the bubble helmet's glint (it's a SPACE mouse)
+  if (up > 0.3 || run) {
+    const [gx, gy] = [x + (run ? -6 : 7) * 1.25 * big, y + (-4 - up * 9 - jump + (run ? 4 : 0)) * 1.25 * big];
+    arc(gx, gy, 7.4 * 1.25 * big, 0, 6.283, 0.7, withA(col("#bfe8ff"), 0.45), 18);
+    R.setAdd(true);
+    disc(gx - 3 * big, gy - 3.4 * big, 1.4 * big, withA(C.white, 0.6));
+    R.setAdd(false);
+  }
+}
+function mouseLaneDraw(lane, t) {
+  const m = G.mouse;
+  if (m && m.lane === lane) drawSpaceMouse(m, t);
+}
+
+// ---- A PET THAT GROWS ----
+const PET_HATCH = 20, // shakes served with it before the egg hatches
+  PET_TRICK_EVERY = 10,
+  TRICKS = ["SPIN", "BIG JUMP", "BACKFLIP", "DANCE", "SPARKLES", "SOMERSAULT"],
+  EGG_COL = {
+    cat: "#f0a040",
+    puppy: "#c89a60",
+    chick: "#f8f4ea",
+    robot: "#9aa6b8",
+    alien: "#5fd05f",
+    dragon: "#3ab05a",
+    droid: "#8a96a8",
+    unicorn: "#ff9fe0",
+  };
+const petGrowAll = () => store.get("petGrow", {});
+function petRec(id) {
+  const r = petGrowAll()[id];
+  return r && typeof r.s === "number" ? r : { s: 0 };
+}
+function petSave(id, r) {
+  const all = petGrowAll();
+  all[id] = r;
+  store.set("petGrow", all);
+}
+const petTricks = (s) => clamp(Math.floor((s - PET_HATCH) / PET_TRICK_EVERY), 0, TRICKS.length);
+const petSize = (s) => (s < PET_HATCH ? 1 : 0.72 + 0.28 * clamp((s - PET_HATCH) / 80, 0, 1));
+// (pets chosen before pets could grow are already hatched and nearly grown - nobody's kitty turns back into an egg)
+(() => {
+  if (store.get("petGrowInit", false)) return;
+  store.set("petGrowInit", true);
+  for (const k of ["pet1", "pet2"]) {
+    const id = store.get(k, "");
+    if (id && petRec(id).s < PET_HATCH + 40) petSave(id, { s: PET_HATCH + 40 });
+  }
+})();
+// a pet that grows: one the player chose (not a bartender's own sidekick), in a real game
+function growPet(pl) {
+  if (G.demo || CS.open || WD.open) return "";
+  const id = kidPetFor(pl);
+  return id && id === petOf(pl.id || 0) ? id : "";
+}
+const petName = (id) => (PETS.find((p) => p.id === id) || { name: "PET" }).name;
+function petLevelStart() {
+  if (G.demo) return;
+  for (const pl of active()) {
+    const id = growPet(pl);
+    pl.petTrick = null;
+    pl.hatchT = 0;
+    if (id && petRec(id).s < PET_HATCH && G.level === fromLevel && !G.petEggSaid) {
+      G.petEggSaid = true;
+      G.callouts.push({
+        text:
+          "YOUR " +
+          petName(id) +
+          " IS STILL AN EGG - SERVE " +
+          (PET_HATCH - petRec(id).s) +
+          " SHAKES TO HATCH IT",
+        c: "#ffe6a0",
+        life: 3,
+        max: 3,
+        sub: true,
+      });
+    }
+  }
+}
+function petServed(pl) {
+  const id = growPet(pl);
+  if (!id) return;
+  const r = petRec(id),
+    before = petTricks(r.s);
+  r.s++;
+  petSave(id, r);
+  if (r.s === PET_HATCH) {
+    pl.hatchT = 1.8;
+    callout("CRACK!  YOUR " + petName(id) + " HATCHED!", "#ffe070", 2.4);
+    sfx("chime", undefined, 3);
+    bgSfx("boing", pl.x);
+    return;
+  }
+  const now = petTricks(r.s);
+  if (now > before) {
+    pl.petTrick = { k: now - 1, t: 0 };
+    callout(petName(id) + " LEARNED A NEW TRICK: " + TRICKS[now - 1] + "!", "#ff9fe0", 2.4);
+    sfx("chime", undefined, 1);
+    return;
+  }
+  if (now > 0 && r.s > PET_HATCH && Math.random() < 0.3 && !(pl.petTrick && pl.petTrick.t < 1.1))
+    pl.petTrick = { k: Math.floor(Math.random() * now), t: 0 };
+}
+function petUpdate(dt) {
+  for (const pl of active()) {
+    if (pl.petTrick) {
+      pl.petTrick.t += dt;
+      if (pl.petTrick.t > 1.1) pl.petTrick = null;
+    }
+    if (pl.hatchT > 0) pl.hatchT = Math.max(0, pl.hatchT - dt);
+    // FREE PLAY: the pet splashes in the puddles (and splashes them away)
+    if (!G.free || pl.petX === undefined) continue;
+    for (const s of spills)
+      if (s.kind === "puddle" && s.lane === pl.lane && !s.splashed && Math.abs(s.x - pl.petX) < 22) {
+        s.splashed = true;
+        s.dry = 0.01;
+        bgSfx("splat", s.x);
+        const c = FLAVORS[s.flavor][1];
+        for (let i = 0; i < 10; i++)
+          emit({
+            kind: "drop",
+            x: projL(s.lane, s.x, LY(s.lane, s.x) + 40)[0] + rnd(-10, 10),
+            y: projL(s.lane, s.x, LY(s.lane, s.x) + 40)[1],
+            vx: rnd(-80, 80),
+            vy: rnd(-160, -70),
+            life: rnd(0.4, 0.7),
+            max: 0.7,
+            size: rnd(1.6, 3),
+            drag: 0.5,
+            grav: 520,
+            c: [c[0], c[1], c[2], 0.9],
+          });
+        if (Math.random() < 0.6)
+          worldText(
+            ["SPLASH!", "SPLOSH!", "WHEEE!"][Math.floor(Math.random() * 3)],
+            { lane: s.lane, x: s.x },
+            "#9fe8ff"
+          );
+      }
+  }
+  if (G.free) {
+    for (const s of spills) {
+      if (s.dry) s.dry += dt;
+      else if (s.kind === "puddle" && s.age > 30) s.dry = 0.01; // (puddles nobody splashes in dry up by themselves)
+    }
+    spills = spills.filter((s) => !(s.dry > 1.2)); // (splashed puddles dry up)
+  }
+}
+// the egg (until it hatches): wobbling after its bartender, speckled in the colour of what's inside
+function drawPetEgg(id, x, y, t, moving, hatch) {
+  const wob = Math.sin(t * (moving ? 14 : 3)) * (moving ? 0.18 : 0.06),
+    c = col(EGG_COL[id] || "#f8f4ea");
+  push();
+  translate(x, y);
+  rotate(wob);
+  disc(0, -8, 7, col("#fff6e6"), 9.4);
+  for (let i = 0; i < 6; i++) disc(-4 + hash(i * 3.1) * 8, -14 + hash(i * 5.3) * 11, 0.9 + hash(i) * 0.8, c);
+  if (hatch > 0) {
+    // cracks
+    line(-6, -9, -2, -7, 0.7, col("#5a4a3a"));
+    line(-2, -7, 1, -10, 0.7, col("#5a4a3a"));
+    line(1, -10, 5, -8, 0.7, col("#5a4a3a"));
+  }
+  pop();
+}
+// the bits of shell flying off as it hatches
+function drawHatchShell(x, y, k) {
+  for (let i = 0; i < 6; i++) {
+    const a = -2.6 + i * 0.42,
+      d = k * 26,
+      px = x + Math.cos(a) * d,
+      py = y - 8 + Math.sin(a) * d + k * k * 30;
+    push();
+    translate(px, py);
+    rotate(k * 6 + i);
+    tri(-3, 0, 3, 0, 0, -4, withA(col("#fff6e6"), 1 - k));
+    pop();
+  }
+}
+// the pet, at its size, doing a trick if it's doing one (called in place of drawKidPet)
+function drawGrowPet(pl, pet, px, py, t, mv) {
+  const id = growPet(pl),
+    r = id ? petRec(id) : { s: 999 };
+  if (id && r.s < PET_HATCH) {
+    outlined(() => {
+      push();
+      translate(px, py);
+      scaleBy(1.4);
+      drawPetEgg(id, 0, 0, t, mv, 0);
+      pop();
+    }, INK);
+    return;
+  }
+  const sz = id ? petSize(r.s) : 1,
+    hk = pl.hatchT > 0 ? 1 - pl.hatchT / 1.8 : 1, // (0 just hatched .. 1)
+    pop0 = pl.hatchT > 0 ? clamp(hk * 3, 0, 1) : 1,
+    T0 = pl.petTrick,
+    k = T0 ? clamp(T0.t / 1, 0, 1) : 0,
+    tr = T0 ? TRICKS[T0.k] : "";
+  outlined(() => {
+    push();
+    translate(px, py);
+    scaleBy(1.4 * sz * (pop0 < 1 ? 0.3 + 0.7 * pop0 + Math.sin(pop0 * 3.14) * 0.25 : 1));
+    let face = pl.petFace || 1;
+    if (tr === "BIG JUMP") translate(0, -Math.sin(k * Math.PI) * 26);
+    if (tr === "SPIN" || tr === "BACKFLIP" || tr === "SOMERSAULT") {
+      translate(0, -Math.sin(k * Math.PI) * (tr === "SPIN" ? 6 : 20) - 8);
+      rotate((tr === "BACKFLIP" ? -1 : 1) * k * 6.283 * (tr === "SPIN" ? 1 : face));
+      translate(0, 8);
+    }
+    if (tr === "DANCE") {
+      face = Math.floor(k * 8) % 2 ? -face : face;
+      translate(0, -Math.abs(Math.sin(k * 25)) * 4);
+    }
+    drawKidPet(pet, 0, 0, t, mv && !T0, T0 ? 0 : pl.petJoy || 0, face);
+    pop();
+  }, INK);
+  if (pl.hatchT > 0) drawHatchShell(px, py, hk);
+  if (tr === "SPARKLES") {
+    R.setAdd(true);
+    for (let i = 0; i < 6; i++) {
+      const a = k * 9 + (i * 6.283) / 6;
+      star(
+        px + Math.cos(a) * 22 * sz,
+        py - 14 * sz + Math.sin(a) * 12 * sz,
+        2.4,
+        withA(col(["#ff5f5f", "#ffd040", "#5fd0ff", "#c86ad8", "#5ff5c8", "#ff9fe0"][i]), 1 - k * 0.6)
+      );
+    }
+    R.setAdd(false);
+  }
+}
+// the wardrobe's line for a pet: how it's getting on
+function petGrowLine(h) {
+  if (!h.id) return h.line;
+  const r = petRec(h.id);
+  if (r.s < PET_HATCH) return "an egg - hatches after " + (PET_HATCH - r.s) + " more shakes";
+  const n = petTricks(r.s);
+  return h.line + (n ? "  ·  " + n + (n === 1 ? " trick" : " tricks") : "");
+}
+
+// ---- FREE PLAY ----
+function freeStart() {
+  if (G.state !== "menu") return;
+  sfx("click");
+  G.freeNext = true;
+  startGame();
+  callout("FREE PLAY!  NO LOSING - JUST HAVE FUN", "#5ff5c8", 2.8);
+}
+function kids2GameStart() {
+  G.free = !!G.freeNext;
+  G.freeNext = false;
+  G.freeServed = 0;
+  G.petEggSaid = false;
+}
+function kids2LevelStart() {
+  if (G.free) G.total = 1e9; // (the customers just keep coming)
+  mouseLevelStart();
+  petLevelStart();
+}
+// free play: a slip is never a lost life - a spilt shake is just a puddle, a customer who reaches you is sent back
+function freeLose(why, lane, x) {
+  if (!G.free || G.demo) return false;
+  if (why === "shake" || why === "empty") {
+    spills.push({
+      kind: "puddle",
+      lane,
+      x: why === "empty" ? TAPX + 20 : x - 10,
+      flavor: why === "empty" ? 0 : (shakes.find((s) => s.lane === lane) || { flavor: 0 }).flavor,
+      seed: Math.random() * 99,
+      age: 0,
+    });
+    bgSfx("splat", x);
+    if (Math.random() < 0.5)
+      G.callouts.push({ text: "SPLASH! A PUDDLE", c: "#9fe8ff", life: 1.4, max: 1.4, sub: true });
+  } else {
+    for (const c of customers)
+      if (c.lane === lane && c.x > X1 - 60) {
+        c.state = "pushed";
+        c.left = 220;
+        c.happy = 0;
+      }
+    sfx("boing", x);
+    G.callouts.push({ text: "OOPS!  BACK YOU GO", c: "#9fe8c8", life: 1.4, max: 1.4, sub: true });
+  }
+  return true;
+}
+function freeHud(g, s, fD) {
+  if (!G.free || G.state !== "play") return;
+  g.font = fD(14);
+  g.textAlign = "center";
+  g.fillStyle = "#5ff5c8";
+  g.fillText("FREE PLAY  ·  SERVED " + G.freeServed + "  ·  NO LOSING!", cssW / 2, 84 * s);
+}
+// ---- hooks ----
+function kids2Served(c, s, demo) {
+  if (demo) return;
+  if (G.free) G.freeServed++;
+  const pl = PL[s.owner || 0] || P1;
+  petServed(pl);
+}
+function kids2Update(dt, demo) {
+  if (demo) return;
+  mouseUpdate(dt);
+  petUpdate(dt);
+}
+
+// ---- SPACE FACTS for the sticker book (true, short and simple) ----
+const STICKER_FACTS = {
+  "c:babyblob":
+    "All the rocks in the asteroid belt squashed together would weigh less than a twentieth of our Moon.",
+  "c:moongiant":
+    "The footprints left on the Moon in 1969 are still there - there is no wind to blow them away.",
+  "c:robogob": "Our Milky Way galaxy has somewhere between 100 and 400 billion stars.",
+  "c:gulper": "Jupiter is so big that more than 1,300 Earths could fit inside it.",
+  "c:rogueking":
+    "Rogue planets wander through space with no star at all. Some were found by the way they bend starlight.",
+  "c:hydra": "For a few weeks, one exploding star - a supernova - can outshine a whole galaxy of stars.",
+  "c:glutton": "The black hole at the centre of our galaxy is about 4 million times heavier than the Sun.",
+  "p:tablemountain":
+    "Table Mountain's rock is hundreds of millions of years old - far older than the Himalayas.",
+  "p:capepoint":
+    "Sailors once called the tip of the Cape the Cape of Storms, because of its wild seas and winds.",
+  "p:drakensberg": "Drakensberg means Dragon Mountain. Its caves hold thousands of San rock paintings.",
+  "p:kruger": "The African elephant is the biggest animal that lives on land.",
+  "p:bokaap": "The Bo-Kaap's brightly painted houses line cobbled streets on the slopes of Signal Hill.",
+  "p:warsaw": "Warsaw's Old Town was rebuilt brick by brick after the Second World War.",
+  "p:wawel":
+    "The legend says a dragon lived in a cave under Wawel Hill - you can still visit the Dragon's Den.",
+  "p:malbork": "Malbork Castle, built of brick, is the biggest castle in the world by the land it covers.",
+  "p:tatras": "The Tatras are the highest mountains of the long Carpathian range.",
+  "p:gdansk": "Gdansk is famous for amber - tree resin millions of years old, washed up by the Baltic Sea.",
+  "m:mouse":
+    "Real space mice: mice have flown to the International Space Station, and quickly learned to float about.",
+};
+function stickerFact(it) {
+  if (!it) return "";
+  if (STICKER_FACTS[it.key]) return STICKER_FACTS[it.key];
+  if (it.kind === "bar") return (VENUES[it.idx] || {}).fact || "";
+  return "";
+}
+// the fact under the sticker's name: "DID YOU KNOW?" and the fact, wrapped, on a dark band
+function drawStickerFact(g, s0, it, tx, ty) {
+  const f = stickerFact(it);
+  if (!f) return;
+  const s = Math.max(s0, 0.85); // (never too small to read on a phone)
+  const maxW = Math.min(VERT ? cssW * 0.9 : cssW * 0.46, 560 * s);
+  g.font = "600 " + Math.round(13 * s) + "px " + FB;
+  const lines = wrapLines(g, T(f), maxW).slice(0, 4),
+    lh = 17 * s,
+    w =
+      Math.max(...lines.map((l) => g.measureText(l).width), g.measureText(T("DID YOU KNOW?")).width) + 24 * s,
+    h = (lines.length + 1) * lh + 14 * s,
+    x0 = clamp(tx - w / 2, 8 * s, cssW - w - 8 * s),
+    cx = x0 + w / 2;
+  g.fillStyle = "rgba(10,6,20,.72)";
+  g.beginPath();
+  g.roundRect ? g.roundRect(x0, ty, w, h, 8 * s) : g.rect(x0, ty, w, h);
+  g.fill();
+  g.textAlign = "center";
+  g.textBaseline = "middle";
+  g.font = "700 " + Math.round(12 * s) + "px " + FB;
+  g.fillStyle = "#5ff5c8";
+  g.fillText("DID YOU KNOW?", cx, ty + 7 * s + lh / 2);
+  g.font = "600 " + Math.round(13 * s) + "px " + FB;
+  g.fillStyle = "rgba(255,243,226,.92)";
+  lines.forEach((l, i) => g.fillText(l, cx, ty + 7 * s + lh * (i + 1.5)));
 }
 // =====================================================================================
 //  MORE FUN (v2026.10.03f): flavour ORDERS, PETS WITH POWERS, a COIN SHOP, MINI-GAMES between worlds, a TROPHY ROOM,
@@ -39418,6 +40312,7 @@ function funLaneDraw(lane, t) {
   funPrints(lane, t);
   if (G.event) holidayLane(G.event, lane, t);
   for (const e of G.eggs || []) if (!e.got && e.lane === lane) funEgg(e, t);
+  mouseLaneDraw(lane, t);
   for (const c of customers) if (c.lane === lane) funRobWarn(c, t);
 }
 // one Easter egg on a bar
@@ -40030,6 +40925,7 @@ function funHud(g, s, t, fD, sx, sy) {
       g.fillText("ENDLESS  ·  SERVED " + G.endServed + "  ·  SPEED " + G.endLvl, cssW / 2, 84 * s);
     }
     modesHud(g, s, fD);
+    freeHud(g, s, fD);
   }
   g.textBaseline = "top";
 }
@@ -40045,7 +40941,7 @@ const contOn = () => store.get("contOn", true),
     return c && c.level >= 1 && c.level <= VENUES.length ? c : null;
   };
 function contRemember() {
-  if (G.demo || G.daily || G.endless || G.ta || G.brush) return;
+  if (G.demo || G.daily || G.endless || G.ta || G.brush || G.free) return;
   if (G.won) {
     store.set("cont", null);
     return;
@@ -40132,7 +41028,7 @@ const FP_IDS = ["shop", "trophies", "map", "cup", "prof", "news", "keys", "setti
     news: "newsBack",
     keys: "kmList",
     settings: "bSound",
-    more: "bEndless",
+    more: "bFree",
   };
 // (v2026.10.05d) SETTINGS and PLAY MORE are screens that open other screens - the shop, the map, the controls... -
 // and when one of those closes, you're back where you came from. FP_PARENT: the screen to go back to.
@@ -40316,6 +41212,7 @@ function funPanelsInit() {
     callout("ENDLESS MODE!  HOW MANY CAN YOU SERVE?", "#ff5fa8", 2.6);
   };
   $k("bTa").onclick = () => modeStart("ta");
+  $k("bFree").onclick = freeStart;
   $k("bRush").onclick = () => modeStart("rush");
   $k("bHoliday").onclick = () => {
     const cur = store.get("eventPick", "auto");
@@ -42758,6 +43655,48 @@ function drawBigGen(t) {
       pts.push(x + 40 * k - f * 120, y - 4 - f * 34 + Math.sin(f * 9 + 1) * 4);
     }
     polyline(pts, 2.2, col("#14141a"));
+  }
+  // OOM KOOS wheels it in by the handle (and back out again when the power's back), and stands by it while it runs
+  {
+    const moving = (inF > 0 && inF < 1) || (outF > 0 && outF < 1),
+      px = x - 50 * k,
+      c =
+        L0.pusher ||
+        (L0.pusher = {
+          lane: 0,
+          x: px,
+          fy: y,
+          type: TYPE_OF.oom,
+          state: "walk",
+          moving: false,
+          calm: true,
+          ph: 0.2,
+          seed: 0.61,
+          walk: 0,
+          age: 0,
+          still: 1,
+          catchT: 9,
+          happy: 0,
+          alpha: 1,
+          flavor: 0,
+          drinkT: 1,
+          fed: 0,
+        });
+    c.x = px;
+    c.fy = y + 4;
+    c.moving = moving;
+    c.walk = Math.abs(slide) / 3;
+    c.still = moving ? 0 : 1;
+    c.happy = run && T0 < 9 ? 1 : 0; // (lekker - it caught!)
+    disc(px, y + 4, 26, withA(C.black, 0.4), 6);
+    outlined(() => {
+      push();
+      translate(px, y + 4);
+      scaleBy(1.1);
+      translate(-px, -(y + 4));
+      drawCustomer(c, t);
+      pop();
+    }, INK);
   }
   push();
   translate(x + jig, y);
@@ -47694,7 +48633,7 @@ function drawEggs(g, s) {
 // THE VERSION (from v1.2.0, 5 October 2026): MAJOR.MINOR.PATCH - a new MINOR for a batch of new things, a new PATCH for
 // fixes and small touches - with the day it was made next to it. (Before this the versions were named after the date,
 // like v2026.10.05c.)
-const GAME_VERSION = "v1.2.0",
+const GAME_VERSION = "v1.3.0",
   GAME_DATE = "05.10.2026",
   VERSION_TEXT = GAME_VERSION + "  ·  " + GAME_DATE;
 const FB = '"Chakra Petch", "Segoe UI", sans-serif';
@@ -49536,6 +50475,12 @@ function sfx(name, x , kind ) {
       noise(0.25, 0.3, 900, 150, out, now + 0.32);
       break;
     }
+    case "squeak": // the space mouse: two quick little squeaks
+      for (let i = 0; i < 2; i++) {
+        tone("sine", 2600 + i * 500, 3400 + i * 600, 0.07, 0.06, out, now + i * 0.11, 0.004);
+        tone("triangle", 5200 + i * 900, 6400, 0.05, 0.015, out, now + i * 0.11, 0.004);
+      }
+      break;
     case "splat":
       noise(0.15, 0.15, 900, 300, out, now, "bandpass");
       tone("sine", 220, 90, 0.12, 0.08, out, now);
@@ -53196,6 +54141,17 @@ profWire();
 //  the game, and where the motion capture, the folk songs and the fonts come from. Both from the menu at any time.
 // =====================================================================================
 const NEWS = [
+  {
+    ver: "v1.3.0",
+    title: "MORE FOR THE KIDS",
+    items: [
+      "Find the SPACE MOUSE hiding on every level",
+      "A pet that grows: it hatches from an egg and learns tricks",
+      "FREE PLAY: no losing, no timer - and puddles to splash in",
+      "Space facts for every boss, place and stop in the sticker book",
+      "Load shedding: Oom Koos wheels in the generator",
+    ],
+  },
   {
     ver: "v1.2.0",
     title: "SIMPLER AND CLEARER",

@@ -1,6 +1,6 @@
 // SPACE PUB - the offline helper. The first visit keeps a copy of the game; after that it starts even with no internet.
 // The page itself is always fetched fresh when there IS internet, so every new version arrives straight away.
-const CACHE = "space-pub-v1.2.0";
+const CACHE = "space-pub-v1.3.0";
 const CORE = ["./", "./index.html", "./manifest.webmanifest", "./icon-192.png", "./icon-512.png", "./icon-maskable-512.png", "./apple-touch-icon.png"];
 self.addEventListener("install", (e) => {
   e.waitUntil(caches.open(CACHE).then((c) => c.addAll(CORE)).then(() => self.skipWaiting()));

@@ -321,7 +321,7 @@ body.retro .table { font-size: 10px; gap: 5px; }
   <h2>WHO'S PLAYING?</h2>
   <p class="tag" id="profTag"></p>
   <div class="buttons" id="profList"></div>
-  <div class="profRow" id="profNew"><input id="profNewName" maxlength="12" placeholder="NEW PLAYER'S NAME" autocomplete="off" spellcheck="false"><button id="profAdd">+ ADD</button></div>
+  <div class="profRow" id="profNew"><input id="profNewName" maxlength="12" placeholder="NEW NAME" autocomplete="off" spellcheck="false"><button id="profAdd">+ ADD</button></div>
   <div class="profRow"><input id="profName" maxlength="12" autocomplete="off" spellcheck="false"><button id="profRen">RENAME</button></div>
   <button id="profDel" class="wide">DELETE THIS PLAYER</button>
   <h3>MOVE MY PROGRESS TO ANOTHER DEVICE</h3>
@@ -2097,6 +2097,7 @@ const DICT_ROWS                             = [
   ["2.5 MILLION LIGHT-YEARS AWAY", "2,5 MILJOEN LIGJARE VER", "2,5 MILIONA LAT ŚWIETLNYCH STĄD"],
   ["2.5 MILLION LIGHT-YEARS", "2,5 MILJOEN LIGJARE", "2,5 MILIONA LAT ŚWIETLNYCH"],
   ["THE SUN", "DIE SON", "SŁOŃCE"],
+  ["NEW NAME", "NUWE NAAM", "NOWE IMIĘ"],
   [
     "\u{1F50A}  SOUND ON!  PRESS A BUTTON AGAIN FOR THE MENU",
     "\u{1F50A}  KLANK AAN!  DRUK WEER 'N KNOPPIE VIR DIE KIESLYS",
@@ -5279,8 +5280,11 @@ function laneAt(wx, wy) {
 }
 function bindPointer(canvas) {
   const world = (e) => {
-    const r = canvas.getBoundingClientRect();
-    return [(e.clientX - r.left) / u - ox, (e.clientY - r.top) / u - oy];
+    const r = canvas.getBoundingClientRect(),
+      wx = (e.clientX - r.left) / u - ox,
+      wy = (e.clientY - r.top) / u - oy,
+      F = miniFit(); // (a mini-game or the bonus round fitted on a tall screen: into its own units)
+    return F ? [(wx - F.x) / F.s, (wy - F.y) / F.s] : [wx, wy];
   };
   canvas.addEventListener("pointerdown", (e) => {
     audio();
@@ -9576,7 +9580,7 @@ function gameOver() {
     (best ? "New high score! " : "High score " + String(G.hi).padStart(6, "0") + ". ") +
     (G.won
       ? "YOU CONQUERED THE SOLAR SYSTEM AND THE GALAXY! All " + LAST_LEVEL + " bars served."
-      : "You reached level " + G.level + " at the " + here().name.toLowerCase() + ".");
+      : "You reached level " + G.level + " at the " + titleCase(here().name) + ".");
   {
     // YOUR RECORDS (an idea from Paddle Wars' record rally): best perfect-pour streak, best combo, most served in one game
     const R0 = store.get("records", {}),
@@ -9677,6 +9681,12 @@ function callout(text, c, sec) {
 //  BONUS ROUND  -  "FIND THE ALIEN": watch which dome it hides under while they shuffle
 // =====================================================================================
 const domeX = (p) => PW / 2 + (p - (bonus.n - 1) / 2) * Math.min(170, 640 / bonus.n);
+// "CERES MINE CANTEEN" -> "Ceres Mine Canteen" (names with digits, like PA-99-N2, and roman numerals stay as they are)
+const titleCase = (s) =>
+  String(s)
+    .split(" ")
+    .map((w) => (/\d/.test(w) || /^[IVX]+$/.test(w) ? w : w.charAt(0) + w.slice(1).toLowerCase()))
+    .join(" ");
 function startBonus() {
   G.callouts = []; // (nothing left over from the level on top of the bonus round)
   G.fadeT = 0.45;
@@ -10447,6 +10457,48 @@ const glassTilt = (s) =>
   0.24 * Math.exp(-s.t / 0.2) * Math.cos(s.t * 20) +
   0.035 * Math.sin(s.t * 31 + s.lane * 2.1) * Math.min(1, s.t * 4); // the top of bar "lane" at x
 
+// THE FIT CAMERA (v2026.10.05a): on a tall (phone) screen the mini-games and the bonus round - made for a wide screen -
+// are shown WHOLE: the wide play area (PW x PH) scaled to the screen's width and set in the middle, with the background
+// filling the rest. (The normal tall camera would crop their sides and squash them up at the top.) Taps go through the
+// same camera, so they land where you see things. FITV: the camera while it's in use (for viewBox below).
+let FITV                                             = null;
+function miniFit() {
+  const VS = G.state === "paused" ? G.prev : G.state;
+  if (!VERT || !((VS === "mini" && G.mini) || (VS === "bonus" && bonus))) return null;
+  // (the play area's far edges - 50 each side - are only scenery: they may go off the screen, so it can be bigger)
+  const s = Math.min((W - 8) / (PW - 100), (H * 0.62) / PH);
+  return { s, x: (W - PW * s) / 2 - ox, y: H * 0.54 - (PH * s) / 2 - oy };
+}
+// where a height in the fitted play area is on the screen (CSS pixels, for the words over it)
+function fitCssY(ly) {
+  const F = miniFit();
+  return F ? (F.y + oy + ly * F.s) * u : (ly + oy) * u;
+}
+function withFit(fn) {
+  const F = miniFit();
+  if (!F) return fn();
+  FITV = F;
+  push();
+  translate(F.x, F.y);
+  scaleBy(F.s);
+  try {
+    fn();
+  } finally {
+    pop();
+    FITV = null;
+  }
+}
+// the screen's edges in the drawing's own units (pad: a little bleed past them)
+function viewBox(pad = 20) {
+  const F = FITV;
+  if (!F) return { L: -ox - pad, Rr: W - ox + pad, T: -oy - pad, B: H - oy + pad };
+  return {
+    L: (-ox - pad - F.x) / F.s,
+    Rr: (W - ox + pad - F.x) / F.s,
+    T: (-oy - pad - F.y) / F.s,
+    B: (H - oy + pad - F.y) / F.s,
+  };
+}
 function draw() {
   const pw = RW,
     ph = RH,
@@ -10488,8 +10540,8 @@ function draw() {
   } // (the ocean raft rolls)
   const VS = G.state === "paused" ? G.prev : G.state; // (paused: keep showing whatever was paused - the cups, a mini-game)
   if (G.state === "ending" && G.end) drawEnding(t);
-  else if (VS === "bonus" && bonus) drawBonus(t);
-  else if (VS === "mini" && G.mini) drawMini(t);
+  else if (VS === "bonus" && bonus) withFit(() => drawBonus(t));
+  else if (VS === "mini" && G.mini) withFit(() => drawMini(t));
   else if (G.state === "story" && G.story) drawStory(t);
   else if (G.state === "approach" && G.appr) drawApproach(t);
   else if (G.state === "jump" && G.jump) drawJump(t);
@@ -32558,8 +32610,11 @@ function drawWarsaw(x, y, k, t) {
 // =====================================================================================
 function drawBonus(t) {
   const b = bonus,
-    L = -ox,
-    Wd = PW + 2 * ox;
+    VB = viewBox(0),
+    L = VB.L,
+    Wd = VB.Rr - VB.L,
+    YB = FITV ? PH + 30 : PH + oy; // (the bottom of the stage: fitted on a tall screen it ends just below the play area)
+  if (FITV) vgrad(L, VB.T, Wd, VB.B - VB.T, col("#12061a"), col("#2a0c30")); // (the dark all round it)
   vgrad(L, 0, Wd, PH, col("#12061a"), col("#2a0c30"));
   bonusBackdrop(L, Wd, t, b);
   // sweeping spotlights from the top
@@ -32587,7 +32642,7 @@ function drawBonus(t) {
   R.setAdd(false);
   // the stage: velvet curtains at the sides with gold tassels, a scalloped valance, chasing bulbs, a chequered tablecloth
   for (const sg of [-1, 1]) {
-    const cx0 = sg < 0 ? L : PW + ox;
+    const cx0 = sg < 0 ? L : L + Wd;
     for (let i = 0; i < 7; i++) {
       const fx = cx0 - sg * (i * 16 + 4),
         sway = Math.sin(t * 0.7 + i * 0.8) * 2;
@@ -32630,10 +32685,10 @@ function drawBonus(t) {
   vgrad(L, 372, Wd, 30, withA(C.black, 0), withA(C.black, 0.35));
   rect(L, 370, Wd, 3, C.chrome);
   rect(L, 402, Wd, 4, C.chromeDk);
-  vgrad(L + 110, 406, Wd - 220, PH + oy - 406, col("#c8283c"), col("#6a0c1c"));
+  vgrad(L + 110, 406, Wd - 220, YB - 406, col("#c8283c"), col("#6a0c1c"));
   for (let i = 0; i < 18; i++) {
     const px = L + 110 + (i * (Wd - 220)) / 18;
-    rect(px, 406, 3, PH + oy - 406, C.chrome);
+    rect(px, 406, 3, YB - 406, C.chrome);
   }
   rect(L + 110, 440, Wd - 220, 3, C.chrome);
   // the cloches: the ones swinging behind first, then the still ones, then the ones swinging in front
@@ -32762,7 +32817,7 @@ function drawBonus(t) {
       rect(hx - 10, hy - 22, 20, 5, col("#e8e8ee"));
     }
   // the audience: heads in silhouette along the bottom - cheering when you find it, sinking in disappointment when you don't
-  const yb = PH + oy,
+  const yb = YB,
     cheer = reveal && b.result ? Math.min(1, b.revT * 2) : 0,
     sad = reveal && !b.result ? Math.min(1, b.revT * 1.5) : 0;
   const tense = b.phase === "drum" ? 1 : 0;
@@ -38479,11 +38534,9 @@ function drawIngredient(kind, x, y, s, rot) {
 }
 function drawMini(t) {
   const M = G.mini,
-    L = -ox - 20,
-    Rr = W - ox + 20,
-    T = -oy - 20,
-    B = H - oy + 20;
-  deepSky(L, Rr, T, B, t, t * 3, 7, (B - T) * 1.05);
+    { L, Rr, T, B: B0 } = viewBox(20),
+    B = FITV ? Math.min(B0, PH + 70) : B0; // (fitted on a tall screen: the counter ends just below the play area - it floats)
+  deepSky(L, Rr, T, B0, t, t * 3, 7, (B0 - T) * 1.05);
   if (M.kind === "stork") {
     for (const it of M.items) {
       if (it.kind === "star") drawIngredient("star", it.x, it.y, 1, it.rot);
@@ -38587,6 +38640,10 @@ function drawMini(t) {
       const px = L + (i * (Rr - L)) / 14;
       rect(px, 470, 2, B - 470, withA(col("#3a1e10"), 0.5));
     } // panels
+    if (FITV) {
+      rect(L, B - 5, Rr - L, 5, col("#2a160c"));
+      vgrad(L, B, Rr - L, 26, withA(C.black, 0.5), withA(C.black, 0)); // (its shadow on the dark below)
+    }
     rect(L, 466, Rr - L, 6, col("#c8ccd6"));
     rect(L, 466, Rr - L, 2, col("#ffffff"));
     rect(L, 472, Rr - L, 2, col("#8a8ea0"));
@@ -39120,6 +39177,20 @@ function funDecor(V, t, layer) {
       });
   }
 }
+// a line of text broken into lines no wider than maxW (with the canvas's current font)
+function wrapLines(g, txt, maxW) {
+  const out = [];
+  let cur = "";
+  for (const w of String(txt).split(" ")) {
+    const tryL = cur ? cur + " " + w : w;
+    if (cur && g.measureText(tryL).width > maxW) {
+      out.push(cur);
+      cur = w;
+    } else cur = tryL;
+  }
+  if (cur) out.push(cur);
+  return out;
+}
 // how to skip a mini-game, in the words of whatever you're playing with (v2026.10.04ar)
 const miniSkipText = () =>
   lastDev === "pad"
@@ -39156,7 +39227,9 @@ function funHud(g, s, t, fD, sx, sy) {
       neon2(g, MINI_NAMES[M.kind], cssW / 2, cssH * 0.32, 22 * s, "#ffc34d");
       g.font = "600 " + Math.round(15 * s) + "px " + FB;
       g.fillStyle = "#fff3e2";
-      g.fillText(MINI_HELP[M.kind], cssW / 2, cssH * 0.42);
+      wrapLines(g, T(MINI_HELP[M.kind]), cssW * (VERT ? 0.86 : 0.56)).forEach((ln, i, a) =>
+        g.fillText(ln, cssW / 2, cssH * 0.42 + (i - (a.length - 1) / 2) * 19 * s * TXT())
+      ); // (wrapped to fit the screen)
       g.fillText(
         Math.ceil(3.2 - M.t) > 0 ? "GET READY... " + Math.ceil(3.2 - M.t) : "",
         cssW / 2,
@@ -39171,7 +39244,7 @@ function funHud(g, s, t, fD, sx, sy) {
           "      TIME: " +
           Math.ceil(M.len - M.t),
         cssW / 2,
-        64 * s
+        VERT ? Math.max(70 * s, fitCssY(0) - 14 * s) : 64 * s // (tall screen: just above the play area, clear of the buttons)
       );
       if (M.yuck > 0) neon2(g, "YUCK! START AGAIN", cssW / 2, cssH * 0.4, 24 * s, "#ff5fa8");
       if (M.made > 0) neon2(g, "SHAKE MADE!", cssW / 2, cssH * 0.4, 26 * s, "#5ff5c8");
@@ -39493,9 +39566,9 @@ function buildShop() {
     el.className = can ? "" : "lock";
     el.innerHTML =
       it.name +
-      " - ● " +
+      ' <span style="white-space:nowrap">· ● ' +
       it.price +
-      "<small>" +
+      "</span><small>" +
       it.line +
       (I[it.id] ? "  ·  YOU HAVE " + I[it.id] : "") +
       "</small>";
@@ -45190,13 +45263,13 @@ function drawGalaxyMap(g, w, h, cur, hop, t, opts                               
   const title = (txt, sub, fr, up) => {
     g.textAlign = "center";
     g.textBaseline = "middle";
-    g.font = "700 " + Math.round(Math.max(10, rN * 2.4)) + "px " + FB;
+    g.font = "700 " + Math.round(Math.max(12, rN * 2.7)) + "px " + FB;
     g.fillStyle = "#e8ecff";
     const y = up ? fr.y - fr.R * 1.08 : fr.y + fr.R * 1.08;
     g.fillText(txt, fr.x, y);
-    g.font = "600 " + Math.round(Math.max(8, rN * 1.7)) + "px " + FB;
+    g.font = "600 " + Math.round(Math.max(9, rN * 1.9)) + "px " + FB;
     g.fillStyle = "#9fb0d8";
-    g.fillText(sub, fr.x, y + rN * 2.4 * (up ? 1 : 1));
+    g.fillText(sub, fr.x, y + Math.max(12, rN * 2.7));
   };
   title("THE MILKY WAY", "OUR HOME GALAXY", F.mw, true);
   title("THE ANDROMEDA GALAXY", "2.5 MILLION LIGHT-YEARS AWAY", F.m31, F.wide);
@@ -45866,14 +45939,15 @@ function modesHud(g, s, fD) {
   else if (G.brush)
     txt = "BOSS RUSH  ·  BOSS " + (G.brush.i + 1) + " / " + RUSH_LEVELS.length + "  ·  " + fmtTime(G.brush.t);
   if (!txt) return;
+  // (top left, under the score and the holy water - clear of the stage show and the announcements)
   g.save();
-  g.textAlign = "center";
+  g.textAlign = "left";
   g.textBaseline = "top";
-  g.font = fD(14);
+  g.font = fD(12);
   g.fillStyle = "#ff5fa8";
   g.shadowColor = "#ff5fa8";
   g.shadowBlur = 8 * s;
-  g.fillText(txt, cssW / 2, 84 * s);
+  g.fillText(txt, 14 * s, 14 * s + (twoP() ? 96 : 66) * s);
   g.restore();
 }
 function modesGameOver() {
@@ -46561,18 +46635,27 @@ function drawAttract(g, s, t) {
       g.textAlign = "center";
       g.textBaseline = "top";
       g.font = "700 " + Math.round(13 * s) + "px " + FB;
-      g.fillStyle = woke ? "#7dff9a" : "#ffe080";
-      g.fillText(
-        quietNow
+      const msg = quietNow
           ? "\u{1F50A}  TAP OR PRESS A KEY FOR SOUND"
           : lastDev === "pad"
             ? "\u{1F50A}  SOUND ON!  PRESS A BUTTON AGAIN FOR THE MENU"
             : lastDev === "touch" || coarse
               ? "\u{1F50A}  SOUND ON!  TOUCH AGAIN FOR THE MENU"
               : "\u{1F50A}  SOUND ON!  PRESS A KEY AGAIN FOR THE MENU",
-        cssW / 2,
-        10 * s + (cssW < 700 ? 60 * s : 0)
-      );
+        my =
+          ph === "demo"
+            ? VERT
+              ? 124 * s
+              : cssH * 0.27 + 40 * s // (in the demo: under the planet's sign and the level line, not on top of them)
+            : 10 * s + (cssW < 700 ? 60 * s : 0),
+        mw = g.measureText(msg).width + 18 * s;
+      g.fillStyle = "rgba(10,4,20,.62)"; // (a soft dark backing, so it reads over anything)
+      g.beginPath();
+      if (g.roundRect) g.roundRect(cssW / 2 - mw / 2, my - 4 * s, mw, 13 * s * 1.25 + 8 * s, 8 * s);
+      else g.rect(cssW / 2 - mw / 2, my - 4 * s, mw, 13 * s * 1.25 + 8 * s);
+      g.fill();
+      g.fillStyle = woke ? "#7dff9a" : "#ffe080";
+      g.fillText(msg, cssW / 2, my);
       g.restore();
     }
   }
@@ -46919,7 +47002,7 @@ function drawEggs(g, s) {
   }
   g.restore();
 }
-const GAME_VERSION = "v2026.10.04as"; // year.month.day it was made
+const GAME_VERSION = "v2026.10.05a"; // year.month.day it was made
 const FB = '"Chakra Petch", "Segoe UI", sans-serif';
 let FD = '"Bungee", "Impact", sans-serif';
 const HUDB = { w: 0, t: -9, l: 0, b: 0, right: 0, lives: 0, room: 0, under: false };
@@ -47187,16 +47270,19 @@ function drawHud(fps) {
     g.shadowBlur = 0;
     g.globalAlpha = 1;
   }
+  // (tall screen: the announcement, the level line and its bars go just below the corner buttons, not under them)
+  const topDy = VERT ? Math.max(0, 54 - sy(44)) : 0;
   if (subNow.length) {
     const c = subNow[subNow.length - 1],
       k = c.life / c.max;
     g.globalAlpha = Math.min(1, k * 3, (1 - k) * 10);
     g.font = fB(13, 700);
     g.fillStyle = c.c;
-    const wd = g.measureText(c.text).width,
-      room = cssW - 24;
+    const cx = clamp(sx(PW / 2), cssW * 0.3, cssW * 0.7), // (centred over the pub - but never squeezed against an edge)
+      wd = g.measureText(c.text).width,
+      room = 2 * Math.min(cx, cssW - cx) - 24;
     if (wd > room) g.font = fB((13 * room) / wd, 700);
-    g.fillText(c.text, sx(PW / 2), sy(44));
+    g.fillText(c.text, cx, sy(44) + topDy);
     g.globalAlpha = 1;
   }
   if (inGame && G.state !== "bonus") {
@@ -47206,11 +47292,11 @@ function drawHud(fps) {
       g.fillText(
         "LEVEL " + G.level + " / " + LAST_LEVEL + "   ·   SERVED " + G.served + " / " + G.total,
         sx(PW / 2),
-        sy(44)
+        sy(44) + topDy
       );
     const bw = 220 * s,
       bx = sx(PW / 2) - bw / 2,
-      by = sy(62);
+      by = sy(62) + topDy;
     g.fillStyle = "rgba(255,255,255,.15)";
     g.fillRect(bx, by, bw, 4 * s);
     g.fillStyle = "#5ff5c8";
@@ -51716,15 +51802,17 @@ function jbPlay(i) {
 }
 function drawJukebox() {
   // a little spectrum of whatever is playing
-  if (!JB.open || !jbAnalyser) return;
+  // (nothing playing yet, or no sound: a gentle idle shimmer, so it never looks like an empty gap)
+  if (!JB.open) return;
   const c = $("jbViz"),
     g = c.getContext("2d");
-  jbAnalyser.getByteFrequencyData(jbData);
+  if (jbAnalyser) jbAnalyser.getByteFrequencyData(jbData);
   g.clearRect(0, 0, c.width, c.height);
   const n = 32,
     w = c.width / n;
   for (let i = 0; i < n; i++) {
-    const v = jbData[i + 2] / 255,
+    const idle = 0.07 + 0.05 * Math.sin(G.time * 2.2 + i * 0.55),
+      v = Math.max(idle, jbAnalyser ? jbData[i + 2] / 255 : 0),
       h = Math.max(2, v * c.height);
     g.fillStyle = "hsl(" + ((300 - i * 6 + G.time * 40) % 360) + " 90% 62%)";
     for (let y = c.height - 4; y > c.height - h; y -= 5) g.fillRect(i * w + 2, y, w - 4, 3);
@@ -52319,6 +52407,15 @@ profWire();
 //  the game, and where the motion capture, the folk songs and the fonts come from. Both from the menu at any time.
 // =====================================================================================
 const NEWS = [
+  {
+    ver: "v2026.10.05a",
+    title: "A POLISH",
+    items: [
+      "Mini-games and the bonus round fit a phone held upright",
+      "Tidier words everywhere - instructions, announcements, the demo",
+      "Time attack and boss rush: the clock is in the top left",
+    ],
+  },
   {
     ver: "v2026.10.04as",
     title: "A QUIET DEMO",

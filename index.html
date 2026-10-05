@@ -304,7 +304,7 @@ body.retro .table { font-size: 10px; gap: 5px; }
     <div><h3>KEYBOARD</h3><dl class="keys">
       <dt>↑ ↓ or W S</dt><dd>jump to another counter</dd>
       <dt>1 2 3 4</dt><dd>jump straight to that counter</dd>
-      <dt>← → or A D</dt><dd>run along the counter (grab tips)</dd>
+      <dt>← → or A D</dt><dd>run along the counter (grab tips) - hold it, or tap twice, for a TURBO run</dd>
       <dt>Space · Enter · X · Ctrl</dt><dd>pour - HOLD mode: hold, let go to slide · TAP mode: one press (T switches)</dd>
       <dt>H · Q</dt><dd>send holy water · show the cross (devils, demons, vampires flee)</dd>
       <dt>P or Esc</dt><dd>pause · F, F11 or Alt+Enter full screen</dd>
@@ -2216,6 +2216,14 @@ const DICT_ROWS                             = [
   ["TOO SLOW - BYE!", "TE STADIG - TOTSIENS!", "ZA WOLNO - PA!"],
   ["IN A HURRY", "HAASTIG", "W POŚPIECHU"],
   [
+    "run along the counter (grab tips) - hold it, or tap twice, for a TURBO run",
+    "hardloop langs die toonbank (vat fooitjies) - hou dit, of tik twee keer, vir 'n TURBO-lopie",
+    "biegnij wzdłuż baru (zbieraj napiwki) - przytrzymaj albo stuknij dwa razy, by przyspieszyć TURBO",
+  ],
+  ["INDIAN", "INDIESE", "INDYJSCY"],
+  ["AUSTRIAN", "OOSTENRYKSE", "AUSTRIACCY"],
+  ["GERMAN", "DUITSE", "NIEMIECCY"],
+  [
     "WAIT! I WAS STILL WASHING THE WINDOWS!",
     "WAG! EK WAS NOG BESIG OM DIE VENSTERS TE WAS!",
     "CZEKAJ! JESZCZE MYŁEM OKNA!",
@@ -2793,6 +2801,11 @@ const DICT_ROWS                             = [
 ];
 // the texts that carry numbers or names: patterns
 const DICT_PAT                             = [
+  [
+    /^(.+) FANS ARE HERE!  DOUBLE POINTS$/,
+    "$1 ONDERSTEUNERS IS HIER!  DUBBEL PUNTE",
+    "KIBICE: $1!  PODWÓJNE PUNKTY",
+  ],
   [/^JUST IN TIME!  \+(\d+)$/, "NET BETYDS!  +$1", "W SAMĄ PORĘ!  +$1"],
   [/^PHEW!  \+(\d+)$/, "SJOE!  +$1", "UFF!  +$1"],
   [/^(\d+) tricks?$/, "$1 truuks", "sztuczki: $1"],
@@ -4598,6 +4611,9 @@ const FAN_LOOKS = {
   sc: ["sc", "sc", "sc2"],
   gb: ["gb", "gb2"],
   fr: ["fr", "fr2"],
+  in: ["ind", "ind2", "ind"], // (v1.3.5) a lady in a sari, a cricket fan in India blue
+  at: ["aut", "aut2"], // a man in lederhosen and a Tyrolean hat, a lady in a dirndl
+  de: ["ger", "ger2"], // German football fans in black, red and gold
 };
 const FAN_SLOGANS = {
   pl: ["POLSKA!", "BIALO-CZERWONI!", "POLSKA, GOL!"],
@@ -4613,6 +4629,9 @@ const FAN_SLOGANS = {
   sc: ["SCOTLAND!", "ALBA GU BRATH!", "FLOWER OF SCOTLAND!"],
   gb: ["COME ON BRITAIN!", "RULE BRITANNIA!", "KEEP CALM AND SHAKE ON!"],
   fr: ["ALLEZ LES BLEUS!", "VIVE LA FRANCE!", "ON EST LES CHAMPIONS!"],
+  in: ["INDIA! INDIA!", "NAMASTE!", "BHARAT!"],
+  at: ["SERVUS!", "AUSTRIA!", "PROST - WITH MILKSHAKE!"],
+  de: ["DEUTSCHLAND!", "AUF GEHT'S!", "TOR! TOR! TOR!"],
 };
 const FAN_NAMES = {
   pl: ["POLISH FOOTBALL", "#ff5f6f"],
@@ -4620,16 +4639,23 @@ const FAN_NAMES = {
   sc: ["SCOTTISH", "#5f8fff"],
   gb: ["BRITISH", "#e0e8ff"],
   fr: ["FRENCH", "#5fa0ff"],
+  in: ["INDIAN", "#ff9933"],
+  at: ["AUSTRIAN", "#ff5f6f"],
+  de: ["GERMAN", "#ffce00"],
 };
-const FAN_ORDER = ["za", "pl", "sc", "za", "pl", "gb", "za", "pl", "fr"]; // South Africans and Poles come most often
+const FAN_ORDER = ["za", "pl", "sc", "za", "pl", "gb", "za", "in", "pl", "fr", "za", "de", "pl", "at"]; // South Africans and Poles come most often
 const pickNation = () => {
   const r = Math.random();
-  return r < 0.4 ? "za" : r < 0.78 ? "pl" : ["sc", "gb", "fr"][Math.floor(Math.random() * 3)];
+  return r < 0.38
+    ? "za"
+    : r < 0.66
+      ? "pl"
+      : ["sc", "gb", "fr", "in", "at", "de"][Math.floor(Math.random() * 6)];
 };
 const fanGear = (look, i) => ({
   flag: i % 2 === 0,
   horn: look === "bafana",
-  ball: look === "plf" ? "football" : look === "bok" ? "rugby" : null,
+  ball: look === "plf" || look === "ger" ? "football" : look === "bok" ? "rugby" : null,
 });
 const REGULARS2 = [
   "priest",
@@ -6449,11 +6475,16 @@ function update(dt) {
       [inp.right, 1],
     ]         ) {
       const was = d < 0 ? P.hL : P.hR;
-      if (held && !was && !demo) {
+      // TURBO, made easy (v1.3.5): a double tap (within 0.45 s), or just HOLD a direction for half a second
+      const hk = d < 0 ? "holdL" : "holdR";
+      P[hk] = held ? (P[hk] || 0) + dt : 0;
+      const holdGo =
+        held && was && P[hk] >= 0.5 && P[hk] - dt < 0.5 && (d < 0 ? P.x > X0 + 80 : P.x < TAPX - 60); // (only where there is room to run)
+      if (((held && !was) || holdGo) && !demo) {
         const last = d < 0 ? P.tL : P.tR;
-        if (G.time - (last ?? -9) < 0.3 && P.dashCD <= 0 && !(P.tired > 0)) {
-          P.dashT = 0.32;
-          P.dashCD = 1.1;
+        if ((holdGo || G.time - (last ?? -9) < 0.45) && P.dashCD <= 0 && !(P.tired > 0)) {
+          P.dashT = 0.4;
+          P.dashCD = 0.8;
           P.dashDir = d;
           sfx("turbo", P.x);
           worldText("TURBO!", { lane: P.lane, x: P.x - 20 }, "#ffd040");
@@ -15343,6 +15374,12 @@ const FAN_WEAR = {
   gb2: ["#1a2a6a", "#f4f4f4", "#202020"],
   fr: ["#1a3a9a", "#f4f4f4", "#d02020"],
   fr2: ["#f4f4f4", "#1a3a9a", "#202020"],
+  ind: ["#c2185b", "#c2185b", "#c89a40"], // a sari (and gold sandals)
+  ind2: ["#1a5fb4", "#20202a", "#f0f0f0"], // India blue
+  aut: ["#f4f0e4", "#6a4a2a", "#3a2410"], // a white shirt, leather lederhosen
+  aut2: ["#2e7d4f", "#b0303a", "#2a1a10"], // a green dirndl bodice, a red skirt
+  ger: ["#f4f4f4", "#202020", "#f0f0f0"],
+  ger2: ["#1a1a1a", "#1a1a1a", "#202020"],
 };
 const CARTOON_BUILD = new Set([
   "golem",
@@ -15508,8 +15545,13 @@ function customerBody(c, t, a) {
   if (c.tone === undefined)
     c.tone = c.fan
       ? SKINS[
-          (["zulu", "xhosa"].includes(c.fan.look) ? 3 : c.fan.look === "bafana" ? 1 : 0) +
-            Math.floor(c.seed * 3)
+          (["zulu", "xhosa"].includes(c.fan.look)
+            ? 3
+            : ["ind", "ind2"].includes(c.fan.look)
+              ? 2
+              : c.fan.look === "bafana"
+                ? 1
+                : 0) + Math.floor(c.seed * 3)
         ]
       : SKINS[Math.floor(c.seed * 9973) % SKINS.length];
   if (c.bat > 0 || (c.fly && c.fly.kind === "bat")) {
@@ -17724,6 +17766,35 @@ function drawTorsoBase(kind, c, t, A, tw, th, body, L, angry, step) {
         rect(-tw / 2 + 1, top, tw - 2, 3, A(col("#007a4d")));
         rect(-tw / 2 + 1, top + 12, tw - 2, 2, A(col("#007a4d")));
       }
+      if (lk === "ind") {
+        // the sari: the end (the pallu) draped over the shoulder, edged in gold
+        quad4(-tw / 2, top, -tw / 2 + 5, top, tw / 2, top + 20, tw / 2 - 5, top + 20, A(col("#e0407a")));
+        line(-tw / 2 + 5, top, tw / 2, top + 20, 1.3, A(col("#ffd24d")));
+        line(-tw / 2, top + 1, tw / 2 - 5, top + 20, 1.1, A(col("#ffd24d")));
+        rect(-tw / 2 + 1, top + 21, tw - 2, 1.6, A(col("#ffd24d")));
+      }
+      if (lk === "ind2") {
+        rect(-tw / 2 + 1, top, tw - 2, 2.4, A(col("#ff9933")));
+        rect(-tw / 2 + 1, top + 2.4, tw - 2, 1.4, A(col("#f4f4f4")));
+        rect(-tw / 2 + 1, top + 3.8, tw - 2, 1.4, A(col("#138808")));
+      } // India blue, a tricolour trim at the collar
+      if (lk === "aut") {
+        line(-4, top, -4, top + 22, 1.6, A(col("#5a3a1a")));
+        line(4, top, 4, top + 22, 1.6, A(col("#5a3a1a")));
+        rect(-4.5, top + 7, 9, 2.4, A(col("#5a3a1a")));
+        for (let i = 0; i < 3; i++) disc(0, top + 3 + i * 6, 0.6, A(col("#8a8070")));
+      } // braces with a carved chest strap, over a white shirt
+      if (lk === "aut2") {
+        rect(-tw / 2 + 1, top, tw - 2, 4, A(col("#f6f2ea"))); // the white blouse
+        for (let i = 0; i < 3; i++) line(-2, top + 7 + i * 4, 2, top + 9 + i * 4, 0.7, A(col("#f6f2ea")));
+        rect(-tw / 2 + 3, top + 20, tw - 6, 9, A(col("#f6f2ea")));
+        rect(-tw / 2 + 3, top + 20, tw - 6, 1.4, A(col("#d8d0c0")));
+      } // the laced bodice, the apron
+      if (lk === "ger" || lk === "ger2") {
+        rect(-tw / 2 + 1, top + 8, tw - 2, 2, A(col("#1a1a1a")));
+        rect(-tw / 2 + 1, top + 10, tw - 2, 2, A(col("#dd0000")));
+        rect(-tw / 2 + 1, top + 12, tw - 2, 2, A(col("#ffce00")));
+      } // black, red and gold across the chest
     }
     if (kind === "cowboy") {
       const vc = A(col("#6a4020"));
@@ -18951,6 +19022,62 @@ function drawHead(kind, x, hy, t, c, A, angry, look, L, mouth = "flat", eyes = "
         disc(x, hy - 8, 11, A(col("#0055a4")), 6);
         rect(x - 10, hy - 6, 20, 3, A(col("#ef4135")));
         disc(x, hy - 15, 3.2, A(C.white));
+      }
+    } else if (lk === "ind") {
+      // dark hair parted in the middle, gathered in a bun with a string of white jasmine; little gold earrings
+      disc(x - 1, hy - 5, 10.5, A(col("#14100c")), 6);
+      disc(x - 10, hy - 1, 5, A(col("#14100c")));
+      for (let i = 0; i < 5; i++) disc(x - 12 + i * 1.4, hy - 4 + i * 1.2, 0.9, A(col("#f8f8f0")));
+      line(x - 1, hy - 11, x - 1, hy - 6, 0.6, A(col("#3a2a20")));
+      face();
+      disc(x - 6, hy + 4, 0.9, A(col("#ffd24d")));
+    } else if (lk === "ind2") {
+      // a cricket fan: a blue cap, the tricolour painted on the cheek
+      disc(x - 1, hy - 6, 10, A(col("#14100c")), 5);
+      face();
+      disc(x, hy - 8, 11, A(col("#1a5fb4")), 5.5);
+      rect(x - 1, hy - 7, 15, 2.6, A(col("#1a5fb4")));
+      rect(x + 3.5, hy + 0.5, 6, 1.4, A(col("#ff9933")));
+      rect(x + 3.5, hy + 1.9, 6, 1.4, A(col("#f4f4f4")));
+      rect(x + 3.5, hy + 3.3, 6, 1.4, A(col("#138808")));
+    } else if (lk === "aut") {
+      // a green Tyrolean hat with a red band and a feather, a moustache
+      disc(x - 1, hy - 5, 10, A(col(c.seed > 0.5 ? "#6a4a2a" : "#c8a060")), 5);
+      face();
+      rect(x - 1, hy + 4, 8, 1.8, A(col(c.seed > 0.5 ? "#6a4a2a" : "#a08040")));
+      rect(x - 12, hy - 9, 24, 2.4, A(col("#2e5a3a")));
+      quad4(x - 7, hy - 9, x + 7, hy - 9, x + 5, hy - 19, x - 5, hy - 19, A(col("#3a6a48")));
+      rect(x - 7, hy - 11, 14, 2, A(col("#b0303a")));
+      line(x + 5, hy - 11, x + 11, hy - 24, 1.2, A(col("#3a3a3a")));
+      line(x + 6, hy - 12, x + 12, hy - 22, 0.8, A(col("#f4f4f4")));
+    } else if (lk === "aut2") {
+      // fair hair in a braided crown, a little white edelweiss
+      disc(x - 1, hy - 5, 10, A(col(c.seed > 0.5 ? "#e0c070" : "#8a5a30")), 5.5);
+      for (let i = 0; i < 8; i++)
+        disc(
+          x - 9 + i * 2.6,
+          hy - 9 - Math.sin((i / 7) * Math.PI) * 2.4,
+          1.6,
+          A(col(c.seed > 0.5 ? "#c8a050" : "#6a4020"))
+        );
+      face();
+      for (let i = 0; i < 5; i++) {
+        const a = (i / 5) * 6.283;
+        disc(x - 7 + Math.cos(a) * 1.6, hy - 10 + Math.sin(a) * 1.6, 0.9, A(col("#f8f8f0")));
+      }
+      disc(x - 7, hy - 10, 0.7, A(col("#ffd24d")));
+    } else if (lk === "ger" || lk === "ger2") {
+      // a German football fan: black, red and gold on the cheek (and a bobble hat for some)
+      disc(x - 1, hy - 6, 10, A(col(["#c8a060", "#6a4a2a", "#2a1a10"][Math.floor(c.seed * 3) % 3])), 5);
+      face();
+      rect(x + 3.5, hy + 0.5, 6, 1.4, A(col("#1a1a1a")));
+      rect(x + 3.5, hy + 1.9, 6, 1.4, A(col("#dd0000")));
+      rect(x + 3.5, hy + 3.3, 6, 1.4, A(col("#ffce00")));
+      if (lk === "ger2") {
+        disc(x, hy - 8, 11, A(col("#1a1a1a")), 6);
+        rect(x - 10, hy - 6, 20, 1.6, A(col("#dd0000")));
+        rect(x - 10, hy - 4.4, 20, 1.6, A(col("#ffce00")));
+        disc(x, hy - 15, 3.2, A(col("#dd0000")));
       }
     } else {
       // bafana fan: a decorated hard hat - the makarapa
@@ -21680,7 +21807,19 @@ function drawFlag(nation, x, y, w, h, t, ph, A) {
       band(0, 0.5, "#f4f4f4");
       band(0.5, 1, "#dc143c");
     } else if (nation === "fr") band(0, 1, um < 1 / 3 ? "#0055a4" : um < 2 / 3 ? "#ffffff" : "#ef4135");
-    else if (nation === "sc") {
+    else if (nation === "in") {
+      band(0, 1 / 3, "#ff9933");
+      band(1 / 3, 2 / 3, "#ffffff");
+      band(2 / 3, 1, "#138808");
+    } else if (nation === "at") {
+      band(0, 1 / 3, "#c8102e");
+      band(1 / 3, 2 / 3, "#ffffff");
+      band(2 / 3, 1, "#c8102e");
+    } else if (nation === "de") {
+      band(0, 1 / 3, "#000000");
+      band(1 / 3, 2 / 3, "#dd0000");
+      band(2 / 3, 1, "#ffce00");
+    } else if (nation === "sc") {
       band(0, 1, "#0065bd");
       for (const cc of [um, 1 - um]) band(Math.max(0, cc - 0.11), Math.min(1, cc + 0.11), "#ffffff");
     } // the saltire
@@ -21719,6 +21858,25 @@ function drawFlag(nation, x, y, w, h, t, ph, A) {
         band(0.5 - hh - 0.06, 0.5 + hh + 0.06, "#ffb81c");
         if (hh > 0.01) band(0.5 - hh, 0.5 + hh, "#000000");
       }
+    }
+  }
+  if (nation === "in") {
+    // the navy wheel (the Ashoka Chakra) in the middle of the white band, riding the wave
+    const dy = Math.sin(t * 6 + ph - 5 * 0.6) * 2.2 * 0.55,
+      cx = x + w / 2,
+      cy = y + dy + h / 2,
+      r = h * 0.13;
+    arc(cx, cy, r, 0, 6.283, Math.max(0.5, h * 0.03), A(col("#000080")), 16);
+    for (let k = 0; k < 8; k++) {
+      const a = (k / 8) * Math.PI;
+      line(
+        cx - Math.cos(a) * r,
+        cy - Math.sin(a) * r,
+        cx + Math.cos(a) * r,
+        cy + Math.sin(a) * r,
+        Math.max(0.3, h * 0.012),
+        A(col("#000080"))
+      );
     }
   }
 }
@@ -49157,7 +49315,7 @@ function drawEggs(g, s) {
 // THE VERSION (from v1.2.0, 5 October 2026): MAJOR.MINOR.PATCH - a new MINOR for a batch of new things, a new PATCH for
 // fixes and small touches - with the day it was made next to it. (Before this the versions were named after the date,
 // like v2026.10.05c.)
-const GAME_VERSION = "v1.3.4",
+const GAME_VERSION = "v1.3.5",
   GAME_DATE = "05.10.2026",
   VERSION_TEXT = GAME_VERSION + "  ·  " + GAME_DATE;
 const FB = '"Chakra Petch", "Segoe UI", sans-serif';
@@ -55006,6 +55164,14 @@ profWire();
 //  the game, and where the motion capture, the folk songs and the fonts come from. Both from the menu at any time.
 // =====================================================================================
 const NEWS = [
+  {
+    ver: "v1.3.5",
+    title: "NEW FANS, EASY TURBO",
+    items: [
+      "Indian, Austrian and German fans, each with their flag",
+      "Turbo run: just hold left or right (or tap twice)",
+    ],
+  },
   {
     ver: "v1.3.4",
     title: "EVERY STOP ITS OWN",

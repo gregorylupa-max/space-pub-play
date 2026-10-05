@@ -577,16 +577,30 @@ const hash = (n) => {
   return s - Math.floor(s);
 };
 // colours are parsed once and remembered (thousands are asked for every frame - no need to make new ones each time)
-const COLS = new Map();
+// (a colour with its own alpha is kept per colour, by alpha - no text joined together for every look-up)
+const COLS = new Map(),
+  COLSA = new Map                               ();
 const col = (hex, a = 1) => {
-  const key = a === 1 ? hex : hex + a;
-  let c = COLS.get(key);
-  if (c) return c;
-  if (COLS.size > 6000) COLS.clear();
-  const n = parseInt(hex.slice(1), 16);
-  c = [((n >> 16) & 255) / 255, ((n >> 8) & 255) / 255, (n & 255) / 255, a];
-  COLS.set(key, c);
-  return c;
+  let c = COLS.get(hex);
+  if (!c) {
+    if (COLS.size > 6000) COLS.clear();
+    const n = parseInt(hex.slice(1), 16);
+    c = [((n >> 16) & 255) / 255, ((n >> 8) & 255) / 255, (n & 255) / 255, 1];
+    COLS.set(hex, c);
+  }
+  if (a === 1) return c;
+  let by = COLSA.get(hex);
+  if (!by) {
+    if (COLSA.size > 3000) COLSA.clear();
+    COLSA.set(hex, (by = new Map()));
+  }
+  let ca = by.get(a);
+  if (!ca) {
+    if (by.size > 64) by.clear(); // (a colour fading smoothly asks for a new alpha every frame: don't hoard them)
+    ca = [c[0], c[1], c[2], a];
+    by.set(a, ca);
+  }
+  return ca;
 };
 // SPEED: colours with a new alpha come from a big ring of reusable arrays instead of a fresh array each time
 // (tens of thousands a second otherwise, and the garbage collector stutters). Every one is used straight away -
@@ -602,12 +616,17 @@ const withA = (c, a) => {
   o[3] = a;
   return o;
 };
-const mix = (c1, c2, t) => [
-  lerp(c1[0], c2[0], t),
-  lerp(c1[1], c2[1], t),
-  lerp(c1[2], c2[2], t),
-  lerp(c1[3], c2[3], t),
-];
+const MXR = Array.from({ length: 8192 }, () => [0, 0, 0, 0]);
+let mxi = 0;
+const mix = (c1, c2, t) => {
+  const o = MXR[mxi];
+  mxi = (mxi + 1) & 8191;
+  o[0] = lerp(c1[0], c2[0], t);
+  o[1] = lerp(c1[1], c2[1], t);
+  o[2] = lerp(c1[2], c2[2], t);
+  o[3] = lerp(c1[3], c2[3], t);
+  return o;
+};
 
 // =====================================================================================
 //  RENDERERS  -  the same small set of shapes, drawn two ways
@@ -6013,6 +6032,36 @@ function demoInput(dt) {
     if (P.x > pu.x + 4) inp.left = true;
     return inp;
   } // grab a power-up when it's quiet
+  // NOTHING TO DO (his bars are quiet): he never just stands there - he walks up the bar to pick up a tip, or to wipe the
+  // counter, and comes back (any real work and he drops it straight away)
+  const busy =
+    urgent >= 0 ||
+    !calm ||
+    P.pouring ||
+    customers.some(
+      (c) =>
+        mine(c.lane) &&
+        c.state === "walk" &&
+        shakesOn(c.lane) < customers.filter((d) => d.lane === c.lane && d.state === "walk").length
+    );
+  if (busy) {
+    P.wander = null;
+    P.demoIdle = 0;
+  } else if (!P.wander && P.x >= TAPX - 1) {
+    P.demoIdle = (P.demoIdle || 0) + dt;
+    if (P.demoIdle > 0.8) {
+      const tp = tips.find((u) => u.lane === P.lane && u.x > X0 + 60);
+      P.wander = { x: tp ? tp.x - 6 : rnd(TAPX - 230, TAPX - 90) };
+      P.demoIdle = 0;
+    }
+  }
+  if (P.wander) {
+    if (P.x > P.wander.x + 4) {
+      inp.left = true;
+      return inp;
+    }
+    P.wander = null;
+  }
   if (P.x < TAPX - 1 && !inp.left) {
     inp.right = true;
     return inp;
@@ -8712,7 +8761,15 @@ function startTwist() {
   G.twFreeze = false;
   G.flare = G.dark = G.sand = G.warp = 0;
   G.ls = null;
-  G.lsT = G.level >= 2 && Math.random() < 0.7 ? rnd(10, 26) : 1e9; // (load shedding comes early, on most stages) G.braai = venue() === 3 || G.event === "heritage" || hash(G.level * 2.17 + 0.3) < 0.4;   // (on some planets there's a braai going in the corner)   // (now and then, ESKOM LOAD SHEDDING)
+  // LOAD SHEDDING, BALANCED: about one stage in four (from stage 2) and never on two stages running - somewhere in the
+  // middle of the stage, 12 to 30 seconds in
+  {
+    const last = G.lsLevel ?? -9,
+      want = G.level >= 2 && Math.abs(G.level - last) >= 2 && Math.random() < 0.25;
+    G.lsT = want ? rnd(12, 30) : 1e9;
+    if (want) G.lsLevel = G.level;
+  }
+  G.braai = venue() === 3 || G.event === "heritage" || hash(G.level * 2.17 + 0.3) < 0.4; // (on some planets there's a braai going in the corner)   // (now and then, ESKOM LOAD SHEDDING)
   G.monkey = null;
   G.glutton = false;
   G.gluttonDone = false;
@@ -14963,7 +15020,19 @@ function ik(sx, sy, tx, ty, l1, l2, bend) {
     B = Math.acos(clamp((l1 * l1 + l2 * l2 - d * d) / (2 * l1 * l2), -1, 1));
   return [base - bend * A, bend * (Math.PI - B)];
 }
-const shade = (c, k) => [Math.min(1, c[0] * k), Math.min(1, c[1] * k), Math.min(1, c[2] * k), c[3]];
+// (from a ring of reusable colours, like withA: a shaded colour is always used straight away, so no fresh array is
+//  needed each time - thousands a frame otherwise, and the garbage collector made the show stutter)
+const SHR = Array.from({ length: 32768 }, () => [0, 0, 0, 0]);
+let shri = 0;
+const shade = (c, k) => {
+  const o = SHR[shri];
+  shri = (shri + 1) & 32767;
+  o[0] = Math.min(1, c[0] * k);
+  o[1] = Math.min(1, c[1] * k);
+  o[2] = Math.min(1, c[2] * k);
+  o[3] = c[3];
+  return o;
+};
 const INK = [0.05, 0.02, 0.09, 1];
 const LOOKS = {
   green: { skin: col("#7dff9a"), pants: col("#3a3a6a"), shoes: col("#202030") },
@@ -20449,8 +20518,10 @@ function drawShow(t) {
   R.setAdd(false);
 }
 
+const ARCP           = [];
 function arc(cx, cy, r, a0, a1, w, c, n = 12) {
-  const pts = [];
+  const pts = ARCP;
+  pts.length = 0; // (one reused list - polyline reads it straight away)
   for (let i = 0; i <= n; i++) {
     const a = a0 + ((a1 - a0) * i) / n;
     pts.push(cx + Math.cos(a) * r, cy + Math.sin(a) * r);
@@ -21918,18 +21989,28 @@ function spaceScenes(L, Rr, y0, yb, t, k, tall) {
 const lerpA = (a, b, f) => a + (b - a) * f,
   ease = (f) => (f < 0 ? 0 : f > 1 ? 1 : f * f * (3 - 2 * f));
 // people of every faith and background at prayer around the shrine: standing with hands together, kneeling, bowing low, hands raised
+// (worked out once for each colour and shade, then remembered - crowds ask for thousands every frame, and building the
+//  text afresh each time kept the garbage collector busy: little stutters in the full-screen show)
+const SHX = new Map                             ();
 const shadeHex = (h, m) => {
-  const c = col(h);
-  return (
-    "#" +
-    [0, 1, 2]
-      .map((i) =>
-        Math.round(Math.min(1, c[i] * m) * 255)
-          .toString(16)
-          .padStart(2, "0")
-      )
-      .join("")
-  );
+  let by = SHX.get(h);
+  if (!by) SHX.set(h, (by = new Map()));
+  let s = by.get(m);
+  if (s === undefined) {
+    const c = col(h);
+    s =
+      "#" +
+      [0, 1, 2]
+        .map((i) =>
+          Math.round(Math.min(1, c[i] * m) * 255)
+            .toString(16)
+            .padStart(2, "0")
+        )
+        .join("");
+    by.set(m, s);
+    if (by.size > 200) by.clear();
+  }
+  return s;
 };
 function prayers(S) {
   const { k, t, fade } = S,
@@ -28618,12 +28699,15 @@ function drawPulsarScene(L, Rr, T, B, f, t) {
       R.setAdd(false);
     }
 }
-const mixC = (a, b, f) => [
-  a[0] + (b[0] - a[0]) * f,
-  a[1] + (b[1] - a[1]) * f,
-  a[2] + (b[2] - a[2]) * f,
-  (a[3] ?? 1) + ((b[3] ?? 1) - (a[3] ?? 1)) * f,
-];
+const mixC = (a, b, f) => {
+  const o = MXR[mxi];
+  mxi = (mxi + 1) & 8191;
+  o[0] = a[0] + (b[0] - a[0]) * f;
+  o[1] = a[1] + (b[1] - a[1]) * f;
+  o[2] = a[2] + (b[2] - a[2]) * f;
+  o[3] = (a[3] ?? 1) + ((b[3] ?? 1) - (a[3] ?? 1)) * f;
+  return o;
+};
 function drawBlackHoleScene(L, Rr, T, B, f, t) {
   const w = Rr - L,
     h = B - T,
@@ -38929,10 +39013,15 @@ function freeLose(why, lane, x) {
 }
 function freeHud(g, s, fD) {
   if (!G.free || G.state !== "play") return;
-  g.font = fD(14);
-  g.textAlign = "center";
+  g.font = fD(12);
+  g.textAlign = "left";
+  g.textBaseline = "top";
   g.fillStyle = "#5ff5c8";
-  g.fillText("FREE PLAY  ·  SERVED " + G.freeServed + "  ·  NO LOSING!", cssW / 2, 84 * s);
+  g.fillText(
+    "FREE PLAY  ·  SERVED " + G.freeServed + "  ·  NO LOSING!",
+    14 * s,
+    14 * s + (twoP() ? 96 : 66) * s
+  ); // (under the score, like the other modes)
 }
 // ---- hooks ----
 function kids2Served(c, s, demo) {
@@ -42215,7 +42304,8 @@ function funPrint(p, t) {
 // =====================================================================================
 // an arc of an oval (arc() is always round)
 function arcE(cx, cy, rx, ry, a0, a1, w, c, n = 12) {
-  const pts = [];
+  const pts = ARCP;
+  pts.length = 0; // (one reused list - polyline reads it straight away)
   for (let i = 0; i <= n; i++) {
     const a = a0 + ((a1 - a0) * i) / n;
     pts.push(cx + Math.cos(a) * rx, cy + Math.sin(a) * ry);
@@ -48633,7 +48723,7 @@ function drawEggs(g, s) {
 // THE VERSION (from v1.2.0, 5 October 2026): MAJOR.MINOR.PATCH - a new MINOR for a batch of new things, a new PATCH for
 // fixes and small touches - with the day it was made next to it. (Before this the versions were named after the date,
 // like v2026.10.05c.)
-const GAME_VERSION = "v1.3.0",
+const GAME_VERSION = "v1.3.1",
   GAME_DATE = "05.10.2026",
   VERSION_TEXT = GAME_VERSION + "  ·  " + GAME_DATE;
 const FB = '"Chakra Petch", "Segoe UI", sans-serif';
@@ -54142,6 +54232,15 @@ profWire();
 // =====================================================================================
 const NEWS = [
   {
+    ver: "v1.3.1",
+    title: "SMOOTHER",
+    items: [
+      "No more little freezes in full screen",
+      "The demo barman keeps busy",
+      "Load shedding about one stage in four",
+    ],
+  },
+  {
     ver: "v1.3.0",
     title: "MORE FOR THE KIDS",
     items: [
@@ -54581,10 +54680,20 @@ let last = performance.now(),
   fps = 60;
 // AUTO QUALITY: if the machine can't keep up, step the extras down (fewer stars and dust, lighter CRT pass,
 // lower screen resolution) so the game itself stays smooth; step back up when there's room again.
+// (SETTLING DOWN: every change rebuilds the picture, which costs a moment - so it never flips back and forth. After a
+//  change it waits a few seconds before judging again; and each time it has to step back down after stepping up, it
+//  waits twice as long before trying to step up again - 15 s, 30 s, 1 min, 2 min, then 4 min at most)
 let slowN = 0,
-  fastN = 0;
+  fastN = 0,
+  qualCool = 0,
+  qualUpWait = 30,
+  qualUpAt = -1e9;
 function autoQuality(f) {
   if (document.hidden) return;
+  if (qualCool > 0) {
+    qualCool--;
+    return;
+  }
   if (f < 50) {
     slowN++;
     fastN = 0;
@@ -54596,11 +54705,15 @@ function autoQuality(f) {
   }
   if (slowN >= 4 && QUAL > 0) {
     QUAL--;
-    slowN = 0;
+    slowN = fastN = 0;
+    qualCool = 6;
+    if (performance.now() - qualUpAt < 90000) qualUpWait = Math.min(480, qualUpWait * 2); // (it just went up and couldn't keep it)
     resize();
-  } else if (fastN >= 30 && QUAL < 2) {
+  } else if (fastN >= qualUpWait && QUAL < 2) {
     QUAL++;
-    fastN = 0;
+    slowN = fastN = 0;
+    qualCool = 6;
+    qualUpAt = performance.now();
     resize();
   }
 }

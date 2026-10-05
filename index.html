@@ -82,6 +82,22 @@ button.wide { grid-column: 1 / -1; }
 #jbList .jbHead { grid-column: 1 / -1; font: 700 14px/1.2 var(--body); letter-spacing: .12em; color: var(--amber, #ffc34d); padding: 14px 4px 4px; border-bottom: 1px solid rgba(255,195,77,.4); }
 #jbList .jbJump { grid-column: 1 / -1; }
 #jukebox .buttons:last-child { grid-template-columns: 1fr 1fr; }
+/* the coin shop: each price as a little badge in the corner (v1.2.0) */
+#shItems button, #shDecor button { position: relative; padding-right: 50px; }
+#shItems .price, #shDecor .price { position: absolute; right: 8px; top: 7px; padding: 1px 7px; border-radius: 999px; font-size: 11px; font-weight: 800; color: var(--amber, #ffc34d); background: rgba(255,195,77,.14); white-space: nowrap; }
+#shDecor .price.own { color: #5ff5c8; background: rgba(95,245,200,.14); }
+/* the game-over results, as a small table (v1.2.0) */
+.stats { display: grid; grid-template-columns: auto auto auto; gap: 3px 14px; justify-content: center; align-items: baseline; margin: 4px 0 8px; font-size: 13px; }
+.stats .lbl { text-align: right; opacity: .72; letter-spacing: .06em; font-weight: 700; }
+.stats .val { font-weight: 800; color: #fff6e8; }
+.stats .note { opacity: .6; font-size: 12px; }
+.stats .note.new { opacity: 1; color: var(--amber, #ffc34d); font-weight: 800; }
+#overInfo:empty { display: none; }
+/* the menu's two big doors (v2026.10.05d), and the section headings inside SETTINGS and PLAY MORE */
+#menu button.big { min-height: 58px; font-size: 16px; letter-spacing: .1em; }
+.panel .buttons h3.sec { grid-column: 1 / -1; margin: 10px 2px 0; font-size: 12px; letter-spacing: .14em; color: var(--amber, #ffc34d); opacity: .9; text-align: left; }
+.panel .buttons h3.sec:first-child { margin-top: 0; }
+#settings, #more { max-height: calc(100% - 32px); overflow-y: auto; }
 /* LANGUAGE: pick one straight away (v2026.10.05c) - the one in use is lit */
 .langRow { grid-column: 1 / -1; display: flex; gap: 6px; align-items: center; }
 .langRow .lbl { font-size: 12px; font-weight: 700; letter-spacing: .08em; opacity: .85; padding: 0 4px; white-space: nowrap; }
@@ -183,8 +199,18 @@ body.retro .table { font-size: 10px; gap: 5px; }
   #sbList, #wdHats, #wdPets { grid-template-columns: 1fr 1fr 1fr; } #sbList button small { display: none; }
 }
 @media (max-height: 520px) { .panel { top: 50%; gap: 9px; padding: 16px 20px; } .tag, .controls { display: none; } .logo { font-size: 40px; } }
+#boot { position: fixed; inset: 0; z-index: 9999; background: #07051a; display: flex; flex-direction: column; align-items: center;
+  justify-content: center; gap: 18px; color: #ffd76a; font: 700 clamp(28px, 7vw, 56px) "Courier New", monospace; letter-spacing: 4px;
+  transition: opacity .45s; text-shadow: 0 0 18px #ff7a3a88; }
+#boot span { font-size: clamp(13px, 2.6vw, 18px); color: #b9b3e6; letter-spacing: 3px; text-shadow: none; }
+#boot i { display: block; width: 46px; height: 46px; border-radius: 50%; border: 4px solid #2c2556; border-top-color: #ffd76a;
+  animation: bootSpin .9s linear infinite; }
+#boot.gone { opacity: 0; pointer-events: none; }
+@keyframes bootSpin { to { transform: rotate(360deg); } }
 </style>
 
+<div id="boot"><b>SPACE PUB</b><i></i><span id="bootTxt">LOADING…</span></div>
+<script>try { var bl = JSON.parse(localStorage.getItem("craterrun.lang")); if (bl === "af") document.getElementById("bootTxt").textContent = "LAAI…"; else if (bl === "pl") document.getElementById("bootTxt").textContent = "WCZYTYWANIE…"; } catch (e) {}</script>
 <div id="stage"><canvas id="hud"></canvas></div>
 
 <div id="topbtns" hidden>
@@ -209,44 +235,68 @@ body.retro .table { font-size: 10px; gap: 5px; }
     <button id="bFrom" class="wide">START AT LEVEL: <b id="vFrom">1</b> <kbd>S</kbd></button>
     <button id="bChar" class="wide">BARTENDER: <b id="vChar">JACK</b> <kbd>B</kbd></button>
     <button id="bDaily" class="wide">DAILY CHALLENGE: <b id="vDaily"></b></button>
-    <button id="bWard">HATS &amp; PETS <b id="vWard"></b></button>
-    <button id="bStickers">STICKER BOOK <b id="vStickers"></b></button>
-    <button id="bShop">COIN SHOP <b id="vShop"></b></button>
-    <button id="bTroph">TROPHIES <b id="vTroph"></b></button>
-    <button id="bEndless" class="wide">ENDLESS MODE <b id="vEndless"></b></button>
-    <button id="bTa">TIME ATTACK <b id="vTa"></b></button>
-    <button id="bRush">BOSS RUSH <b id="vRush"></b></button>
-    <button id="bMap">GALAXY MAP <b id="vMap"></b></button>
-    <button id="bCup">CUP TOURNAMENT <b id="vCup"></b></button>
-    <button id="bKeys" class="wide">CONTROLS: CHOOSE YOUR KEYS</button>
+    <button id="bMore" class="big">★ PLAY MORE</button>
+    <button id="bSettings" class="big">⚙ SETTINGS</button>
     <button id="bNews" class="wide">WHAT'S NEW &amp; CREDITS</button>
-    <button id="bOneBtn">ONE-BUTTON: <b id="vOneBtn">OFF</b></button>
-    <button id="bBreak">BREAK REMINDER: <b id="vBreak">OFF</b></button>
-    <button id="bCalm">CALM MODE: <b id="vCalm">OFF</b></button>
-    <button id="bShapes">FLAVOUR SHAPES: <b id="vShapes">OFF</b></button>
-    <button id="bBuzz">VIBRATION: <b id="vBuzz">ON</b></button>
-    <button id="bVoice">VOICE: <b id="vVoice">OFF</b></button>
-    <button id="bTxt">TEXT SIZE: <b id="vTxt">NORMAL</b></button>
-    <button id="bLefty">LEFT-HANDED: <b id="vLefty">OFF</b></button>
-    <button id="bHoliday" class="wide">HOLIDAY: <b id="vHoliday">BY DATE</b></button>
-    <button id="bContSet" class="wide">CONTINUE AFTER GAME OVER: <b id="vContSet">ON</b></button>
-    <button id="bPour">POUR: <b id="vPour">HOLD</b> <kbd>T</kbd></button>
-    <button id="bLayout">LAYOUT: <b id="vLayout">AUTO</b> <kbd>V</kbd></button>
-    <button id="bLook" class="wide">LOOK: <b id="vLook"></b> <kbd>L</kbd></button>
-    <button id="bCrt" class="wide">SCREEN: <b id="vCrt"></b> <kbd>C</kbd></button>
-    <button id="bGfx" class="wide">GRAPHICS: <b id="vGfx"></b> <kbd>G</kbd></button>
-    <div id="langRow" class="langRow"><span class="lbl">LANGUAGE:</span><button data-lang="en" lang="en">ENGLISH</button><button data-lang="af" lang="af">AFRIKAANS</button><button data-lang="pl" lang="pl">POLSKI</button></div>
-    <button id="bSound">SOUND: <b id="vSound"></b> <kbd>M</kbd></button>
-    <button id="bMusic">MUSIC: <b id="vMusic"></b> <kbd>N</kbd></button>
-    <button id="bVolM">MUSIC VOLUME <b class="vVolM"></b></button>
-    <button id="bVolF">EFFECTS VOLUME <b class="vVolF"></b></button>
-    <label class="add" for="musicFiles" tabindex="0">+ ADD YOUR MUSIC</label>
-    <button id="bJuke">MUSIC BOX <kbd>J</kbd></button>
     <button id="bFull">FULL SCREEN <kbd>F</kbd></button>
     <button id="bExit">EXIT GAME</button>
     <button id="bCold" class="wide" title="Start again from the very beginning, like switching it on: back to the demo (F8). Your stars, coins and settings are kept.">↻ COLD START</button>
   </div>
   <input id="musicFiles" type="file" accept="audio/*,.mp3,.m4a,.ogg,.wav" multiple hidden>
+</section>
+
+<section id="more" class="panel" hidden aria-label="Play more">
+  <h2>★ PLAY MORE</h2>
+  <p class="tag">Other ways to play - and everything you've collected.</p>
+  <div class="buttons">
+    <h3 class="sec">MORE WAYS TO PLAY</h3>
+    <button id="bEndless" class="wide">ENDLESS MODE <b id="vEndless"></b></button>
+    <button id="bTa">TIME ATTACK <b id="vTa"></b></button>
+    <button id="bRush">BOSS RUSH <b id="vRush"></b></button>
+    <button id="bMap">GALAXY MAP <b id="vMap"></b></button>
+    <button id="bCup">CUP TOURNAMENT <b id="vCup"></b></button>
+    <h3 class="sec">YOUR COLLECTION</h3>
+    <button id="bWard">HATS &amp; PETS <b id="vWard"></b></button>
+    <button id="bStickers">STICKER BOOK <b id="vStickers"></b></button>
+    <button id="bShop">COIN SHOP <b id="vShop"></b></button>
+    <button id="bTroph">TROPHIES <b id="vTroph"></b></button>
+    <button id="bJuke" class="wide">MUSIC BOX <kbd>J</kbd></button>
+  </div>
+  <div class="profRow"><button id="moreBack" class="primary">DONE <kbd>Esc</kbd></button></div>
+</section>
+
+<section id="settings" class="panel" hidden aria-label="Settings">
+  <h2>⚙ SETTINGS</h2>
+  <div class="buttons">
+    <h3 class="sec">SOUND AND MUSIC</h3>
+    <button id="bSound">SOUND: <b id="vSound"></b> <kbd>M</kbd></button>
+    <button id="bMusic">MUSIC: <b id="vMusic"></b> <kbd>N</kbd></button>
+    <button id="bVolM">MUSIC VOLUME <b class="vVolM"></b></button>
+    <button id="bVolF">EFFECTS VOLUME <b class="vVolF"></b></button>
+    <button id="bVolB">BACKGROUND SOUNDS <b class="vVolB"></b></button>
+    <button id="bVoice">VOICE: <b id="vVoice">OFF</b></button>
+    <label class="add" for="musicFiles" tabindex="0">+ ADD YOUR MUSIC</label>
+    <h3 class="sec">LANGUAGE</h3>
+    <div id="langRow" class="langRow"><button data-lang="en" lang="en">ENGLISH</button><button data-lang="af" lang="af">AFRIKAANS</button><button data-lang="pl" lang="pl">POLSKI</button></div>
+    <h3 class="sec">SCREEN</h3>
+    <button id="bLook" class="wide">LOOK: <b id="vLook"></b> <kbd>L</kbd></button>
+    <button id="bCrt" class="wide">SCREEN: <b id="vCrt"></b> <kbd>C</kbd></button>
+    <button id="bGfx" class="wide">GRAPHICS: <b id="vGfx"></b> <kbd>G</kbd></button>
+    <button id="bLayout">LAYOUT: <b id="vLayout">AUTO</b> <kbd>V</kbd></button>
+    <button id="bTxt">TEXT SIZE: <b id="vTxt">NORMAL</b></button>
+    <h3 class="sec">PLAYING</h3>
+    <button id="bPour">POUR: <b id="vPour">HOLD</b> <kbd>T</kbd></button>
+    <button id="bOneBtn">ONE-BUTTON: <b id="vOneBtn">OFF</b></button>
+    <button id="bLefty">LEFT-HANDED: <b id="vLefty">OFF</b></button>
+    <button id="bBuzz">VIBRATION: <b id="vBuzz">ON</b></button>
+    <button id="bContSet" class="wide">CONTINUE AFTER GAME OVER: <b id="vContSet">ON</b></button>
+    <button id="bKeys" class="wide">CONTROLS: CHOOSE YOUR KEYS</button>
+    <h3 class="sec">COMFORT</h3>
+    <button id="bCalm">CALM MODE: <b id="vCalm">OFF</b></button>
+    <button id="bShapes">FLAVOUR SHAPES: <b id="vShapes">OFF</b></button>
+    <button id="bBreak">BREAK REMINDER: <b id="vBreak">OFF</b></button>
+    <button id="bHoliday" >HOLIDAY: <b id="vHoliday">BY DATE</b></button>
+  </div>
   <p class="info" id="musicInfo" style="min-height:0" hidden></p>
   <p class="info" id="gfxInfo"></p>
   <div class="controls" aria-label="Controls">
@@ -277,7 +327,9 @@ body.retro .table { font-size: 10px; gap: 5px; }
   </div>
   <p class="hint" id="turnHint" hidden>Tip: turn your phone sideways for a bigger view.</p>
   <ol class="table" id="hiTable"></ol>
+  <div class="profRow"><button id="setBack" class="primary">DONE <kbd>Esc</kbd></button></div>
 </section>
+
 
 <section id="chars" class="panel side" hidden aria-label="Choose your bartender">
   <h2 id="csTitle">CHOOSE YOUR BARTENDER</h2>
@@ -393,6 +445,7 @@ body.retro .table { font-size: 10px; gap: 5px; }
     <button id="pMusic">MUSIC: <b id="vMusic2"></b></button>
     <button id="pVolM">MUSIC VOLUME <b class="vVolM"></b></button>
     <button id="pVolF">EFFECTS VOLUME <b class="vVolF"></b></button>
+    <button id="pVolB">BACKGROUND SOUNDS <b class="vVolB"></b></button>
     <button id="pFull">FULL SCREEN <kbd>F</kbd></button>
     <button id="pQuit" class="wide">QUIT TO MENU</button>
     <button id="pReset" class="wide">↻ COLD START (BACK TO THE DEMO)</button>
@@ -405,6 +458,7 @@ body.retro .table { font-size: 10px; gap: 5px; }
   <h2>GAME OVER</h2>
   <p class="big" id="overScore"></p>
   <p class="info" id="overInfo"></p>
+  <div class="stats" id="overStats"></div>
   <form class="name" id="nameForm" hidden>
     <label for="nameIn">Your initials for the high-score table</label>
     <div class="row"><input id="nameIn" maxlength="3" autocomplete="off" spellcheck="false"><button type="submit" id="nameSave">SAVE</button></div>
@@ -468,6 +522,22 @@ const PROFILE = (() => {
     return "main";
   }
 })();
+// RESTART THE PAGE (cold start, a new language, another profile) - with the LOADING screen up straight away, so it never
+// looks frozen while the game loads again
+function reloadGame(delay = 0) {
+  const go = () => {
+    const b = document.getElementById("boot");
+    if (b) b.remove();
+    const d = document.createElement("div");
+    d.id = "boot";
+    d.innerHTML =
+      "<b>SPACE PUB</b><i></i><span>" + (typeof T === "function" ? T("LOADING…") : "LOADING…") + "</span>";
+    document.body.appendChild(d);
+    setTimeout(() => location.reload(), 60);
+  };
+  if (delay > 0) setTimeout(go, delay);
+  else go();
+}
 const storeKey = (k) =>
   PROFILE !== "main" && PROFILE_KEYS.has(k) ? "craterrun.p." + PROFILE + "." + k : "craterrun." + k;
 const store = {
@@ -1795,6 +1865,8 @@ const DICT_ROWS                             = [
   ["YOUR MUSIC", "JOU MUSIEK", "TWOJA MUZYKA"],
   ["MUSIC VOLUME", "MUSIEK-VOLUME", "GŁOŚNOŚĆ MUZYKI"],
   ["EFFECTS VOLUME", "EFFEKTE-VOLUME", "GŁOŚNOŚĆ EFEKTÓW"],
+  ["BACKGROUND SOUNDS", "AGTERGRONDGELUIDE", "DŹWIĘKI TŁA"],
+  ["LOADING…", "LAAI…", "WCZYTYWANIE…"],
   ["+ ADD YOUR MUSIC", "+ VOEG JOU MUSIEK BY", "+ DODAJ SWOJĄ MUZYKĘ"],
   ["MUSIC BOX", "MUSIEKDOOS", "SZAFA GRAJĄCA"],
   ["FULL SCREEN", "VOLSKERM", "PEŁNY EKRAN"],
@@ -2125,6 +2197,99 @@ const DICT_ROWS                             = [
   ["2.5 MILLION LIGHT-YEARS AWAY", "2,5 MILJOEN LIGJARE VER", "2,5 MILIONA LAT ŚWIETLNYCH STĄD"],
   ["2.5 MILLION LIGHT-YEARS", "2,5 MILJOEN LIGJARE", "2,5 MILIONA LAT ŚWIETLNYCH"],
   ["THE SUN", "DIE SON", "SŁOŃCE"],
+  // the space events' captions (v1.2.0)
+  [
+    "A TOTAL ECLIPSE: THE MOON SLIDES IN FRONT OF THE SUN",
+    "'N VOLLE SONSVERDUISTERING: DIE MAAN GLY VOOR DIE SON IN",
+    "CAŁKOWITE ZAĆMIENIE: KSIĘŻYC WSUWA SIĘ PRZED SŁOŃCE",
+  ],
+  [
+    "THE SUN IS ABOUT 400 TIMES WIDER THAN THE MOON - AND ABOUT 400 TIMES FARTHER AWAY",
+    "DIE SON IS SOWAT 400 KEER BREËR AS DIE MAAN - EN SOWAT 400 KEER VERDER WEG",
+    "SŁOŃCE JEST OKOŁO 400 RAZY SZERSZE OD KSIĘŻYCA - I OKOŁO 400 RAZY DALEJ",
+  ],
+  [
+    "TOTALITY! THE SUN'S PEARLY CORONA SHINES OUT",
+    "VOLLEDIG! DIE SON SE PÊRELKORONA SKYN UIT",
+    "ZAĆMIENIE PEŁNE! ŚWIECI PERŁOWA KORONA SŁOŃCA",
+  ],
+  ["...AND THE SUNLIGHT COMES BACK", "...EN DIE SONLIG KOM TERUG", "...I ŚWIATŁO SŁOŃCA WRACA"],
+  ["SUNRISE, SEEN FROM SPACE", "SONOPKOMS, GESIEN UIT DIE RUIMTE", "WSCHÓD SŁOŃCA WIDZIANY Z KOSMOSU"],
+  [
+    "THAT THIN BLUE LINE IS ALL THE AIR THE PLANET HAS",
+    "DAARDIE DUN BLOU LYN IS AL DIE LUG WAT DIE PLANEET HET",
+    "TA CIENKA NIEBIESKA LINIA TO CAŁE POWIETRZE PLANETY",
+  ],
+  [
+    "ON THE SPACE STATION THE SUN RISES ABOUT 16 TIMES A DAY",
+    "OP DIE RUIMTESTASIE KOM DIE SON SOWAT 16 KEER PER DAG OP",
+    "NA STACJI KOSMICZNEJ SŁOŃCE WSCHODZI OKOŁO 16 RAZY NA DOBĘ",
+  ],
+  [
+    "A PULSAR: A DEAD STAR ONLY ABOUT 20 KM ACROSS",
+    "'N PULSAR: 'N DOOIE STER NET SOWAT 20 KM BREED",
+    "PULSAR: MARTWA GWIAZDA O ŚREDNICY ZALEDWIE OKOŁO 20 KM",
+  ],
+  [
+    "IT SPINS, SWEEPING TWO BEAMS ROUND LIKE A LIGHTHOUSE",
+    "DIT TOL EN SWAAI TWEE LIGSTRALE ROND SOOS 'N VUURTORING",
+    "WIRUJE, OMIATAJĄC DWOMA PROMIENIAMI JAK LATARNIA MORSKA",
+  ],
+  [
+    "SOME SPIN HUNDREDS OF TIMES A SECOND",
+    "SOMMIGE TOL HONDERDE KERE PER SEKONDE",
+    "NIEKTÓRE OBRACAJĄ SIĘ SETKI RAZY NA SEKUNDĘ",
+  ],
+  [
+    "A BLACK HOLE: GRAVITY SO STRONG THAT NOT EVEN LIGHT GETS OUT",
+    "'N SWART GAT: SWAARTEKRAG SO STERK DAT SELFS LIG NIE UITKOM NIE",
+    "CZARNA DZIURA: GRAWITACJA TAK SILNA, ŻE NAWET ŚWIATŁO NIE UCIEKNIE",
+  ],
+  [
+    "HOT GAS SWIRLS ROUND IT IN A GLOWING DISC",
+    "WARM GAS DRAAI DAAROM IN 'N GLOEIENDE SKYF",
+    "GORĄCY GAZ WIRUJE WOKÓŁ NIEJ W ŚWIECĄCYM DYSKU",
+  ],
+  [
+    "GET TOO CLOSE AND YOU'RE STRETCHED LIKE SPAGHETTI!",
+    "KOM TE NABY EN JY WORD UITGEREK SOOS SPAGETTI!",
+    "PODEJDŹ ZA BLISKO, A ROZCIĄGNIE CIĘ JAK SPAGHETTI!",
+  ],
+  ["A GIANT STAR FLICKERS...", "'N REUSESTER FLIKKER...", "OLBRZYMIA GWIAZDA MIGOCZE..."],
+  ["...AND EXPLODES: A SUPERNOVA!", "...EN ONTPLOF: 'N SUPERNOVA!", "...I WYBUCHA: SUPERNOWA!"],
+  [
+    "FOR A FEW WEEKS IT CAN OUTSHINE A WHOLE GALAXY",
+    "VIR 'N PAAR WEKE KAN DIT 'N HELE STERRESTELSEL OORSKADU",
+    "PRZEZ KILKA TYGODNI MOŻE ŚWIECIĆ JAŚNIEJ NIŻ CAŁA GALAKTYKA",
+  ],
+  [
+    "MUCH OF THE IRON IN YOUR BLOOD WAS MADE IN EXPLODING STARS",
+    "BAIE VAN DIE YSTER IN JOU BLOED IS IN ONTPLOFFENDE STERRE GEMAAK",
+    "WIELE ŻELAZA W TWOJEJ KRWI POWSTAŁO W WYBUCHAJĄCYCH GWIAZDACH",
+  ],
+  // the game-over table (v1.2.0)
+  ["HIGH SCORE", "BESTE TELLING", "REKORD"],
+  ["LEVEL", "VLAK", "POZIOM"],
+  ["PERFECT STREAK", "PERFEKTE REEKS", "SERIA IDEALNYCH"],
+  ["BEST COMBO", "BESTE KOMBO", "NAJLEPSZE KOMBO"],
+  ["SERVED", "BEDIEN", "OBSŁUŻONO"],
+  ["NEW HIGH SCORE!", "NUWE BESTE TELLING!", "NOWY REKORD!"],
+  ["NEW RECORD!", "NUWE REKORD!", "NOWY REKORD!"],
+  // the simpler menu (v2026.10.05d)
+  ["★ PLAY MORE", "★ SPEEL MEER", "★ WIĘCEJ GRANIA"],
+  ["⚙ SETTINGS", "⚙ INSTELLINGS", "⚙ USTAWIENIA"],
+  [
+    "Other ways to play - and everything you've collected.",
+    "Ander maniere om te speel - en alles wat jy al versamel het.",
+    "Inne sposoby gry - i wszystko, co już zebrałeś.",
+  ],
+  ["MORE WAYS TO PLAY", "MEER MANIERE OM TE SPEEL", "WIĘCEJ SPOSOBÓW GRY"],
+  ["YOUR COLLECTION", "JOU VERSAMELING", "TWOJA KOLEKCJA"],
+  ["SOUND AND MUSIC", "KLANK EN MUSIEK", "DŹWIĘK I MUZYKA"],
+  ["LANGUAGE", "TAAL", "JĘZYK"],
+  ["SCREEN", "SKERM", "EKRAN"],
+  ["PLAYING", "SPEEL", "GRA"],
+  ["COMFORT", "GEMAK", "WYGODA"],
   // the neutron star's story (v2026.10.05c)
   [
     "A SUPERGIANT STAR - MANY TIMES HEAVIER THAN THE SUN",
@@ -2263,6 +2428,7 @@ const DICT_PAT                             = [
     "SZTURM NA BOSSÓW: POKONANO $1 Z $2",
   ],
   [/^BEST (\d+:[\d.]+)$/, "BESTE $1", "REKORD $1"],
+  [/^RECORD (\d+)$/, "REKORD $1", "REKORD $1"],
   [
     /^LEVEL (\d+) CLEAR!(\s+\+\d+)(\s+)PERFECT SERVICE!$/,
     "VLAK $1 KLAAR!$2$3PERFEKTE DIENS!",
@@ -2420,7 +2586,7 @@ function setLang(l) {
   sfx("click");
   if (l === LANG) return;
   store.set("lang", l);
-  setTimeout(() => location.reload(), 120);
+  reloadGame(120);
 }
 // =====================================================================================
 //  CONTROLS - CHOOSE YOUR OWN KEYS (v2026.10.04ar). For each player: up, down, run left, run right, pour, holy water,
@@ -5638,7 +5804,7 @@ function update(dt) {
     G.churchT = (G.churchT ?? rnd(40, 90)) - dt;
     if (G.churchT <= 0) {
       G.churchT = rnd(100, 170);
-      sfx("churchbells", PW * 0.15);
+      bgSfx("churchbells", PW * 0.15);
       if (!G.churchHint) {
         G.churchHint = true;
         G.callouts.push({
@@ -6807,7 +6973,7 @@ function update(dt) {
     sfx("hypno");
   }
   G.mind = mindNow;
-  if (venue() === 6 && G.time % 7 < dt) sfx("thunder", rnd(0, PW));
+  if (venue() === 6 && G.time % 7 < dt) bgSfx("thunder", rnd(0, PW));
   if (venue() === 3 && Math.random() < dt * 5)
     emit({
       kind: "puff",
@@ -9632,6 +9798,7 @@ function gameOver() {
     store.set("hi", G.hi);
   }
   $("overScore").textContent = "SCORE " + String(G.score).padStart(6, "0");
+  // the headline: who won (two players), or the whole galaxy conquered - the numbers go in the table below
   $("overInfo").textContent =
     (twoP()
       ? G.versus
@@ -9643,30 +9810,41 @@ function gameOver() {
           ".  "
         : "Team score: P1 " + P1.score + " + P2 " + P2.score + ".  "
       : "") +
-    (best ? "New high score! " : "High score " + String(G.hi).padStart(6, "0") + ". ") +
-    (G.won
-      ? "YOU CONQUERED THE SOLAR SYSTEM AND THE GALAXY! All " + LAST_LEVEL + " bars served."
-      : "You reached level " + G.level + " at the " + titleCase(here().name) + ".");
+    (G.won ? "YOU CONQUERED THE SOLAR SYSTEM AND THE GALAXY! All " + LAST_LEVEL + " bars served." : "");
   {
-    // YOUR RECORDS (an idea from Paddle Wars' record rally): best perfect-pour streak, best combo, most served in one game
+    // THE RESULTS (v1.2.0: a little table instead of one long line) - and YOUR RECORDS (an idea from Paddle Wars'
+    // record rally): best perfect-pour streak, best combo, most served in one game
     const R0 = store.get("records", {}),
       served = (G.servedAll || 0) - (G.runServed0 ?? 0),
       now = { perf: G.runPerf || 0, combo: G.runCombo || 0, served },
-      out = [],
-      R1 = { ...R0 };
+      R1 = { ...R0 },
+      rows                                      = [
+        ["HIGH SCORE", String(G.hi).padStart(6, "0"), best ? "NEW HIGH SCORE!" : "", best],
+        ["LEVEL", G.level + "  ·  " + titleCase(here().name), "", false],
+      ];
     for (const [k, label] of [
       ["perf", "PERFECT STREAK"],
       ["combo", "BEST COMBO"],
       ["served", "SERVED"],
     ]) {
-      const nw = now[k] > (R0[k] || 0);
-      if (nw) R1[k] = now[k];
-      out.push(
-        label + " " + now[k] + (nw && now[k] > 0 ? " - NEW RECORD!" : "  (record " + (R0[k] || 0) + ")")
-      );
+      const nw = now[k] > (R0[k] || 0) && now[k] > 0;
+      if (now[k] > (R0[k] || 0)) R1[k] = now[k];
+      rows.push([label, String(now[k]), nw ? "NEW RECORD!" : "RECORD " + (R0[k] || 0), nw]);
     }
     store.set("records", R1);
-    $("overInfo").textContent += "   ·   " + out.join("   ·   ");
+    const box = $("overStats");
+    box.innerHTML = "";
+    for (const [l, v, n, nw] of rows)
+      for (const [cls, txt] of [
+        ["lbl", l],
+        ["val", v],
+        ["note" + (nw ? " new" : ""), n],
+      ]) {
+        const d = document.createElement("span");
+        d.className = cls;
+        d.textContent = txt;
+        box.appendChild(d);
+      }
   }
   const table = store.get("scores", []),
     makes = G.score > 0 && (table.length < 20 || G.score > table[table.length - 1].s);
@@ -9680,7 +9858,9 @@ function gameOver() {
     const sv = contOn() && !G.won && contSave();
     $("oCont").hidden = !sv;
     if (sv) $("vOCont").textContent = "STAGE " + sv.level;
-    if (G.contN) $("overInfo").textContent += "   ·   CONTINUES USED: " + G.contN;
+    if (G.contN)
+      $("overInfo").textContent +=
+        ($("overInfo").textContent ? "   ·   " : "") + "CONTINUES USED: " + G.contN;
     funMenuText();
   }
   // after a cup match: the match result, and the way back to the bracket
@@ -9688,6 +9868,7 @@ function gameOver() {
   $("oMenu").textContent = cupM ? "BACK TO THE CUP ▶" : "MENU";
   if (cupM) {
     $("oCont").hidden = true;
+    $("overStats").innerHTML = ""; // (a cup match: just the match result)
     $("overInfo").textContent =
       cupM.w +
       " WINS THE MATCH!   " +
@@ -12601,7 +12782,7 @@ function skyTraffic(L, Rr, y0, yb, t, v) {
     if (!busy && turn("e53_19", e, 16)) {
       const sx = L - 30 + (e.s / 16) * (w + 60),
         sy = y0 + 20 + e.s * 1.5;
-      once("sputnik", e.n, () => sfx("sputnik", 480));
+      once("sputnik", e.n, () => bgSfx("sputnik", 480));
       if (inSky(sx, sy, 6)) {
         disc(sx + px, sy + py, 4.5, col("#c8ccd8"));
         disc(sx + px - 1.2, sy + py - 1.2, 2, col("#ffffff"));
@@ -12730,7 +12911,7 @@ function skyTraffic(L, Rr, y0, yb, t, v) {
   {
     const c = cyc(26, 3);
     if (!busy && turn("meteor", c, 6)) {
-      once("meteor", c.n, () => sfx("meteors", PW / 2));
+      once("meteor", c.n, () => bgSfx("meteors", PW / 2));
       R.setAdd(true);
       for (let i = 0; i < (LOW() ? 14 : 30); i++) {
         const st = hash(i * 3.3 + c.n) * 5,
@@ -12771,7 +12952,7 @@ function skyTraffic(L, Rr, y0, yb, t, v) {
   if (!busy) {
     const c = cyc(29, 9);
     if (turn("c29_9", c, 8)) {
-      once("rocket", c.n, () => sfx("rocket", L + 80));
+      once("rocket", c.n, () => bgSfx("rocket", L + 80));
       const k = c.s / 8,
         x = L - 40 + k * (w + 80) + px,
         y = yb(x) - 6 - k * ym(x) * 0.9 + py,
@@ -12805,7 +12986,7 @@ function skyTraffic(L, Rr, y0, yb, t, v) {
   if (!busy) {
     const c = cyc(21, 1);
     if (turn("c21_1", c, 13)) {
-      once("ufo", c.n, () => sfx("ufo", L + 40));
+      once("ufo", c.n, () => bgSfx("ufo", L + 40));
       const s = c.s,
         hover = s > 5 && s < 8.5,
         cx = L + w * 0.18 + hash(c.n) * w * 0.5;
@@ -12841,7 +13022,7 @@ function skyTraffic(L, Rr, y0, yb, t, v) {
           }
           R.setAdd(false);
         }
-        if (Math.abs(s - 5.02) < 0.05) once("heist", c.n, () => sfx("beam", x));
+        if (Math.abs(s - 5.02) < 0.05) once("heist", c.n, () => bgSfx("beam", x));
       }
       if (hover) {
         const bb = heist ? y + 70 : yb(x) - 4;
@@ -23835,7 +24016,7 @@ function basilica(S) {
     R.setAdd(false);
   } // a hymn rising
   if (!(G.demo || G.state === "menu") && ph > 12 && ph < 12 + 1 / 30 && typeof sfx === "function") {
-    sfx("pilgrims", bx);
+    bgSfx("pilgrims", bx);
     if (typeof SPACE_FX !== "undefined" && AC) SPACE_FX.bells(fxOut(bx), AC.currentTime);
   }
 }
@@ -25235,6 +25416,7 @@ function hijack(S) {
       uy = cy + Math.sin(t * 3) * 2 * k,
       beam = (ph > 9.6 && ph < 12.8) || (ph > 17.2 && ph < 20.3) ? 1 : 0;
     drawSaucer(ux, uy, k, S.fade, t, beam);
+    if (S.big && beam) showSfx("ufo", "hijack" + (ph > 15 ? 2 : 1)); // (in the full-screen show: its eerie hum)
     if (!gone && up > 0)
       for (const [i, x, y] of spots)
         floatingPilgrim(
@@ -27421,6 +27603,7 @@ function drawEclipse(L, Rr, T, B, f, t) {
     total = clamp(1 - d / (r * 0.18), 0, 1);
   const fade = Math.min(1, f * 6, (1 - f) * 6),
     bright = (1 - cover * 0.92) * fade;
+  if (cover > 0.9 && f < 0.6) showSfx("chime", "eclipse-total");
   R.setAdd(true);
   glow(sx, sy, r * 9, withA(col("#ffd890"), 0.22 * bright));
   glow(sx, sy, r * 3.2, withA(col("#fff0c0"), 0.5 * bright));
@@ -27597,20 +27780,66 @@ function drawSN(cx, cy, Rd, f, t, fade) {
   }
   R.setAdd(false);
 }
-// ---- A NEUTRON STAR IS BORN (v2026.10.05c): the whole story, in stages (the captions are in attract.ts, NSTAR_CAPS):
+// ---- A NEUTRON STAR IS BORN (v2026.10.05c): the whole story, in stages (its captions are in SPACE_CAPS below; attract.ts draws them):
 //      a supergiant boiling away, then a cut-away look inside - layer on layer, an iron core at the heart; the core
 //      collapses in a blink, BOUNCES, a shock wave races out - SUPERNOVA - and what's left is a neutron star: a dead star
 //      about 20 km across, spinning, its magnetic field looping round it, sweeping two beams like a lighthouse ----
-const NSTAR_CAPS                     = [
-  [0, "A SUPERGIANT STAR - MANY TIMES HEAVIER THAN THE SUN"],
-  [0.16, "INSIDE: LAYER UPON LAYER - AND AN IRON CORE THAT CAN'T BURN"],
-  [0.3, "THE CORE COLLAPSES IN A FRACTION OF A SECOND..."],
-  [0.4, "...AND BOUNCES! A SHOCK WAVE RACES OUT"],
-  [0.46, "SUPERNOVA!"],
-  [0.66, "LEFT BEHIND: A NEUTRON STAR - HEAVIER THAN THE SUN, BUT ONLY ABOUT 20 KM ACROSS"],
-  [0.81, "A SUGAR CUBE OF IT WOULD WEIGH ABOUT A BILLION TONNES"],
-  [0.91, "IT SPINS, FLASHING LIKE A LIGHTHOUSE: A PULSAR"],
-];
+// CAPTIONS FOR THE BIG SPACE EVENTS (v1.2.0): a few true, simple facts each, timed to what's on the screen
+// ([when, as a fraction of the event; the words] - drawn in attract.ts, translated in lang.ts)
+const SPACE_CAPS                                     = {
+  nstar: [
+    [0, "A SUPERGIANT STAR - MANY TIMES HEAVIER THAN THE SUN"],
+    [0.16, "INSIDE: LAYER UPON LAYER - AND AN IRON CORE THAT CAN'T BURN"],
+    [0.3, "THE CORE COLLAPSES IN A FRACTION OF A SECOND..."],
+    [0.4, "...AND BOUNCES! A SHOCK WAVE RACES OUT"],
+    [0.46, "SUPERNOVA!"],
+    [0.66, "LEFT BEHIND: A NEUTRON STAR - HEAVIER THAN THE SUN, BUT ONLY ABOUT 20 KM ACROSS"],
+    [0.81, "A SUGAR CUBE OF IT WOULD WEIGH ABOUT A BILLION TONNES"],
+    [0.91, "IT SPINS, FLASHING LIKE A LIGHTHOUSE: A PULSAR"],
+  ],
+  eclipse: [
+    [0, "A TOTAL ECLIPSE: THE MOON SLIDES IN FRONT OF THE SUN"],
+    [0.22, "THE SUN IS ABOUT 400 TIMES WIDER THAN THE MOON - AND ABOUT 400 TIMES FARTHER AWAY"],
+    [0.42, "TOTALITY! THE SUN'S PEARLY CORONA SHINES OUT"],
+    [0.6, "...AND THE SUNLIGHT COMES BACK"],
+  ],
+  sunrise: [
+    [0, "SUNRISE, SEEN FROM SPACE"],
+    [0.33, "THAT THIN BLUE LINE IS ALL THE AIR THE PLANET HAS"],
+    [0.62, "ON THE SPACE STATION THE SUN RISES ABOUT 16 TIMES A DAY"],
+  ],
+  pulsar: [
+    [0, "A PULSAR: A DEAD STAR ONLY ABOUT 20 KM ACROSS"],
+    [0.34, "IT SPINS, SWEEPING TWO BEAMS ROUND LIKE A LIGHTHOUSE"],
+    [0.66, "SOME SPIN HUNDREDS OF TIMES A SECOND"],
+  ],
+  blackhole: [
+    [0, "A BLACK HOLE: GRAVITY SO STRONG THAT NOT EVEN LIGHT GETS OUT"],
+    [0.33, "HOT GAS SWIRLS ROUND IT IN A GLOWING DISC"],
+    [0.6, "GET TOO CLOSE AND YOU'RE STRETCHED LIKE SPAGHETTI!"],
+  ],
+  supernova: [
+    [0, "A GIANT STAR FLICKERS..."],
+    [0.22, "...AND EXPLODES: A SUPERNOVA!"],
+    [0.45, "FOR A FEW WEEKS IT CAN OUTSHINE A WHOLE GALAXY"],
+    [0.72, "MUCH OF THE IRON IN YOUR BLOOD WAS MADE IN EXPLODING STARS"],
+  ],
+};
+// GENTLE SOUNDS FOR THE SPACE SHOW (v1.2.0): a few, quiet, once each - a rumble, a boom, a chime, a hum, a whoosh.
+// (The show is otherwise silent but for the music - and the quiet demo keeps all of it silent until you touch it.)
+const SHOW_SFX = { done: new Set        (), on: false };
+function showSfx(name, key) {
+  const k = (ATTRACT.sn || 0) + ":" + key;
+  if (SHOW_SFX.done.has(k)) return;
+  SHOW_SFX.done.add(k);
+  if (SHOW_SFX.done.size > 200) SHOW_SFX.done.clear();
+  SHOW_SFX.on = true;
+  try {
+    bgSfx(name);
+  } finally {
+    SHOW_SFX.on = false;
+  }
+}
 function drawNeutronBirth(L, Rr, T, B, f, t) {
   const w = Rr - L,
     h = B - T,
@@ -27624,6 +27853,8 @@ function drawNeutronBirth(L, Rr, T, B, f, t) {
     bounce = seg(0.4, 0.46),
     blast = seg(0.44, 0.7),
     after = seg(0.66, 1);
+  if (f > 0.3 && f < 0.4) showSfx("thunder", "ns-collapse");
+  if (f > 0.445 && f < 0.5) showSfx("boom", "ns-blast");
   // 1. THE SUPERGIANT: a huge red-orange star, its surface boiling - it shrinks a little and dims as the core gives way
   if (f < 0.47) {
     const rS = R0 * (1 - 0.18 * collapse * collapse) * (1 + 0.02 * Math.sin(t * 1.3)),
@@ -27762,21 +27993,25 @@ function drawNeutronBirth(L, Rr, T, B, f, t) {
     }
     const blink = Math.pow(Math.max(0, Math.cos(spin * 2)), 40);
     if (blink > 0.02) rect(L, T, w, h, withA(col("#cfe8ff"), 0.08 * blink * k * fade * FLASH()));
-    // the magnetic field: loops from pole to pole, turning with it
-    for (let i = 0; i < 4; i++) {
-      const s = 0.4 + i * 0.22,
-        pts = [];
-      for (let j = 0; j <= 24; j++) {
-        const an = (j / 24) * Math.PI * 2,
-          r = R0 * 0.32 * s * Math.sin(an / 2) ** 2;
-        const x0 = Math.sin(an) * r,
-          y0 = Math.cos(an) * r * 0.6;
-        pts.push(
-          cx + x0 * Math.cos(spin * 0.5) - y0 * Math.sin(spin * 0.5) * 0.3,
-          cy + y0 + x0 * Math.sin(spin * 0.5) * 0.3
-        );
+    // the magnetic field: neat loops from pole to pole on both sides (the shape of a real magnet's field,
+    // r = L sin² of the angle from the pole). The beams shine out of the magnetic poles, so the loops turn with them.
+    const tilt = spin - Math.PI / 2;
+    for (let i = 1; i <= 4; i++) {
+      const Lf = R0 * (0.12 + i * 0.075);
+      for (const side of [-1, 1]) {
+        const pts = [];
+        for (let j = 0; j <= 28; j++) {
+          const th = (j / 28) * Math.PI,
+            r = Lf * Math.sin(th) ** 2,
+            x0 = side * r * Math.sin(th),
+            y0 = -r * Math.cos(th);
+          pts.push(
+            cx + x0 * Math.cos(tilt) - y0 * Math.sin(tilt),
+            cy + x0 * Math.sin(tilt) + y0 * Math.cos(tilt)
+          );
+        }
+        polyline(pts, R0 * 0.005, C2("#b8a0ff", (0.42 - i * 0.06) * k));
       }
-      polyline(pts, R0 * 0.004, C2("#b8a0ff", 0.35 * k));
     }
     R.setAdd(false);
     disc(cx, cy, rN, C2("#f4fbff", k));
@@ -27793,6 +28028,7 @@ function drawSupernova(L, Rr, T, B, f, t) {
     cy = T + h * 0.42,
     Rad = Math.min(w, h) * 0.55;
   drawSN(cx, cy, Rad, f, t, fade);
+  if (f > 0.24 && f < 0.3) showSfx("boom", "sn-blast");
   if (f > 0.24 && f < 0.3) {
     R.setAdd(true);
     rect(L, T, w, h, withA(C.white, 0.7 * FLASH() * (1 - (f - 0.24) / 0.06)));
@@ -28040,6 +28276,7 @@ function drawBlackHoleScene(L, Rr, T, B, f, t) {
     Rd = Math.min(w, h) * 0.17;
   drawBlackHole(cx, cy, Rd, t, fade);
   // a lost space-toilet drifts too close... and is stretched like spaghetti into the dark ("spaghettification")
+  if (f > 0.6 && f < 0.7) showSfx("whoosh", "bh-spaghetti");
   const p = clamp((f - 0.15) / 0.7, 0, 1),
     an = 2.6 - p * 2.2,
     d = Rd * (5.2 - p * 4.2),
@@ -34487,7 +34724,7 @@ function pilgrimage(L, Rr, y0, yb, t, k, tall, ph) {
     }
   for (const p of outside)
     drawPilgrim(p.x, p.y, k * 0.58 * p.sc, t, p.i, (ph - p.i * 0.7) * 5.2, fade * p.al);
-  if (!demo && ph > 11.9 && ph < 12.0 + 1 / 30 && typeof sfx === "function") sfx("pilgrims", sx);
+  if (!demo && ph > 11.9 && ph < 12.0 + 1 / 30 && typeof sfx === "function") bgSfx("pilgrims", sx);
 }
 // a lantern ship: a curved hull with planks and gold trim, a mast with a bellied sail, a lantern swinging at the prow,
 // hooded travellers aboard, and a trail of sparkles behind it
@@ -37882,7 +38119,17 @@ function drawGlutton(c, t, a) {
 //  BARTENDER LEVELS, DECORATE YOUR DINER, ENDLESS MODE, HOLIDAY EVENTS, STORY SCENES with Bocian Bogdan,
 //  ONE-BUTTON MODE for little ones, and a friendly BREAK REMINDER
 // =====================================================================================
-const FP = { shop: false, trophies: false, map: false, cup: false, prof: false, news: false, keys: false },
+const FP = {
+    shop: false,
+    trophies: false,
+    map: false,
+    cup: false,
+    prof: false,
+    news: false,
+    keys: false,
+    settings: false,
+    more: false,
+  },
   BRK = { open: false, t: 0 };
 const FLAV_NAMES = ["STRAWBERRY", "CHOCOLATE", "MINT"],
   FLAV_HEX = ["#ff8fbf", "#9a5a3a", "#8ff0c0"],
@@ -38123,6 +38370,7 @@ const STORY = {
 //  HOOKS FROM THE GAME
 // =====================================================================================
 function funGameStart() {
+  fpClearAll(); // (no SETTINGS or PLAY MORE screen left open behind the game)
   G.endless = !!G.endlessNext;
   G.endlessNext = false;
   G.endLvl = 1;
@@ -39104,9 +39352,12 @@ function funOrderBubble(c, t) {
   const fy = LY(c.lane, c.x) + 22,
     x = c.x + 34 + (c.gold ? 18 : 0),
     y = fy - 104 + Math.sin(t * 2.5 + c.seed * 7) * 2;
-  disc(x, y, 15, col("#ffffff"), 13);
-  tri(x - 8, y + 9, x - 2, y + 11, x - 14, y + 18, col("#ffffff"));
-  arc(x, y, 15, 0, 6.283, 1, withA(C.black, 0.25), 20);
+  // (v1.2.0: a little bigger, a ring in the colour of the flavour they want, and a clear dark edge)
+  const fc = FLAVORS[c.want] ? FLAVORS[c.want][1] : col("#ffffff");
+  disc(x, y, 16.5, col("#ffffff"), 14.3);
+  tri(x - 8, y + 10, x - 2, y + 12, x - 14, y + 19, col("#ffffff"));
+  arcE(x, y, 16.5, 14.3, 0, 6.283, 1.6, withA(col("#140a1e"), 0.75), 24);
+  arcE(x, y, 13.6, 11.6, 0, 6.283, 2.2, withA(fc, 0.85), 24);
   push();
   translate(x, y + 8);
   scaleBy(0.62);
@@ -39320,7 +39571,7 @@ function funDecor(V, t, layer) {
         outlined(() => drawTaxiRace(tf, 175, 785, 86, 0.5, t), INK); // (a crisp outline, like everyone in the pub)
         if (!G.taxiOn) {
           G.taxiOn = true;
-          if (G.state === "play" && !G.demo) sfx("hoot");
+          if (G.state === "play" && !G.demo) bgSfx("hoot");
         }
       } else G.taxiOn = false;
     }
@@ -39858,7 +40109,7 @@ function funMenuText() {
   if ($k("bDaily") && ev && EVENT_NAMES[ev]) $k("bDaily").title = EVENT_NAMES[ev];
 }
 // the menu's own screens: the coin shop, the trophies, the galaxy map, the cup tournament
-const FP_IDS = ["shop", "trophies", "map", "cup", "prof", "news", "keys"],
+const FP_IDS = ["shop", "trophies", "map", "cup", "prof", "news", "keys", "settings", "more"],
   fpAny = () => FP_IDS.some((k) => FP[k]),
   fpWhich = () => FP_IDS.find((k) => FP[k]) || "shop",
   FP_BTN = {
@@ -39869,6 +40120,8 @@ const FP_IDS = ["shop", "trophies", "map", "cup", "prof", "news", "keys"],
     prof: "bProf",
     news: "bNews",
     keys: "bKeys",
+    settings: "bSettings",
+    more: "bMore",
   },
   FP_FIRST = {
     shop: "shItems",
@@ -39878,9 +40131,19 @@ const FP_IDS = ["shop", "trophies", "map", "cup", "prof", "news", "keys"],
     prof: "profList",
     news: "newsBack",
     keys: "kmList",
+    settings: "bSound",
+    more: "bEndless",
   };
+// (v2026.10.05d) SETTINGS and PLAY MORE are screens that open other screens - the shop, the map, the controls... -
+// and when one of those closes, you're back where you came from. FP_PARENT: the screen to go back to.
+let FP_PARENT                = null;
 function openFP(id) {
   if (G.state !== "menu") return;
+  for (const p of ["settings", "more"])
+    if (FP[p] && id !== p) {
+      FP[p] = false;
+      FP_PARENT = p;
+    }
   FP[id] = true;
   ({
     shop: buildShop,
@@ -39890,6 +40153,8 @@ function openFP(id) {
     prof: buildProf,
     news: buildNews,
     keys: buildKeys,
+    settings: () => {},
+    more: () => {},
   })[id]();
   showPanels();
   sfx("click");
@@ -39901,8 +40166,20 @@ function openFP(id) {
 }
 function closeFP(id) {
   FP[id] = false;
+  if (FP_PARENT && id !== FP_PARENT && G.state === "menu") {
+    FP[FP_PARENT] = true; // (back to SETTINGS or PLAY MORE, where it was opened from)
+    FP_PARENT = null;
+  } else if (id === "settings" || id === "more") FP_PARENT = null;
   showPanels();
-  setTimeout(() => $k(FP_BTN[id]).focus(), 30);
+  setTimeout(() => {
+    const b = $k(FP_BTN[id]);
+    if (b) b.focus();
+  }, 30);
+}
+// (a game starting from SETTINGS or PLAY MORE - a time attack, a stop on the map - leaves no screen open behind it)
+function fpClearAll() {
+  for (const k of FP_IDS) FP[k] = false;
+  FP_PARENT = null;
 }
 function buildShop() {
   $k("shTitle").textContent = "COIN SHOP  ● " + fCoins();
@@ -39916,7 +40193,7 @@ function buildShop() {
     el.className = can ? "" : "lock";
     el.innerHTML =
       it.name +
-      ' <span style="white-space:nowrap">· ● ' +
+      '<span class="price">● ' +
       it.price +
       "</span><small>" +
       it.line +
@@ -39945,7 +40222,7 @@ function buildShop() {
     el.className = (can ? "" : "lock") + (own ? " on" : "");
     el.innerHTML =
       it.name +
-      (own ? " ✓" : " - ● " + it.price) +
+      (own ? '<span class="price own">✓</span>' : '<span class="price">● ' + it.price + "</span>") +
       "<small>" +
       (own ? "in your diner! (tap to hide / show)" : it.line) +
       "</small>";
@@ -40018,6 +40295,10 @@ function funPanelsInit() {
   $k("gmBack").onclick = () => closeFP("map");
   $k("gmPlay").onclick = () => gmPlay();
   $k("bCup").onclick = () => openFP("cup");
+  $k("bMore").onclick = () => openFP("more");
+  $k("bSettings").onclick = () => openFP("settings");
+  $k("moreBack").onclick = () => closeFP("more");
+  $k("setBack").onclick = () => closeFP("settings");
   $k("bNews").onclick = () => openFP("news");
   $k("bKeys").onclick = () => openFP("keys");
   $k("kmBack").onclick = () => {
@@ -44335,7 +44616,7 @@ function stageHud(g, s, t, fD, sx, sy) {
       g.fillText("HAAAA!", cx + 20 * s, sy(STAGE.top + 46));
       if (G.kiaiK !== k && G.state === "play") {
         G.kiaiK = k;
-        sfx("kiai");
+        bgSfx("kiai");
       }
     }
   }
@@ -44366,7 +44647,7 @@ function stageHud(g, s, t, fD, sx, sy) {
       g.fillText("HA HA HA!", cx + Math.sin(t * 20) * 3, sy(STAGE.top + 46));
       if (G.laughK !== k && G.state === "play") {
         G.laughK = k;
-        sfx("laugh");
+        bgSfx("laugh");
       }
     }
   }
@@ -46301,7 +46582,10 @@ function modesHud(g, s, fD) {
   g.restore();
 }
 function modesGameOver() {
-  const add = (t) => ($k("overInfo").textContent = t + "   ·   " + $k("overInfo").textContent);
+  const add = (t) => {
+    const o = $k("overInfo").textContent;
+    $k("overInfo").textContent = o ? t + "   ·   " + o : t;
+  };
   if (G.ta)
     add(
       G.ta.served >= TA_GOAL
@@ -46824,6 +47108,28 @@ function drawAttract(g, s, t) {
     g.fillText(txt, cx, y);
     g.shadowBlur = 0;
   }; // (shrinks to fit narrow screens)
+  // a soft dark band behind a caption, so it reads over anything - a planet, a supernova (v1.2.0)
+  const band = (txt, y, px, a = 0.55) => {
+    g.font = fD(px);
+    let tw = g.measureText(txt).width,
+      ph2 = px * s;
+    if (tw > cssW - 24) {
+      ph2 = (px * s * (cssW - 24)) / tw;
+      tw = cssW - 24;
+    }
+    const bw = tw + 26 * s,
+      bh = ph2 * 1.9,
+      bx = cx - bw / 2,
+      by = y - bh / 2;
+    g.save();
+    g.globalAlpha *= a;
+    g.fillStyle = "#06040e";
+    g.beginPath();
+    if (g.roundRect) g.roundRect(bx, by, bw, bh, bh / 2);
+    else g.rect(bx, by, bw, bh);
+    g.fill();
+    g.restore();
+  };
   if (ph === "title") {
     g.fillStyle = "rgba(4,2,10,.62)";
     g.fillRect(0, 0, cssW, cssH);
@@ -46838,23 +47144,28 @@ function drawAttract(g, s, t) {
     neon("1 OR 2 PLAYERS  ·  CO-OP OR VERSUS", cssH * 0.68 + 40 * s, 11, "#b9a8ff", 4);
     neon("© 2026 GL   ·   FREE PLAY", cssH * 0.86, 12, "#ff8fbf", 4);
   } else if (ph === "demo") {
-    const dY = VERT ? 68 * s : cssH * 0.2,
-      lY = VERT ? 106 * s : cssH * 0.27; // (tall view: tucked up under the title, out of the sky)
-    if (blink)
-      neon(
-        ["DEMO · 1 PLAYER", "DEMO · 2 PLAYERS · CO-OP", "DEMO · 2 PLAYERS · VERSUS"][ATTRACT.mode],
-        dY,
-        VERT ? 13 : 18,
-        "#ffc34d",
-        10
-      );
-    {
-      const a = ATTRACT.mode
-        ? BARTENDERS[P1.char].name + (ATTRACT.mode === 2 ? "  VS  " : "  &  ") + BARTENDERS[P2.char].name
-        : BARTENDERS[P1.char].name;
+    // (tall view, v1.2.0: just two short lines under the planet's sign - the demo and who's playing on one, the level on
+    //  the other - so nothing is squeezed)
+    const dY = VERT ? 66 * s : cssH * 0.2,
+      lY = VERT ? 86 * s : cssH * 0.27;
+    const who = ATTRACT.mode
+      ? BARTENDERS[P1.char].name + (ATTRACT.mode === 2 ? "  VS  " : "  &  ") + BARTENDERS[P2.char].name
+      : BARTENDERS[P1.char].name;
+    if (VERT) {
+      if (blink)
+        neon(["DEMO", "DEMO · CO-OP", "DEMO · VERSUS"][ATTRACT.mode] + "  ·  " + who, dY, 11, "#ffc34d", 8);
+    } else {
+      if (blink)
+        neon(
+          ["DEMO · 1 PLAYER", "DEMO · 2 PLAYERS · CO-OP", "DEMO · 2 PLAYERS · VERSUS"][ATTRACT.mode],
+          dY,
+          18,
+          "#ffc34d",
+          10
+        );
       g.font = "700 " + Math.round(13 * s) + "px " + FB;
       g.fillStyle = "rgba(255,243,226,.85)";
-      g.fillText(a, cx, dY + (VERT ? 17 : 26) * s);
+      g.fillText(who, cx, dY + 26 * s);
     }
     const ia = Math.min(1, G.demoT * 2, (DEMO_STAY - G.demoT) * 2); // which planet we're on
     {
@@ -46869,7 +47180,13 @@ function drawAttract(g, s, t) {
     } // what's going on outside
     if (ia > 0) {
       g.globalAlpha = ia;
-      neon("LEVEL " + G.level + " · " + here().name, lY, VERT ? 10 : 13, "#5ff5c8", 8);
+      neon(
+        VERT ? "LEVEL " + G.level : "LEVEL " + G.level + " · " + here().name,
+        lY,
+        VERT ? 10 : 13,
+        "#5ff5c8",
+        8
+      ); // (tall: the sign above already says where)
       g.font = "600 " + Math.round(12 * s) + "px " + FB;
       g.fillStyle = "rgba(255,243,226,.8)";
       if (!VERT) g.fillText(here().sub, cx, lY + 22 * s);
@@ -46998,7 +47315,7 @@ function drawAttract(g, s, t) {
         my =
           ph === "demo"
             ? VERT
-              ? 124 * s
+              ? cssH * 0.72 // (tall: down in the open, clear of the sign and the level)
               : cssH * 0.27 + 40 * s // (in the demo: under the planet's sign and the level line, not on top of them)
             : 10 * s + (cssW < 700 ? 60 * s : 0),
         mw = g.measureText(msg).width + 18 * s;
@@ -47075,22 +47392,25 @@ function drawAttract(g, s, t) {
     } // the tannie's speech bubble
     if (cur && cur.item.kind === "scene") {
       g.globalAlpha = Math.min(1, cur.ph, cur.item.len - cur.ph) * 0.8;
+      band(cur.item.sc.name, cssH * 0.88, 13);
       neon(cur.item.sc.name, cssH * 0.88, 13, "#9fd0ff", 8);
       g.globalAlpha = 1;
     } // a quiet caption
-    if (cur && cur.item.kind === "fly" && cur.item.what === "nstar") {
-      // the neutron star's story, a caption for each stage (each fades in and out)
-      const f = cur.ph / cur.item.len;
-      for (let i = 0; i < NSTAR_CAPS.length; i++) {
-        const a = NSTAR_CAPS[i][0],
-          b = i + 1 < NSTAR_CAPS.length ? NSTAR_CAPS[i + 1][0] : 1;
+    if (cur && cur.item.kind === "fly" && SPACE_CAPS[cur.item.what]) {
+      // the big events' captions, one for each stage (each fades in and out)
+      const f = cur.ph / cur.item.len,
+        CAPS = SPACE_CAPS[cur.item.what];
+      for (let i = 0; i < CAPS.length; i++) {
+        const a = CAPS[i][0],
+          b = i + 1 < CAPS.length ? CAPS[i + 1][0] : 1;
         if (f < a || f >= b) continue;
         const tIn = (f - a) * cur.item.len,
           tOut = (b - f) * cur.item.len;
         g.globalAlpha = clamp(Math.min(tIn, tOut) * 2, 0, 1) * 0.9;
-        const txt = T(NSTAR_CAPS[i][1]),
+        const txt = T(CAPS[i][1]),
           sz = Math.min(15, (cssW * 0.92) / Math.max(1, txt.length) / 0.62 / s);
-        neon(txt, cssH * 0.86, sz, i === 4 ? "#ffd0f0" : "#bfe4ff", 8);
+        band(txt, cssH * 0.86, sz);
+        neon(txt, cssH * 0.86, sz, /SUPERNOVA|TOTALITY/.test(CAPS[i][1]) ? "#ffd0f0" : "#bfe4ff", 8);
         g.globalAlpha = 1;
       }
     }
@@ -47371,7 +47691,12 @@ function drawEggs(g, s) {
   }
   g.restore();
 }
-const GAME_VERSION = "v2026.10.05c"; // year.month.day it was made
+// THE VERSION (from v1.2.0, 5 October 2026): MAJOR.MINOR.PATCH - a new MINOR for a batch of new things, a new PATCH for
+// fixes and small touches - with the day it was made next to it. (Before this the versions were named after the date,
+// like v2026.10.05c.)
+const GAME_VERSION = "v1.2.0",
+  GAME_DATE = "05.10.2026",
+  VERSION_TEXT = GAME_VERSION + "  ·  " + GAME_DATE;
 const FB = '"Chakra Petch", "Segoe UI", sans-serif';
 let FD = '"Bungee", "Impact", sans-serif';
 const HUDB = { w: 0, t: -9, l: 0, b: 0, right: 0, lives: 0, room: 0, under: false };
@@ -47544,7 +47869,7 @@ function drawHud(fps) {
     const glW = g.measureText("GL").width;
     g.font = fB(12, 500);
     g.fillStyle = "rgba(185,168,184,.85)";
-    g.fillText(GAME_VERSION, cssW - 20 - glW, cssH - 11);
+    g.fillText(VERSION_TEXT, cssW - 20 - glW, cssH - 11);
     g.textBaseline = "top";
     g.textAlign = "center";
     drawEggs(g, s);
@@ -47838,9 +48163,13 @@ function drawHud(fps) {
   // call-outs
   let subY = 0;
   const headBig = G.callouts.find((c) => !c.world && !c.sub);
+  // (v1.2.0: fewer words at once - only the three newest floating words over the bars, the two newest lines of a message)
+  const liveW = new Set(G.callouts.filter((c) => c.world && c.life > 0).slice(-3)),
+    liveS = new Set(G.callouts.filter((c) => c.sub && c.life > 0).slice(-2));
   drawDanger(g, s, t, sx, sy);
   for (const c of G.callouts) {
     if (!c.world && !c.sub && c !== headBig) continue; // (only one big announcement at a time)
+    if ((c.world && !liveW.has(c)) || (c.sub && !liveS.has(c))) continue;
     if (liveHud && !c.world) continue; // (while playing, those are up in the neon sign - see above)
     const k = c.life / c.max,
       a = Math.min(1, k * 3, (1 - k) * 10);
@@ -47948,16 +48277,19 @@ function drawHud(fps) {
   const dev = R.kind === "GPU" ? "GPU · " + R.device : "CPU · software";
   // (only on the menu and in a game - not over the full-screen shows, the trips between planets or the mini-games)
   const techLine = !ATTRACT.on && ["menu", "play", "lost", "clear", "paused", "over"].includes(G.state);
-  if (techLine && !(lift && cssW < 1000))
-    g.fillText(
-      (dev.length > 60 ? dev.slice(0, 58) + "…" : dev) +
-        "  ·  " +
-        fps +
-        " FPS" +
-        (QUAL < 2 ? "  ·  AUTO QUALITY " + (QUAL ? "MEDIUM" : "LOW") : ""),
-      12,
-      cssH - 10 - lift
-    );
+  if (techLine && !(lift && cssW < 1000)) {
+    // (it never runs into the version and date in the other corner: on a narrow screen the graphics card's name is
+    //  cut short, and on a very narrow one only the frame rate is left)
+    g.font = fB(12, 500);
+    const room = cssW - 12 - g.measureText(VERSION_TEXT).width - 24 - 34 * s - 16,
+      tail = "  ·  " + fps + " FPS" + (QUAL < 2 ? "  ·  AUTO QUALITY " + (QUAL ? "MEDIUM" : "LOW") : "");
+    let d = dev.length > 60 ? dev.slice(0, 58) + "…" : dev;
+    while (d.length > 8 && g.measureText(d + tail).width > room)
+      d = d.slice(0, -4).replace(/[\s·,(…]+$/, "") + "…";
+    let line = d + tail;
+    if (g.measureText(line).width > room) line = fps + " FPS";
+    if (g.measureText(line).width <= room) g.fillText(line, 12, cssH - 10 - lift);
+  }
   g.textAlign = "right";
   g.font = fD(20);
   g.fillStyle = "hsl(" + Math.round((t * 25) % 360) + " 90% 65%)";
@@ -47965,10 +48297,10 @@ function drawHud(fps) {
   const glW = g.measureText("GL").width;
   g.font = fB(12, 500);
   g.fillStyle = "rgba(185,168,184,.85)";
-  g.fillText(GAME_VERSION, cssW - 20 - glW, cssH - 11 - lift);
+  g.fillText(VERSION_TEXT, cssW - 20 - glW, cssH - 11 - lift);
   if (MY.mode === "mine" && MY.now) {
     g.fillStyle = "rgba(255,195,77,.85)";
-    g.fillText("♪ " + MY.now, cssW - 20 - glW - g.measureText(GAME_VERSION).width - 16, cssH - 11 - lift);
+    g.fillText("♪ " + MY.now, cssW - 20 - glW - g.measureText(VERSION_TEXT).width - 16, cssH - 11 - lift);
   }
   kidHud(g, s, t, fD, sx, sy);
   gmClearHud(g, s); // (the galaxy map, after a level)
@@ -48445,10 +48777,13 @@ function drawDanger(g, s, t, sx, sy) {
     g.globalAlpha = 0.5 + 0.5 * pulse;
     g.fillStyle = "#ff3040";
     g.beginPath();
-    g.arc(sx(hx), sy(hy), (9 + urg * 3) * s, 0, 6.283);
+    g.arc(sx(hx), sy(hy), (11 + urg * 4) * s, 0, 6.283);
     g.fill();
+    g.strokeStyle = "rgba(255,255,255,.9)"; // (a white edge: it stands out on any background - v1.2.0)
+    g.lineWidth = 2 * s;
+    g.stroke();
     g.fillStyle = "#ffffff";
-    g.font = "900 " + Math.round(14 * s) + "px " + FB;
+    g.font = "900 " + Math.round(16 * s) + "px " + FB;
     g.fillText("!", sx(hx), sy(hy) + 1 * s);
     const gr = g.createRadialGradient(sx(ex), sy(ey), 0, sx(ex), sy(ey), 60 * s);
     gr.addColorStop(0, "rgba(255,40,60," + 0.35 * urg * (0.6 + 0.4 * pulse) + ")");
@@ -48515,6 +48850,8 @@ let musLP = null,
   fxVol = null,
   musVol = null,
   fxBus = null,
+  bgBus = null,
+  SFX_BG = false,
   musicBus = null,
   leadBus = null,
   myBus = null,
@@ -48576,13 +48913,33 @@ document.addEventListener("visibilitychange", () => {
   if (!document.hidden && AC && AC.state !== "running") AC.resume().catch(() => {});
 });
 // VOLUME: music and sound effects, each 0 to 1 (in steps of a quarter), remembered
-const VOL = { music: clamp(+store.get("volMusic", 1), 0, 1), fx: clamp(+store.get("volFx", 1), 0, 1) };
+// (and a third, BACKGROUND SOUNDS: the world around the pub - the stage show's laughs, the taxi's hoot, passing
+// rockets and saucers, the window's goings-on - so you can turn the scenery down and keep the game sounds)
+const VOL = {
+  music: clamp(+store.get("volMusic", 1), 0, 1),
+  fx: clamp(+store.get("volFx", 1), 0, 1),
+  bg: clamp(+store.get("volBg", 1), 0, 1),
+};
+const VOL_KEY = { music: "volMusic", fx: "volFx", bg: "volBg" };
 function setVol(which, v) {
   VOL[which] = clamp(v, 0, 1);
-  store.set(which === "music" ? "volMusic" : "volFx", VOL[which]);
+  store.set(VOL_KEY[which], VOL[which]);
+  if (which === "bg") {
+    if (AC && bgBus) bgBus.gain.setTargetAtTime(VOL.bg, AC.currentTime, 0.03);
+    return;
+  }
   const n = which === "music" ? musVol : fxVol;
   if (AC && n) n.gain.setTargetAtTime(VOL[which], AC.currentTime, 0.03);
   QWANT[which] = VOL[which];
+}
+// a background sound: played like any effect, but through the BACKGROUND SOUNDS knob
+function bgSfx(name, x , kind ) {
+  SFX_BG = true;
+  try {
+    sfx(name, x, kind);
+  } finally {
+    SFX_BG = false;
+  }
 }
 const volText = (v) =>
   "▮".repeat(Math.round(v * 4)) + "▯".repeat(4 - Math.round(v * 4)) + " " + Math.round(v * 100) + "%";
@@ -48613,6 +48970,9 @@ function audio() {
   fxBus = AC.createGain();
   fxBus.gain.value = 0.5;
   fxBus.connect(fxVol);
+  bgBus = AC.createGain();
+  bgBus.gain.value = VOL.bg;
+  bgBus.connect(fxBus);
   musicBus = AC.createGain();
   musicBus.gain.value = MY.mode === "original" ? 0.3 : 0;
   musLP = AC.createBiquadFilter();
@@ -48751,8 +49111,16 @@ function fxOut(x) {
   // a panner for one sound, feeding the effects bus and the echo
   const out = AC.createStereoPanner ? AC.createStereoPanner() : AC.createGain();
   if (out.pan) out.pan.value = x === undefined ? 0 : clamp(((x - PW / 2) / (PW / 2)) * 0.75, -0.8, 0.8);
-  out.connect(fxBus);
-  if (revSend) out.connect(revSend);
+  const bg = SFX_BG && bgBus;
+  out.connect(bg ? bgBus : fxBus);
+  if (revSend) {
+    if (bg) {
+      const g = AC.createGain(); // (the echo of a background sound turns down with it, too)
+      g.gain.value = VOL.bg;
+      out.connect(g);
+      g.connect(revSend);
+    } else out.connect(revSend);
+  }
   setTimeout(() => {
     try {
       out.disconnect();
@@ -48773,7 +49141,7 @@ function glass(out, when, vol = 0.06, base = 2600) {
     );
 }
 function sfx(name, x , kind ) {
-  if (!AC || AC.state !== "running" || (G.state === "menu" && name !== "click")) return;
+  if (!AC || AC.state !== "running" || (G.state === "menu" && name !== "click" && !SHOW_SFX.on)) return;
   const now = AC.currentTime,
     out = fxOut(x),
     R2 = Math.random;
@@ -51820,6 +52188,11 @@ function showPanels() {
   $("prof").hidden = !FP.prof;
   $("news").hidden = !FP.news;
   $("keys").hidden = !FP.keys;
+  {
+    const over = JB.open || SB.open || WD.open || CS.open || ATTRACT.on || G.state !== "menu"; // (the music box, the sticker book... open on top)
+    $("settings").hidden = !FP.settings || over;
+    $("more").hidden = !FP.more || over;
+  }
   $("breakp").hidden = !BRK.open;
   funMenuText();
   $("jukebox").hidden = !JB.open;
@@ -51985,12 +52358,15 @@ $("bSound").onclick = toggleSound;
 function volText2() {
   for (const el of document.querySelectorAll(".vVolM")) el.textContent = volText(VOL.music);
   for (const el of document.querySelectorAll(".vVolF")) el.textContent = volText(VOL.fx);
+  for (const el of document.querySelectorAll(".vVolB")) el.textContent = volText(VOL.bg);
 }
 for (const [id, which] of [
   ["bVolM", "music"],
   ["pVolM", "music"],
   ["bVolF", "fx"],
   ["pVolF", "fx"],
+  ["bVolB", "bg"],
+  ["pVolB", "bg"],
 ]         ) {
   const step = (d) => {
     audio();
@@ -52379,7 +52755,20 @@ funPanelsInit();
 //  MENU NAVIGATION with keyboard and controller: move between buttons, choose, go back
 // =====================================================================================
 function visiblePanel() {
-  return ["breakp", "chars", "jukebox", "stickers", "wardrobe", "shop", "trophies", "menu", "pause", "over"]
+  return [
+    "breakp",
+    "chars",
+    "jukebox",
+    "stickers",
+    "wardrobe",
+    "shop",
+    "trophies",
+    "settings",
+    "more",
+    "menu",
+    "pause",
+    "over",
+  ]
     .map((id) => $(id))
     .find((p) => p && !p.hidden);
 }
@@ -52633,7 +53022,7 @@ function profSwitch(id) {
   try {
     localStorage.setItem("craterrun.profile", JSON.stringify(id));
   } catch (e) {}
-  location.reload();
+  reloadGame();
 }
 const profClean = (s) =>
   String(s || "")
@@ -52784,7 +53173,7 @@ async function profImport() {
         } catch (e) {} // (the code holds the whole of a player's progress: anything not in it starts fresh)
     $k("profMsg").textContent = "DONE! " + (o.name || "The") + "'s progress is in this profile now.";
     sfx("chime", undefined, 2);
-    setTimeout(() => location.reload(), 1200);
+    reloadGame(1200);
   } catch (e) {
     $k("profMsg").textContent =
       "That code doesn't work - copy the whole code (it starts with SPUB) and try again.";
@@ -52807,6 +53196,17 @@ profWire();
 //  the game, and where the motion capture, the folk songs and the fonts come from. Both from the menu at any time.
 // =====================================================================================
 const NEWS = [
+  {
+    ver: "v1.2.0",
+    title: "SIMPLER AND CLEARER",
+    items: [
+      "A simpler main menu: PLAY MORE and SETTINGS hold the rest",
+      "A clearer game-over table, shop and in-game words",
+      "Captions and sounds for every space event",
+      "A BACKGROUND SOUNDS volume and a loading screen",
+      "New version numbers: v1.2.0 with the date",
+    ],
+  },
   {
     ver: "v2026.10.05c",
     title: "A NEUTRON STAR IS BORN",
@@ -52928,7 +53328,7 @@ function buildNews() {
     p.appendChild(document.createTextNode(v));
     box.appendChild(p);
   }
-  h("p", GAME_VERSION + "  ·  BAIE DANKIE · DZIĘKUJĘ · NGIYABONGA · ENKOSI", "info");
+  h("p", VERSION_TEXT + "  ·  BAIE DANKIE · DZIĘKUJĘ · NGIYABONGA · ENKOSI", "info");
   store.set("seenVer", GAME_VERSION);
 }
 // once after an update (not on the very first visit - there's the coach for that), the news shows by itself
@@ -53087,6 +53487,41 @@ async function shareNow(kind                ) {
     if (e && e.name === "AbortError") return; // (you closed the share menu - fine)
   }
   // no share menu here: save the picture instead
+  saveFile(name, blob);
+}
+// SAVE A FILE: on Claude's page the game asks Claude's viewer to save it (a plain download is blocked there); anywhere
+// else it's an ordinary download
+let CLAUDE_DL      = undefined; // (undefined: not asked yet; null: not on offer here)
+async function claudeDownloads() {
+  if (CLAUDE_DL !== undefined) return CLAUDE_DL;
+  const w      = window;
+  CLAUDE_DL = null;
+  try {
+    if (w.claude && typeof w.claude.use === "function") CLAUDE_DL = (await w.claude.use("downloads")) || null;
+  } catch (e) {
+    CLAUDE_DL = null;
+  }
+  return CLAUDE_DL;
+}
+async function saveFile(name        , blob      ) {
+  const dl = await claudeDownloads();
+  if (dl) {
+    try {
+      await dl.save({ filename: name, data: blob });
+      return;
+    } catch (e) {
+      const code = e && e.code;
+      if (code === "declined" || code === "rate_limited") return; // (you said no - fine)
+      if (
+        code !== "unavailable" &&
+        code !== "not_granted" &&
+        code !== "capability_disabled" &&
+        code !== "capability_removed"
+      )
+        return;
+      CLAUDE_DL = null; // (not usable here after all: fall back to a plain download)
+    }
+  }
   const a = document.createElement("a");
   a.href = URL.createObjectURL(blob);
   a.download = name;
@@ -53097,6 +53532,10 @@ async function shareNow(kind                ) {
     a.remove();
   }, 2000);
 }
+// (ask early - after the page has started - so the first SHARE press goes straight to the save)
+setTimeout(() => {
+  claudeDownloads();
+}, 1500);
 // =====================================================================================
 //  VOICE (v2026.10.04ar): a reading voice for children who can't read yet - the coach's tips, READY? GO!, the big
 //  announcements and GAME OVER are read out loud, in the game's language, by the voice built into the phone or computer.
@@ -53227,7 +53666,7 @@ function hardReset() {
     audio();
     if (AC) AC.suspend();
   } catch (e) {}
-  location.reload();
+  reloadGame();
 }
 // HARD RESET FROM THE CONTROLLER: hold START + SELECT (BACK / VIEW / SHARE - the two middle buttons) for 2 seconds.
 // It runs on its own little timer, so it still works even if the game itself has stopped drawing.
@@ -53338,6 +53777,15 @@ function crashed(e) {
 }
 function frame(ts) {
   requestAnimationFrame(frame);
+  // LOADING: the splash that covers the page while it starts up fades away once the first picture is drawn
+  requestAnimationFrame(() =>
+    requestAnimationFrame(() => {
+      const b = document.getElementById("boot");
+      if (!b) return;
+      b.classList.add("gone");
+      setTimeout(() => b.remove(), 600);
+    })
+  );
   try {
     frameWork(ts);
     CRASH.n = 0;
@@ -53433,6 +53881,16 @@ $("vMusic").textContent = $("vMusic2").textContent = MUSIC_NAMES[MY.mode];
 resetGame(true);
 startAttract(); // the cabinet wakes up in demo mode; the menu comes when you touch it
 requestAnimationFrame(frame);
+// LOADING: the splash that covers the page while it starts up fades away once the first picture is drawn
+const BOOT_EL = document.getElementById("boot");
+requestAnimationFrame(() =>
+  requestAnimationFrame(() => {
+    const b = BOOT_EL;
+    if (!b || !b.isConnected) return;
+    b.classList.add("gone");
+    setTimeout(() => b.remove(), 600);
+  })
+);
 // =====================================================================================
 //  AFRIKAANSE VOLKSLIEDJIES (v2026.10.04ak): 56 Afrikaans folk songs for the music box, from the four-part songbook
 //  "Afrikaanse Volksliedjies". Only the tunes are used - the bare melody with its chords, never the book's piano

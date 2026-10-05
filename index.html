@@ -237,7 +237,7 @@ body.retro .table { font-size: 10px; gap: 5px; }
     <button id="bDaily" class="wide">DAILY CHALLENGE: <b id="vDaily"></b></button>
     <button id="bMore" class="big">★ PLAY MORE</button>
     <button id="bSettings" class="big">⚙ SETTINGS</button>
-    <button id="bNews" class="wide">WHAT'S NEW &amp; CREDITS</button>
+    <button id="bNews" class="wide">WHAT'S NEW &amp; CREDITS <b id="vNews"></b></button>
     <button id="bFull">FULL SCREEN <kbd>F</kbd></button>
     <button id="bExit">EXIT GAME</button>
     <button id="bCold" class="wide" title="Start again from the very beginning, like switching it on: back to the demo (F8). Your stars, coins and settings are kept.">↻ COLD START</button>
@@ -2207,6 +2207,7 @@ const DICT_ROWS                             = [
     "Za około 4,5 miliarda lat Andromeda i nasza Droga Mleczna spotkają się i staną się jedną galaktyką!",
   ],
   ["LOADING…", "LAAI…", "WCZYTYWANIE…"],
+  ["★ NEW", "★ NUUT", "★ NOWOŚĆ"],
   ["+ ADD YOUR MUSIC", "+ VOEG JOU MUSIEK BY", "+ DODAJ SWOJĄ MUZYKĘ"],
   ["MUSIC BOX", "MUSIEKDOOS", "SZAFA GRAJĄCA"],
   ["FULL SCREEN", "VOLSKERM", "PEŁNY EKRAN"],
@@ -48723,7 +48724,7 @@ function drawEggs(g, s) {
 // THE VERSION (from v1.2.0, 5 October 2026): MAJOR.MINOR.PATCH - a new MINOR for a batch of new things, a new PATCH for
 // fixes and small touches - with the day it was made next to it. (Before this the versions were named after the date,
 // like v2026.10.05c.)
-const GAME_VERSION = "v1.3.1",
+const GAME_VERSION = "v1.3.2",
   GAME_DATE = "05.10.2026",
   VERSION_TEXT = GAME_VERSION + "  ·  " + GAME_DATE;
 const FB = '"Chakra Petch", "Segoe UI", sans-serif';
@@ -54232,6 +54233,11 @@ profWire();
 // =====================================================================================
 const NEWS = [
   {
+    ver: "v1.3.2",
+    title: "NO MORE POP-UPS",
+    items: ["WHAT'S NEW no longer pops up by itself - look for the ★ NEW on its button"],
+  },
+  {
     ver: "v1.3.1",
     title: "SMOOTHER",
     items: [
@@ -54385,19 +54391,16 @@ function buildNews() {
   }
   h("p", VERSION_TEXT + "  ·  BAIE DANKIE · DZIĘKUJĘ · NGIYABONGA · ENKOSI", "info");
   store.set("seenVer", GAME_VERSION);
+  newsCheck(); // (the "★ NEW" goes)
 }
-// once after an update (not on the very first visit - there's the coach for that), the news shows by itself
+// after an update the news never pops up by itself (v1.3.2) - the WHAT'S NEW button just wears a little "★ NEW" until
+// it's been opened (and not on the very first visit - there's the coach for that)
 function newsCheck() {
-  const seen = store.get("seenVer", "");
-  if (seen === GAME_VERSION) return;
-  const played = (store.get("hi", 0) | 0) > 0 || Object.keys(store.get("stars", {})).length > 0;
-  if (!seen && !played) {
-    store.set("seenVer", GAME_VERSION);
-    return;
-  }
-  setTimeout(() => {
-    if (G.state === "menu" && !ATTRACT.on && !fpAny()) openFP("news");
-  }, 600);
+  const seen = store.get("seenVer", ""),
+    played = (store.get("hi", 0) | 0) > 0 || Object.keys(store.get("stars", {})).length > 0;
+  if (!seen && !played) store.set("seenVer", GAME_VERSION);
+  const b = document.getElementById("vNews");
+  if (b) b.textContent = store.get("seenVer", "") === GAME_VERSION ? "" : "★ NEW";
 }
 // =====================================================================================
 //  SHARE (v2026.10.04ap): a picture card of your game - the score, the stage you reached, your stars, who played - to
@@ -54948,6 +54951,7 @@ try {
 } catch (e) {} // (start the sound straight away where it's allowed - the Windows version - otherwise on the first touch, click or key)
 $("vMusic").textContent = $("vMusic2").textContent = MUSIC_NAMES[MY.mode];
 resetGame(true);
+newsCheck(); // (the WHAT'S NEW button's "★ NEW", after an update)
 startAttract(); // the cabinet wakes up in demo mode; the menu comes when you touch it
 requestAnimationFrame(frame);
 // LOADING: the splash that covers the page while it starts up fades away once the first picture is drawn

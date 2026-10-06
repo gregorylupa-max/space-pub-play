@@ -305,7 +305,7 @@ body.retro .table { font-size: 10px; gap: 5px; }
       <dt>↑ ↓ or W S</dt><dd>jump to another counter</dd>
       <dt>1 2 3 4</dt><dd>jump straight to that counter</dd>
       <dt>← → or A D</dt><dd>run along the counter (grab tips) - hold it, or tap twice, for a TURBO run</dd>
-      <dt>MOUSE</dt><dd>press and hold up your bar to run there · hold at the taps to pour · click a bar to jump to it</dd>
+      <dt>MOUSE</dt><dd>press and hold up your bar to run there · hold at the taps to pour · click a bar to jump to it · right-click (or click FLAVOUR) to change flavour · click the HOLY bottles or the ✝ (top left)</dd>
       <dt>Space · Enter · X · Ctrl</dt><dd>pour - HOLD mode: hold, let go to slide · TAP mode: one press (T switches)</dd>
       <dt>H · Q</dt><dd>send holy water · show the cross (devils, demons, vampires flee)</dd>
       <dt>P or Esc</dt><dd>pause · F, F11 or Alt+Enter full screen</dd>
@@ -2218,6 +2218,77 @@ const DICT_ROWS                             = [
   ["IN A HURRY", "HAASTIG", "W POŚPIECHU"],
   ["NAVAJO LADY", "NAVAJO-DAME", "PANI Z PLEMIENIA NAWAHO"],
   [
+    "TABLE MOUNTAIN · CAPE TOWN, SOUTH AFRICA",
+    "TAFELBERG · KAAPSTAD, SUID-AFRIKA",
+    "GÓRA STOŁOWA · KAPSZTAD, REPUBLIKA POŁUDNIOWEJ AFRYKI",
+  ],
+  [
+    "CAPE POINT · THE TIP OF THE CAPE, SOUTH AFRICA",
+    "KAAPPUNT · DIE PUNT VAN DIE KAAP, SUID-AFRIKA",
+    "CAPE POINT · KRANIEC PRZYLĄDKA, RPA",
+  ],
+  [
+    "THE DRAKENSBERG · THE DRAGON MOUNTAINS, SOUTH AFRICA",
+    "DIE DRAKENSBERG · SUID-AFRIKA",
+    "GÓRY SMOCZE (DRAKENSBERG) · RPA",
+  ],
+  [
+    "THE BUSH · KRUGER NATIONAL PARK, SOUTH AFRICA",
+    "DIE BOS · KRUGER WILDTUIN, SUID-AFRIKA",
+    "BUSZ · PARK NARODOWY KRUGERA, RPA",
+  ],
+  ["THE BO-KAAP · CAPE TOWN, SOUTH AFRICA", "DIE BO-KAAP · KAAPSTAD, SUID-AFRIKA", "BO-KAAP · KAPSZTAD, RPA"],
+  ["WARSAW · THE CAPITAL OF POLAND", "WARSKOU · DIE HOOFSTAD VAN POLE", "WARSZAWA · STOLICA POLSKI"],
+  ["WAWEL HILL · KRAKÓW, POLAND", "WAWEL-HEUWEL · KRAKÓW, POLE", "WAWEL · KRAKÓW, POLSKA"],
+  ["MALBORK CASTLE · POLAND", "MALBORK-KASTEEL · POLE", "ZAMEK W MALBORKU · POLSKA"],
+  ["THE TATRA MOUNTAINS · POLAND", "DIE TATRA-BERGE · POLE", "TATRY · POLSKA"],
+  ["GDAŃSK · ON THE BALTIC SEA, POLAND", "GDAŃSK · AAN DIE OOSSEE, POLE", "GDAŃSK · NAD BAŁTYKIEM, POLSKA"],
+  [
+    "A SOUTH AFRICAN MINIBUS TAXI - IN SPACE!",
+    "'N SUID-AFRIKAANSE MINIBUSTAXI - IN DIE RUIMTE!",
+    "POŁUDNIOWOAFRYKAŃSKA TAKSÓWKA - W KOSMOSIE!",
+  ],
+  ["SOUTH AFRICA AND POLAND · FRIENDS", "SUID-AFRIKA EN POLE · VRIENDE", "RPA I POLSKA · PRZYJACIELE"],
+  ["AN AIRSHIP - A ZEPPELIN", "'N LUGSKIP - 'N ZEPPELIN", "STEROWIEC - ZEPPELIN"],
+  ["A DRAGON OF THE STARS", "'N DRAAK VAN DIE STERRE", "GWIEZDNY SMOK"],
+  ["A RETRO ROCKET SHIP", "'N OUTYDSE VUURPYLSKIP", "STAROMODNA RAKIETA"],
+  ["A SPACE SUBMARINE", "'N RUIMTEDUIKBOOT", "KOSMICZNA ŁÓDŹ PODWODNA"],
+  [
+    "SPUTNIK · THE FIRST SATELLITE, 1957",
+    "SPOETNIK · DIE EERSTE SATELLIET, 1957",
+    "SPUTNIK · PIERWSZY SZTUCZNY SATELITA, 1957",
+  ],
+  ["A GREAT EAGLE", "'N GROOT AREND", "WIELKI ORZEŁ"],
+  ["A PTERODACTYL", "'N PTERODAKTIEL", "PTERODAKTYL"],
+  ["A CLOUD OF BATS", "'N SWERM VLERMUISE", "CHMARA NIETOPERZY"],
+  ["THE HOLIDAY CONVOY", "DIE VAKANSIE-KONVOOI", "WAKACYJNY KONWÓJ"],
+  ["A COW IN A SPACE HELMET?!", "'N KOEI MET 'N RUIMTEHELM?!", "KROWA W HEŁMIE KOSMICZNYM?!"],
+  [
+    "A BRAAI ON A LITTLE FLOATING ROCK",
+    "'N BRAAI OP 'N KLEIN SWEWENDE ROTS",
+    "BRAAI NA MAŁEJ LATAJĄCEJ SKALE",
+  ],
+  [
+    "AN ASTRONAUT ON A LAWN CHAIR, WITH A MILKSHAKE",
+    "'N RUIMTEVAARDER IN 'N STOEL, MET 'N MELKSKOMMEL",
+    "ASTRONAUTA NA LEŻAKU, Z KOKTAJLEM",
+  ],
+  [
+    "A LEARNER DRIVER - IN A UFO!",
+    "'N LEERLINGBESTUURDER - IN 'N VLIEËNDE PIERING!",
+    "KURSANT NA PRAWO JAZDY - W UFO!",
+  ],
+  [
+    "A RUBBER DUCK WITH A JETPACK",
+    "'N RUBBEREENDJIE MET 'N STRALERPAK",
+    "GUMOWA KACZUSZKA Z PLECAKIEM ODRZUTOWYM",
+  ],
+  ["A TOASTER, DRIFTING BY", "'N ROOSTERBROODMASJIEN WAT VERBYDRYF", "TOSTER, KTÓRY PRZELATUJE"],
+  ["THE WAWEL DRAGON", "DIE WAWEL-DRAAK", "SMOK WAWELSKI"],
+  ["BOCIAN BOGDAN, THE POSTMAN STORK", "BOCIAN BOGDAN, DIE POSBODE-OOIEVAAR", "BOCIAN BOGDAN, LISTONOSZ"],
+  ["A LOST SPACE TOURIST", "'N VERDWAALDE RUIMTETOERIS", "ZAGUBIONY KOSMICZNY TURYSTA"],
+
+  [
     "A RED DWARF: A SMALL, COOL, RED STAR",
     "'N ROOI DWERG: 'N KLEIN, KOEL, ROOI STER",
     "CZERWONY KARZEŁ: MAŁA, CHŁODNA, CZERWONA GWIAZDA",
@@ -2254,9 +2325,9 @@ const DICT_ROWS                             = [
   ],
   ["MOUSE", "MUIS", "MYSZ"],
   [
-    "press and hold up your bar to run there · hold at the taps to pour · click a bar to jump to it",
-    "druk en hou op jou toonbank om soontoe te hardloop · hou by die krane om te skink · klik 'n toonbank om daarheen te spring",
-    "naciśnij i przytrzymaj na swoim barze, by tam pobiec · przytrzymaj przy kranach, by nalać · kliknij bar, by na niego przeskoczyć",
+    "press and hold up your bar to run there · hold at the taps to pour · click a bar to jump to it · right-click (or click FLAVOUR) to change flavour · click the HOLY bottles or the ✝ (top left)",
+    "druk en hou op jou toonbank om soontoe te hardloop · hou by die krane om te skink · klik 'n toonbank om daarheen te spring · regsklik (of klik GEUR) om die geur te verander · klik die HEILIGE bottels of die ✝ (bo links)",
+    "naciśnij i przytrzymaj na swoim barze, by tam pobiec · przytrzymaj przy kranach, by nalać · kliknij bar, by na niego przeskoczyć · prawy przycisk (albo klik w SMAK) zmienia smak · kliknij butelki ŚWIĘCONEJ WODY albo ✝ (u góry po lewej)",
   ],
   ["THE LESHY", "DIE LESJI", "LESZY"],
   ["A RUSALKA", "'N RUSALKA", "RUSAŁKA"],
@@ -6087,9 +6158,33 @@ function bindPointer(canvas) {
       F = miniFit(); // (a mini-game or the bonus round fitted on a tall screen: into its own units)
     return F ? [(wx - F.x) / F.s, (wy - F.y) / F.s] : [wx, wy];
   };
+  canvas.addEventListener("contextmenu", (e) => {
+    if (G.state !== "play" || G.demo) return;
+    e.preventDefault();
+    if (!(oneBtn() || DF().kid)) funCycleFlav(P1); // RIGHT-CLICK: the next flavour
+  });
   canvas.addEventListener("pointerdown", (e) => {
     audio();
     if (e.pointerType === "touch") setDev("touch");
+    // the mouse on the HUD: the holy water bottles, the cross, the flavour (screen pixels, like the HUD)
+    if (G.state === "play" && !G.demo && e.button === 0) {
+      const hr = $("hud").getBoundingClientRect(),
+        mx = e.clientX - hr.left,
+        my = e.clientY - hr.top,
+        inR = (r) => r && mx >= r[0] && mx <= r[0] + r[2] && my >= r[1] && my <= r[1] + r[3];
+      if (inR(HUDHIT.holy)) {
+        pressedEdge.holy = true;
+        return;
+      }
+      if (inR(HUDHIT.cross)) {
+        pressedEdge.cross = true;
+        return;
+      }
+      if (inR(HUDHIT.flav) && !(oneBtn() || DF().kid)) {
+        funCycleFlav(P1);
+        return;
+      }
+    }
     const [wx, wy] = world(e);
     if (funPointer("down", wx, wy)) return;
     if (mouseTap(wx, wy)) return; // (found the space mouse!)
@@ -39701,14 +39796,18 @@ function kids2GameStart() {
 //      they walk in from the bottom. The game itself is the same (only what you see, and which way the controls go).
 // (a mirror bar shows only in the pub itself - never in the cups round, a mini-game or the trip)
 function mirrorPlay() {
-  return !!G.mirror && ["play", "lost", "clear", "fired"].includes(G.state === "paused" ? G.prev : G.state);
+  return (
+    !!G.mirror &&
+    (["play", "lost", "clear", "fired"].includes(G.state === "paused" ? G.prev : G.state) ||
+      (G.demo && G.state === "menu" && !(ATTRACT.on && ATTRACT.phase !== "demo")))
+  );
 }
 function mirrorLevel() {
-  return !G.demo && !G.ta && !G.brush && !G.versus && G.level >= 4 && G.level % 5 === 4;
+  return !G.ta && !G.brush && !G.versus && G.level >= 4 && G.level % 5 === 4; // (the demo shows them too)
 }
 function kids2LevelStart() {
   G.mirror = mirrorLevel();
-  if (G.mirror)
+  if (G.mirror && !G.demo)
     G.callouts.push({
       text: VERT
         ? "MIRROR BAR!  THIS TIME YOU SERVE FROM THE TOP"
@@ -42079,6 +42178,7 @@ function funHud(g, s, t, fD, sx, sy) {
     g.font = fD(12);
     g.fillStyle = FLAV_HEX[f];
     g.textAlign = "left";
+    HUDHIT.flav = [8 * s, cssH - 66 * s, 260 * s, 22 * s]; // (click it - or right-click anywhere - to change flavour)
     g.fillText(
       "FLAVOUR: " +
         FLAV_NAMES[f] +
@@ -48848,7 +48948,7 @@ function flyDepth() {
 }
 function iconPair(n) {
   // one famous place from South Africa and one from Poland each show, at different distances, in turn
-  const dep = () => [0.38, 0.5, 0.65, 0.8, 1][Math.floor(Math.random() * 5)],
+  const dep = () => [0.6, 0.72, 0.85, 1, 1.15][Math.floor(Math.random() * 5)], // (v1.3.9: nearer - big enough to recognise)
     dy = () => (Math.random() - 0.5) * 0.18,
     za = ICONS.za[n % ICONS.za.length],
     pl = ICONS.pl[n % ICONS.pl.length];
@@ -48873,6 +48973,42 @@ const FLYBYS = [
   "bats",
   "convoy",
 ]; // (retro1 / retro2: chunky 80s comic-book spaceships of our own design)
+// WHAT'S FLYING PAST (v1.3.9): the name of every place, fly-by and silly thing in the show, as a caption - so everything
+// can be recognised (the big events have their own captions, line by line)
+const FLY_NAMES                         = {
+  "tablemountain": "TABLE MOUNTAIN · CAPE TOWN, SOUTH AFRICA",
+  "capepoint": "CAPE POINT · THE TIP OF THE CAPE, SOUTH AFRICA",
+  "drakensberg": "THE DRAKENSBERG · THE DRAGON MOUNTAINS, SOUTH AFRICA",
+  "kruger": "THE BUSH · KRUGER NATIONAL PARK, SOUTH AFRICA",
+  "bokaap": "THE BO-KAAP · CAPE TOWN, SOUTH AFRICA",
+  "warsaw": "WARSAW · THE CAPITAL OF POLAND",
+  "wawel": "WAWEL HILL · KRAKÓW, POLAND",
+  "malbork": "MALBORK CASTLE · POLAND",
+  "tatras": "THE TATRA MOUNTAINS · POLAND",
+  "gdansk": "GDAŃSK · ON THE BALTIC SEA, POLAND",
+  "taxi": "A SOUTH AFRICAN MINIBUS TAXI - IN SPACE!",
+  "flags": "SOUTH AFRICA AND POLAND · FRIENDS",
+  "zeppelin": "AN AIRSHIP - A ZEPPELIN",
+  "dragon": "A DRAGON OF THE STARS",
+  "dragon2": "A DRAGON OF THE STARS",
+  "retro1": "A RETRO ROCKET SHIP",
+  "retro2": "A RETRO ROCKET SHIP",
+  "submarine": "A SPACE SUBMARINE",
+  "sputnik": "SPUTNIK · THE FIRST SATELLITE, 1957",
+  "eagle": "A GREAT EAGLE",
+  "ptero": "A PTERODACTYL",
+  "bats": "A CLOUD OF BATS",
+  "convoy": "THE HOLIDAY CONVOY",
+  "cow": "A COW IN A SPACE HELMET?!",
+  "braai": "A BRAAI ON A LITTLE FLOATING ROCK",
+  "lawnchair": "AN ASTRONAUT ON A LAWN CHAIR, WITH A MILKSHAKE",
+  "learner": "A LEARNER DRIVER - IN A UFO!",
+  "duck": "A RUBBER DUCK WITH A JETPACK",
+  "toaster": "A TOASTER, DRIFTING BY",
+  "smok": "THE WAWEL DRAGON",
+  "bocian": "BOCIAN BOGDAN, THE POSTMAN STORK",
+  "tourist": "A LOST SPACE TOURIST",
+};
 const FLAG_FIRST                                                 = { space: false, sky: -1 }; // (the very first big flag you see is always South Africa; after that it's random)
 function spacePlan(n)             {
   const sc = SCENES[n % SCENES.length],
@@ -49540,6 +49676,27 @@ function drawAttract(g, s, t) {
       neon(cur.item.sc.name, cssH * 0.88, 13, "#9fd0ff", 8);
       g.globalAlpha = 1;
     } // a quiet caption
+    {
+      const nm =
+        cur && cur.item.kind === "fly" && !SPACE_CAPS[cur.item.what]
+          ? FLY_NAMES[cur.item.what]
+          : cur && cur.item.gag
+            ? FLY_NAMES[cur.item.gag]
+            : null;
+      if (nm) {
+        const len = cur.item.len || 10,
+          f = cur.ph / len,
+          a = clamp(Math.min((f - 0.12) * len, (0.88 - f) * len) * 1.5, 0, 1);
+        if (a > 0) {
+          g.globalAlpha = a * 0.9;
+          const txt = T(nm),
+            sz = Math.min(14, (cssW * 0.92) / Math.max(1, txt.length) / 0.62 / s);
+          band(txt, cssH * 0.86, sz);
+          neon(txt, cssH * 0.86, sz, "#ffe8a0", 8);
+          g.globalAlpha = 1;
+        }
+      }
+    }
     if (cur && cur.item.kind === "fly" && SPACE_CAPS[cur.item.what]) {
       // the big events' captions, one for each stage (each fades in and out)
       const f = cur.ph / cur.item.len,
@@ -49838,11 +49995,17 @@ function drawEggs(g, s) {
 // THE VERSION (from v1.2.0, 5 October 2026): MAJOR.MINOR.PATCH - a new MINOR for a batch of new things, a new PATCH for
 // fixes and small touches - with the day it was made next to it. (Before this the versions were named after the date,
 // like v2026.10.05c.)
-const GAME_VERSION = "v1.3.8",
+const GAME_VERSION = "v1.3.9",
   GAME_DATE = "06.10.2026",
   VERSION_TEXT = GAME_VERSION + "  ·  " + GAME_DATE;
 const FB = '"Chakra Petch", "Segoe UI", sans-serif';
 let FD = '"Bungee", "Impact", sans-serif';
+// (where the clickable bits of the HUD are this frame, in screen pixels: [x, y, w, h] - the mouse can use them)
+const HUDHIT                                                                           = {
+  holy: null,
+  cross: null,
+  flav: null,
+};
 const HUDB = { w: 0, t: -9, l: 0, b: 0, right: 0, lives: 0, room: 0, under: false };
 let signX = 0,
   signY = 0; // (0: the usual place, at the top)
@@ -49921,6 +50084,7 @@ function tourMap(g, s, a) {
   g.textBaseline = "top";
 }
 function drawHud(fps) {
+  HUDHIT.holy = HUDHIT.cross = HUDHIT.flav = null; // (filled in again as they are drawn)
   const g = hg;
   g.setTransform(hdpr, 0, 0, hdpr, 0, 0);
   g.clearRect(0, 0, cssW, cssH);
@@ -50246,6 +50410,7 @@ function drawHud(fps) {
       g.font = fB(10, 700);
       g.fillStyle = "#7fd8ff";
       g.fillText("HOLY", x0, y0 + 3 * s);
+      const holyX0 = x0;
       x0 += 34 * s;
       for (const p of active()) {
         if (twoP()) {
@@ -50264,6 +50429,7 @@ function drawHud(fps) {
           x0 += 12 * s;
         }
         g.globalAlpha = 1;
+        if (!twoP()) HUDHIT.holy = [holyX0 - 4 * s, y0 - 6 * s, x0 - holyX0 + 8 * s, 26 * s]; // (click: holy water)
         x0 += 8 * s;
         // the cross: gold and glowing when it's ready, filling up while it recharges
         const cd = Math.max(0, p.crossCD || 0),
@@ -50287,6 +50453,7 @@ function drawHud(fps) {
         g.fillRect(cx0, cy0 + 3.5 * s, 9 * s, 3 * s);
         g.restore();
         g.shadowBlur = 0;
+        if (!twoP()) HUDHIT.cross = [cx0 - 6 * s, cy0 - 6 * s, 22 * s, 28 * s]; // (click: show the cross)
         x0 += 20 * s;
       }
     }
@@ -51257,10 +51424,12 @@ function noise(dur, vol, f0, f1, bus = fxBus, when = AC.currentTime, type = "low
     fl = AC.createBiquadFilter(),
     gn = AC.createGain();
   s.buffer = noiseBuf;
+  s.loop = true; // (a long burst started late in the 2 s buffer would otherwise stop dead at its end - a click)
   fl.type = type;
   fl.frequency.setValueAtTime(f0, when);
   fl.frequency.exponentialRampToValueAtTime(Math.max(40, f1), when + dur);
-  gn.gain.setValueAtTime(vol, when);
+  gn.gain.setValueAtTime(0.0001, when); // a soft 4 ms start, so a short burst never clicks
+  gn.gain.linearRampToValueAtTime(vol, when + Math.min(0.004, dur * 0.25));
   gn.gain.exponentialRampToValueAtTime(0.0001, when + dur);
   s.connect(fl);
   fl.connect(gn);
@@ -51298,7 +51467,7 @@ function fxOut(x) {
     try {
       out.disconnect();
     } catch (e) {}
-  }, 4000);
+  }, 7000); // (long enough that no sound's tail is ever cut off mid-note)
   return out;
 }
 const ping = (f, dur, vol, out, when) => tone("sine", f, f * 0.995, dur, vol, out, when, 0.002); // glass, bells
@@ -51656,10 +51825,7 @@ function sfx(name, x , kind ) {
     case "whoosh":
       noise(0.16, 0.18, 7000, 2000, out, now, "highpass");
       tone("sine", 500, 900, 0.1, 0.04, out, now);
-      for (let i = 0; i < 5; i++)
-        noise(0.025, 0.12, 9000, 5000, out, now + i * 0.03 + R2() * 0.02, "highpass");
-      tone("square", 1800, 300, 0.12, 0.025, out, now);
-      break; // with a crackle of lightning
+      break; // (v1.3.9: no more "crackle of lightning" on top - in the demo, hopping bars all the time, it sounded like a fault)
     case "click":
       blip(660, 660, 0.04, 0.08, out, now);
       break;
@@ -52483,6 +52649,7 @@ function airlock(out, now) {
     fl = AC.createBiquadFilter(),
     g = AC.createGain();
   src.buffer = noiseBuf;
+  src.loop = true;
   fl.type = "bandpass";
   fl.Q.value = 0.8;
   fl.frequency.setValueAtTime(5000, now + 0.08);
@@ -55704,6 +55871,16 @@ profWire();
 //  the game, and where the motion capture, the folk songs and the fonts come from. Both from the menu at any time.
 // =====================================================================================
 const NEWS = [
+  {
+    ver: "v1.3.9",
+    title: "PLAY BY MOUSE",
+    items: [
+      "Hold up your bar to run, hold at the taps to pour, click a bar to jump",
+      "Right-click for the next flavour; click the HOLY bottles or the cross to use them",
+      "Places and fly-bys in the show are bigger and named",
+      "No more crackle during the demo",
+    ],
+  },
   {
     ver: "v1.3.8",
     title: "MIRROR BARS",

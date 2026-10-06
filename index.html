@@ -10748,6 +10748,11 @@ const ENDING_LEN = 40;
 // TWO REWARDS: "mw" - the whole Milky Way served (a party, then on to Andromeda); "final" - both galaxies served:
 // BEST BARTENDER IN THE UNIVERSE, the credits - and then the tour starts again from Mercury, harder
 function startEnding(kind = "final") {
+  if (kind === "final" && !G.coreShown && !G.endless && !G.ta && !G.brush && !G.versus) {
+    G.coreShown = true; // (first, the dive into the heart of Andromeda - core.ts - and then this again, for the party)
+    startCore();
+    return;
+  }
   if (kind === "final") {
     funWon();
     G.won = true;
@@ -10897,6 +10902,7 @@ function endEnding() {
 // NEW TOUR (after the final credits): back to Mercury with your score and lives - and everything a notch faster
 function newTour() {
   G.loop = (G.loop || 0) + 1;
+  G.coreShown = false;
   G.won = false;
   G.mwDone = false;
   G.level = 0;
@@ -11176,6 +11182,10 @@ function startJump() {
 }
 function updateJump(dt) {
   const J = G.jump;
+  if (J.core) {
+    updateCore(dt);
+    return;
+  }
   if (J.inter) {
     updateInterJump(dt);
     if (J.t >= INTER_LEN) finishJump();
@@ -11225,11 +11235,12 @@ function finishJump() {
   } // first the trip, then Bogdan (sometimes), then the new place. (the press that skipped the jump doesn't pour)
 }
 function skipJump() {
-  const len = G.jump && G.jump.inter ? INTER_LEN : JUMP_LEN;
+  const len = G.jump && G.jump.core ? CORE_LEN : G.jump && G.jump.inter ? INTER_LEN : JUMP_LEN;
   if (G.jump && G.jump.t < len - 0.8) {
     G.jump.t = Math.max(G.jump.t, len - 0.8);
     G.jump.banged = G.jump.out = G.jump.rev = true;
     if (G.jump.inter) for (const k of ["s1", "s2", "s3", "s4"]) G.jump[k] = true;
+    if (G.jump.core) for (const k of ["c1", "c2", "c3", "c4"]) G.jump[k] = true;
   }
 }
 function nextSwap() {
@@ -31592,7 +31603,8 @@ function drawFlagTow(x, y, q, t, fade, nat) {
 //      smear into lines - a flash and it's in hyperspace (a blue tunnel of rushing light) - another flash and it drops out,
 //      sliding to a stop beside the next stop's planet ----
 function drawJump(t) {
-  if (G.jump.inter) return drawInterJump(t); // (the great jump to Andromeda - intergal.ts)
+  if (G.jump.inter) return drawInterJump(t);
+  if (G.jump.core) return drawCore(t); // (the heart of Andromeda - core.ts) // (the great jump to Andromeda - intergal.ts)
   const J = G.jump,
     j = J.t,
     L = -ox - 20,
@@ -42586,6 +42598,239 @@ function interHud(g, s) {
   g.textBaseline = "top";
 }
 // =====================================================================================
+//  THE HEART OF ANDROMEDA (v1.4.5): when the last stop is served, before the final party, the bar dives into the very
+//  centre of the Andromeda galaxy, with true facts on the way:
+//    0-7 s    the dive: the galaxy filling the sky, then its glowing core rushing up to meet us
+//    7-30     the core: a crowd of old golden stars; the famous DOUBLE NUCLEUS - two bright knots, one of them really a
+//             ring of old red stars seen from the side; a little cluster of hot young blue stars; and in the middle the
+//             SUPERMASSIVE BLACK HOLE, a black shadow in a ring of light with a faint, quiet disc of gas round it
+//  Any key skips it. (It plays once per tour; drawn with the trip's machinery - G.jump with .core set.)
+// =====================================================================================
+const CORE_LEN = 30;
+const CORE_CAPS                     = [
+  [0.5, "LAST STOP DONE - NOW, TO THE HEART OF ANDROMEDA!"],
+  [7.5, "AT ITS CENTRE: A SUPERMASSIVE BLACK HOLE - OVER 100 MILLION TIMES HEAVIER THAN THE SUN"],
+  [12, "THE ONE AT THE HEART OF OUR MILKY WAY IS ABOUT 4 MILLION SUNS - ANDROMEDA'S IS MANY TIMES BIGGER"],
+  [16.5, "ANDROMEDA HAS A DOUBLE NUCLEUS: TWO BRIGHT KNOTS OF STARS RIGHT IN THE MIDDLE"],
+  [20.5, "ONE OF THEM IS REALLY A RING OF OLD RED STARS CIRCLING THE BLACK HOLE - SEEN FROM THE SIDE"],
+  [24.5, "IT'S QUIET NOW - IT ISN'T SWALLOWING MUCH. JUST AS WELL: WE'RE ONLY HERE TO SERVE SHAKES!"],
+  [28.2, "THE WHOLE TOUR SERVED - BOTH GALAXIES!"],
+];
+function startCore() {
+  G.state = "jump";
+  G.callouts = [];
+  customers = [];
+  shakes = [];
+  empties = [];
+  tips = [];
+  bonus = null;
+  G.jump = { t: 0, core: true, banged: true, out: true, rev: true };
+  sfx("warp");
+  G.flash = 0.7;
+  G.flashC = col("#ffe8c0");
+}
+function updateCore(dt) {
+  const J = G.jump,
+    once = (k) => (J[k] ? false : (J[k] = true));
+  J.t += dt;
+  if (J.t > 6.4 && once("c1")) {
+    sfx("whoosh");
+    G.flash = 0.8;
+    G.flashC = col("#fff0d0");
+  }
+  if (J.t > 9 && once("c2")) sfx("thunder");
+  if (J.t > 17 && once("c3")) sfx("chime", undefined, 2);
+  if (J.t > 28 && once("c4")) sfx("bonus");
+  if (J.t >= CORE_LEN) {
+    G.jump = null;
+    startEnding("final"); // (and on to the party - BEST BARTENDER IN THE UNIVERSE)
+  }
+}
+function drawCore(t) {
+  const j = G.jump.t,
+    L = -ox - 20,
+    Rr = W - ox + 20,
+    T = -oy - 20,
+    B = H - oy + 20,
+    w = Rr - L,
+    h = B - T,
+    big = Math.max(w, h),
+    k = Math.min(w / 900, h / 560),
+    cx = L + w * 0.5,
+    cy = T + h * 0.44;
+  WORLD_NOW = true;
+  deepSky(L, Rr, T, B, t, 60 + j, 9, 0);
+  WORLD_NOW = false;
+  // ---- the dive: Andromeda growing, its core rushing up ----
+  if (j < 7.4) {
+    // (zooming in only so far - drawn any bigger, the galaxy's soft glows band - then the core's warm light takes over)
+    const u = ease(clamp(j / 7, 0, 1)),
+      ga = big * (0.6 + 1.5 * u),
+      fade = 1 - clamp((j - 5.6) / 1.8, 0, 1);
+    if (fade > 0.02) drawAndromeda(cx - (1 - u) * w * 0.05, cy, ga);
+    R.setAdd(true);
+    glow(cx, cy, big * (0.2 + 0.5 * u), withA(col("#ffd8a0"), 0.12 + 0.28 * u));
+    R.setAdd(false);
+    if (fade < 1) rect(L, T, w, h, withA(col("#1a1008"), 0.8 * (1 - fade))); // (a soft dip into the core)
+  }
+  // ---- the core ----
+  if (j > 6.2) {
+    const a0 = clamp((j - 6.2) / 1.2, 0, 1);
+    R.setAdd(true);
+    rect(L, T, w, h, withA(col("#2a1a10"), 0.55 * a0)); // a warm haze of starlight everywhere
+    glow(cx, cy, big * 0.7, withA(col("#ffc890"), 0.3 * a0));
+    glow(cx, cy, big * 0.35, withA(col("#ffe0b0"), 0.35 * a0));
+    // a crowd of old golden and red stars, thicker towards the middle, slowly wheeling
+    for (let i = 0; i < 700; i++) {
+      const r = Math.pow(hash(i * 1.37), 1.7) * big * 0.75,
+        th = hash(i * 2.91) * 6.283 + t * (0.02 + 0.05 * (1 - r / big)),
+        x = cx + Math.cos(th) * r,
+        y = cy + Math.sin(th) * r * 0.62;
+      if (x < L || x > Rr || y < T || y > B) continue;
+      const s2 = 1 + hash(i) * 1.6;
+      rect(
+        x,
+        y,
+        s2,
+        s2,
+        withA(col(i % 5 ? "#ffe8c8" : i % 3 ? "#ffb070" : "#fff8f0"), (0.35 + 0.5 * hash(i * 7)) * a0)
+      );
+      if (i % 37 === 0) glow(x, y, 6 + s2 * 3, withA(col("#ffd8a0"), 0.4 * a0));
+    }
+    // THE DOUBLE NUCLEUS: P1, the brighter knot - really an eccentric ring of old red stars, seen tilted - and P2
+    const p1x = cx - 120 * k,
+      p1y = cy - 30 * k,
+      p2x = cx + 20 * k,
+      p2y = cy + 6 * k;
+    push();
+    translate(p1x, p1y);
+    rotate(-0.35);
+    scaleXY(1, 0.38);
+    for (let i = 0; i < 140; i++) {
+      const th = (i / 140) * 6.283 + t * 0.15,
+        rr = (90 + 34 * Math.cos(th + 0.8) + hash(i) * 14) * k;
+      glow(
+        Math.cos(th) * rr + 40 * k,
+        Math.sin(th) * rr,
+        (5 + hash(i * 3) * 6) * k,
+        withA(col(i % 4 ? "#ff9a58" : "#ffd8a0"), 0.5 * a0)
+      );
+    }
+    pop();
+    glow(p1x - 30 * k, p1y - 8 * k, 70 * k, withA(col("#ffb878"), 0.55 * a0));
+    glow(p1x - 30 * k, p1y - 8 * k, 26 * k, withA(col("#fff0d8"), 0.8 * a0)); // (where the ring's stars bunch up: the bright knot)
+    glow(p2x, p2y, 46 * k, withA(col("#ffd0a0"), 0.45 * a0));
+    // the little cluster of hot, young BLUE stars right round the black hole
+    for (let i = 0; i < 26; i++) {
+      const th = hash(i * 5.3) * 6.283 + t * 0.6,
+        rr = (14 + hash(i * 2.2) * 26) * k;
+      glow(
+        p2x + Math.cos(th) * rr,
+        p2y + Math.sin(th) * rr * 0.6,
+        (3 + hash(i) * 4) * k,
+        withA(col("#9fc8ff"), 0.85 * a0)
+      );
+    }
+    R.setAdd(false);
+    // THE BLACK HOLE: a faint, thin disc of gas (it's quiet), the ring of bent light, and the black shadow in the middle
+    const bh = 22 * k * (j > 8 ? 1 : clamp((j - 6.2) / 1.8, 0, 1)),
+      sw = t * 0.9;
+    push();
+    translate(p2x, p2y);
+    R.setAdd(true);
+    push();
+    scaleXY(1, 0.22);
+    for (let i = 0; i < 4; i++)
+      arc(
+        0,
+        0,
+        bh * (2.2 + i * 0.5),
+        Math.PI,
+        Math.PI * 2,
+        bh * 0.35,
+        withA(col(i % 2 ? "#ff9a50" : "#ffd090"), 0.35 * a0),
+        36
+      );
+    pop(); // the far side of the disc
+    arc(0, 0, bh * 1.32, 0, 6.283, bh * 0.22, withA(col("#fff0d0"), 0.8 * a0), 40); // the photon ring
+    glow(Math.cos(sw) * bh * 1.3, Math.sin(sw) * bh * 1.3, bh * 0.5, withA(col("#ffffff"), 0.5 * a0)); // a hot spot going round
+    R.setAdd(false);
+    disc(0, 0, bh, withA(col("#000000"), a0));
+    R.setAdd(true);
+    push();
+    scaleXY(1, 0.22);
+    for (let i = 0; i < 4; i++)
+      arc(
+        0,
+        0,
+        bh * (2.2 + i * 0.5),
+        0,
+        Math.PI,
+        bh * 0.35,
+        withA(col(i % 2 ? "#ff9a50" : "#ffd090"), 0.45 * a0),
+        36
+      );
+    pop(); // the near side, in front of the shadow
+    R.setAdd(false);
+    pop();
+  }
+  // ---- the bar, gliding through it all with its shield up ----
+  const tilt = Math.sin(t * 0.7) * 0.03,
+    K = VERT ? Math.min((w * 0.5) / 940, (h * 0.2) / 540) : Math.min(k * 0.3, (w * 0.42) / 940),
+    bx = L + w * (j < 7 ? 0.5 : 0.18 + 0.64 * ((j - 7) / (CORE_LEN - 7))),
+    by = T + h * (VERT ? 0.72 : 0.76) + Math.sin(t * 1.3) * 4;
+  push();
+  translate(bx, by);
+  rotate(tilt);
+  scaleBy(K);
+  drawDinerBody(t, j < 7 ? 1 : 0.5);
+  R.setAdd(true);
+  push();
+  translate(-20, -40);
+  scaleXY(1, 0.52);
+  arc(0, 0, 560, -1.15, 1.15, 5, withA(col("#cfe8ff"), 0.35), 36);
+  pop();
+  R.setAdd(false);
+  pop();
+}
+function coreHud(g, s) {
+  const j = G.jump.t,
+    cx = cssW / 2;
+  g.textAlign = "center";
+  g.textBaseline = "middle";
+  for (let i = 0; i < CORE_CAPS.length; i++) {
+    const [a, txt0] = CORE_CAPS[i],
+      b = i + 1 < CORE_CAPS.length ? CORE_CAPS[i + 1][0] : CORE_LEN;
+    if (j < a || j >= b) continue;
+    const al = clamp(Math.min(j - a, b - j - 0.2) * 2.5, 0, 1),
+      txt = T(txt0),
+      sz = Math.min(15, (cssW * 0.92) / Math.max(1, txt.length) / 0.6 / s),
+      lines =
+        sz < 11 && txt.includes(" - ")
+          ? txt.split(" - ")
+          : sz < 11 && txt.includes(": ")
+            ? txt.split(": ")
+            : [txt],
+      sz2 = Math.min(15, ...lines.map((l) => (cssW * 0.92) / Math.max(1, l.length) / 0.6 / s));
+    g.globalAlpha = al;
+    lines.forEach((ln, li) => {
+      const y = cssH * 0.88 + (li - (lines.length - 1)) * sz2 * s * 1.9;
+      g.font = Math.round(sz2 * s) + "px " + FD;
+      const ww = g.measureText(ln).width + 24 * s;
+      g.fillStyle = "rgba(4,2,12,.6)";
+      g.fillRect(cx - ww / 2, y - sz2 * s, ww, sz2 * s * 2);
+      neon2(g, ln, cx, y, sz2 * s, i === CORE_CAPS.length - 1 ? "#ffd24d" : "#ffe0c0");
+    });
+    g.globalAlpha = 1;
+  }
+  if (j > 7) {
+    g.globalAlpha = clamp(Math.min((j - 7) * 1.5, (CORE_LEN - j) * 2), 0, 1);
+    neon2(g, "THE HEART OF ANDROMEDA", cx, cssH * 0.1, 24 * s, "#ffc34d");
+    g.globalAlpha = 1;
+  }
+  g.textBaseline = "top";
+}
+// =====================================================================================
 //  MORE FUN (v2026.10.03f): flavour ORDERS, PETS WITH POWERS, a COIN SHOP, MINI-GAMES between worlds, a TROPHY ROOM,
 //  BARTENDER LEVELS, DECORATE YOUR DINER, ENDLESS MODE, HOLIDAY EVENTS, STORY SCENES with Bocian Bogdan,
 //  ONE-BUTTON MODE for little ones, and a friendly BREAK REMINDER
@@ -49364,7 +49609,7 @@ function newFaceFor(type, demo) {
   }
   if (now && G.nfIntro && Math.random() < 0.12) return TYPE_OF[now[1]];
   if (met.length && Math.random() < 0.07) return TYPE_OF[met[Math.floor(Math.random() * met.length)][1]];
-  return godFor(demo) || animalFor(demo); // (or, now and then, one of the old gods - gods.ts - or one of the animals)
+  return godFor(demo) || bellboyFor(demo) || animalFor(demo); // (or, now and then, one of the old gods - gods.ts - or one of the animals)
 }
 function newFaceServed(c) {
   const ls = NF_LINES[c.type.kind];
@@ -49429,6 +49674,7 @@ function crossAt(x, y, s, c, flared) {
 function newFaceTorso(kind, c, t, A, tw, th, body, L, angry, step) {
   if (ANIMAL_KINDS.has(kind)) return animalTorso(kind, c, t, A, tw, th, L); // (the animals - animals.ts)
   if (GOD_KINDS.has(kind)) return godTorso(kind, c, t, A, tw, th, L); // (the old gods - gods.ts)
+  if (kind === "bellboy") return bellboyTorso(c, t, A, tw, th);
   const top = -th,
     sd = c.seed * 91;
   const chest = (cc) => {
@@ -49643,6 +49889,7 @@ function newFaceTorso(kind, c, t, A, tw, th, body, L, angry, step) {
 function newFaceHead(kind, x, hy, t, c, A, L, H) {
   if (ANIMAL_KINDS.has(kind)) return animalHead(kind, x, hy, t, c, A, L, H);
   if (GOD_KINDS.has(kind)) return godHead(kind, x, hy, t, c, A, L, H);
+  if (kind === "bellboy") return bellboyHead(x, hy, t, c, A, H);
   const { eye, brows, mouthAt, shadedHead, ink } = H,
     sk = L.skin;
   if (NF_APES.has(kind)) {
@@ -49988,6 +50235,7 @@ function newFaceBack(kind, c, t, A, tw, th, moving) {
 function newFaceFront(kind, c, t, A, tw, th, hx, hy, holding, moving) {
   if (ANIMAL_KINDS.has(kind)) return;
   if (GOD_KINDS.has(kind)) return godFront(kind, c, t, A, tw, th, hx, hy, holding, moving);
+  if (kind === "bellboy") return bellboyFront(c, t, A, hx, hy, holding);
   if (!holding) return;
   if (kind === "hussar") {
     const tilt = 0.08,
@@ -50810,6 +51058,94 @@ function godFront(kind, c, t, A, tw, th, hx, hy, holding, moving) {
       line(hx + 8, hy - 15 + i * 3, hx + 14, hy - 14 + i * 3, 0.5, A(col("#d8d0c0")));
     line(hx + 11, hy - 8, hx + 6, hy + 14, 0.5, A(col("#f4f0e8"))); // the thread, down to her hand
   }
+}
+// =====================================================================================
+//  THE BELLBOY (v1.4.5): from some grand space hotel, on his break - a red jacket with gold buttons and braid, a little
+//  pillbox hat on its chin strap, white gloves, and a suitcase he hasn't managed to put down. From stage 2, now and then.
+// =====================================================================================
+Object.assign(NF_LOOK, {
+  bellboy: { skin: "#f0c8a0", pants: "#2a2a3a", shoes: "#1a1a22", body: "#c8202a", arm: "#c8202a", tw: 16 },
+});
+Object.assign(LOOKS, { bellboy: { skin: col("#f0c8a0"), pants: col("#2a2a3a"), shoes: col("#1a1a22") } });
+NF_KINDS.add("bellboy");
+Object.assign(NF_LINES, {
+  bellboy: ["RING RING - THANK YOU!", "AT YOUR SERVICE!", "ROOM SERVICE COULD LEARN FROM YOU!"],
+});
+{
+  const ty = { kind: "bellboy", speed: 1.15, push: 150, w: 0.95, newface: true };
+  TYPES.push(ty);
+  TYPE_OF.bellboy = ty;
+}
+Object.assign(NICE, { bellboy: "BELLBOY" });
+function bellboyFor(demo) {
+  if (G.level < 2 || Math.random() >= 0.03) return null;
+  const seen = G.anSeen || (G.anSeen = {});
+  if (!seen.bellboy && !demo) {
+    seen.bellboy = true;
+    callout("A BELLBOY - ON HIS BREAK!", "#ffd24d", 2.2);
+    sfx("bell", X0); // (ding!)
+  }
+  return TYPE_OF.bellboy;
+}
+function bellboyTorso(c, t, A, tw, th) {
+  const top = -th,
+    red = col("#c8202a"),
+    gold = col("#e8c040");
+  quad4(
+    -tw / 2,
+    top,
+    tw / 2,
+    top,
+    tw / 2 - 1,
+    -2,
+    -tw / 2 + 1,
+    -2,
+    A(red),
+    A(red),
+    A(shade(red, 0.8)),
+    A(shade(red, 0.8))
+  );
+  disc(-tw / 2, top + 3, 3.2, A(shade(red, 0.85)));
+  disc(tw / 2, top + 3, 3.2, A(red));
+  for (const sx of [-1, 1]) rect(sx > 0 ? tw / 2 - 4 : -tw / 2, top - 1, 4, 2.2, A(gold)); // epaulettes
+  for (let i = 0; i < 4; i++) {
+    disc(-1.6, top + 4 + i * 4.6, 1, A(gold));
+    disc(2.4, top + 4 + i * 4.6, 1, A(gold));
+  } // two rows of gold buttons
+  for (let i = 0; i < 4; i++) line(-1.6, top + 4 + i * 4.6, 2.4, top + 4 + i * 4.6, 0.6, A(gold)); // braid between them
+  rect(-tw / 2, -5, tw, 2, A(shade(red, 0.7)));
+}
+function bellboyHead(x, hy, t, c, A, H) {
+  const { eye, brows, mouthAt, shadedHead } = H;
+  shadedHead(x, hy, 8, 9, col("#f0c8a0"));
+  disc(x - 2, hy - 6, 7.5, A(col("#5a3a22")), 3.5); // hair under the hat
+  eye(x + 1.5, hy - 1, 1.5);
+  eye(x + 5.5, hy - 1, 1.5);
+  brows(hy - 4);
+  mouthAt(x + 4, hy + 4.4, 1.8);
+  // the pillbox hat, tipped at an angle, with its gold band and a black chin strap
+  push();
+  translate(x + 1, hy - 9);
+  rotate(0.15);
+  rect(-5, -5, 10, 5, A(col("#c8202a")));
+  rect(-5, -1.6, 10, 1.6, A(col("#e8c040")));
+  disc(0, -5, 5, A(col("#d83038")), 1.2);
+  disc(0, -6, 1.2, A(col("#e8c040"))); // a gold button on top
+  pop();
+  line(x - 3, hy - 9, x - 1, hy + 6, 0.6, A(col("#1a1a1a")));
+}
+function bellboyFront(c, t, A, hx, hy, holding) {
+  if (!holding) return;
+  // a brown leather suitcase, with straps and a label
+  const bx = hx - 1,
+    by = hy + 2;
+  line(hx, hy, hx, by, 1.2, A(col("#3a2410")));
+  rect(bx - 9, by, 18, 12, A(col("#8a5a2a")));
+  rect(bx - 9, by, 18, 2, A(col("#a8723a")));
+  rect(bx - 5, by, 2, 12, A(col("#5a3a1a")));
+  rect(bx + 3, by, 2, 12, A(col("#5a3a1a")));
+  rect(bx - 2, by + 4, 5, 3, A(col("#f4f0e4")));
+  disc(hx, hy, 1.8, A(col("#ffffff"))); // a white glove
 }
 // =====================================================================================
 //  EASY TO PICK UP, HARD TO MASTER (v2026.10.04ag)
@@ -53186,7 +53522,7 @@ function drawEggs(g, s) {
 // THE VERSION (from v1.2.0, 5 October 2026): MAJOR.MINOR.PATCH - a new MINOR for a batch of new things, a new PATCH for
 // fixes and small touches - with the day it was made next to it. (Before this the versions were named after the date,
 // like v2026.10.05c.)
-const GAME_VERSION = "v1.4.4",
+const GAME_VERSION = "v1.4.5",
   GAME_DATE = "06.10.2026",
   VERSION_TEXT = GAME_VERSION + "  ·  " + GAME_DATE;
 const FB = '"Chakra Petch", "Segoe UI", sans-serif';
@@ -53307,8 +53643,9 @@ function drawHud(fps) {
     if (crtOn && !CRT_ACTIVE) drawScanlines(g);
     return;
   } // (the full-screen scenes: just their own words)
-  if (G.state === "jump" && G.jump && G.jump.inter) {
-    interHud(g, s); // (the great jump to Andromeda - intergal.ts)
+  if (G.state === "jump" && G.jump && (G.jump.inter || G.jump.core)) {
+    if (G.jump.core) coreHud(g, s);
+    else interHud(g, s); // (the great jump to Andromeda - intergal.ts)
     const DS = DSIGN;
     g.globalAlpha = DS.fl;
     neon2(g, "SPACE PUB", DS.x * u, (DS.y - 10 * DS.s) * u, 30 * DS.s * u, "#ff5fa8");
@@ -59128,6 +59465,14 @@ profWire();
 //  the game, and where the motion capture, the folk songs and the fonts come from. Both from the menu at any time.
 // =====================================================================================
 const NEWS = [
+  {
+    ver: "v1.4.5",
+    title: "THE HEART OF ANDROMEDA",
+    items: [
+      "After the last stop: a dive into the heart of Andromeda - its black hole and its double nucleus",
+      "A bellboy drops in on his break - suitcase and all",
+    ],
+  },
   {
     ver: "v1.4.4",
     title: "THE GREAT JUMP",

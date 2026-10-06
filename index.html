@@ -2258,6 +2258,11 @@ const DICT_ROWS                             = [
     "SPOETNIK · DIE EERSTE SATELLIET, 1957",
     "SPUTNIK · PIERWSZY SZTUCZNY SATELITA, 1957",
   ],
+  [
+    "THE INTERNATIONAL SPACE STATION · PEOPLE HAVE LIVED ON IT SINCE 2000",
+    "DIE INTERNASIONALE RUIMTESTASIE · MENSE WOON AL SEDERT 2000 DAAROP",
+    "MIĘDZYNARODOWA STACJA KOSMICZNA · LUDZIE MIESZKAJĄ NA NIEJ OD 2000 ROKU",
+  ],
   ["A GREAT EAGLE", "'N GROOT AREND", "WIELKI ORZEŁ"],
   ["A PTERODACTYL", "'N PTERODAKTIEL", "PTERODAKTYL"],
   ["A CLOUD OF BATS", "'N SWERM VLERMUISE", "CHMARA NIETOPERZY"],
@@ -5158,6 +5163,60 @@ const BARTENDERS = [
     hoops: true,
     eyes: "#3a1a0a",
   },
+  // (v1.4.0) STELLA and BENITA from South Africa, and GRZEGORZ BRZĘCZYSZCZYKIEWICZ from Poland - the most famous tongue-twister
+  // of a Polish surname (GRZEGORZ for short, on the big screen)
+  {
+    name: "STELLA",
+    nation: "za",
+    line: "a smile that lights up the Milky Way",
+    w: 0.98,
+    h: 1.03,
+    sex: "f",
+    skin: "#f2d0b0",
+    hair: "#3a2214",
+    style: "ponytail",
+    shirt: "#fffaf6",
+    dress: "#2a6ad0",
+    tie: "#ffffff",
+    lips: "#c8304a",
+    shoe: "#2a2a3a",
+    hoops: true,
+    eyes: "#5a3a1a",
+  },
+  {
+    name: "BENITA",
+    nation: "za",
+    line: "never spills a single drop",
+    w: 1.0,
+    h: 0.99,
+    sex: "f",
+    skin: "#f4d4b8",
+    hair: "#8a4a24",
+    style: "bob",
+    shirt: "#fffaf2",
+    dress: "#7a3aa0",
+    tie: "#ffd24d",
+    lips: "#b82848",
+    shoe: "#3a1a2a",
+    eyes: "#3a6a4a",
+  },
+  {
+    name: "GRZEGORZ BRZĘCZYSZCZYKIEWICZ",
+    short: "GRZEGORZ",
+    nation: "pl",
+    line: "try saying his surname after three milkshakes",
+    w: 1.1,
+    h: 1.05,
+    sex: "m",
+    skin: "#f4d4b8",
+    hair: "#5a3a1e",
+    style: "pompadour",
+    shirt: "#f6f6f2",
+    pants: "#2a2a3a",
+    tie: "#dc143c",
+    beard: true,
+    hat: true,
+  },
   // DETECTIVE DEX: a hard-boiled space detective who took a job behind the bar to crack a case - trench coat, fedora, and his
   // robot sidekick (the DETECTIVE DROID pet floats along after him)
   {
@@ -5184,8 +5243,25 @@ const NATION_INFO = {
   af: { label: "AFRIKAANS · SOUTH AFRICA", flag: "za", hi: "HALLO! LEKKER!" },
   zu: { label: "ZULU · SOUTH AFRICA", flag: "za", hi: "SAWUBONA!" },
   xh: { label: "XHOSA · SOUTH AFRICA", flag: "za", hi: "MOLWENI!" },
+  za: { label: "SOUTH AFRICA", flag: "za", hi: "HOWZIT!" },
 };
-const myChar = (id) => clamp(store.get("char" + (id + 1), id ? 1 : 0) | 0, 0, BARTENDERS.length - 1); // the bartender each player picked (the demo borrows others)
+const barShort = (i) => {
+  const b      = BARTENDERS[i ?? 0] || BARTENDERS[0];
+  return b.short || b.name;
+}; // (the short name, where a long one wouldn't fit)
+// (v1.4.0: until you pick your own, the first player is ANNEKE from South Africa, and the second GRZEGORZ from Poland)
+const DEFAULT_CHAR = [
+  Math.max(
+    0,
+    BARTENDERS.findIndex((b) => b.name === "ANNEKE")
+  ),
+  Math.max(
+    0,
+    BARTENDERS.findIndex((b) => b.name.startsWith("GRZEGORZ"))
+  ),
+];
+const myChar = (id) =>
+  clamp(store.get("char" + (id + 1), DEFAULT_CHAR[id ? 1 : 0]) | 0, 0, BARTENDERS.length - 1); // the bartender each player picked (the demo borrows others)
 const mkP = (id)         => ({
   id,
   char: myChar(id),
@@ -13496,14 +13572,15 @@ function skyTraffic(L, Rr, y0, yb, t, v) {
     py = PAR[1] * 0.55;
   // ONE THING AT A TIME out there: each sight takes its turn, and after it there are quiet seconds of just sky
   const turn = (key, e, D) => {
-    if (SKY.own && (t > SKY.own.end || t < SKY.own.end - D - 1)) {
+    if (SKY.own && (t > SKY.own.end || t < SKY.own.end - SKY.own.D - 1)) {
+      // (v1.4.0: measured by the CURRENT sight's own length - a shorter sight checked first used to cancel a long one)
       SKY.quiet = Math.min(SKY.own.end, t) + 18;
       SKY.own = null;
     }
     if (e.s >= D) return false;
     if (SKY.own) return SKY.own.k === key && SKY.own.n === e.n;
     if ((t < SKY.quiet - 0.01 && SKY.quiet - t < 19) || e.s > 0.6) return false;
-    SKY.own = { k: key, n: e.n, end: t - e.s + D };
+    SKY.own = { k: key, n: e.n, end: t - e.s + D, D };
     return true;
   };
   const inSky = (x, y, r) => x - r > L && x + r < Rr && y - r > y0 && y + r < yb(x);
@@ -13579,6 +13656,22 @@ function skyTraffic(L, Rr, y0, yb, t, v) {
           glow(sx + px, sy + py, 9, withA(col("#ff4040"), 0.7));
           R.setAdd(false);
         }
+      }
+    }
+  }
+  // THE INTERNATIONAL SPACE STATION sails slowly over, its golden wings catching the sun (and a bright glint, as you'd see
+  // it from the ground)
+  {
+    const e = cyc(89, 61);
+    if (!busy && turn("iss", e, 20)) {
+      const f = e.s / 20,
+        sx = Rr + 50 - f * (w + 100),
+        sy = y0 + Math.min(44, ym(L + w / 2) * 0.36) + Math.sin(f * 3) * 4;
+      if (inSky(sx, sy, 8)) {
+        drawISS(sx + px, sy + py, 0.5, t, -0.1);
+        R.setAdd(true);
+        glow(sx + px, sy + py, 34, withA(col("#fff4d8"), 0.18 + 0.1 * Math.sin(t * 1.3)));
+        R.setAdd(false);
       }
     }
   }
@@ -15366,6 +15459,72 @@ function drawTip(tp, t) {
     disc(tp.x, cy - 1, 5.5, col("#ffd24d"), 4);
   }
   disc(tp.x - 2, y - 8 - (n - 1) * 3 + dy, 1.6, withA(C.white, 0.8));
+}
+// THE INTERNATIONAL SPACE STATION (v1.4.0): seen from below as it sails over - the long truss with its eight big golden
+// solar wings, the white radiators, and the chain of modules down the middle (with the little Russian-segment panels and a
+// capsule docked at the end). The sunlight glints along the wings as it goes. Used in the full-screen show and the bar
+// window. (k: size; x, y: the middle)
+function drawISS(x, y, k, t, tilt = -0.12) {
+  const C2 = (h, a = 1) => withA(col(h), a);
+  push();
+  translate(x, y);
+  rotate(tilt);
+  scaleXY(k, k * 0.66); // (a little from the side, so it looks like it's out there in 3-D)
+  // the modules down the middle (behind the truss)
+  const mod = (x0, y0, w, h, c, hi) => {
+    rect(x0, y0, w, h, C2(c));
+    rect(x0 + w * 0.2, y0, w * 0.22, h, C2(hi, 0.8)); // (the sunny side of the cylinder)
+    line(x0, y0 + h * 0.5, x0 + w, y0 + h * 0.5, 0.35, C2("#8a8e98", 0.7));
+  };
+  mod(-14, -31, 10, 6, "#cfd2d8", "#f2f4f8"); // the European lab
+  mod(4, -32, 15, 7, "#d6d8de", "#f6f8fa"); // the Japanese lab...
+  rect(19, -31, 6, 5, C2("#b8bcc4")); // ...and its little porch
+  mod(-4, -33, 8, 9, "#dcdee4", "#ffffff"); // a node
+  mod(-3.5, -24, 7, 21, "#d4d6dc", "#f4f6f8"); // the US lab
+  mod(-3.5, 3, 7, 12, "#c8ccd2", "#eef0f4"); // the next node
+  mod(-4, 15, 8, 11, "#bcc0c6", "#e4e6ea"); // Zarya
+  mod(-4.5, 26, 9, 14, "#b4b8be", "#dcdfe4"); // Zvezda
+  for (const s of [-1, 1]) {
+    // Zvezda's own two little blue wings
+    const x0 = s > 0 ? 4.5 : -26.5;
+    rect(x0, 31, 22, 5, C2("#2c3c66"));
+    for (let i = 1; i < 6; i++) line(x0 + i * 3.7, 31, x0 + i * 3.7, 36, 0.3, C2("#5a70a8"));
+  }
+  // a capsule docked at the end, with its own tiny panels
+  rect(-2.5, 40, 5, 6, C2("#9aa294"));
+  disc(0, 47, 2.8, C2("#8a9284"));
+  for (const s of [-1, 1]) rect(s > 0 ? 2.5 : -9.5, 41.5, 7, 2.6, C2("#34466e"));
+  // the radiators: white panels off the truss
+  for (const s of [-1, 1])
+    for (const d of [-1, 1]) {
+      const rx = s * 21 - 4,
+        y0 = d > 0 ? 3 : -21;
+      rect(rx, y0, 8, 18, C2("#e8ecf0"));
+      for (let i = 1; i < 6; i++) line(rx, y0 + i * 3, rx + 8, y0 + i * 3, 0.35, C2("#a8b0bc"));
+    }
+  // THE TRUSS: the long backbone
+  rect(-66, -2.4, 132, 4.8, C2("#9ea2aa"));
+  rect(-66, -2.4, 132, 1.4, C2("#c8ccd4"));
+  for (let i = -66; i <= 66; i += 6) line(i, -2.4, i + 3, 2.4, 0.35, C2("#6a6e78"));
+  // THE EIGHT SOLAR WINGS: two masts at each end, a wing up and a wing down from each
+  for (const mx of [-58, -44, 44, 58])
+    for (const d of [-1, 1]) {
+      const y0 = d > 0 ? 3.4 : -45.4,
+        gl = 0.5 + 0.5 * Math.sin(t * 0.7 - mx * 0.04 + d * 0.6), // (the sun glinting along the panels)
+        cA = gl > 0.85 ? "#e8b84e" : gl > 0.5 ? "#c8943a" : "#a8782e";
+      for (const sx of [-5, 0.6]) {
+        rect(mx + sx, y0, 4.4, 42, C2(cA));
+        for (let j = 1; j < 14; j++)
+          line(mx + sx, y0 + j * 3, mx + sx + 4.4, y0 + j * 3, 0.3, C2("#6a4a1a", 0.8));
+      }
+      line(mx, y0, mx, y0 + 42, 0.5, C2("#d8dce4")); // the mast between the two blankets
+      if (gl > 0.92) {
+        R.setAdd(true);
+        glow(mx, y0 + 21, 18, withA(col("#fff0c0"), (gl - 0.92) * 4));
+        R.setAdd(false);
+      }
+    }
+  pop();
 }
 // =====================================================================================
 //  CHARACTERS - a little skeleton for everybody: hips, a bending torso, a head that lags behind the body,
@@ -28639,6 +28798,9 @@ function drawDeepSpace(t) {
       case "dragon":
       case "dragon2":
         drawSkyDragon(x, cy, k * 0.9, t, DRAGONS[(ATTRACT.sn + (cur.item.what === "dragon2" ? 2 : 0)) % 4]);
+        break;
+      case "iss": // the International Space Station sails slowly across, turning a little, the sun glinting on its wings
+        outlined(() => drawISS(xr, cy - 6 * k, k * 1.25, t, -0.18 + f * 0.16), INK);
         break;
       case "retro1":
         outlined(() => drawRetroCruiser(x, cy, k, t), INK);
@@ -48966,6 +49128,7 @@ const FLYBYS = [
   "retro1",
   "submarine",
   "sputnik",
+  "iss",
   "eagle",
   "retro2",
   "dragon2",
@@ -48995,6 +49158,7 @@ const FLY_NAMES                         = {
   "retro2": "A RETRO ROCKET SHIP",
   "submarine": "A SPACE SUBMARINE",
   "sputnik": "SPUTNIK · THE FIRST SATELLITE, 1957",
+  "iss": "THE INTERNATIONAL SPACE STATION · PEOPLE HAVE LIVED ON IT SINCE 2000",
   "eagle": "A GREAT EAGLE",
   "ptero": "A PTERODACTYL",
   "bats": "A CLOUD OF BATS",
@@ -49348,7 +49512,7 @@ function drawAttract(g, s, t) {
       y = (PH * 0.8 + oy) * u;
     g.textAlign = "center";
     g.textBaseline = "middle";
-    g.font = Math.round(26 * s) + "px " + FD;
+    g.font = Math.round(Math.min(26 * s, (cssW * 0.9) / Math.max(1, b.name.length) / 0.62)) + "px " + FD; // (a long name shrinks to fit)
     g.fillStyle = "#ffc34d";
     g.shadowColor = "#ffc34d";
     g.shadowBlur = 14 * s;
@@ -49429,8 +49593,8 @@ function drawAttract(g, s, t) {
     const dY = VERT ? 66 * s : cssH * 0.2,
       lY = VERT ? 86 * s : cssH * 0.27;
     const who = ATTRACT.mode
-      ? BARTENDERS[P1.char].name + (ATTRACT.mode === 2 ? "  VS  " : "  &  ") + BARTENDERS[P2.char].name
-      : BARTENDERS[P1.char].name;
+      ? barShort(P1.char) + (ATTRACT.mode === 2 ? "  VS  " : "  &  ") + barShort(P2.char)
+      : barShort(P1.char);
     if (VERT) {
       if (blink)
         neon(["DEMO", "DEMO · CO-OP", "DEMO · VERSUS"][ATTRACT.mode] + "  ·  " + who, dY, 11, "#ffc34d", 8);
@@ -49995,7 +50159,7 @@ function drawEggs(g, s) {
 // THE VERSION (from v1.2.0, 5 October 2026): MAJOR.MINOR.PATCH - a new MINOR for a batch of new things, a new PATCH for
 // fixes and small touches - with the day it was made next to it. (Before this the versions were named after the date,
 // like v2026.10.05c.)
-const GAME_VERSION = "v1.3.9",
+const GAME_VERSION = "v1.4.0",
   GAME_DATE = "06.10.2026",
   VERSION_TEXT = GAME_VERSION + "  ·  " + GAME_DATE;
 const FB = '"Chakra Petch", "Segoe UI", sans-serif';
@@ -50950,7 +51114,7 @@ function drawEndingHud(g, s, fD, fB) {
     }
   } else {
     const pt = et - 13,
-      names = E.ps.map((p) => BARTENDERS[p.char].name),
+      names = E.ps.map((p) => barShort(p.char)),
       two = names.length === 2;
     const title = two
       ? G.versus
@@ -55324,7 +55488,7 @@ const CS                                                                        
   who: 0,
 };
 function charsText() {
-  $("vChar").textContent = BARTENDERS[myChar(0)].name + (playMode ? " & " + BARTENDERS[myChar(1)].name : "");
+  $("vChar").textContent = barShort(myChar(0)) + (playMode ? " & " + barShort(myChar(1)) : "");
 }
 function buildChars() {
   const list = $("csList");
@@ -55871,6 +56035,16 @@ profWire();
 //  the game, and where the motion capture, the folk songs and the fonts come from. Both from the menu at any time.
 // =====================================================================================
 const NEWS = [
+  {
+    ver: "v1.4.0",
+    title: "NEW BARTENDERS & THE ISS",
+    items: [
+      "The International Space Station flies by - in the show and past the pub windows",
+      "Three new bartenders: Stella, Benita and Grzegorz Brzęczyszczykiewicz",
+      "Anneke is now the first barman, and Grzegorz the second (until you pick your own)",
+      "Supernovas, pulsars and black holes out of the window now play right through",
+    ],
+  },
   {
     ver: "v1.3.9",
     title: "PLAY BY MOUSE",

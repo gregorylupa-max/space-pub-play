@@ -30,6 +30,7 @@ body { user-select: none; -webkit-user-select: none; -webkit-tap-highlight-color
   box-shadow: 0 0 40px rgba(95, 245, 200, .12), inset 0 0 30px rgba(255, 95, 168, .06);
   backdrop-filter: blur(3px);
 }
+.panel > * { flex-shrink: 0; } /* (v1.4.1: when a panel is taller than the screen it scrolls - its parts used to squash and overlap) */
 .logo { margin: 0; font-family: var(--display); font-weight: 400; font-size: clamp(34px, 8.4vw, 60px); line-height: .98; letter-spacing: .01em; text-wrap: balance;
   color: var(--magenta); text-shadow: 0 0 16px rgba(255, 95, 168, .7), 0 0 40px rgba(255, 95, 168, .35); }
 .logo span { display: block; color: var(--cyan); text-shadow: 0 0 16px rgba(95, 245, 200, .7), 0 0 40px rgba(95, 245, 200, .3); }
@@ -144,12 +145,12 @@ button b { color: var(--amber); font-weight: 700; }
 kbd { font: 600 11px var(--body); color: var(--dim); border: 1px solid var(--line); border-radius: 4px; padding: 1px 5px; }
 .info { margin: 0; font-size: 13px; color: var(--dim); line-height: 1.45; min-height: 2.9em; }
 .info b { color: var(--ink); font-weight: 600; }
-.controls { display: grid; grid-template-columns: 1fr 1fr; gap: 12px 20px; }
+.controls { display: grid; grid-template-columns: 1fr; gap: 14px; } /* (v1.4.1: one list under the other - side by side they were squeezed and ran into each other) */
 .controls > div { min-width: 0; display: flex; flex-direction: column; gap: 6px; }
 .controls h3 { margin: 0; font: 400 12px var(--display); letter-spacing: .14em; color: var(--cyan); }
-.keys { display: grid; grid-template-columns: auto 1fr; gap: 4px 14px; font-size: 13px; color: var(--dim); margin: 0; }
-.keys dt { color: var(--ink); font-weight: 600; white-space: nowrap; }
-.keys dd { margin: 0; }
+.keys { display: grid; grid-template-columns: minmax(84px, 36%) 1fr; gap: 6px 14px; font-size: 13px; line-height: 1.35; color: var(--dim); margin: 0; }
+.keys dt { color: var(--ink); font-weight: 600; overflow-wrap: anywhere; }
+.keys dd { margin: 0; min-width: 0; }
 .hi { margin: 0; font-family: var(--display); font-size: 14px; color: var(--amber); letter-spacing: .08em; }
 h2 { margin: 0; font-family: var(--display); font-weight: 400; font-size: 40px; color: var(--magenta); text-shadow: 0 0 16px rgba(255, 95, 168, .6); }
 .table { margin: 0; padding: 0; list-style: none; display: grid; gap: 3px; font-family: var(--display); font-size: 13px; color: var(--dim); font-variant-numeric: tabular-nums; }
@@ -2293,6 +2294,219 @@ const DICT_ROWS                             = [
   ["BOCIAN BOGDAN, THE POSTMAN STORK", "BOCIAN BOGDAN, DIE POSBODE-OOIEVAAR", "BOCIAN BOGDAN, LISTONOSZ"],
   ["A LOST SPACE TOURIST", "'N VERDWAALDE RUIMTETOERIS", "ZAGUBIONY KOSMICZNY TURYSTA"],
 
+  // (v1.4.1) the planet tour
+  [
+    "THE SUN: OUR STAR - 109 EARTHS WOULD FIT ACROSS IT",
+    "DIE SON: ONS STER - 109 AARDES SOU OOR HOM PAS",
+    "SŁOŃCE: NASZA GWIAZDA - ZMIEŚCIŁOBY SIĘ W NIM 109 ZIEM W RZĘDZIE",
+  ],
+  [
+    "ITS LIGHT TAKES ABOUT 8 MINUTES TO REACH US",
+    "SY LIG NEEM OMTRENT 8 MINUTE OM ONS TE BEREIK",
+    "JEGO ŚWIATŁO LECI DO NAS OKOŁO 8 MINUT",
+  ],
+  [
+    "THE SURFACE IS ABOUT 5,500 °C - THE GLOWING CORONA OVER A MILLION",
+    "DIE OPPERVLAK IS OMTRENT 5 500 °C - DIE GLOEIENDE KORONA OOR 'N MILJOEN",
+    "POWIERZCHNIA MA OKOŁO 5500 °C - ŚWIECĄCA KORONA PONAD MILION",
+  ],
+  [
+    "IT HOLDS 99.8% OF ALL THE MASS IN THE SOLAR SYSTEM",
+    "DIT HOU 99,8% VAN AL DIE MASSA IN DIE SONNESTELSEL",
+    "MIEŚCI 99,8% CAŁEJ MASY UKŁADU SŁONECZNEGO",
+  ],
+  [
+    "MERCURY: THE SMALLEST PLANET, AND THE CLOSEST TO THE SUN",
+    "MERCURIUS: DIE KLEINSTE PLANEET, EN DIE NAASTE AAN DIE SON",
+    "MERKURY: NAJMNIEJSZA PLANETA I NAJBLIŻSZA SŁOŃCU",
+  ],
+  ["A YEAR THERE LASTS JUST 88 DAYS", "'N JAAR DAAR DUUR NET 88 DAE", "ROK TRWA TAM TYLKO 88 DNI"],
+  [
+    "DAYS REACH 430 °C - NIGHTS FALL TO -180 °C",
+    "DAE BEREIK 430 °C - NAGTE DAAL TOT -180 °C",
+    "W DZIEŃ 430 °C - W NOCY SPADA DO -180 °C",
+  ],
+  [
+    "IT HAS ALMOST NO AIR, SO ITS CRATERS NEVER WEAR AWAY",
+    "DIT HET AMPER GEEN LUG NIE, DUS SY KRATERS SLYT NOOIT WEG NIE",
+    "PRAWIE NIE MA POWIETRZA, WIĘC JEGO KRATERY NIGDY SIĘ NIE ZACIERAJĄ",
+  ],
+  [
+    "VENUS: THE HOTTEST PLANET - ABOUT 465 °C",
+    "VENUS: DIE WARMSTE PLANEET - OMTRENT 465 °C",
+    "WENUS: NAJGORĘTSZA PLANETA - OKOŁO 465 °C",
+  ],
+  [
+    "ITS THICK CLOUDS ARE MADE OF SULPHURIC ACID",
+    "SY DIK WOLKE IS VAN SWAWELSUUR GEMAAK",
+    "JEJ GĘSTE CHMURY SĄ Z KWASU SIARKOWEGO",
+  ],
+  [
+    "IT SPINS BACKWARDS - THERE, THE SUN RISES IN THE WEST",
+    "DIT DRAAI AGTERUIT - DAAR KOM DIE SON IN DIE WESTE OP",
+    "KRĘCI SIĘ W DRUGĄ STRONĘ - TAM SŁOŃCE WSCHODZI NA ZACHODZIE",
+  ],
+  [
+    "A DAY ON VENUS IS LONGER THAN ITS YEAR",
+    "'N DAG OP VENUS IS LANGER AS SY JAAR",
+    "DZIEŃ NA WENUS JEST DŁUŻSZY NIŻ JEJ ROK",
+  ],
+  [
+    "EARTH: THE ONLY PLANET WE KNOW OF WITH LIFE",
+    "DIE AARDE: DIE ENIGSTE PLANEET WAARVAN ONS WEET MET LEWE",
+    "ZIEMIA: JEDYNA ZNANA NAM PLANETA, NA KTÓREJ JEST ŻYCIE",
+  ],
+  [
+    "ABOUT 71% OF ITS SURFACE IS OCEAN",
+    "OMTRENT 71% VAN SY OPPERVLAK IS OSEAAN",
+    "OKOŁO 71% JEJ POWIERZCHNI TO OCEAN",
+  ],
+  [
+    "THE MOON IS ABOUT 384,000 KM AWAY - AND DRIFTS 3.8 CM FURTHER EVERY YEAR",
+    "DIE MAAN IS OMTRENT 384 000 KM WEG - EN DRYF ELKE JAAR 3,8 CM VERDER",
+    "KSIĘŻYC JEST OKOŁO 384 000 KM STĄD - I CO ROK ODSUWA SIĘ O 3,8 CM",
+  ],
+  [
+    "AT NIGHT, THE LIGHTS OF ITS CITIES SHINE OUT INTO SPACE",
+    "SNAGS SKYN DIE LIGTE VAN SY STEDE TOT IN DIE RUIMTE",
+    "NOCĄ ŚWIATŁA JEJ MIAST ŚWIECĄ AŻ W KOSMOS",
+  ],
+  [
+    "THE MOON: 12 PEOPLE WALKED ON IT, FROM 1969 TO 1972",
+    "DIE MAAN: 12 MENSE HET DAAROP GELOOP, VAN 1969 TOT 1972",
+    "KSIĘŻYC: CHODZIŁO PO NIM 12 LUDZI, OD 1969 DO 1972 ROKU",
+  ],
+  [
+    "THERE'S NO WIND THERE - THEIR FOOTPRINTS ARE STILL THERE",
+    "DAAR IS GEEN WIND NIE - HULLE VOETSPORE IS NOG DAAR",
+    "NIE MA TAM WIATRU - ICH ŚLADY STÓP WCIĄŻ TAM SĄ",
+  ],
+  [
+    "ITS GRAVITY IS ONE SIXTH OF EARTH'S - YOU COULD JUMP SIX TIMES HIGHER",
+    "SY SWAARTEKRAG IS 'N SESDE VAN DIE AARDE S'N - JY SOU SES KEER HOËR KON SPRING",
+    "GRAWITACJA TO JEDNA SZÓSTA ZIEMSKIEJ - SKOCZYŁBYŚ SZEŚĆ RAZY WYŻEJ",
+  ],
+  [
+    "THE DARK PATCHES ARE OLD SEAS OF COOLED LAVA",
+    "DIE DONKER KOLLE IS OU SEË VAN AFGEKOELDE LAVA",
+    "CIEMNE PLAMY TO DAWNE MORZA ZASTYGŁEJ LAWY",
+  ],
+  [
+    "MARS: THE RED PLANET - ITS DUST IS FULL OF RUST",
+    "MARS: DIE ROOI PLANEET - SY STOF IS VOL ROES",
+    "MARS: CZERWONA PLANETA - JEGO PYŁ JEST PEŁEN RDZY",
+  ],
+  [
+    "OLYMPUS MONS IS THE TALLEST VOLCANO WE KNOW - ABOUT 22 KM HIGH",
+    "OLYMPUS MONS IS DIE HOOGSTE VULKAAN WAARVAN ONS WEET - OMTRENT 22 KM HOOG",
+    "OLYMPUS MONS TO NAJWYŻSZY ZNANY WULKAN - MA OKOŁO 22 KM",
+  ],
+  [
+    "IT HAS TWO LITTLE MOONS: PHOBOS AND DEIMOS",
+    "DIT HET TWEE KLEIN MANE: PHOBOS EN DEIMOS",
+    "MA DWA MAŁE KSIĘŻYCE: FOBOSA I DEJMOSA",
+  ],
+  [
+    "ROBOT ROVERS HAVE BEEN EXPLORING IT SINCE 1997",
+    "ROBOTVOERTUIE VERKEN DIT AL SEDERT 1997",
+    "ŁAZIKI-ROBOTY BADAJĄ GO OD 1997 ROKU",
+  ],
+  [
+    "JUPITER: THE BIGGEST PLANET - MORE THAN 1,300 EARTHS WOULD FIT INSIDE",
+    "JUPITER: DIE GROOTSTE PLANEET - MEER AS 1 300 AARDES SOU BINNE-IN PAS",
+    "JOWISZ: NAJWIĘKSZA PLANETA - ZMIEŚCIŁOBY SIĘ W NIM PONAD 1300 ZIEM",
+  ],
+  [
+    "THE GREAT RED SPOT IS A STORM WIDER THAN THE WHOLE EARTH",
+    "DIE GROOT ROOI VLEK IS 'N STORM BREËR AS DIE HELE AARDE",
+    "WIELKA CZERWONA PLAMA TO BURZA SZERSZA NIŻ CAŁA ZIEMIA",
+  ],
+  [
+    "A DAY ON JUPITER LASTS LESS THAN 10 HOURS",
+    "'N DAG OP JUPITER DUUR MINDER AS 10 UUR",
+    "DZIEŃ NA JOWISZU TRWA MNIEJ NIŻ 10 GODZIN",
+  ],
+  [
+    "ITS FOUR BIG MOONS WERE FIRST SEEN BY GALILEO IN 1610",
+    "SY VIER GROOT MANE IS DIE EERSTE KEER IN 1610 DEUR GALILEO GESIEN",
+    "JEGO CZTERY DUŻE KSIĘŻYCE PIERWSZY ZOBACZYŁ GALILEUSZ W 1610 ROKU",
+  ],
+  [
+    "SATURN: ITS RINGS ARE MADE OF ICE AND ROCK",
+    "SATURNUS: SY RINGE IS VAN YS EN ROTS GEMAAK",
+    "SATURN: JEGO PIERŚCIENIE SĄ Z LODU I SKAŁ",
+  ],
+  [
+    "THE RINGS ARE ENORMOUSLY WIDE - BUT MOSTLY LESS THAN A KILOMETRE THICK",
+    "DIE RINGE IS GEWELDIG WYD - MAAR MEESTAL MINDER AS 'N KILOMETER DIK",
+    "PIERŚCIENIE SĄ OGROMNIE SZEROKIE - ALE PRZEWAŻNIE CIEŃSZE NIŻ KILOMETR",
+  ],
+  [
+    "IT'S SO LIGHT FOR ITS SIZE THAT IT WOULD FLOAT IN A GIANT BATH",
+    "DIT IS SO LIG VIR SY GROOTTE DAT DIT IN 'N REUSAGTIGE BAD SOU DRYF",
+    "JEST TAK LEKKI JAK NA SWÓJ ROZMIAR, ŻE PŁYWAŁBY W OLBRZYMIEJ WANNIE",
+  ],
+  [
+    "ITS BIGGEST MOON, TITAN, HAS LAKES OF LIQUID METHANE",
+    "SY GROOTSTE MAAN, TITAN, HET MERE VAN VLOEIBARE METAAN",
+    "JEGO NAJWIĘKSZY KSIĘŻYC, TYTAN, MA JEZIORA CIEKŁEGO METANU",
+  ],
+  [
+    "URANUS: IT SPINS ON ITS SIDE, LIKE A ROLLING BALL",
+    "URANUS: DIT DRAAI OP SY SY, SOOS 'N ROLLENDE BAL",
+    "URAN: KRĘCI SIĘ NA BOKU, JAK TOCZĄCA SIĘ PIŁKA",
+  ],
+  [
+    "AN ICE GIANT - AND THE COLDEST PLANET, DOWN TO ABOUT -224 °C",
+    "'N YSREUS - EN DIE KOUDSTE PLANEET, TOT OMTRENT -224 °C",
+    "LODOWY OLBRZYM - I NAJZIMNIEJSZA PLANETA, DO OKOŁO -224 °C",
+  ],
+  [
+    "ONE TRIP ROUND THE SUN TAKES IT 84 YEARS",
+    "EEN RONDTE OM DIE SON NEEM DIT 84 JAAR",
+    "JEDNO OKRĄŻENIE SŁOŃCA ZAJMUJE MU 84 LATA",
+  ],
+  ["IT HAS 13 FAINT, DARK RINGS", "DIT HET 13 DOWWE, DONKER RINGE", "MA 13 SŁABYCH, CIEMNYCH PIERŚCIENI"],
+  [
+    "NEPTUNE: THE FARTHEST PLANET FROM THE SUN",
+    "NEPTUNUS: DIE VERSTE PLANEET VAN DIE SON",
+    "NEPTUN: PLANETA NAJDALEJ OD SŁOŃCA",
+  ],
+  [
+    "ITS WINDS ARE THE FASTEST IN THE SOLAR SYSTEM - OVER 2,000 KM/H",
+    "SY WINDE IS DIE VINNIGSTE IN DIE SONNESTELSEL - MEER AS 2 000 KM/H",
+    "JEGO WIATRY SĄ NAJSZYBSZE W UKŁADZIE SŁONECZNYM - PONAD 2000 KM/H",
+  ],
+  [
+    "IT WAS FOUND WITH MATHS BEFORE ANYONE SAW IT, IN 1846",
+    "DIT IS MET WISKUNDE GEVIND VOORDAT IEMAND DIT GESIEN HET, IN 1846",
+    "ODKRYTO GO MATEMATYKĄ, ZANIM KTOKOLWIEK GO ZOBACZYŁ, W 1846 ROKU",
+  ],
+  [
+    "ITS BIGGEST MOON, TRITON, GOES ROUND THE WRONG WAY",
+    "SY GROOTSTE MAAN, TRITON, GAAN VERKEERDE KANT OM",
+    "JEGO NAJWIĘKSZY KSIĘŻYC, TRYTON, KRĄŻY W ODWROTNĄ STRONĘ",
+  ],
+  [
+    "PLUTO: A DWARF PLANET, FAR OUT BEYOND NEPTUNE",
+    "PLUTO: 'N DWERGPLANEET, VER ANKANT NEPTUNUS",
+    "PLUTON: PLANETA KARŁOWATA, DALEKO ZA NEPTUNEM",
+  ],
+  [
+    "IT HAS A BIG PALE 'HEART' OF FROZEN NITROGEN",
+    "DIT HET 'N GROOT BLEEK 'HART' VAN BEVRORE STIKSTOF",
+    "MA DUŻE JASNE 'SERCE' Z ZAMARZNIĘTEGO AZOTU",
+  ],
+  [
+    "ITS MOON CHARON IS HALF ITS SIZE - THE TWO CIRCLE EACH OTHER",
+    "SY MAAN CHARON IS HALF SO GROOT - DIE TWEE DRAAI OM MEKAAR",
+    "JEGO KSIĘŻYC CHARON JEST O POŁOWĘ MNIEJSZY - KRĄŻĄ WOKÓŁ SIEBIE NAWZAJEM",
+  ],
+  [
+    "A SPACECRAFT FLEW PAST IN 2015 AND SENT BACK THE FIRST CLOSE PICTURES",
+    "'N RUIMTETUIG HET IN 2015 VERBYGEVLIEG EN DIE EERSTE NABYFOTO'S TERUGGESTUUR",
+    "W 2015 ROKU PRZELECIAŁA OBOK SONDA I PRZYSŁAŁA PIERWSZE ZDJĘCIA Z BLISKA",
+  ],
   [
     "A RED DWARF: A SMALL, COOL, RED STAR",
     "'N ROOI DWERG: 'N KLEIN, KOEL, ROOI STER",
@@ -28462,6 +28676,7 @@ function drawAndromeda(ax, ay, a) {
   }
 }
 const ANDRO_ON = () => ATTRACT.on && ATTRACT.phase === "space"; // (Andromeda hangs in the sky of the deep-space show)
+const WORLD_SINK = { v: 0, t: 0 };
 function deepSky(L, Rr, T, B, t, at, sn, pan = 0, panX = 0) {
   const w = Rr - L,
     h = B - T,
@@ -28646,9 +28861,12 @@ function deepSky(L, Rr, T, B, t, at, sn, pan = 0, panX = 0) {
   }
   R.setAdd(false);
   // the giant planet low in a corner: a lit side, banding, a terminator shadow, an atmosphere glow, rings behind and in front
+  // (it sinks out of the way while one of the planet tour's worlds drifts by)
+  WORLD_SINK.v += ((WORLD_NOW ? 1 : 0) - WORLD_SINK.v) * Math.min(1, Math.max(0, t - WORLD_SINK.t) * 1.5);
+  WORLD_SINK.t = t;
   const gr = big * 0.17,
     gx = L + w * 0.87 - at * 1.2,
-    gy = B - gr * 1.05 - at * 0.8; // (low in the corner, out of the way of the sights)
+    gy = B - gr * 1.05 - at * 0.8 + WORLD_SINK.v * gr * 3; // (low in the corner, out of the way of the sights)
   R.setAdd(true);
   glow(gx, gy, gr * 1.5, withA(col("#ffb080"), 0.14));
   R.setAdd(false);
@@ -28688,6 +28906,10 @@ function drawDeepSpace(t) {
     at = ATTRACT.t,
     tot = ATTRACT_LEN.space,
     sn = ATTRACT.sn || 0;
+  {
+    const c0 = spaceNow();
+    WORLD_NOW = !!(c0 && c0.item.kind === "fly" && c0.item.what in WORLD_FNS);
+  }
   const cur0 = spaceNow(),
     desc = cur0 && cur0.item.kind === "descend" ? cur0 : null,
     pan = desc ? ease(desc.ph / 9) * h * 1.05 : 0, // (a slow, stately tilt down...)
@@ -28846,6 +29068,19 @@ function drawDeepSpace(t) {
         drawFlagTow(fx, fy, q, t, d < 0.8 ? 0.55 + (0.45 * (d - 0.4)) / 0.4 : 1, cur.item.nat || "za");
         break;
       } // the big flags, slowly
+      case "sun":
+      case "mercury":
+      case "venus":
+      case "earth":
+      case "moon":
+      case "mars":
+      case "jupiter":
+      case "saturn":
+      case "uranus":
+      case "neptune":
+      case "pluto":
+        drawWorldFly(cur.item.what, L, Rr, T, B, f, t); // the planet tour (planets.ts)
+        break;
       case "eclipse":
         drawEclipse(L, Rr, T, B, f, t);
         break;
@@ -31351,16 +31586,20 @@ function drawJump(t) {
   // the diner: idling, then lunging forward, shuddering through hyperspace, then gliding to a stop
   const thrust =
     j < 1.6 ? 0.12 + (j / 1.6) * 0.35 : j < 4.4 ? 0.47 + 0.53 * acc : hyper ? 1 : 1 - ease(arr) * 0.88;
-  const K = k * (VERT ? 0.42 : 0.48),
+  // (v1.4.1: bigger and higher up - clear of the tour map - and always fitting the screen, the tall view too)
+  const K = VERT
+      ? Math.min((w * 0.88) / 940, (h * 0.34) / 540)
+      : Math.min(k * 0.56, (w * 0.84) / 940, (h * 0.5) / 540),
     cx =
       L +
-      w * 0.5 +
+      w * 0.52 +
       (j < 4.4
         ? acc * w * 0.06 - Math.sin(acc * Math.PI) * w * 0.03
         : hyper
           ? w * 0.06
           : w * 0.06 * (1 - ease(arr))),
-    cy = T + h * 0.6 + (hyper ? Math.sin(t * 47) * 2 : Math.sin(t * 1.3) * 4);
+    cy =
+      (VERT ? T + h * 0.5 : T + h * 0.2 + 330 * K) + (hyper ? Math.sin(t * 47) * 2 : Math.sin(t * 1.3) * 4); // (wide: the straw's tip just under the title)
   if (hyper || (j > 7 && dec > 0)) {
     const a = hyper ? 1 : dec;
     R.setAdd(true);
@@ -31382,8 +31621,32 @@ function drawJump(t) {
   } // a wake of light
   push();
   translate(cx, cy);
+  rotate(-0.05 * (j < 4.4 ? Math.sin(acc * Math.PI) : 0) + (hyper ? Math.sin(t * 3.1) * 0.01 : 0)); // (it leans back as it surges away)
   scaleBy(K);
   drawDinerBody(t, thrust);
+  if (hyper || (j > 4 && j < 4.4)) {
+    // THE SHIELD: in hyperspace a shimmering bubble round the whole diner, brightest at the nose where it parts the light
+    const sa = hyper ? Math.min(1, (j - 4.4) * 4, (7 - j) * 4) : (j - 4) / 0.4;
+    R.setAdd(true);
+    push();
+    translate(-20, -40);
+    scaleXY(1, 0.52);
+    for (let i = 0; i < 3; i++)
+      arc(
+        0,
+        0,
+        560 + i * 18,
+        -1.15,
+        1.15,
+        6 - i * 2,
+        withA(col(i ? "#6aa0ff" : "#cfe8ff"), (0.5 - i * 0.14) * sa),
+        36
+      );
+    arc(0, 0, 560, 1.15, Math.PI * 2 - 1.15, 3, withA(col("#6aa0ff"), 0.14 * sa), 40);
+    pop();
+    glow(520, -40, 160, withA(col("#9fd0ff"), 0.45 * sa * (0.85 + 0.15 * Math.sin(t * 23))));
+    R.setAdd(false);
+  }
   // ...and someone was still outside when it left: an astronaut on the end of a tether, flapping about in the wake
   if (j > 1.4 && j < 9) {
     const tg = Math.min(1, (j - 1.4) * 1.5) * (j > 8.2 ? 1 - (j - 8.2) / 0.8 : 1),
@@ -31452,6 +31715,15 @@ function drawDinerBody(t, thrust = 0) {
       withA(col("#e8f4ff"), 0.5 + 0.45 * thrust)
     );
     glow(-470, py, r * (1.6 + thrust * 2.4), withA(col("#9fd0ff"), 0.4 + 0.5 * thrust));
+    for (let j = 0; j < 4; j++) {
+      const f = (t * (1.2 + thrust * 2.4) + j / 4 + py * 0.01) % 1;
+      glow(
+        -490 - f * Lp * 0.7,
+        py,
+        r * (0.7 + f * 1.2),
+        withA(col("#cfe8ff"), (0.18 + 0.3 * thrust) * (1 - f))
+      );
+    } // (v1.4.1) shock diamonds drifting back down the plume
   }
   R.setAdd(false);
   for (const [py, r] of [
@@ -31478,8 +31750,51 @@ function drawDinerBody(t, thrust = 0) {
       line(-470 + i * 35, py - r - 1, -470 + i * 35, py + r + 1, 2, withA(col("#1a1c24"), 0.4));
   }
   // the floating rock, thrusters glowing underneath
-  poly([-420, 40, 420, 40, 360, 90, 220, 150, 60, 190, -120, 170, -300, 120, -400, 80], col("#3a3036"));
-  poly([-420, 40, 420, 40, 380, 60, -390, 62], col("#5a4a52"));
+  // (v1.4.1) RUBBLE: little rocks shaken loose, trailing behind - more of them, and further, the faster it goes
+  for (let i = 0; i < 9; i++) {
+    const f = (t * (0.08 + thrust * 0.5) + hash(i * 3.3)) % 1,
+      rx = -380 - f * (300 + thrust * 900),
+      ry = 70 + hash(i * 7.1) * 120 + Math.sin(t * 0.7 + i) * 8,
+      rr = 5 + hash(i * 1.9) * 12;
+    disc(rx, ry, rr, withA(col("#3a3036"), 1 - f * 0.7), rr * 0.8);
+    disc(rx - rr * 0.25, ry - rr * 0.25, rr * 0.55, withA(col("#6a5a62"), 1 - f * 0.7), rr * 0.45);
+  }
+  // THE FLOATING ROCK in layers: a dark belly, a lighter crust on top, strata, craters, and glowing crystals
+  poly([-420, 40, 420, 40, 360, 90, 220, 150, 60, 190, -120, 170, -300, 120, -400, 80], col("#2a2228"));
+  poly([-420, 40, 420, 40, 380, 82, 220, 132, 50, 166, -120, 150, -290, 106, -396, 72], col("#3e3238"));
+  poly([-420, 40, 420, 40, 396, 64, 230, 96, 40, 112, -140, 104, -320, 86, -404, 60], col("#544650"));
+  poly([-420, 40, 420, 40, 380, 60, -390, 62], col("#6e5e68"));
+  for (const [x1, y1, x2, y2] of [
+    [-360, 84, -120, 96],
+    [-80, 120, 180, 108],
+    [-260, 120, -40, 140],
+    [120, 140, 260, 124],
+  ])
+    line(x1, y1, x2, y2, 2, withA(col("#1e181c"), 0.6)); // strata
+  for (const [x, y, r] of [
+    [-300, 92, 14],
+    [-60, 132, 18],
+    [160, 104, 11],
+    [40, 160, 9],
+    [300, 74, 10],
+  ]) {
+    disc(x, y, r, col("#2a2228"), r * 0.5);
+    disc(x, y - r * 0.12, r * 0.8, col("#1e181c"), r * 0.36);
+  } // craters
+  R.setAdd(true);
+  for (const [x, y, a, cc] of [
+    [-200, 128, -0.4, "#5ff5ff"],
+    [-170, 136, 0.3, "#5ff5ff"],
+    [96, 170, 0.2, "#ff5fd0"],
+    [120, 160, -0.5, "#ff5fd0"],
+    [300, 104, 0.4, "#9f7aff"],
+  ]         ) {
+    const pu = 0.65 + 0.35 * Math.sin(t * 2.2 + x * 0.05);
+    glow(x, y + 6, 26, withA(col(cc), 0.35 * pu));
+    tri(x - 6, y, x + 6, y, x + Math.sin(a) * 30, y + Math.cos(a) * 30, withA(col(cc), 0.85 * pu));
+    tri(x - 2, y, x + 3, y, x + Math.sin(a) * 24, y + Math.cos(a) * 24, withA(C.white, 0.6 * pu));
+  } // crystals growing out of the rock, glowing
+  R.setAdd(false);
   for (let i = 0; i < 5; i++) {
     const x = -260 + i * 130,
       y = 150 - Math.abs(i - 2) * 22;
@@ -31498,12 +31813,80 @@ function drawDinerBody(t, thrust = 0) {
     R.setAdd(false);
   }
   // the diner: a long chrome streamliner with a red stripe and rounded ends
-  disc(-250, -50, 78, col("#b8bccc"));
-  disc(250, -50, 78, col("#b8bccc"));
-  rect(-250, -128, 500, 156, col("#c8ccd8"));
-  rect(-320, -128 + 10, 640, 30, col("#d8dce8"));
-  rect(-326, -40, 652, 22, col("#d84050"));
+  // (v1.4.1) a shaded chrome hull: bright where the light catches the top, darker towards the belly, a red stripe with depth
+  for (const ex of [-250, 250]) {
+    disc(ex, -48, 80, col("#7a8090"));
+    disc(ex, -52, 77, col("#b8bccc"));
+    disc(ex + (ex < 0 ? -10 : 10), -82, 40, withA(col("#e8ecf6"), 0.7), 26);
+  }
+  quad4(
+    -250,
+    -128,
+    250,
+    -128,
+    250,
+    28,
+    -250,
+    28,
+    col("#eef0f8"),
+    col("#eef0f8"),
+    col("#8e94a4"),
+    col("#8e94a4")
+  );
+  quad4(
+    -320,
+    -118,
+    320,
+    -118,
+    320,
+    -88,
+    -320,
+    -88,
+    col("#f6f8fc"),
+    col("#f6f8fc"),
+    col("#c0c4d0"),
+    col("#c0c4d0")
+  );
+  rect(-250, -128, 500, 4, withA(C.white, 0.75)); // the sunlit rim along the roof
+  quad4(
+    -326,
+    -40,
+    326,
+    -40,
+    326,
+    -18,
+    -326,
+    -18,
+    col("#ff5a6a"),
+    col("#ff5a6a"),
+    col("#a82838"),
+    col("#a82838")
+  );
+  rect(-326, -40, 652, 3, withA(col("#ffb0b8"), 0.8));
   rect(-326, -14, 652, 6, col("#f0f0f4"));
+  if (thrust > 0.35) {
+    // the light of the stars rushing past, sliding along the chrome
+    R.setAdd(true);
+    for (let i = 0; i < 2; i++) {
+      const f = (t * (0.6 + thrust * 1.4) + i * 0.5) % 1,
+        sx = 330 - f * 760;
+      quad4(
+        sx,
+        -126,
+        sx + 26,
+        -126,
+        sx - 14,
+        26,
+        sx - 40,
+        26,
+        withA(C.white, 0.0),
+        withA(C.white, 0.22 * thrust),
+        withA(C.white, 0.12 * thrust),
+        withA(C.white, 0)
+      );
+    }
+    R.setAdd(false);
+  }
   for (let i = 0; i < 9; i++) {
     const x = -260 + i * 62,
       lit = 0.75 + 0.25 * Math.sin(t * 1.3 + i * 2.1);
@@ -31521,6 +31904,59 @@ function drawDinerBody(t, thrust = 0) {
       disc(x + 29, -77, 5, col("#ffffff"), 3);
     }
   } // people inside; a bartender in a paper hat
+  // (v1.4.1) CHASER BULBS all along the roof edge, and the navigation lights: red at the back, green at the front
+  {
+    const ch = Math.floor(t * 9);
+    for (let i = 0; i < 26; i++) {
+      const bx = -250 + i * 20,
+        on = (i + ch) % 3 === 0;
+      disc(bx, -129, 3.2, col(on ? "#fff4c0" : "#8a7a50"));
+      if (on) {
+        R.setAdd(true);
+        glow(bx, -129, 10, withA(col("#ffd870"), 0.7));
+        R.setAdd(false);
+      }
+    }
+    R.setAdd(true);
+    if (Math.sin(t * 3) > 0) glow(-330, -30, 26, withA(col("#ff3040"), 0.9));
+    if (Math.sin(t * 3 + 1.6) > 0) glow(330, -30, 26, withA(col("#40ff80"), 0.9));
+    const sb = (t * 1.1) % 1;
+    if (sb < 0.05 || (sb > 0.12 && sb < 0.17)) glow(50, -330, 40, withA(C.white, 0.95)); // a double strobe on the straw
+    R.setAdd(false);
+  }
+  // SEARCHLIGHTS from the deck, sweeping the sky (off in hyperspace)
+  if (thrust < 0.9) {
+    R.setAdd(true);
+    const sa = 1 - thrust;
+    for (const [bx, ph] of [
+      [-380, 0],
+      [370, 2.1],
+    ]         ) {
+      const a = -Math.PI / 2 + Math.sin(t * 0.45 + ph) * 0.55,
+        Lb = 900,
+        sp = 0.09,
+        ex1 = bx + Math.cos(a - sp) * Lb,
+        ey1 = 20 + Math.sin(a - sp) * Lb,
+        ex2 = bx + Math.cos(a + sp) * Lb,
+        ey2 = 20 + Math.sin(a + sp) * Lb;
+      quad4(
+        bx - 6,
+        20,
+        ex1,
+        ey1,
+        ex2,
+        ey2,
+        bx + 6,
+        20,
+        withA(col("#fff4d8"), 0.2 * sa),
+        withA(col("#fff4d8"), 0),
+        withA(col("#fff4d8"), 0),
+        withA(col("#fff4d8"), 0.2 * sa)
+      );
+      glow(bx, 20, 16, withA(col("#fff4d8"), 0.8 * sa));
+    }
+    R.setAdd(false);
+  }
   // two flags flying on the roof: South Africa and Poland. The diner always flies to the right (the engines are at the back,
   // on the left), so the flags stream out BEHIND their poles - to the left - mirrored, so they still read the right way round
   for (const [fx, nat, ph] of [
@@ -40448,6 +40884,656 @@ function drawStopMood(t) {
   }
 }
 // =====================================================================================
+//  THE PLANET TOUR (v1.4.1): in the full-screen show, the Sun and the worlds of the Solar System drift by one at a time,
+//  big and slowly turning - each with its own look (storms, ice caps, rings, moons) and true facts as captions along the
+//  bottom (WORLD_CAPS, shown by attract.ts like the star events' captions). All drawn here from plain shapes:
+//    - a body is a disc, limb-darkened, with features painted ON THE SPHERE (they slide round and squash at the edges
+//      as it turns),
+//    - then a soft day/night edge (the Sun is to the left), and a glowing atmosphere where there is one.
+// =====================================================================================
+const TOUR_WORLDS = [
+  "sun",
+  "earth",
+  "mars",
+  "jupiter",
+  "saturn",
+  "moon",
+  "venus",
+  "neptune",
+  "mercury",
+  "uranus",
+  "pluto",
+];
+// (the facts: checked against NASA's planet fact sheets)
+const WORLD_CAPS                                     = {
+  sun: [
+    [0, "THE SUN: OUR STAR - 109 EARTHS WOULD FIT ACROSS IT"],
+    [0.27, "ITS LIGHT TAKES ABOUT 8 MINUTES TO REACH US"],
+    [0.5, "THE SURFACE IS ABOUT 5,500 °C - THE GLOWING CORONA OVER A MILLION"],
+    [0.74, "IT HOLDS 99.8% OF ALL THE MASS IN THE SOLAR SYSTEM"],
+  ],
+  mercury: [
+    [0, "MERCURY: THE SMALLEST PLANET, AND THE CLOSEST TO THE SUN"],
+    [0.27, "A YEAR THERE LASTS JUST 88 DAYS"],
+    [0.5, "DAYS REACH 430 °C - NIGHTS FALL TO -180 °C"],
+    [0.74, "IT HAS ALMOST NO AIR, SO ITS CRATERS NEVER WEAR AWAY"],
+  ],
+  venus: [
+    [0, "VENUS: THE HOTTEST PLANET - ABOUT 465 °C"],
+    [0.27, "ITS THICK CLOUDS ARE MADE OF SULPHURIC ACID"],
+    [0.5, "IT SPINS BACKWARDS - THERE, THE SUN RISES IN THE WEST"],
+    [0.74, "A DAY ON VENUS IS LONGER THAN ITS YEAR"],
+  ],
+  earth: [
+    [0, "EARTH: THE ONLY PLANET WE KNOW OF WITH LIFE"],
+    [0.27, "ABOUT 71% OF ITS SURFACE IS OCEAN"],
+    [0.5, "THE MOON IS ABOUT 384,000 KM AWAY - AND DRIFTS 3.8 CM FURTHER EVERY YEAR"],
+    [0.74, "AT NIGHT, THE LIGHTS OF ITS CITIES SHINE OUT INTO SPACE"],
+  ],
+  moon: [
+    [0, "THE MOON: 12 PEOPLE WALKED ON IT, FROM 1969 TO 1972"],
+    [0.27, "THERE'S NO WIND THERE - THEIR FOOTPRINTS ARE STILL THERE"],
+    [0.5, "ITS GRAVITY IS ONE SIXTH OF EARTH'S - YOU COULD JUMP SIX TIMES HIGHER"],
+    [0.74, "THE DARK PATCHES ARE OLD SEAS OF COOLED LAVA"],
+  ],
+  mars: [
+    [0, "MARS: THE RED PLANET - ITS DUST IS FULL OF RUST"],
+    [0.27, "OLYMPUS MONS IS THE TALLEST VOLCANO WE KNOW - ABOUT 22 KM HIGH"],
+    [0.5, "IT HAS TWO LITTLE MOONS: PHOBOS AND DEIMOS"],
+    [0.74, "ROBOT ROVERS HAVE BEEN EXPLORING IT SINCE 1997"],
+  ],
+  jupiter: [
+    [0, "JUPITER: THE BIGGEST PLANET - MORE THAN 1,300 EARTHS WOULD FIT INSIDE"],
+    [0.27, "THE GREAT RED SPOT IS A STORM WIDER THAN THE WHOLE EARTH"],
+    [0.5, "A DAY ON JUPITER LASTS LESS THAN 10 HOURS"],
+    [0.74, "ITS FOUR BIG MOONS WERE FIRST SEEN BY GALILEO IN 1610"],
+  ],
+  saturn: [
+    [0, "SATURN: ITS RINGS ARE MADE OF ICE AND ROCK"],
+    [0.27, "THE RINGS ARE ENORMOUSLY WIDE - BUT MOSTLY LESS THAN A KILOMETRE THICK"],
+    [0.5, "IT'S SO LIGHT FOR ITS SIZE THAT IT WOULD FLOAT IN A GIANT BATH"],
+    [0.74, "ITS BIGGEST MOON, TITAN, HAS LAKES OF LIQUID METHANE"],
+  ],
+  uranus: [
+    [0, "URANUS: IT SPINS ON ITS SIDE, LIKE A ROLLING BALL"],
+    [0.27, "AN ICE GIANT - AND THE COLDEST PLANET, DOWN TO ABOUT -224 °C"],
+    [0.5, "ONE TRIP ROUND THE SUN TAKES IT 84 YEARS"],
+    [0.74, "IT HAS 13 FAINT, DARK RINGS"],
+  ],
+  neptune: [
+    [0, "NEPTUNE: THE FARTHEST PLANET FROM THE SUN"],
+    [0.27, "ITS WINDS ARE THE FASTEST IN THE SOLAR SYSTEM - OVER 2,000 KM/H"],
+    [0.5, "IT WAS FOUND WITH MATHS BEFORE ANYONE SAW IT, IN 1846"],
+    [0.74, "ITS BIGGEST MOON, TRITON, GOES ROUND THE WRONG WAY"],
+  ],
+  pluto: [
+    [0, "PLUTO: A DWARF PLANET, FAR OUT BEYOND NEPTUNE"],
+    [0.27, "IT HAS A BIG PALE 'HEART' OF FROZEN NITROGEN"],
+    [0.5, "ITS MOON CHARON IS HALF ITS SIZE - THE TWO CIRCLE EACH OTHER"],
+    [0.74, "A SPACECRAFT FLEW PAST IN 2015 AND SENT BACK THE FIRST CLOSE PICTURES"],
+  ],
+};
+Object.assign(SPACE_CAPS, WORLD_CAPS); // (their captions run just like the star events')
+let WORLD_NOW = false; // (a world is drifting by this frame: the giant planet in the corner of the sky steps aside)
+// a spot ON THE SPHERE (longitude, latitude in radians; rot turns the world): squashed as it nears the edge, hidden round
+// the back. (rx, ry: its size; kx stretches it east-west - for cloud streaks and storms)
+function onSphere(r, rot, lon, lat, sz, c, kx = 1, ky = 1) {
+  const d = lon - rot,
+    cz = Math.cos(lat) * Math.cos(d);
+  if (cz <= 0.04) return;
+  const x = r * Math.cos(lat) * Math.sin(d),
+    y = -r * Math.sin(lat),
+    hw = r * Math.sqrt(Math.max(0, 1 - (y / r) ** 2)) - Math.abs(x),
+    hh = r * Math.sqrt(Math.max(0, 1 - (x / r) ** 2)) - Math.abs(y),
+    rx = Math.min(sz * kx * Math.max(0.12, Math.cos(d)), hw * 0.96),
+    ry = Math.min(sz * ky * Math.max(0.2, Math.cos(lat)), hh * 0.96);
+  if (rx > 0.4 && ry > 0.4) disc(x, y, rx, c, ry); // (never poking out past the rim)
+}
+// a band of latitude (lat0..lat1, radians): chord-shaped strips that stay inside the disc
+function latBand(r, lat0, lat1, c, wob = 0, t = 0) {
+  const y0 = -r * Math.sin(lat1),
+    y1 = -r * Math.sin(lat0),
+    n = 3;
+  for (let i = 0; i < n; i++) {
+    const a = y0 + ((y1 - y0) * i) / n,
+      b = y0 + ((y1 - y0) * (i + 1)) / n,
+      far = Math.abs(a) > Math.abs(b) ? a : b,
+      hw = r * 0.985 * Math.sqrt(Math.max(0, 1 - (far / r) ** 2)),
+      dy = wob ? Math.sin(t * 0.5 + i + lat0 * 9) * wob : 0;
+    if (hw > 1) rect(-hw, a + dy, hw * 2, b - a, c);
+  }
+}
+// the night side (the Sun is to the left): a smooth mesh from the day/night edge - a half-ellipse that sweeps across as
+// tk goes from -1 (all night) to 1 (all day) - round to the right-hand rim, with a soft fade along the edge
+function nightSide(r, tk, a = 0.88, rows = 40) {
+  const dk = col("#02030c"),
+    P = [];
+  for (let i = 0; i <= rows; i++) {
+    const th = -Math.PI / 2 + (i / rows) * Math.PI,
+      y = r * Math.sin(th),
+      hw = r * Math.cos(th);
+    P.push([y, hw * tk, hw, Math.max(1, hw * 0.3)]);
+  }
+  for (let i = 0; i < rows; i++) {
+    const [y0, x0, h0, s0] = P[i],
+      [y1, x1, h1, s1] = P[i + 1];
+    quad4(
+      x0 - s0,
+      y0,
+      x0 + s0,
+      y0,
+      x1 + s1,
+      y1,
+      x1 - s1,
+      y1,
+      withA(dk, 0),
+      withA(dk, a),
+      withA(dk, a),
+      withA(dk, 0)
+    );
+    const e0 = Math.min(h0, x0 + s0),
+      e1 = Math.min(h1, x1 + s1);
+    quad4(e0, y0, h0, y0, h1, y1, e1, y1, withA(dk, a));
+  }
+}
+// an ice cap at a pole: a cap of the sphere, cut off at latitude lat (+ north, - south)
+function polarCap(r, lat, c) {
+  const n = 18,
+    sg = Math.sign(lat),
+    pts = [];
+  const y0 = -sg * r * Math.sin(Math.abs(lat));
+  for (let i = 0; i <= n; i++) {
+    const a = Math.PI + (i / n) * Math.PI,
+      x = Math.cos(a) * r,
+      y = sg > 0 ? Math.sin(a) * r : -Math.sin(a) * r;
+    if ((sg > 0 && y <= y0) || (sg < 0 && y >= y0)) pts.push(x, y);
+  }
+  const hw = r * Math.cos(Math.abs(lat));
+  pts.unshift(-hw, y0);
+  pts.push(hw, y0);
+  // a fan from the cut line's middle (the cap is convex)
+  for (let i = 0; i + 3 < pts.length; i += 2) tri(0, y0, pts[i], pts[i + 1], pts[i + 2], pts[i + 3], c);
+  disc(0, y0, hw, c, r * 0.04); // (a soft, rounded lower edge)
+}
+// the base of a world: a darker rim, the body, a softer middle - so it looks round
+function worldBall(r, c1, c2) {
+  disc(0, 0, r, shade(c2, 0.8));
+  disc(0, 0, r * 0.985, c2);
+  disc(-r * 0.05, -r * 0.04, r * 0.9, c1);
+}
+// the glow of an atmosphere round the edge, brightest on the day side
+function atmosphere(r, c, a) {
+  R.setAdd(true);
+  for (const [wd, aa] of [
+    [0.12, 0.18],
+    [0.06, 0.3],
+    [0.025, 0.5],
+  ])
+    arc(0, 0, r, Math.PI * 0.42, Math.PI * 1.58, r * wd, withA(c, a * aa), 48); // (a soft rim of air: wide and faint, narrow and bright)
+  glow(-r * 0.2, 0, r * 1.35, withA(c, a * 0.18));
+  R.setAdd(false);
+}
+// a sheen of sunlight on the day side (the light comes from the left)
+function sunSheen(r, a = 0.14) {
+  disc(-r * 0.42, -r * 0.3, r * 0.42, withA(C.white, a), r * 0.38);
+  disc(-r * 0.5, -r * 0.36, r * 0.2, withA(C.white, a * 0.8), r * 0.18);
+}
+// ---- the bodies themselves (each centred on 0,0, radius r) ----
+function wSun(r, t) {
+  R.setAdd(true);
+  glow(0, 0, r * 3.2, withA(col("#ff9a30"), 0.16));
+  glow(0, 0, r * 1.9, withA(col("#ffb040"), 0.35));
+  for (let i = 0; i < 12; i++) {
+    const a = (i / 12) * 6.283 + Math.sin(t * 0.2 + i) * 0.1,
+      Lr = r * (1.5 + 0.35 * hash(i * 3.1) + 0.12 * Math.sin(t * 0.6 + i * 2));
+    quad4(
+      Math.cos(a - 0.06) * r,
+      Math.sin(a - 0.06) * r,
+      Math.cos(a) * Lr,
+      Math.sin(a) * Lr,
+      Math.cos(a) * Lr,
+      Math.sin(a) * Lr,
+      Math.cos(a + 0.06) * r,
+      Math.sin(a + 0.06) * r,
+      withA(col("#ffe0a0"), 0.22),
+      withA(col("#ff9a30"), 0),
+      withA(col("#ff9a30"), 0),
+      withA(col("#ffe0a0"), 0.22)
+    );
+  } // the streamers of the corona
+  R.setAdd(false);
+  disc(0, 0, r, col("#f07818"));
+  disc(0, 0, r * 0.95, col("#ff9a28"));
+  disc(0, 0, r * 0.82, col("#ffb840"));
+  disc(0, 0, r * 0.62, col("#ffd060"));
+  disc(0, 0, r * 0.38, col("#ffe898")); // (darker towards the edge, like the real Sun)
+  for (let i = 0; i < 160; i++) {
+    const a = hash(i * 1.7) * 6.283,
+      d = Math.sqrt(hash(i * 2.9)) * r * 0.93,
+      fl = 0.5 + 0.5 * Math.sin(t * (1 + hash(i) * 2) + i);
+    disc(
+      Math.cos(a) * d,
+      Math.sin(a) * d,
+      r * (0.025 + hash(i * 5) * 0.03),
+      withA(col(i % 2 ? "#fff4c8" : "#e07010"), 0.12 + 0.12 * fl)
+    );
+  } // the boiling granules
+  const rot = t * 0.05;
+  for (const [lon, lat, s] of [
+    [0.3, 0.25, 0.07],
+    [0.55, 0.3, 0.045],
+    [2.4, -0.2, 0.06],
+    [4.1, 0.15, 0.05],
+  ]) {
+    onSphere(r, rot, lon, lat, r * s * 1.7, col("#c85a10"));
+    onSphere(r, rot, lon, lat, r * s, col("#4a1a04"));
+  } // sunspots, cooler (and darker) than all round them
+  R.setAdd(true);
+  for (let i = 0; i < 4; i++) {
+    const a = 0.6 + i * 1.55 + Math.sin(t * 0.13 + i) * 0.2,
+      px = Math.cos(a) * r,
+      py = Math.sin(a) * r,
+      h0 = r * (0.1 + 0.06 * Math.sin(t * 0.7 + i * 1.3));
+    arc(px, py, h0, a - 1.45, a + 1.45, r * 0.035, withA(col("#ff6a20"), 0.75), 16);
+    arc(px, py, h0 * 0.8, a - 1.3, a + 1.3, r * 0.02, withA(col("#ffb060"), 0.5), 14);
+    glow(px + Math.cos(a) * h0 * 0.6, py + Math.sin(a) * h0 * 0.6, h0 * 0.9, withA(col("#ff7a30"), 0.3));
+  } // prominences: loops of glowing gas arching off the edge
+  glow(0, 0, r * 1.06, withA(col("#ffd080"), 0.25));
+  R.setAdd(false);
+}
+function wMercury(r, t) {
+  worldBall(r, col("#a8a29c"), col("#7a746e"));
+  const rot = t * 0.04;
+  for (let i = 0; i < 46; i++) {
+    const lon = hash(i * 3.3) * 6.283,
+      lat = (hash(i * 7.1) - 0.5) * 2.6,
+      s = r * (0.03 + hash(i * 1.9) ** 2 * 0.13);
+    onSphere(r, rot, lon, lat, s, col("#c8c2bc"));
+    onSphere(r, rot, lon - 0.01, lat + 0.01, s * 0.82, col("#6a645e"));
+  } // craters on craters - nothing ever wears them away
+  sunSheen(r, 0.12);
+  nightSide(r, 0.2);
+}
+function wVenus(r, t) {
+  worldBall(r, col("#f2dca0"), col("#c8a868"));
+  const rot = -t * 0.06; // (it turns the other way)
+  for (let i = 0; i < 9; i++) {
+    const lat0 = -1.3 + i * 0.29;
+    latBand(r, lat0, lat0 + 0.12, withA(col(i % 2 ? "#fff0c8" : "#d4b070"), 0.35), r * 0.02, t);
+  }
+  for (let i = 0; i < 30; i++)
+    onSphere(
+      r,
+      rot * 1.6,
+      hash(i * 2.3) * 6.283,
+      (hash(i * 5.1) - 0.5) * 2.2,
+      r * (0.05 + hash(i) * 0.06),
+      withA(col(i % 3 ? "#fff4d8" : "#b8945a"), 0.5),
+      3.2,
+      0.7
+    ); // swirling cloud streaks
+  sunSheen(r, 0.2);
+  atmosphere(r, col("#ffe8b0"), 0.5);
+  nightSide(r, 0.25, 0.85);
+}
+function continentsOn(r, rot, c, pts) {
+  for (const [lon, lat, s] of pts) onSphere(r, rot, lon, lat, r * s, c);
+}
+const EARTH_LAND = [
+  // (made-up continents: a big one, a long one, an island chain and a hot desert land)
+  [0.2, 0.5, 0.2],
+  [0.45, 0.35, 0.22],
+  [0.1, 0.25, 0.16],
+  [0.6, 0.6, 0.15],
+  [0.3, 0.75, 0.14],
+  [1.9, 0.2, 0.17],
+  [2.05, -0.1, 0.16],
+  [2.15, -0.4, 0.13],
+  [1.8, 0.5, 0.12],
+  [3.4, -0.3, 0.1],
+  [3.6, -0.2, 0.08],
+  [3.8, -0.35, 0.07],
+  [4.6, 0.3, 0.18],
+  [4.8, 0.1, 0.17],
+  [4.9, -0.15, 0.14],
+  [5.5, -0.5, 0.15],
+];
+function wEarth(r, t, moon = true) {
+  worldBall(r, col("#2a6ad0"), col("#163c8a"));
+  const rot = t * 0.09;
+  continentsOn(r, rot, col("#2e7a34"), EARTH_LAND);
+  continentsOn(
+    r,
+    rot,
+    col("#c8a860"),
+    EARTH_LAND.filter((p, i) => i % 4 === 1).map(([a, b, s]) => [a + 0.04, b - 0.03, s * 0.55])
+  ); // deserts
+  polarCap(r, 1.02, col("#f4f8ff"));
+  polarCap(r, -1.05, col("#f4f8ff")); // the ice caps
+  for (let i = 0; i < 34; i++)
+    onSphere(
+      r,
+      rot * 1.25 + t * 0.02,
+      hash(i * 4.1) * 6.283,
+      (hash(i * 2.7) - 0.5) * 2.4,
+      r * (0.05 + hash(i * 9) * 0.07),
+      withA(C.white, 0.7),
+      2.6,
+      0.8
+    ); // clouds, drifting faster than the ground
+  sunSheen(r, 0.18);
+  nightSide(r, 0.3, 0.9);
+  // city lights on the night side
+  R.setAdd(true);
+  for (const [lon, lat, s] of EARTH_LAND) {
+    const d = lon - rot,
+      cz = Math.cos(lat) * Math.cos(d),
+      x = r * Math.cos(lat) * Math.sin(d),
+      y = -r * Math.sin(lat),
+      hw = r * Math.sqrt(Math.max(0, 1 - (y / r) ** 2));
+    if (cz > 0.1 && x > hw * 0.62)
+      for (let k = 0; k < 5; k++)
+        disc(
+          x + (hash(k + lon * 9) - 0.5) * r * s,
+          y + (hash(k * 3 + lat * 7) - 0.5) * r * s * 0.7,
+          r * 0.008,
+          withA(col("#ffd070"), 0.85)
+        );
+  }
+  R.setAdd(false);
+  atmosphere(r, col("#6ab0ff"), 0.6);
+  if (moon) {
+    const a = t * 0.12,
+      mx = Math.cos(a) * r * 1.9,
+      my = Math.sin(a) * r * 0.35 - r * 0.25,
+      front = Math.sin(a) > 0;
+    if (front || mx * mx + my * my > r * r) {
+      push();
+      translate(mx, my);
+      wMoonBall(r * 0.27, t);
+      pop();
+    }
+  }
+}
+function wMoonBall(r, t) {
+  worldBall(r, col("#c8c8c0"), col("#8a8a84"));
+  const rot = 0.4; // (it always shows us the same face)
+  for (const [lon, lat, s] of [
+    [0.1, 0.45, 0.26],
+    [0.45, 0.3, 0.2],
+    [-0.25, 0.25, 0.22],
+    [0.3, -0.05, 0.16],
+    [-0.1, -0.1, 0.12],
+    [0.6, 0.6, 0.12],
+  ])
+    onSphere(r, rot, lon + 0.4, lat, r * s, col("#7a7a76")); // the seas of old lava
+  for (let i = 0; i < 26; i++) {
+    const lon = hash(i * 3.7) * 2.6 - 1.3 + 0.4,
+      lat = (hash(i * 6.1) - 0.5) * 2.4,
+      s = r * (0.02 + hash(i * 2.2) ** 2 * 0.07);
+    onSphere(r, rot, lon, lat, s, col("#e0e0d8"));
+    onSphere(r, rot, lon + 0.01, lat - 0.01, s * 0.75, col("#9a9a94"));
+  }
+  R.setAdd(true);
+  for (let i = 0; i < 8; i++) {
+    const a = (i / 8) * 6.283;
+    line(
+      r * 0.1,
+      r * 0.55,
+      r * 0.1 + Math.cos(a) * r * 0.35,
+      r * 0.55 + Math.sin(a) * r * 0.25,
+      r * 0.012,
+      withA(C.white, 0.18)
+    );
+  } // a young crater's bright rays
+  R.setAdd(false);
+  sunSheen(r, 0.1);
+  nightSide(r, 0.15, 0.92);
+}
+function wMoon(r, t) {
+  // the Earth, small and blue, rising behind
+  push();
+  translate(r * 1.55, -r * 0.95);
+  wEarth(r * 0.3, t, false);
+  pop();
+  wMoonBall(r, t);
+  // and a lander's footprints? too small to see from here - but the flag's shadow is long at sunrise...
+}
+function wMars(r, t) {
+  worldBall(r, col("#d4683a"), col("#9a3e1c"));
+  const rot = t * 0.08;
+  for (const [lon, lat, s, c] of [
+    [0.4, 0.2, 0.22, "#8a3a1e"],
+    [0.9, -0.3, 0.26, "#7a321a"],
+    [2.2, 0.1, 0.2, "#8a3a1e"],
+    [3.6, -0.2, 0.3, "#7a321a"],
+    [4.6, 0.35, 0.18, "#8a3a1e"],
+    [5.4, -0.45, 0.22, "#7a321a"],
+  ]         )
+    onSphere(r, rot, lon, lat, r * s, withA(col(c), 0.7), 1.4, 0.8); // the dark markings
+  for (let i = 0; i < 9; i++)
+    onSphere(r, rot, 1.6 + i * 0.09, -0.12 - Math.sin(i) * 0.03, r * 0.04, col("#5a2210"), 1.6, 0.6); // a great canyon
+  onSphere(r, rot, 2.9, 0.3, r * 0.12, col("#e88a5a"));
+  onSphere(r, rot, 2.9, 0.3, r * 0.05, col("#a04a28")); // the giant volcano
+  polarCap(r, 1.08, col("#fff4f0"));
+  polarCap(r, -1.18, col("#fff4f0")); // the polar ice caps
+  sunSheen(r, 0.14);
+  atmosphere(r, col("#ffb090"), 0.3);
+  nightSide(r, 0.25);
+  // PHOBOS, a little lumpy moon, racing round
+  const a = t * 0.5,
+    px = Math.cos(a) * r * 1.5,
+    py = Math.sin(a) * r * 0.3 + r * 0.1;
+  if (Math.sin(a) > 0 || px * px + py * py > r * r) {
+    disc(px, py, r * 0.09, col("#6a5a50"), r * 0.065);
+    disc(px - r * 0.02, py - r * 0.015, r * 0.06, col("#9a8a7a"), r * 0.045);
+  }
+}
+function wJupiter(r, t) {
+  worldBall(r, col("#ecdcc0"), col("#b08a64"));
+  const rot = t * 0.14;
+  const B = [
+    [1.15, 1.5, "#9a8a7a"],
+    [0.85, 1.0, "#c8a07a"],
+    [0.5, 0.7, "#a8704a"],
+    [0.3, 0.42, "#f4e8d4"],
+    [0.1, 0.24, "#b8805a"],
+    [-0.1, 0.06, "#f8ecd8"],
+    [-0.38, -0.18, "#a86c46"],
+    [-0.62, -0.46, "#c89a72"],
+    [-0.95, -0.75, "#b08a6a"],
+    [-1.5, -1.15, "#9a8a7a"],
+  ]         ;
+  for (const [a, b, c] of B) latBand(r, a, b, withA(col(c), 0.75), r * 0.006, t);
+  for (let i = 0; i < 26; i++)
+    onSphere(
+      r,
+      rot,
+      hash(i * 3.1) * 6.283,
+      [0.24, 0.06, -0.18, 0.44][i % 4],
+      r * (0.025 + hash(i) * 0.03),
+      withA(col(i % 2 ? "#fff4e4" : "#6a4a3a"), 0.6),
+      2.6,
+      0.6
+    ); // swirls along the edges of the belts
+  // THE GREAT RED SPOT
+  onSphere(r, rot, 1.2, -0.38, r * 0.17, col("#e8c0a0"), 1.5, 0.75);
+  onSphere(r, rot, 1.2, -0.38, r * 0.14, col("#c8502a"), 1.5, 0.7);
+  onSphere(r, rot, 1.2, -0.38, r * 0.07, col("#e07a50"), 1.5, 0.65);
+  sunSheen(r, 0.1);
+  nightSide(r, 0.35, 0.85);
+  atmosphere(r, col("#ffe0c0"), 0.2);
+  // the four big moons, strung out in a line, going round
+  for (const [i, d, sp, c, s] of [
+    [0, 1.45, 0.5, "#f0d060", 0.05],
+    [1, 1.85, 0.33, "#d8d0c0", 0.045],
+    [2, 2.4, 0.2, "#a89a8a", 0.07],
+    [3, 3.1, 0.12, "#7a7068", 0.065],
+  ]         ) {
+    const a = t * sp + i * 1.7,
+      mx = Math.cos(a) * r * d,
+      my = Math.sin(a) * r * d * 0.06;
+    if (Math.sin(a) < 0 && Math.abs(mx) < r) continue; // (behind the planet)
+    disc(mx, my, r * s, col(c));
+    disc(mx + r * s * 0.35, my, r * s * 0.8, withA(col("#02030c"), 0.6));
+  }
+}
+function wSaturn(r, t) {
+  drawSaturn(0, 0, r * 0.78, 0.3, col("#ecd29a"), col("#a8824e"), -0.12);
+  // TITAN, orange in its hazy air
+  const a = t * 0.15,
+    mx = Math.cos(a) * r * 1.75,
+    my = Math.sin(a) * r * 0.35 - r * 0.1;
+  if (Math.sin(a) > 0 || Math.abs(mx) > r * 1.3) {
+    disc(mx, my, r * 0.075, col("#d8963a"));
+    disc(mx + r * 0.025, my + r * 0.01, r * 0.06, withA(col("#02030c"), 0.4));
+  }
+}
+function wUranus(r, t) {
+  const tilt = 1.48; // (on its side: the rings stand up and down)
+  push();
+  rotate(tilt);
+  for (const [r0, r1] of [
+    [1.62, 1.66],
+    [1.74, 1.77],
+    [1.9, 1.96],
+  ])
+    ringBand(0, 0, r * r0, r * r1, 0.2, Math.PI, Math.PI * 2, withA(col("#8aa0b0"), 0.5), 40);
+  pop();
+  worldBall(r, col("#b4ecf0"), col("#6ab8c8"));
+  for (let i = 0; i < 4; i++) latBand(r, -0.9 + i * 0.5, -0.8 + i * 0.5, withA(col("#d8fbff"), 0.2));
+  sunSheen(r, 0.16);
+  atmosphere(r, col("#a8f0ff"), 0.4);
+  nightSide(r, 0.3, 0.85);
+  push();
+  rotate(tilt);
+  for (const [r0, r1] of [
+    [1.62, 1.66],
+    [1.74, 1.77],
+    [1.9, 1.96],
+  ])
+    ringBand(0, 0, r * r0, r * r1, 0.2, 0, Math.PI, withA(col("#9ab4c4"), 0.6), 40);
+  pop();
+  for (let i = 0; i < 3; i++) {
+    const a = t * (0.2 - i * 0.05) + i * 2.1,
+      mx = Math.sin(a) * r * 0.3,
+      my = Math.cos(a) * r * (1.4 + i * 0.35); // (its moons go round its tipped-over middle - up and down)
+    if (Math.sin(a) < 0 && Math.abs(my) < r) continue;
+    disc(mx, my, r * 0.045, col("#b8b4ac"));
+  }
+}
+function wNeptune(r, t) {
+  worldBall(r, col("#3a6ae8"), col("#1a3a9a"));
+  const rot = t * 0.12;
+  for (let i = 0; i < 5; i++)
+    latBand(r, -1.0 + i * 0.45, -0.92 + i * 0.45, withA(col(i % 2 ? "#5a8aff" : "#2a4ab8"), 0.35));
+  onSphere(r, rot, 2.0, -0.35, r * 0.15, col("#14287a"), 1.5, 0.75); // a great dark storm...
+  onSphere(r, rot * 1.3, 2.05, -0.2, r * 0.07, withA(C.white, 0.85), 2.4, 0.5); // ...and the white clouds riding beside it
+  for (let i = 0; i < 12; i++)
+    onSphere(
+      r,
+      rot * 1.6,
+      hash(i * 5.3) * 6.283,
+      (hash(i * 2.1) - 0.5) * 1.8,
+      r * 0.04,
+      withA(C.white, 0.75),
+      3.5,
+      0.5
+    ); // fast streaks of cloud
+  sunSheen(r, 0.15);
+  atmosphere(r, col("#7aa8ff"), 0.55);
+  nightSide(r, 0.3, 0.88);
+  const a = -t * 0.25,
+    mx = Math.cos(a) * r * 1.6,
+    my = Math.sin(a) * r * 0.4; // TRITON, going round the wrong way
+  if (Math.sin(a) > 0 || mx * mx + my * my > r * r) {
+    disc(mx, my, r * 0.08, col("#e0c8c0"));
+    disc(mx + r * 0.03, my, r * 0.065, withA(col("#02030c"), 0.45));
+  }
+}
+function wPluto(r, t) {
+  // PLUTO and CHARON circle a point between them
+  const a = t * 0.18,
+    d = r * 2.1,
+    px = -Math.cos(a) * d * 0.3,
+    py = -Math.sin(a) * d * 0.1,
+    cx = Math.cos(a) * d,
+    cy = Math.sin(a) * d * 0.33,
+    charon = () => {
+      push();
+      translate(cx, cy);
+      const cr = r * 0.5;
+      worldBall(cr, col("#a8a6a2"), col("#6a6866"));
+      polarCap(cr, 1.15, col("#7a4a3a")); // its dark red cap
+      for (let i = 0; i < 10; i++)
+        onSphere(cr, a, hash(i * 2.7) * 6.283, (hash(i * 4.3) - 0.5) * 2, cr * 0.06, col("#8a8884"));
+      sunSheen(cr, 0.1);
+      nightSide(cr, 0.2, 0.9, 30);
+      pop();
+    };
+  if (Math.sin(a) < 0) charon(); // (behind)
+  push();
+  translate(px, py);
+  worldBall(r, col("#d8bc98"), col("#9a7458"));
+  const rot = 0.6 + Math.sin(t * 0.1) * 0.2; // (the heart turned towards us)
+  for (const [lon, lat, s] of [
+    [0.4, -0.15, 0.3],
+    [0.75, -0.25, 0.26],
+    [0.55, -0.4, 0.2],
+    [0.4, 0.05, 0.18],
+    [0.8, -0.02, 0.15],
+  ])
+    onSphere(r, rot, lon, lat, r * s, col("#f6ecdc")); // the big pale HEART
+  for (const [lon, lat, s] of [
+    [-0.6, -0.05, 0.2],
+    [-0.9, 0.0, 0.22],
+    [-1.25, -0.05, 0.18],
+    [3.2, 0.05, 0.25],
+  ])
+    onSphere(r, rot, lon, lat, r * s, col("#6a3a28"), 1.6, 0.7); // dark red lands along its middle
+  sunSheen(r, 0.08);
+  nightSide(r, 0.15, 0.9);
+  pop();
+  if (Math.sin(a) >= 0) charon();
+}
+const WORLD_FNS                                                 = {
+  sun: wSun,
+  mercury: wMercury,
+  venus: wVenus,
+  earth: (r, t) => wEarth(r, t, true),
+  moon: wMoon,
+  mars: wMars,
+  jupiter: wJupiter,
+  saturn: wSaturn,
+  uranus: wUranus,
+  neptune: wNeptune,
+  pluto: wPluto,
+};
+const WORLD_SIZE = { sun: 1.15, mercury: 0.8, moon: 0.85, pluto: 0.62, saturn: 1.1, uranus: 0.85 };
+// ONE WORLD DRIFTING BY in the full-screen show (f: 0..1 through its turn): it glides in from the right, slows to a near
+// stop in the middle (turning all the while) and glides out to the left
+function drawWorldFly(what, L, Rr, T, B, f, t) {
+  const fn = WORLD_FNS[what];
+  if (!fn) return;
+  const w = Rr - L,
+    h = B - T,
+    r = Math.min(w, h) * (VERT ? 0.3 : 0.26) * (WORLD_SIZE[what] || 1),
+    inF = ease(clamp(f / 0.16, 0, 1)),
+    outF = ease(clamp((f - 0.84) / 0.16, 0, 1)),
+    x = L + w * 0.54 + (1 - inF) * (w * 0.5 + r * 2.4) - outF * (w * 0.5 + r * 2.6) - (f - 0.5) * w * 0.08,
+    y = T + h * (VERT ? 0.45 : 0.44);
+  if (what !== "sun") {
+    // the faint light of the far-off Sun, off to the left, so the day side makes sense
+    R.setAdd(true);
+    glow(x - r * 3.2, y - r * 0.3, r * 1.1, withA(col("#ffe8c0"), 0.08));
+    R.setAdd(false);
+  }
+  push();
+  translate(x, y);
+  fn(r, t);
+  pop();
+}
+// =====================================================================================
 //  MORE FUN (v2026.10.03f): flavour ORDERS, PETS WITH POWERS, a COIN SHOP, MINI-GAMES between worlds, a TROPHY ROOM,
 //  BARTENDER LEVELS, DECORATE YOUR DINER, ENDLESS MODE, HOLIDAY EVENTS, STORY SCENES with Bocian Bogdan,
 //  ONE-BUTTON MODE for little ones, and a friendly BREAK REMINDER
@@ -49198,7 +50284,9 @@ function spacePlan(n)             {
       const what = ["eclipse", "pulsar", "sunrise", "reddwarf", "blackhole", "supernova", "nstar"][n % 7];
       return { kind: "fly", what, len: what === "nstar" ? 34 : 28 };
     })(),
-    { kind: "space", len: 12 },
+    { kind: "space", len: 8 },
+    { kind: "fly", what: TOUR_WORLDS[(n * 2) % TOUR_WORLDS.length], len: 28 }, // the planet tour: a world from the Solar System...
+    { kind: "space", len: 8 },
     { kind: "scene", sc, len: sc.len },
     { kind: "space", len: 18, gag: gag(1) },
     {
@@ -49215,7 +50303,9 @@ function spacePlan(n)             {
     ...iconPair(n),
     { kind: "space", len: 14 },
     { kind: "fly", what: fl2, len: 14, ...flyDepth() },
-    { kind: "space", len: 12 },
+    { kind: "space", len: 8 },
+    { kind: "fly", what: TOUR_WORLDS[(n * 2 + 1) % TOUR_WORLDS.length], len: 28 }, // ...and another, before we head home
+    { kind: "space", len: 8 },
     { kind: "descend", len: 24 },
   ].map((it          ) => (it.kind === "scene" && !it.len ? { ...it, len: it.sc.len } : it)); // (a moment in history each show: South Africa first, then Poland, taking turns)   // (one big flag each show, South Africa or Poland at random)
 }
@@ -49873,9 +50963,32 @@ function drawAttract(g, s, t) {
           tOut = (b - f) * cur.item.len;
         g.globalAlpha = clamp(Math.min(tIn, tOut) * 2, 0, 1) * 0.9;
         const txt = T(CAPS[i][1]),
-          sz = Math.min(15, (cssW * 0.92) / Math.max(1, txt.length) / 0.62 / s);
-        band(txt, cssH * 0.86, sz);
-        neon(txt, cssH * 0.86, sz, /SUPERNOVA|TOTALITY/.test(CAPS[i][1]) ? "#ffd0f0" : "#bfe4ff", 8);
+          fit = (tx) => Math.min(15, (cssW * 0.92) / Math.max(1, tx.length) / 0.62 / s),
+          cc = /SUPERNOVA|TOTALITY/.test(CAPS[i][1]) ? "#ffd0f0" : "#bfe4ff";
+        let lines = [txt];
+        if (fit(txt) < 13 && txt.includes(" ")) {
+          // (v1.4.1: too long for a narrow screen - two lines, split near the middle, at a dash or colon if there's one)
+          const mid = txt.length / 2;
+          let best = -1;
+          for (let k = 0; k < txt.length; k++)
+            if (txt[k] === " ") {
+              const sc2 = Math.abs(k - mid) - (/[-:,]/.test(txt[k - 1] || "") || txt[k + 1] === "-" ? 6 : 0);
+              if (
+                best < 0 ||
+                sc2 <
+                  Math.abs(best - mid) - (/[-:,]/.test(txt[best - 1] || "") || txt[best + 1] === "-" ? 6 : 0)
+              )
+                best = k;
+            }
+          lines = [txt.slice(0, best), txt.slice(best + 1)];
+        }
+        const sz = Math.min(...lines.map(fit)),
+          lh = sz * s * 1.9;
+        lines.forEach((ln, li) => {
+          const yy = cssH * 0.86 + (li - (lines.length - 1)) * lh;
+          band(ln, yy, sz);
+          neon(ln, yy, sz, cc, 8);
+        });
         g.globalAlpha = 1;
       }
     }
@@ -50159,7 +51272,7 @@ function drawEggs(g, s) {
 // THE VERSION (from v1.2.0, 5 October 2026): MAJOR.MINOR.PATCH - a new MINOR for a batch of new things, a new PATCH for
 // fixes and small touches - with the day it was made next to it. (Before this the versions were named after the date,
 // like v2026.10.05c.)
-const GAME_VERSION = "v1.4.0",
+const GAME_VERSION = "v1.4.1",
   GAME_DATE = "06.10.2026",
   VERSION_TEXT = GAME_VERSION + "  ·  " + GAME_DATE;
 const FB = '"Chakra Petch", "Segoe UI", sans-serif';
@@ -50191,8 +51304,14 @@ function tourMap(g, s, a) {
   g.textAlign = "center";
   g.textBaseline = "middle";
   g.lineWidth = 2 * s;
+  // (v1.4.1: every label is kept inside the screen - at the first and last stops it used to hang off the edge)
+  const inside = (txt, x) => {
+    const hw2 = g.measureText(txt).width / 2 + 10 * s;
+    return clamp(x, hw2, Math.max(hw2, cssW - hw2));
+  };
   const lbl = (txt, x, yy, c, px) => {
     g.font = Math.round(px * s) + "px " + FD;
+    x = inside(txt, x);
     const lw = g.measureText(txt).width + 12 * s;
     g.fillStyle = "rgba(10,8,30,.75)";
     g.fillRect(x - lw / 2, yy - px * 0.9 * s, lw, px * 1.8 * s);
@@ -50240,7 +51359,7 @@ function tourMap(g, s, a) {
     if (on) {
       g.font = Math.round(10 * s) + "px " + FD;
       g.fillStyle = "#ffc34d";
-      g.fillText("YOU ARE HERE", x, y + 26 * s);
+      g.fillText("YOU ARE HERE", inside("YOU ARE HERE", x), y + 26 * s);
     }
   }
   // (the fact about the new place comes with its introduction, after the trip)
@@ -56035,6 +57154,16 @@ profWire();
 //  the game, and where the motion capture, the folk songs and the fonts come from. Both from the menu at any time.
 // =====================================================================================
 const NEWS = [
+  {
+    ver: "v1.4.1",
+    title: "THE PLANET TOUR",
+    items: [
+      "The planet tour: the Sun and every planet drift through the show - with true facts about each",
+      "The bar on its trip between stops: chrome, lights, searchlights, glowing crystals and a hyperspace shield",
+      "The keyboard and controller help in Settings no longer runs together",
+      '"YOU ARE HERE" on the tour map no longer runs off the side of the screen',
+    ],
+  },
   {
     ver: "v1.4.0",
     title: "NEW BARTENDERS & THE ISS",

@@ -148,6 +148,10 @@ kbd { font: 600 11px var(--body); color: var(--dim); border: 1px solid var(--lin
 .controls { display: grid; grid-template-columns: 1fr; gap: 14px; } /* (v1.4.1: one list under the other - side by side they were squeezed and ran into each other) */
 .controls > div { min-width: 0; display: flex; flex-direction: column; gap: 6px; }
 .controls h3 { margin: 0; font: 400 12px var(--display); letter-spacing: .14em; color: var(--cyan); }
+#howto { width: min(720px, calc(100% - 24px)); }
+#howto .help h3 { margin: 10px 0 2px; font: 400 12px var(--display); letter-spacing: .12em; color: var(--cyan); }
+#howto .help p { margin: 0 0 4px; font-size: 14px; line-height: 1.45; color: var(--dim); }
+#howto .help b { color: var(--ink); }
 .keys { display: grid; grid-template-columns: minmax(84px, 36%) 1fr; gap: 6px 14px; font-size: 13px; line-height: 1.35; color: var(--dim); margin: 0; }
 .keys dt { color: var(--ink); font-weight: 600; overflow-wrap: anywhere; }
 .keys dd { margin: 0; min-width: 0; }
@@ -238,7 +242,8 @@ body.retro .table { font-size: 10px; gap: 5px; }
     <button id="bDaily" class="wide">DAILY CHALLENGE: <b id="vDaily"></b></button>
     <button id="bMore" class="big">★ PLAY MORE</button>
     <button id="bSettings" class="big">⚙ SETTINGS</button>
-    <button id="bNews" class="wide">WHAT'S NEW &amp; CREDITS <b id="vNews"></b></button>
+    <button id="bHow">? HOW TO PLAY</button>
+    <button id="bNews">WHAT'S NEW &amp; CREDITS <b id="vNews"></b></button>
     <button id="bFull">FULL SCREEN <kbd>F</kbd></button>
     <button id="bExit">EXIT GAME</button>
     <button id="bCold" class="wide" title="Start again from the very beginning, like switching it on: back to the demo (F8). Your stars, coins and settings are kept.">↻ COLD START</button>
@@ -297,6 +302,8 @@ body.retro .table { font-size: 10px; gap: 5px; }
     <h3 class="sec">COMFORT</h3>
     <button id="bCalm">CALM MODE: <b id="vCalm">OFF</b></button>
     <button id="bShapes">FLAVOUR SHAPES: <b id="vShapes">OFF</b></button>
+    <button id="bFlav">FLAVOUR ORDERS: <b id="vFlav">ON</b></button>
+    <button id="bHow2">? HOW TO PLAY</button>
     <button id="bBreak">BREAK REMINDER: <b id="vBreak">OFF</b></button>
     <button id="bHoliday" >HOLIDAY: <b id="vHoliday">BY DATE</b></button>
   </div>
@@ -391,6 +398,27 @@ body.retro .table { font-size: 10px; gap: 5px; }
   <div class="profRow"><button id="profExp">EXPORT (COPY MY CODE)</button><button id="profImp">IMPORT A CODE</button></div>
   <p class="info" id="profMsg"></p>
   <button id="profBack" class="primary">DONE <kbd>Esc</kbd></button>
+</section>
+
+<section id="howto" class="panel" hidden aria-label="How to play">
+  <h2>HOW TO PLAY</h2>
+  <div class="help">
+    <h3>THE AIM</h3>
+    <p>Customers walk down the four bars towards you. Pour a shake and slide it to them: when one catches it, they slide back up the bar, drink it - and slide the empty glass back down to you. Serve everyone in the queue and the level is done; then it's off to the next stop of the tour.</p>
+    <h3>POURING AND SLIDING</h3>
+    <p>Stand at the taps and <b>hold POUR</b> to fill the glass; <b>let go</b> to slide it down the bar. Let go just as it fills for a <b>PERFECT</b> pour (extra points). In TAP mode (Settings, or T) one press does it all.</p>
+    <h3>YOU LOSE A LIFE WHEN</h3>
+    <p>&bull; a customer reaches your end of the bar &bull; a shake slides off the far end with nobody to catch it &bull; an empty glass slides back past you and smashes. So: serve them early, never slide a shake down an empty bar, and run to catch the empties!</p>
+    <h3>RUNNING, TIPS AND TURBO</h3>
+    <p>Run along the bar (left/right). Customers served quickly often leave a <b>TIP</b> on the counter - run up and grab it for bonus points. Tap a direction twice, or hold it, for a <b>TURBO</b> run. Change bar with up/down, 1-4, or a tap/click on it.</p>
+    <h3>FLAVOURS</h3>
+    <p>Some customers show the flavour they'd like in a bubble over their head - strawberry, chocolate or mint. Switch your flavour (<b>E</b>, a <b>right-click</b>, SELECT on a controller, or the FLAVOUR words / button) and serve the one they asked for: <b>+150</b>. The wrong flavour is still fine - just no bonus. Don't want to bother? Turn <b>FLAVOUR ORDERS</b> off in SETTINGS: then nobody asks, and there's just one flavour to pour.</p>
+    <h3>SPECIAL GUESTS</h3>
+    <p>Don't serve <b>devils, demons or vampires</b>: run up the bar and show them the door, or send HOLY WATER (H) / show the CROSS (Q). <b>Angels</b> are worth triple points. Customers with a <b>stopwatch</b> are in a hurry - serve them fast for a bonus. A <b>protest</b> calms down when you serve the marchers.</p>
+    <h3>POWER-UPS, STARS AND COINS</h3>
+    <p>Grab the <b>power-ups</b> that appear on the bar when it's quiet. Each level gives up to three <b>stars</b>, and you earn <b>coins</b> to spend in the COIN SHOP (PLAY MORE). FREE PLAY mode has no losing and no timer.</p>
+  </div>
+  <button id="howBack" class="primary">DONE <kbd>Esc</kbd></button>
 </section>
 
 <section id="news" class="panel side" hidden aria-label="What's new and credits">
@@ -719,9 +747,12 @@ function makeGL(cv, power, retro, levels, crt) {
   gl.linkProgram(prog);
   if (!gl.getProgramParameter(prog, gl.LINK_STATUS)) return null;
   gl.useProgram(prog);
-  const F = 10,
+  // (v1.4.5) A VERTEX is 32 bytes: the position (2 floats), the colour (4 x 16-bit, 0-1 - plenty of precision, half the
+  // size of floats), and the shape info (4 floats). 20% less to send to the video card every frame than before.
+  const F = 8,
     MAXV = 90000,
     data = new Float32Array(MAXV * F),
+    cols16 = new Uint16Array(data.buffer),
     buf = gl.createBuffer();
   gl.bindBuffer(gl.ARRAY_BUFFER, buf);
   gl.bufferData(gl.ARRAY_BUFFER, data.byteLength, gl.DYNAMIC_DRAW);
@@ -731,8 +762,12 @@ function makeGL(cv, power, retro, levels, crt) {
     gl.vertexAttribPointer(l, size, gl.FLOAT, false, F * 4, off * 4);
   };
   at("p", 2, 0);
-  at("c", 4, 2);
-  at("t", 4, 6);
+  {
+    const l = gl.getAttribLocation(prog, "c");
+    gl.enableVertexAttribArray(l);
+    gl.vertexAttribPointer(l, 4, gl.UNSIGNED_SHORT, true, F * 4, 8);
+  }
+  at("t", 4, 4);
   const uRes = gl.getUniformLocation(prog, "res"),
     uHard = gl.getUniformLocation(prog, "hard"),
     uOff = gl.getUniformLocation(prog, "off");
@@ -790,9 +825,9 @@ function makeGL(cv, power, retro, levels, crt) {
     gl.enableVertexAttribArray(locP);
     gl.vertexAttribPointer(locP, 2, gl.FLOAT, false, F * 4, 0);
     gl.enableVertexAttribArray(locC);
-    gl.vertexAttribPointer(locC, 4, gl.FLOAT, false, F * 4, 8);
+    gl.vertexAttribPointer(locC, 4, gl.UNSIGNED_SHORT, true, F * 4, 8);
     gl.enableVertexAttribArray(locT);
-    gl.vertexAttribPointer(locT, 4, gl.FLOAT, false, F * 4, 24);
+    gl.vertexAttribPointer(locT, 4, gl.FLOAT, false, F * 4, 16);
   }
   gl.enable(gl.BLEND);
   let n = 0,
@@ -815,7 +850,7 @@ function makeGL(cv, power, retro, levels, crt) {
     if (!n) return;
     vtot += n;
     if (capture) {
-      capture.push({ data: data.slice(0, n * F), add });
+      capture.push({ data: new Float32Array(data.buffer.slice(0, n * F * 4)), add }); // (copied byte for byte)
       n = 0;
       return;
     }
@@ -832,14 +867,18 @@ function makeGL(cv, power, retro, levels, crt) {
       a = c[3];
     data[i] = x * sc;
     data[i + 1] = y * sc;
-    data[i + 2] = c[0] * a;
-    data[i + 3] = c[1] * a;
-    data[i + 4] = c[2] * a;
-    data[i + 5] = add ? 0 : a;
-    data[i + 6] = u;
-    data[i + 7] = w;
-    data[i + 8] = m;
-    data[i + 9] = s;
+    const j = (i + 2) * 2, // (the colour, in 16-bit steps)
+      r = c[0] * a,
+      g2 = c[1] * a,
+      b = c[2] * a;
+    cols16[j] = r >= 1 ? 65535 : r > 0 ? r * 65535 + 0.5 : 0;
+    cols16[j + 1] = g2 >= 1 ? 65535 : g2 > 0 ? g2 * 65535 + 0.5 : 0;
+    cols16[j + 2] = b >= 1 ? 65535 : b > 0 ? b * 65535 + 0.5 : 0;
+    cols16[j + 3] = add ? 0 : a >= 1 ? 65535 : a > 0 ? a * 65535 + 0.5 : 0;
+    data[i + 4] = u;
+    data[i + 5] = w;
+    data[i + 6] = m;
+    data[i + 7] = s;
     n++;
   }
   const room = (k) => {
@@ -1069,8 +1108,8 @@ function makeGL(cv, power, retro, levels, crt) {
       for (const sg of L) {
         gl.bindBuffer(gl.ARRAY_BUFFER, sg.b);
         gl.vertexAttribPointer(locP, 2, gl.FLOAT, false, F * 4, 0);
-        gl.vertexAttribPointer(locC, 4, gl.FLOAT, false, F * 4, 8);
-        gl.vertexAttribPointer(locT, 4, gl.FLOAT, false, F * 4, 24);
+        gl.vertexAttribPointer(locC, 4, gl.UNSIGNED_SHORT, true, F * 4, 8);
+        gl.vertexAttribPointer(locT, 4, gl.FLOAT, false, F * 4, 16);
         gl.drawArrays(gl.TRIANGLES, 0, sg.count);
         calls++;
       }
@@ -1686,6 +1725,7 @@ const COMFORT = {
   buzz: store.get("buzz", true) !== false,
   txt: clamp(store.get("txt", 0) | 0, 0, 2),
   lefty: !!store.get("lefty", false),
+  flav: store.get("flavours", true) !== false, // (v1.4.5) FLAVOUR ORDERS on or off
 }; // (how many times the video card was lost and the game fell back to the processor)
 const stage = $("stage"),
   hud = $("hud"),
@@ -2933,6 +2973,16 @@ const DICT_ROWS                             = [
   ["✓ DONE TODAY", "✓ VANDAG KLAAR", "✓ DZIŚ ZROBIONE"],
   // v2026.10.04ar: challenge modes, controls, the music box, the galaxy map
   ["TIME ATTACK", "TYDJAG", "NA CZAS"],
+  ["? HOW TO PLAY", "? HOE OM TE SPEEL", "? JAK GRAĆ"],
+  ["HOW TO PLAY", "HOE OM TE SPEEL", "JAK GRAĆ"],
+  ["FLAVOUR ORDERS:", "GEURBESTELLINGS:", "ZAMÓWIENIA SMAKÓW:"],
+  ["THE AIM", "DIE DOEL", "CEL GRY"],
+  ["POURING AND SLIDING", "SKINK EN GLY", "NALEWANIE I ŚLIZGANIE"],
+  ["YOU LOSE A LIFE WHEN", "JY VERLOOR 'N LEWE AS", "TRACISZ ŻYCIE, GDY"],
+  ["RUNNING, TIPS AND TURBO", "HARDLOOP, FOOIE EN TURBO", "BIEGANIE, NAPIWKI I TURBO"],
+  ["FLAVOURS", "GEURE", "SMAKI"],
+  ["SPECIAL GUESTS", "SPESIALE GASTE", "SPECJALNI GOŚCIE"],
+  ["POWER-UPS, STARS AND COINS", "KRAGTE, STERRE EN MUNTE", "BONUSY, GWIAZDKI I MONETY"],
   ["COSMIC WEATHER: SOLAR WIND!", "RUIMTEWEER: SONWIND!", "KOSMICZNA POGODA: WIATR SŁONECZNY!"],
   ["COSMIC WEATHER: METEOR HAIL!", "RUIMTEWEER: METEOORHAEL!", "KOSMICZNA POGODA: GRAD METEORÓW!"],
   [
@@ -5000,7 +5050,7 @@ const FAN_SLOGANS = {
   gb: ["COME ON BRITAIN!", "RULE BRITANNIA!", "KEEP CALM AND SHAKE ON!"],
   fr: ["ALLEZ LES BLEUS!", "VIVE LA FRANCE!", "ON EST LES CHAMPIONS!"],
   in: ["INDIA! INDIA!", "NAMASTE!", "BHARAT!"],
-  at: ["SERVUS!", "AUSTRIA!", "PROST - WITH MILKSHAKE!"],
+  at: ["SERVUS!", "AUSTRIA!", "PROST - WITH MILKSHAKE!", "HOLLA-RI-DI-HO!", "BABA!"],
   de: ["DEUTSCHLAND!", "AUF GEHT'S!", "TOR! TOR! TOR!"],
 };
 const FAN_NAMES = {
@@ -5805,6 +5855,7 @@ function startLevel() {
   startTwist();
   kidLevelStart();
   weatherLevelStart();
+  crittersLevelStart();
   funLevelStart();
   if (!G.demo)
     for (const p of active()) {
@@ -7616,7 +7667,25 @@ function update(dt) {
       type.zombie ||
       type.snake ||
       [TYPE_OF.dragon, TYPE_OF.alibaba, SPIRITS.pontiff].includes(type);
-    if (!special && Math.random() < 0.16) {
+    if (!special && Math.random() < 0.035) {
+      // (v1.4.5) AUSTRIANS on their own, now and then: a man in lederhosen and a Tyrolean hat, a lady in a dirndl with a
+      // slice of Sachertorte - and the first time in a game, a hello and a little fact
+      type = TYPE_OF.fan;
+      const lk = Math.random() < 0.5 ? "aut" : "aut2";
+      fan = { nation: "at", look: lk, flag: lk === "aut", horn: false, ball: null, cake: lk === "aut2" };
+      const seen = G.anSeen || (G.anSeen = {});
+      if (!seen.at && !demo) {
+        seen.at = true;
+        callout("SERVUS! VISITORS FROM AUSTRIA!", "#ff5f6f", 2.4);
+        G.callouts.push({
+          text: "THE SACHERTORTE - CHOCOLATE CAKE WITH APRICOT JAM - WAS FIRST BAKED IN VIENNA IN 1832",
+          c: "#ffe6a0",
+          life: 3.8,
+          max: 3.8,
+          sub: true,
+        });
+      }
+    } else if (!special && Math.random() < 0.16) {
       type = TYPE_OF.fan;
       const nat = Math.random() < 0.6 ? "za" : pickNation(),
         lk = FAN_LOOKS[nat][Math.floor(Math.random() * FAN_LOOKS[nat].length)];
@@ -7730,6 +7799,7 @@ function update(dt) {
   updateTwist(dt, demo);
   kidUpdate(dt, demo);
   weatherUpdate(dt, demo); // (v1.4.3) a spell of cosmic weather, once a level
+  crittersUpdate(dt); // (v1.4.4) the spider, the caterpillars and the worms
   funUpdate(dt, demo);
   // ---- THE SPACE RACE (from level 3): an astronaut, a cosmonaut and a taikonaut walk in together, one on each of three bars ----
   if (G.level >= 3) {
@@ -11094,7 +11164,9 @@ function startJump() {
   G.state = "jump";
   // (the window cleaner's words: the next set each trip, starting somewhere different each game)
   JUMP_SAY_N = JUMP_SAY_N < 0 ? Math.floor(Math.random() * JUMP_SAYS.length) : JUMP_SAY_N + 1;
-  G.jump = { t: 0, banged: false, out: false, say: JUMP_SAY_N };
+  G.jump = { t: 0, banged: false, out: false, say: JUMP_SAY_N, rocks: Math.random() < 0.65, hits: 0 };
+  // (v1.4.5) leaving the Milky Way for Andromeda: THE GREAT JUMP across the gap between the galaxies (intergal.ts)
+  if (G.level === MW_LAST + 1 && !G.endless && !G.ta && !G.brush) G.jump.inter = true; // (rocks: meteors hit the shield this trip)
   customers = [];
   shakes = [];
   empties = [];
@@ -11104,6 +11176,11 @@ function startJump() {
 }
 function updateJump(dt) {
   const J = G.jump;
+  if (J.inter) {
+    updateInterJump(dt);
+    if (J.t >= INTER_LEN) finishJump();
+    return;
+  }
   J.t += dt * 1.6; // (v1.4.1: the whole trip plays faster - about 6 seconds instead of 10 - and back to the bar sooner)
   if (J.t > 1.6 && !J.rev) {
     J.rev = true;
@@ -11115,13 +11192,25 @@ function updateJump(dt) {
     G.flash = 1;
     G.flashC = col("#cfe8ff");
   }
+  if (J.rocks) {
+    // (v1.4.5) a meteor striking the shield: a boom as each one hits
+    const n = Math.floor((J.t - METEOR_T0) / METEOR_GAP);
+    if (J.t >= METEOR_T0 && n < METEOR_N && n >= (J.hits || 0)) {
+      J.hits = n + 1;
+      sfx("boom", PW * 0.75);
+      G.shake = Math.max(G.shake || 0, 1.6);
+    }
+  }
   if (J.t > 7 && !J.out) {
     J.out = true;
     sfx("warp");
     G.flash = 0.8;
     G.flashC = C.white;
   }
-  if (J.t >= JUMP_LEN) {
+  if (J.t >= JUMP_LEN) finishJump();
+}
+function finishJump() {
+  {
     G.jump = null;
     G.state = "play";
     startLevel();
@@ -11136,9 +11225,11 @@ function updateJump(dt) {
   } // first the trip, then Bogdan (sometimes), then the new place. (the press that skipped the jump doesn't pour)
 }
 function skipJump() {
-  if (G.jump && G.jump.t < JUMP_LEN - 0.8) {
-    G.jump.t = Math.max(G.jump.t, JUMP_LEN - 0.8);
+  const len = G.jump && G.jump.inter ? INTER_LEN : JUMP_LEN;
+  if (G.jump && G.jump.t < len - 0.8) {
+    G.jump.t = Math.max(G.jump.t, len - 0.8);
     G.jump.banged = G.jump.out = G.jump.rev = true;
+    if (G.jump.inter) for (const k of ["s1", "s2", "s3", "s4"]) G.jump[k] = true;
   }
 }
 function nextSwap() {
@@ -11901,6 +11992,7 @@ function draw() {
       }
       drawCounter(lane, V, t);
       drawDrips(lane);
+      for (const cr of CRITS) if (cr.lane === lane) drawCritter(cr, t); // (a caterpillar or a worm on the bar top)
       for (const tp of tips) if (tp.lane === lane) drawTip(tp, t);
       for (const u of powerups) if (u.lane === lane) drawPowerup(u, t);
       for (const m of empties) if (m.lane === lane) drawGlass(m.x, LY(lane, m.x) - 3, null, 0, m.spin);
@@ -11951,6 +12043,7 @@ function draw() {
     drawAir(V, t);
     safeDraw("stopMood", () => drawStopMood(t)); // (this stop's own colour and air)
     safeDraw("weather", () => drawWeather(t)); // (and, now and then, its weather)
+    safeDraw("spider", () => drawSpider(t)); // (and a spider dropping in to have a look)
   }
   const ending = G.state === "ending" && G.end;
   const deep =
@@ -14978,29 +15071,17 @@ function sideScene(type, edge, dir, py, pr, wAt, y0, y1, t) {
     },
     ins = (x, y, r) => (x - edge) * dir - r > 0 && (x - edge) * dir + r < wAt(y);
   if (pr < 8) return;
+  // (v1.4.4) the big planets peeking in at the side windows use the planet tour's painters - shaded, turning, a smooth
+  // night side that stays on the planet - turned so their sunlit side faces into the pub
+  const painted = (fn, r) => {
+    push();
+    translate(edge, py);
+    if (dir > 0) scaleXY(-1, 1);
+    fn(r);
+    pop();
+  };
   if (type === "earth") {
-    add(() => glow(edge, py, pr + 16, withA(col("#5fa8ff"), 0.3)));
-    disc(edge, py, pr, col("#1a4a9a"));
-    disc(edge - dir * 4, py - 3, pr * 0.92, col("#2a6fd0"));
-    for (let i = 0; i < 6; i++) {
-      const a = i * 1.1 + t * 0.03;
-      disc(
-        edge + Math.cos(a) * pr * 0.5 * hash(i + 3),
-        py + Math.sin(a) * pr * 0.5,
-        pr * (0.16 + hash(i) * 0.1),
-        col("#3fa060"),
-        pr * 0.12
-      );
-    }
-    for (let i = 0; i < 5; i++)
-      disc(
-        edge + Math.cos(i * 1.7 + t * 0.05) * pr * 0.5,
-        py + Math.sin(i * 1.7) * pr * 0.5,
-        pr * 0.2,
-        withA(C.white, 0.5),
-        pr * 0.07
-      );
-    disc(edge + dir * pr * 0.4, py + pr * 0.15, pr * 0.85, withA(col("#02030c"), 0.6));
+    painted((r) => wEarth(r, t, false), pr);
   } else if (type === "sun") {
     add(() => {
       glow(edge, py, pr * 2.2, withA(col("#fff0c0"), 0.5));
@@ -15075,7 +15156,7 @@ function sideScene(type, edge, dir, py, pr, wAt, y0, y1, t) {
       disc(x, py + oy2, r, col(c));
       disc(x + dir * r * 0.4, py + oy2 - r * 0.2, r * 0.9, col("#120a30"));
     }
-  } else if (type === "jupiter") jupiter(edge, py, pr, t, () => true);
+  } else if (type === "jupiter") painted((r) => wJupiter(r, t), pr * 0.9);
   else if (type === "io") {
     const r = pr * 0.45;
     disc(edge, py, r, col("#e8d050"));
@@ -15086,7 +15167,7 @@ function sideScene(type, edge, dir, py, pr, wAt, y0, y1, t) {
         r * 0.13,
         col(i % 2 ? "#c06020" : "#f0f0a0")
       );
-    disc(edge + dir * r * 0.4, py + r * 0.2, r * 0.8, withA(col("#02030c"), 0.4));
+    painted(() => nightSide(r, 0.3, 0.7), 0);
     const vx = edge + dir * r * 0.5,
       vy = py - r * 0.8;
     add(() => {
@@ -15097,37 +15178,13 @@ function sideScene(type, edge, dir, py, pr, wAt, y0, y1, t) {
     });
   } // a volcano erupting
   else if (type === "saturn") {
-    const r = pr * 0.6;
-    for (let i = 0; i < 3; i++)
-      arc(
-        edge,
-        py,
-        r * (1.5 + i * 0.16),
-        Math.PI * 1.05,
-        Math.PI * 1.95,
-        2,
-        withA(col(i === 1 ? "#e0b070" : "#a07040"), 0.7),
-        14
-      );
-    disc(edge, py, r, col("#a07040"));
-    disc(edge - dir * r * 0.15, py - r * 0.15, r * 0.88, col("#e0b070"));
-    for (let i = -2; i <= 2; i++)
-      rect(edge - r * 0.85, py + i * r * 0.3, r * 1.7, r * 0.08, withA(col("#a07040"), 0.5));
-    disc(edge + dir * r * 0.35, py + r * 0.25, r * 0.75, withA(col("#02030c"), 0.45));
-    for (let i = 0; i < 3; i++) {
-      const pts = [];
-      for (let k = 0; k <= 14; k++) {
-        const a = -0.1 + (k / 14) * (Math.PI + 0.2);
-        pts.push(edge + Math.cos(a) * r * (1.5 + i * 0.16), py + Math.sin(a) * r * (1.5 + i * 0.16) * 0.28);
-      }
-      polyline(pts, 2, withA(col(i === 1 ? "#e0b070" : "#a07040"), 0.85));
-    }
+    painted((r) => wSaturn(r, t), pr * 0.78);
   } else if (type === "titan") {
     const r = pr * 0.5;
     add(() => glow(edge, py, r + 14, withA(col("#ffb060"), 0.35)));
     disc(edge, py, r, col("#d08a3a"));
     disc(edge, py, r * 0.9, col("#e8a050"));
-    disc(edge + dir * r * 0.4, py + r * 0.2, r * 0.8, withA(col("#1a0e04"), 0.5));
+    painted(() => nightSide(r, 0.3, 0.75), 0); // (a smooth night side that stays on the moon)
   } else if (type === "clouds") {
     for (let i = 0; i < 14; i++) {
       const y = y0 + (i / 14) * (y1 - y0),
@@ -16991,6 +17048,8 @@ function customerBody(c, t, a) {
     const sw = Math.sin(ft) * 0.3;
     if (c.fan.flag) near = { a1: -1.5 + sw * 0.4, a2: -0.12 };
     else if (c.fan.horn) near = { a1: -0.45, a2: -1.35 };
+    else if (c.fan.cake)
+      near = { a1: -0.7, a2: -0.9 }; // (holding the cake out in front, carefully)
     else near = { a1: -1.3 + sw, a2: -0.5 };
     far = { a1: -1.9 - sw, a2: -0.4, fist: 1 };
   } // a flag up, a vuvuzela to the lips, or both arms waving
@@ -17265,6 +17324,14 @@ function customerBody(c, t, a) {
       line(-3, 0, 3, 0, 0.8, A(C.white));
       for (let i = -1; i <= 1; i++) line(i * 1.6, -1, i * 1.6, 1, 0.6, A(C.white));
       pop();
+    } else if (c.fan.cake) {
+      // (v1.4.5) an Austrian lady's slice of SACHERTORTE on a plate: dark chocolate, a stripe of apricot jam, cream
+      const by = hy2 - 3;
+      disc(hx + 2, by + 3, 7, A(col("#f4f4f8")), 2);
+      quad4(hx - 3, by + 2, hx + 7, by + 2, hx + 6, by - 5, hx - 2, by - 5, A(col("#3a1e14")));
+      rect(hx - 2.6, by - 1.6, 9, 1.2, A(col("#e8901e")));
+      quad4(hx - 2, by - 5, hx + 6, by - 5, hx + 5, by - 6.4, hx - 1, by - 6.4, A(col("#2a140c")));
+      disc(hx + 8, by - 1, 2.4, A(col("#fffaf0")), 1.8); // a dollop of whipped cream
     } else if (c.fan.horn && fanMarch) {
       push();
       translate(hx + 1, hy2 - 3);
@@ -17441,13 +17508,13 @@ function drawTorso(kind, c, t, A, tw, th, body, L, angry, step) {
   // wear and tear: stains, a patch, creases that shift as they walk, rust and scuffs on suits and robots
   const sd = c.seed * 97,
     dirty = kind === "robot" ? col("#8a4a20") : kind === "astro" ? col("#8a7a60") : shade(body, 0.55);
-  if (!NF_APES.has(kind))
+  if (!NF_APES.has(kind) && !ANIMAL_KINDS.has(kind))
     for (let i = 0; i < 3; i++) {
       const x = (hash(sd + i) - 0.5) * (tw - 6),
         y = top + 7 + hash(sd * 2 + i) * (th - 12);
       disc(x, y, 1.4 + hash(sd + i * 3) * 1.4, A(withA(dirty, 0.75)), 1 + hash(i) * 0.8);
     }
-  if (!alienKinds.has(kind) && !NF_APES.has(kind)) {
+  if (!alienKinds.has(kind) && !NF_APES.has(kind) && !ANIMAL_KINDS.has(kind)) {
     line(-tw / 2 + 3, top + 13 + step * 0.8, -1, top + 15, 1, A(withA(shade(body, 0.7), 0.8)));
     line(1, top + 18 - step * 0.8, tw / 2 - 3, top + 16, 1, A(withA(shade(body, 0.7), 0.8)));
     if (hash(sd * 5) > 0.45) {
@@ -22429,6 +22496,7 @@ function drawVert(V, t) {
         }),
     });
   for (const tp of tips) list.push({ x: tp.x, f: () => vAt(tp.lane, tp.x, 0, () => drawTip(tp, t)) });
+  for (const cr of CRITS) list.push({ x: cr.x, f: () => vAt(cr.lane, cr.x, 0, () => drawCritter(cr, t)) }); // (v1.4.4)
   for (const u of powerups) list.push({ x: u.x, f: () => vAt(u.lane, u.x, 0, () => drawPowerup(u, t)) });
   for (const m of empties)
     list.push({
@@ -22504,6 +22572,7 @@ function drawVert(V, t) {
   if (G.showT > 0) drawShow(t);
   if (vView()) safeDraw("stopMood", () => drawStopMood(t)); // (this stop's own colour and air)
   if (vView()) safeDraw("weather", () => drawWeather(t)); // (and, now and then, its weather)
+  if (vView()) safeDraw("spider", () => drawSpider(t));
 }
 
 // ---- bananas in the air, and the peels they leave behind the bar ----
@@ -28692,8 +28761,8 @@ function drawAndromeda(ax, ay, a) {
           prev[1],
           pt[0],
           pt[1],
-          wd * a * (0.4 + Math.sin((j / 40) * Math.PI)),
-          withA(col("#120806"), al)
+          Math.min(wd * a * (0.4 + Math.sin((j / 40) * Math.PI)), 3.2), // (thin, however big it's drawn)
+          withA(col("#120806"), al * 0.85)
         );
       prev = pt;
     }
@@ -31523,6 +31592,7 @@ function drawFlagTow(x, y, q, t, fade, nat) {
 //      smear into lines - a flash and it's in hyperspace (a blue tunnel of rushing light) - another flash and it drops out,
 //      sliding to a stop beside the next stop's planet ----
 function drawJump(t) {
+  if (G.jump.inter) return drawInterJump(t); // (the great jump to Andromeda - intergal.ts)
   const J = G.jump,
     j = J.t,
     L = -ox - 20,
@@ -31671,6 +31741,7 @@ function drawJump(t) {
       );
     arc(0, 0, 560, 1.15, Math.PI * 2 - 1.15, 3, withA(col("#6aa0ff"), 0.14 * sa), 40);
     pop();
+    if (J.rocks) drawShieldRocks(j, t); // (v1.4.5) meteors smashing into the shield
     glow(520, -40, 160, withA(col("#9fd0ff"), 0.45 * sa * (0.85 + 0.15 * Math.sin(t * 23))));
     R.setAdd(false);
   }
@@ -32514,6 +32585,116 @@ function drawShuttle(x, y, s, t, down) {
     line(22, 2, 28, 12, 3, col("#8a8a98"));
   }
   pop();
+}
+
+// ---- METEORS ON THE SHIELD (v1.4.5): on most trips a volley of meteors comes streaking in out of hyperspace - red-hot
+//      with friction - and bursts against the shield in a fireball; the shield flares round the impact and sparks stream
+//      back past the ship. (Drawn in the diner's own units; the shield is an ellipse round (-20,-40), 560 across, 291 up.)
+const METEOR_T0 = 4.9,
+  METEOR_GAP = 0.62,
+  METEOR_N = 4;
+function drawShieldRocks(j, t) {
+  R.setAdd(true);
+  for (let k = 0; k < METEOR_N; k++) {
+    const ti = METEOR_T0 + k * METEOR_GAP,
+      p = j - ti,
+      th = (hash(k * 7.3 + 1) - 0.5) * 1.3, // where on the front of the shield it hits
+      ix = -20 + 560 * Math.cos(th),
+      iy = -40 + 291 * Math.sin(th);
+    if (p < -0.45 || p > 0.8) continue;
+    if (p < 0) {
+      // incoming: a big tumbling rock, glowing red-hot with friction, a long plasma trail streaming behind it
+      const f = -p / 0.45,
+        mx = ix + 40 + f * 420,
+        my = iy - f * (60 + hash(k * 3.1) * 140),
+        heat = 1 - f * 0.6,
+        rr = 34 + hash(k) * 16;
+      for (let i = 0; i < 9; i++) {
+        const u = i / 9;
+        glow(
+          mx + rr + u * 520,
+          my - u * 90 * (my < iy ? -1 : 1) * 0.3,
+          rr * (1.6 - u * 1.2),
+          withA(col(i < 3 ? "#ffe8b0" : "#ff6a20"), (0.75 - u * 0.6) * heat)
+        );
+      }
+      R.setAdd(false);
+      push();
+      translate(mx, my);
+      rotate(t * 3 + k);
+      poly(
+        [
+          -rr,
+          0,
+          -rr * 0.6,
+          -rr * 0.8,
+          rr * 0.2,
+          -rr,
+          rr,
+          -rr * 0.3,
+          rr * 0.8,
+          rr * 0.6,
+          0,
+          rr,
+          -rr * 0.7,
+          rr * 0.7,
+        ],
+        col("#4a3a32")
+      );
+      disc(-rr * 0.2, -rr * 0.2, rr * 0.55, col("#6a5444"), rr * 0.45);
+      pop();
+      R.setAdd(true);
+      glow(mx - rr * 0.6, my, rr * 1.8, withA(col("#ff7a30"), 0.6 + heat * 0.35)); // (the front of it white- and red-hot)
+      glow(mx - rr * 0.8, my, rr * 0.9, withA(col("#fff4d0"), 0.7 * heat));
+      continue;
+    }
+    // IMPACT: a great fireball blooming, a white-hot core, a shock ring, the shield flaring round it, sparks raking back
+    const q = p / 0.8,
+      e = 1 - q,
+      e2 = e * e;
+    glow(ix, iy, 120 + q * 380, withA(col("#ff6a20"), 0.75 * e));
+    glow(ix, iy, 80 + q * 220, withA(col("#ffc060"), 0.9 * e));
+    glow(ix, iy, 70 * e + 20, withA(C.white, e));
+    arc(ix, iy, 40 + q * 420, 0, Math.PI * 2, 10 * e + 2, withA(col("#ffe0a0"), 0.7 * e2), 36); // the shock wave
+    push();
+    translate(-20, -40);
+    scaleXY(1, 0.52);
+    for (let i = 0; i < 3; i++)
+      arc(
+        0,
+        0,
+        560 + i * 12,
+        th / 0.52 - 0.5 * (0.4 + q),
+        th / 0.52 + 0.5 * (0.4 + q),
+        26 - i * 7,
+        withA(col(i ? "#9fd0ff" : "#ffffff"), (0.85 - i * 0.22) * e),
+        20
+      );
+    pop(); // the shield flaring where it was struck
+    for (let i = 0; i < 22; i++) {
+      const a = Math.PI * (0.5 + hash(k * 13 + i) * 1.0) + th * 0.6,
+        d = q * (160 + hash(i + k) * 420),
+        sx = ix + Math.cos(a) * d - q * q * 380,
+        sy = iy + Math.sin(a) * d * 0.7;
+      line(
+        sx,
+        sy,
+        sx + Math.cos(a) * 40 + 60,
+        sy + Math.sin(a) * 20,
+        5,
+        withA(col(i % 3 ? "#ffc060" : "#ffffff"), e)
+      );
+    } // sparks and molten bits, swept back by the speed
+    for (let i = 0; i < 6; i++) {
+      const a = th + (i - 2.5) * 0.3;
+      glow(ix - q * (120 + i * 70), iy + Math.sin(a) * 120 * q, 50 * e, withA(col("#6aa0ff"), 0.5 * e));
+    } // energy rippling away across the shield
+    if (q < 0.18 && !COMFORT.calm) {
+      const fq = 1 - q / 0.18;
+      glow(ix, iy, 1400, withA(col("#ffd8a0"), 0.35 * fq)); // (the flash lights up everything)
+    }
+  }
+  R.setAdd(false);
 }
 // =====================================================================================
 //  TWO MORE MOMENTS FROM POLAND'S HISTORY (v2026.10.04ag) - crowds, armies and symbols, no real people:
@@ -40414,6 +40595,7 @@ function kids2GameStart() {
   G.freeServed = 0;
   G.petEggSaid = false;
   G.tagSeen = {}; // (name tags: fresh every game)
+  G.anSeen = {}; // (and the animals' first visits)
   G.mirror = false;
 }
 // ---- MIRROR BARS (v1.3.8): now and then (every fifth stop, from stop 4) the pub is the other way round - in the wide view
@@ -40568,13 +40750,12 @@ function drawStickerFact(g, s0, it, tx, ty) {
 // ---- NAME TAGS (v1.3.7): so that a child soon knows everybody - the first time each kind of customer walks in during a
 //      game, a little name tag ("PIRATE", "THE LESHY", "GERMAN FAN") floats over their head for a few seconds. In KID MODE
 //      every customer shows one.
+// (v1.4.4: EVERY customer now gets a name tag as they walk in, for about six seconds - eight in kid mode - small and
+//  see-through, and it fades right back whenever a shake or an empty glass slides underneath it)
+const TAG_LEN = () => (kidOn() ? 8 : 6);
 function tagSpawn(c, demo) {
   if (!c || demo || !c.type) return;
-  const seen = G.tagSeen || (G.tagSeen = {}),
-    key = c.fan ? "fan:" + c.fan.nation : c.type.kind;
-  if (!kidOn() && seen[key]) return;
-  seen[key] = true;
-  c.tagT = 3;
+  c.tagAt = G.time;
 }
 function tagName(c) {
   if (c.fan) return (FAN_NAMES[c.fan.nation] || ["", ""])[0].replace(/ (FOOTBALL|RUGBY)$/, "") + " FAN";
@@ -40586,21 +40767,35 @@ function nameTagsHud(g, s, sx, sy) {
   const used             = [];
   g.textAlign = "center";
   g.textBaseline = "middle";
+  // where the shakes and empty glasses are on screen: a tag never hides one
+  const busy = [...shakes, ...empties].map((o) => {
+    const [ox2, oy2] = projL(o.lane, o.x, LY(o.lane, o.x) - 20);
+    return [sx(ox2), sy(oy2)];
+  });
+  const LEN = TAG_LEN();
   for (const c of customers) {
-    if (!(c.tagT > 0)) continue;
-    c.tagT -= 1 / 60;
-    if (c.state !== "walk" || c.x < X0 - 6 || c.alpha < 0.6 || n >= 3) continue;
+    if (c.tagAt === undefined && c.state === "walk" && c.x >= X0 - 6 && c.type) c.tagAt = G.time; // (everyone, as they come in)
+    if (c.tagAt === undefined) continue;
+    const left = LEN - (G.time - c.tagAt); // (in game time - the same on every screen, at any frame rate)
+    if (!(left > 0)) continue;
+    if (c.state !== "walk" || c.x < X0 - 6 || c.alpha < 0.6 || n >= 8) continue;
     n++;
-    const a = Math.min(1, c.tagT * 2, (3 - c.tagT) * 4),
-      [px, py] = projL(c.lane, c.x + 10, LY(c.lane, c.x) - 150 * (VERT ? 1 : pS(c.lane, c.x))),
+    const a0 = Math.min(1, left * 2, (LEN - left) * 4),
+      [px, py] = projL(
+        c.lane,
+        c.x + 10,
+        LY(c.lane, c.x) - (c.hurry ? 185 : 150) * (VERT ? 1 : pS(c.lane, c.x))
+      ),
       txt = T(tagName(c)),
       x = sx(px),
       y = sy(py);
-    g.font = "800 " + Math.round(11 * Math.max(s, 0.8)) + "px " + FB;
+    g.font = "800 " + Math.round(12 * Math.max(s, 0.8)) + "px " + FB;
     const w = g.measureText(txt).width + 14 * s;
     if (used.some((r) => Math.abs(r[0] - x) < (r[2] + w) / 2 && Math.abs(r[1] - y) < 20 * s)) continue; // (never one on top of another)
     used.push([x, y, w]);
-    g.globalAlpha = a * 0.85;
+    const near = busy.some(([bx, by]) => Math.abs(bx - x) < w / 2 + 24 * s && Math.abs(by - y) < 26 * s),
+      a = a0 * (near ? 0.22 : 1); // (a shake or glass going by underneath: the tag steps aside, almost see-through)
+    g.globalAlpha = a * 0.62;
     g.fillStyle = "rgba(10,6,20,.9)";
     g.beginPath();
     g.roundRect
@@ -41582,7 +41777,7 @@ function startPlanetTour() {
   ATTRACT.t = 0;
 }
 // =====================================================================================
-//  COSMIC WEATHER (v1.4.3): once in every level a spell of space weather blows through the pub for twenty-odd seconds -
+//  COSMIC WEATHER (v1.4.3): now and then (v1.4.5: about one level in three) a spell of space weather blows through the pub for twenty-odd seconds -
 //  SOLAR WIND, METEOR HAIL, STARDUST SNOW, COMET RAIN, a DUST STORM or an ION STORM - picked to suit the stop (dust and
 //  hail on the rocky worlds, snow on the icy ones, rain where there's air and cloud...). It's only weather: it changes
 //  how the pub looks and sounds, never how hard the level is. (It all fades in and out; calm mode keeps it gentle, with
@@ -41614,9 +41809,13 @@ const WX_ALL           = ["solarwind", "hail", "snow", "rain", "dust", "ion"];
 let WX          = null,
   WX_NEXT = 15,
   WX_LAST                = null;
+let WX_LVL = -9; // (the last level that had weather)
 function weatherLevelStart() {
   WX = null;
-  WX_NEXT = 10 + Math.random() * 12; // (once a level, a little way in)
+  // (v1.4.5: not every level - about one in three, and never two in a row; when it comes, a little way in)
+  if (G.level <= WX_LVL) WX_LVL = -9; // (a new game)
+  const due = G.level - WX_LVL >= 2 && Math.random() < 0.4;
+  WX_NEXT = due ? 10 + Math.random() * 12 : -1;
 }
 function weatherUpdate(dt, demo) {
   if (G.state !== "play") return;
@@ -41633,6 +41832,7 @@ function weatherUpdate(dt, demo) {
     choices = pool.filter((k) => k !== WX_LAST),
     k = choices[Math.floor(Math.random() * choices.length)] || "snow";
   WX = { k, t: 0, len: 20 + Math.random() * 8 };
+  WX_LVL = G.level;
   WX_LAST = k;
   WX_NEXT = -1;
   const I = WX_INFO[k];
@@ -41890,6 +42090,502 @@ function drawWeather(t) {
   }
 }
 // =====================================================================================
+//  LITTLE VISITORS (v1.4.4): the pub has some tiny regulars of its own -
+//    - a SPIDER now and then lowers itself from the ceiling on its thread, dangles, turns slowly... notices where it is
+//      (eyes like saucers, a "!") and zips straight back up;
+//    - a CATERPILLAR inches along a counter, humping its back - and ducks flat when a shake whizzes over it;
+//    - an EARTHWORM pokes up out of a knot-hole in the bar top, has a look round, wriggles, and slips back down.
+//  They're only for fun: nothing hits them, they never get in the way of play.
+// =====================================================================================
+                
+                    
+               
+            
+            
+              
+              
+             
+            
+  
+let CRITS            = [],
+  SPIDER                                                           = null,
+  CRIT_NEXT = { cat: 12, worm: 20, spider: 25 };
+function crittersLevelStart() {
+  CRITS = [];
+  SPIDER = null;
+  CRIT_NEXT = { cat: 8 + Math.random() * 14, worm: 16 + Math.random() * 18, spider: 18 + Math.random() * 25 };
+}
+function crittersUpdate(dt) {
+  if (G.state !== "play") return;
+  for (const c of CRITS) {
+    c.t += dt;
+    if (c.k === "cat" && c.t < c.len - 2) {
+      const duck = shakes.some((s) => s.lane === c.lane && Math.abs(s.x - c.x) < 26);
+      if (!duck) c.x += c.dir * c.sp * dt * (0.55 + 0.45 * Math.max(0, Math.sin(c.t * 3.2))); // (inching: stretch, then pull up)
+    }
+  }
+  CRITS = CRITS.filter((c) => c.t < c.len);
+  CRIT_NEXT.cat -= dt;
+  CRIT_NEXT.worm -= dt;
+  CRIT_NEXT.spider -= dt;
+  const lane = () => Math.floor(Math.random() * LANES);
+  if (CRIT_NEXT.cat <= 0) {
+    CRIT_NEXT.cat = 28 + Math.random() * 30;
+    if (!CRITS.some((c) => c.k === "cat")) {
+      const dir = Math.random() < 0.5 ? 1 : -1;
+      CRITS.push({
+        k: "cat",
+        lane: lane(),
+        x: dir > 0 ? X0 + 60 + Math.random() * 160 : X1 - 120 - Math.random() * 160,
+        t: 0,
+        len: 22,
+        dir,
+        sp: 9 + Math.random() * 4,
+        c: Math.floor(Math.random() * 3),
+      });
+    }
+  }
+  if (CRIT_NEXT.worm <= 0) {
+    CRIT_NEXT.worm = 24 + Math.random() * 26;
+    CRITS.push({
+      k: "worm",
+      lane: lane(),
+      x: X0 + 80 + Math.random() * (X1 - X0 - 200),
+      t: 0,
+      len: 5.2,
+      dir: Math.random() < 0.5 ? 1 : -1,
+      sp: 0,
+      c: 0,
+    });
+  }
+  if (CRIT_NEXT.spider <= 0) {
+    CRIT_NEXT.spider = 40 + Math.random() * 35;
+    if (!SPIDER)
+      SPIDER = {
+        x: 0.15 + Math.random() * 0.7,
+        t: 0,
+        d: 0.22 + Math.random() * 0.16,
+        spin: Math.random() * 6,
+      };
+  }
+  if (SPIDER && (SPIDER.t += dt) > SPIDER_LEN) SPIDER = null;
+}
+// ---- the caterpillar and the worm, sitting on a counter (drawn with the counter, in its own place: lane space) ----
+const CAT_COLS = [
+  ["#5fd04a", "#3a9a2a", "#ffe050"],
+  ["#ffb030", "#d07a10", "#3a2a1a"],
+  ["#a070ff", "#6a40c0", "#ffe080"],
+];
+function drawCritter(c, t) {
+  const y = LY(c.lane, c.x) - 3;
+  push();
+  translate(c.x, y);
+  scaleBy(1.5); // (a little bigger than life, so you can see them)
+  translate(-c.x, -y);
+  drawCritter0(c, t);
+  pop();
+}
+function drawCritter0(c, t) {
+  const y = LY(c.lane, c.x) - 3;
+  if (c.k === "cat") {
+    const [c1, c2, spot] = CAT_COLS[c.c],
+      fade = Math.min(1, c.t, (c.len - c.t) / 1.5),
+      duck = shakes.some((s) => s.lane === c.lane && Math.abs(s.x - c.x) < 26),
+      n = 7,
+      seg = 4.2;
+    if (fade <= 0) return;
+    for (let i = n - 1; i >= 0; i--) {
+      const px = c.x - c.dir * i * seg,
+        hump = duck ? 0 : Math.max(0, Math.sin(c.t * 3.2 - i * 0.55)) * 4, // (the hump rippling along its back)
+        py = y - 3.4 - hump;
+      disc(px, py + 0.5, 3.6, withA(col(c2), fade));
+      disc(px - 0.5, py - 0.4, 3, withA(col(c1), fade));
+      if (i % 2 === 0) disc(px, py - 1.6, 0.9, withA(col(spot), fade));
+      line(px - 1.2, py + 2.6, px - 1.6, y, 0.8, withA(col(c2), fade)); // little legs
+    }
+    // the head: big eyes, antennae
+    const hx = c.x + c.dir * 4.2,
+      hy = y - 4.6 - (duck ? -1 : Math.max(0, Math.sin(c.t * 3.2 + 0.55)) * 2);
+    disc(hx, hy, 4, withA(col(c1), fade));
+    disc(hx + c.dir * 1.4, hy - 0.8, 1.5, withA(C.white, fade));
+    disc(hx + c.dir * 1.8, hy - 0.8, 0.8, withA(col("#1a1020"), fade));
+    line(hx, hy - 3.4, hx + c.dir * 2, hy - 8, 0.7, withA(col(c2), fade));
+    disc(hx + c.dir * 2, hy - 8, 1, withA(col(spot), fade));
+    line(hx - c.dir * 1, hy - 3.4, hx, hy - 7.6, 0.7, withA(col(c2), fade));
+    disc(hx, hy - 7.6, 1, withA(col(spot), fade));
+    if (duck) line(hx + c.dir * 0.6, hy + 1.6, hx + c.dir * 2.4, hy + 1.4, 0.6, withA(col("#1a1020"), fade)); // (eek)
+  } else {
+    // the earthworm: up out of the knot-hole, a look round, a wriggle, and back down
+    const u = c.t < 0.8 ? c.t / 0.8 : c.t > c.len - 0.7 ? (c.len - c.t) / 0.7 : 1,
+      up = Math.max(0, u) * 14;
+    disc(c.x, y - 0.6, 3.6, col("#3a2414"), 1.4); // the hole
+    if (up <= 0.3) return;
+    const pts = [];
+    for (let i = 0; i <= 6; i++) {
+      const f = i / 6,
+        wig = Math.sin(t * 5 + f * 4) * 2.2 * f * (c.t > 1 && c.t < c.len - 1 ? 1 : 0.3);
+      pts.push(c.x + wig + c.dir * f * f * 3, y - 0.6 - f * up);
+    }
+    polyline(pts, 3.4, col("#c86a6a"));
+    polyline(pts, 1.6, col("#e8949a"));
+    const hx = pts[pts.length - 2],
+      hy = pts[pts.length - 1];
+    disc(hx, hy, 1.9, col("#d87a80"));
+    const look = Math.sin(c.t * 2.2) > 0 ? 1 : -1;
+    disc(hx + look * 0.7, hy - 0.4, 0.8, C.white);
+    disc(hx + look * 0.9, hy - 0.4, 0.4, col("#1a1020"));
+  }
+}
+// ---- the spider, on its thread from the ceiling (over the whole screen, like the weather) ----
+const SPIDER_LEN = 6.6;
+function drawSpider(t) {
+  const S = SPIDER;
+  if (!S || G.state !== "play") return;
+  const L = -ox - 16,
+    Rr = W - ox + 16,
+    T = -oy - 16,
+    B = H - oy + 16,
+    w = Rr - L,
+    h = B - T,
+    st = S.t,
+    // 0-3.4 s: lowering slowly - 3.4-4.4: dangling and turning - 4.4-5.2: it NOTICES - 5.2-6.6: zips back up
+    down = st < 3.4 ? ease(st / 3.4) : st < 5.3 ? 1 : 1 - ease(clamp((st - 5.3) / 0.45, 0, 1)),
+    x = L + w * S.x + Math.sin(st * 1.3) * 3 * (st < 5.2 ? 1 : 0),
+    y = T + h * S.d * down,
+    k = Math.min(w, h) / 330,
+    scared = st > 4.4 && st < 5.6,
+    turn = st > 3.4 && st < 4.4 ? Math.sin((st - 3.4) * 3) : 0;
+  if (down <= 0.01) return;
+  line(x, T, x, y - 5 * k, 0.8, withA(col("#e8f0ff"), 0.7)); // the silk thread
+  push();
+  translate(x, y);
+  scaleBy(k);
+  rotate(turn * 0.25);
+  // legs: four each side, bent, waggling (flailing when it's scared)
+  for (const sd of [-1, 1])
+    for (let i = 0; i < 4; i++) {
+      const wav = Math.sin(t * (scared ? 22 : 4) + i * 1.3 + sd) * (scared ? 0.5 : 0.18),
+        a0 = (-0.55 + i * 0.36 + wav) * sd,
+        kx = Math.cos(a0) * 9 * sd,
+        ky = Math.sin(a0) * 9 * sd - 4,
+        fx = kx + sd * 6,
+        fy = ky + 9;
+      polyline([sd * 2, 1, kx, ky, fx, fy], 1.5, col("#1a1218"));
+    }
+  disc(0, 6, 7.5, col("#2a1a24")); // the round body
+  disc(-2, 4, 3, col("#4a3040"));
+  for (let i = 0; i < 3; i++) disc(0, 3 + i * 3, 0.9, col("#c84a6a")); // a little pattern on its back
+  disc(0, -2.5, 5, col("#2a1a24")); // the head
+  const ew = scared ? 2.9 : 2;
+  disc(-2, -3.4, ew, C.white);
+  disc(2, -3.4, ew, C.white);
+  disc(-2 + (scared ? 0 : turn), -3.2, scared ? 0.9 : 1.1, col("#120a10"));
+  disc(2 + (scared ? 0 : turn), -3.2, scared ? 0.9 : 1.1, col("#120a10"));
+  if (scared) {
+    disc(0, 1, 1.4, col("#120a10")); // (mouth open: "oh!")
+    pop();
+    pixText("!", x + 14 * k, y - 18 * k, 1.6 * k, col("#ffd24d"));
+    return;
+  }
+  line(-1.4, 0.4, 1.4, 0.4, 0.8, col("#120a10"));
+  pop();
+}
+// =====================================================================================
+//  THE GREAT JUMP (v1.4.5): after the Milky Way's last stop, the trip to Andromeda isn't an ordinary hop - it's the long
+//  way across the dark between the galaxies, with true facts on the way:
+//    0-9 s    LEAVING THE MILKY WAY: the bar climbs up out of the galaxy's disc - the whole spiral spreading out beneath
+//             it, then shrinking away behind as we pull clear of it
+//    9-11     the engines at full power, the shield up - and the flash into hyperspace
+//    11-24    HYPERSPACE between the galaxies: a long blue tunnel, a counter racing down the light-years
+//    24-26    the flash out of hyperspace
+//    26-36    ANDROMEDA: there it is, filling the sky, growing as we fall towards it, with its little companions
+//  Any key skips it, like every trip.
+// =====================================================================================
+const INTER_LEN = 36;
+const INTER_CAPS                     = [
+  [0.5, "WE'VE SERVED THE WHOLE MILKY WAY - NOW FOR ANDROMEDA!"],
+  [4.5, "OUR GALAXY, THE MILKY WAY: ABOUT 100,000 LIGHT-YEARS ACROSS"],
+  [8, "SOMEWHERE IN ONE OF ITS ARMS: OUR SUN - ONE STAR AMONG A FEW HUNDRED BILLION"],
+  [11.5, "ANDROMEDA IS ABOUT 2.5 MILLION LIGHT-YEARS AWAY"],
+  [15, "ITS LIGHT TAKES 2.5 MILLION YEARS TO REACH US - IT SET OFF BEFORE THERE WERE ANY PEOPLE ON EARTH"],
+  [
+    19.5,
+    "EVEN AT THE SPEED OF LIGHT, THIS TRIP WOULD TAKE 2.5 MILLION YEARS - GOOD THING WE HAVE HYPERSPACE!",
+  ],
+  [26.5, "THE ANDROMEDA GALAXY: ABOUT 220,000 LIGHT-YEARS ACROSS - TWICE THE SIZE OF OURS"],
+  [30, "IT HAS ABOUT A TRILLION STARS - AND IT'S COMING OUR WAY AT ABOUT 110 KM EVERY SECOND"],
+  [33.5, "WELCOME TO ANDROMEDA!"],
+];
+function updateInterJump(dt) {
+  const J = G.jump,
+    once = (k) => (J[k] ? false : (J[k] = true));
+  J.t += dt;
+  if (J.t > 1 && once("s1")) sfx("powerdown");
+  if (J.t > 8 && once("rev")) sfx("turbo");
+  if (J.t > 10.6 && once("banged")) {
+    sfx("warp");
+    G.flash = 1;
+    G.flashC = col("#cfe8ff");
+  }
+  if (J.t > 17 && once("s2")) sfx("whoosh");
+  if (J.t > 24.6 && once("out")) {
+    sfx("warp");
+    G.flash = 0.9;
+    G.flashC = C.white;
+  }
+  if (J.t > 27 && once("s3")) sfx("chime", undefined, 2);
+  if (J.t > 34 && once("s4")) sfx("bonus");
+}
+// the Milky Way, seen from above and to the side: a barred spiral with a golden core, two great arms and two lesser
+// ones, pink star-forming knots and dark dust - big while we're in it, shrinking as we leave
+function milkyWay(x, y, r, tilt, rot, al) {
+  if (al <= 0.01 || r < 2) return;
+  const ca = Math.cos(rot),
+    sa = Math.sin(rot),
+    P = (px, py) => [x + px * ca - py * tilt * sa, y + px * sa + py * tilt * ca];
+  R.setAdd(true);
+  for (const [rr, a, c] of [
+    [1.15, 0.07, "#5a6ab0"],
+    [0.75, 0.1, "#8a8ac8"],
+    [0.4, 0.22, "#ffd8a0"],
+    [0.18, 0.5, "#ffe8c0"],
+    [0.07, 0.9, "#fff8e8"],
+  ]         ) {
+    const [cx, cy] = P(0, 0);
+    glowE(cx, cy, r * rr, r * rr * Math.max(0.2, tilt), withA(col(c), a * al));
+  }
+  // the central bar
+  for (let i = -6; i <= 6; i++) {
+    const [bx, by] = P(i * r * 0.035, 0);
+    glow(bx, by, r * 0.07, withA(col("#ffd8a8"), 0.18 * al));
+  }
+  const N = r > 200 ? 520 : 260;
+  for (let arm = 0; arm < 4; arm++) {
+    const major = arm % 2 === 0;
+    for (let i = 0; i < N; i++) {
+      const f = i / N,
+        d = r * (0.2 + 0.85 * f),
+        ang = (arm * Math.PI) / 2 + f * 5.2 + (hash(i * 1.7 + arm * 31) - 0.5) * (major ? 0.35 : 0.5),
+        sp = (hash(i * 3.1 + arm) - 0.5) * r * (major ? 0.07 : 0.05) * (1 + f),
+        [px, py] = P(Math.cos(ang) * d + sp, Math.sin(ang) * d + sp),
+        a2 = ((1 - f) * 0.7 + 0.2) * al * (major ? 1 : 0.6);
+      rect(
+        px,
+        py,
+        r > 200 ? 2 : 1.4,
+        r > 200 ? 2 : 1.4,
+        withA(hash(i + arm * 7) > 0.75 ? col("#bfd0ff") : C.white, a2 * 0.75)
+      );
+      if (i % 11 === 0)
+        glow(
+          px,
+          py,
+          r * 0.05 * (1 - f * 0.4),
+          withA(col(hash(i * 5 + arm) > 0.6 ? "#ff8fc8" : "#8fb4ff"), 0.22 * a2)
+        );
+    }
+  }
+  R.setAdd(false);
+  for (let arm = 0; arm < 2; arm++)
+    for (let i = 0; i < 40; i++) {
+      const f = i / 40,
+        d = r * (0.25 + 0.75 * f),
+        ang = arm * Math.PI + f * 5.2 - 0.18,
+        [px, py] = P(Math.cos(ang) * d, Math.sin(ang) * d);
+      disc(
+        px,
+        py,
+        r * 0.02 * (1 - f * 0.5),
+        withA(col("#0a0610"), 0.35 * al),
+        r * 0.02 * Math.max(0.3, tilt)
+      );
+    } // dust lanes along the inner edge of the great arms
+}
+function drawInterJump(t) {
+  const J = G.jump,
+    j = J.t,
+    L = -ox - 20,
+    Rr = W - ox + 20,
+    T = -oy - 20,
+    B = H - oy + 20,
+    w = Rr - L,
+    h = B - T,
+    big = Math.max(w, h),
+    k = Math.min(w / 900, h / 560);
+  const hyper = j > 10.6 && j < 24.6,
+    hk = hyper ? Math.min(1, (j - 10.6) * 2, (24.6 - j) * 2) : 0;
+  // the sky: deep, empty, the space between the galaxies (fewer stars the further out we are)
+  WORLD_NOW = true; // (no giant planet in the corner of the sky out here)
+  deepSky(L, Rr, T, B, t, j * 2, 7, 0);
+  WORLD_NOW = false;
+  rect(
+    L,
+    T,
+    w,
+    h,
+    withA(col("#010106"), clamp((j - 6) / 4, 0, 0.75) * (j < 26 ? 1 : clamp((30 - j) / 4, 0, 1)))
+  ); // (the dark between the galaxies)
+  // ---- 1. LEAVING THE MILKY WAY ----
+  if (j < 12) {
+    // (we start just above the disc, the spiral spread out wide below; it shrinks away as we climb out and leave)
+    const u = ease(clamp(j / 10, 0, 1)),
+      r = big * (0.6 - 0.48 * u),
+      tilt = 0.32 + 0.53 * ease(clamp(j / 7, 0, 1)),
+      gx = L + w * (0.45 - 0.2 * u),
+      gy = T + h * (0.72 - 0.28 * u);
+    milkyWay(gx, gy, r, tilt, 0.4 + j * 0.02, 1 - clamp((j - 10.2) / 1, 0, 1));
+    if (j > 5 && j < 10.4) {
+      const [sx, sy] = [
+        gx + r * 0.55 * Math.cos(0.4 + j * 0.02 + 2.2),
+        gy + r * 0.55 * Math.sin(0.4 + j * 0.02 + 2.2) * tilt,
+      ];
+      const pa = Math.min(1, (j - 5) * 1.5, (10.4 - j) * 2);
+      R.setAdd(true);
+      glow(sx, sy, 6, withA(col("#fff4b0"), pa));
+      R.setAdd(false);
+      if (j > 8 && j < 10.4) {
+        pixText("THE SUN", sx, sy - 18, 1.1, withA(col("#ffe080"), pa)); // (where we live)
+        line(sx, sy - 12, sx, sy - 4, 1, withA(col("#ffe080"), pa * 0.7));
+      }
+    }
+  }
+  // ---- 2. HYPERSPACE: the long tunnel between the galaxies ----
+  if (j > 8 && j < 26) {
+    const smear = j < 10.6 ? ease((j - 8) / 2.6) : j < 24.6 ? 1 : 1 - ease((j - 24.6) / 1.4);
+    R.setAdd(true);
+    const cx = L + w * 0.5,
+      cy = T + h * 0.45;
+    for (let i = 0; i < 220; i++) {
+      const a = hash(i * 1.7) * 6.283,
+        sp = 0.5 + hash(i * 3.3) * 1.5,
+        z = (hash(i * 5.1) + t * sp * (0.3 + smear * 1.6)) % 1,
+        d0 = z * z * big * 0.8,
+        d1 = d0 + (6 + smear * 220 * z) * k;
+      line(
+        cx + Math.cos(a) * d0,
+        cy + Math.sin(a) * d0,
+        cx + Math.cos(a) * d1,
+        cy + Math.sin(a) * d1,
+        1 + z * 2.6,
+        withA(col(i % 5 ? "#cfe0ff" : ["#ff8fd0", "#8fffd8", "#ffd88f"][i % 3]), (0.25 + 0.7 * z) * smear)
+      );
+    }
+    if (hk > 0) {
+      // the tunnel walls: rings of blue and violet light rushing past
+      for (let i = 0; i < 12; i++) {
+        const z = (i / 12 + t * 0.9) % 1,
+          rr = z * z * big * 0.75;
+        arc(cx, cy, rr, 0, 6.283, 2 + z * 10, withA(col(i % 2 ? "#5a7aff" : "#a060ff"), 0.22 * hk * z), 48);
+      }
+      glow(cx, cy, 90 * k, withA(C.white, 0.6 * hk)); // the light at the end of the tunnel
+    }
+    R.setAdd(false);
+  }
+  // ---- 3. ANDROMEDA, filling the sky ----
+  if (j > 24.2) {
+    const u = ease(clamp((j - 24.6) / 11, 0, 1)),
+      a0 = Math.min(1, (j - 24.2) * 1.2),
+      ga = big * (0.22 + 0.5 * u);
+    push();
+    R.setAdd(true);
+    glow(L + w * 0.5, T + h * 0.42, ga * 1.2, withA(col("#8fa8ff"), 0.12 * a0));
+    R.setAdd(false);
+    pop();
+    if (a0 > 0.05) drawAndromeda(L + w * 0.56, T + h * 0.36, ga);
+  }
+  // ---- the bar itself, flying through it all (with its shield up through hyperspace) ----
+  const thrust =
+      j < 8
+        ? 0.3
+        : j < 10.6
+          ? 0.3 + 0.7 * ease((j - 8) / 2.6)
+          : j < 24.6
+            ? 1
+            : 1 - ease(clamp((j - 24.6) / 5, 0, 1)) * 0.8,
+    K = VERT ? Math.min((w * 0.7) / 940, (h * 0.26) / 540) : Math.min(k * 0.42, (w * 0.6) / 940),
+    arr = ease(clamp((j - 25) / 6, 0, 1)), // (arriving: the bar drifts down and to the side, so Andromeda has the sky)
+    dep = 1 - ease(clamp((j - 7) / 3, 0, 1)), // (leaving: small and high up, climbing away with the galaxy spread below it)
+    cx = L + w * (0.52 - 0.2 * arr + 0.2 * dep),
+    cy =
+      T +
+      h * ((VERT ? 0.62 : 0.66) + 0.12 * arr - 0.42 * dep) +
+      (hyper ? Math.sin(t * 47) * 2 : Math.sin(t * 1.3) * 4);
+  push();
+  translate(cx, cy);
+  scaleBy(K * (1 - 0.3 * arr) * (1 - 0.45 * dep));
+  drawDinerBody(t, thrust);
+  if (hk > 0) {
+    R.setAdd(true);
+    push();
+    translate(-20, -40);
+    scaleXY(1, 0.52);
+    for (let i = 0; i < 3; i++)
+      arc(
+        0,
+        0,
+        560 + i * 18,
+        -1.15,
+        1.15,
+        6 - i * 2,
+        withA(col(i ? "#6aa0ff" : "#cfe8ff"), (0.5 - i * 0.14) * hk),
+        36
+      );
+    arc(0, 0, 560, 1.15, Math.PI * 2 - 1.15, 3, withA(col("#6aa0ff"), 0.14 * hk), 40);
+    pop();
+    glow(520, -40, 160, withA(col("#9fd0ff"), 0.45 * hk));
+    R.setAdd(false);
+  }
+  pop();
+}
+// ---- the words: the facts as captions, the light-years counter in hyperspace ----
+function interHud(g, s) {
+  const j = G.jump.t,
+    cx = cssW / 2;
+  g.textAlign = "center";
+  g.textBaseline = "middle";
+  for (let i = 0; i < INTER_CAPS.length; i++) {
+    const [a, txt0] = INTER_CAPS[i],
+      b = i + 1 < INTER_CAPS.length ? INTER_CAPS[i + 1][0] : INTER_LEN;
+    if (j < a || j >= b) continue;
+    const al = clamp(Math.min(j - a, b - j - 0.2) * 2.5, 0, 1),
+      txt = T(txt0),
+      sz = Math.min(15, (cssW * 0.92) / Math.max(1, txt.length) / 0.6 / s),
+      lines = sz < 11 && txt.includes(" - ") ? txt.split(" - ") : [txt],
+      sz2 = Math.min(15, ...lines.map((l) => (cssW * 0.92) / Math.max(1, l.length) / 0.6 / s));
+    g.globalAlpha = al;
+    lines.forEach((ln, li) => {
+      const y = cssH * 0.86 + (li - (lines.length - 1)) * sz2 * s * 1.9;
+      g.font = Math.round(sz2 * s) + "px " + FD;
+      const ww = g.measureText(ln).width + 24 * s;
+      g.fillStyle = "rgba(4,2,12,.6)";
+      g.fillRect(cx - ww / 2, y - sz2 * s, ww, sz2 * s * 2);
+      neon2(g, ln, cx, y, sz2 * s, i === INTER_CAPS.length - 1 ? "#ffd24d" : "#bfe4ff");
+    });
+    g.globalAlpha = 1;
+  }
+  // the big title, and the light-years left to go
+  if (j < 4) {
+    g.globalAlpha = clamp(Math.min(j * 2, (4 - j) * 2), 0, 1);
+    neon2(g, "TO ANDROMEDA!", cx, cssH * 0.12, 30 * s, "#ff8fd0");
+    g.globalAlpha = 1;
+  }
+  if (j > 11 && j < 25) {
+    const f = clamp((j - 11) / 13.4, 0, 1),
+      left = Math.max(0, Math.round(2537000 * (1 - f * f * (3 - 2 * f)))),
+      al = clamp(Math.min((j - 11) * 2, (25 - j) * 2), 0, 1);
+    g.globalAlpha = al;
+    neon2(g, "HYPERSPACE!", cx, cssH * 0.1, 24 * s, "#cfe8ff");
+    neon2(g, left.toLocaleString("en-US") + " LIGHT-YEARS TO GO", cx, cssH * 0.1 + 34 * s, 16 * s, "#5ff5c8");
+    g.globalAlpha = 1;
+  }
+  if (j > 25.5) {
+    g.globalAlpha = clamp((j - 25.5) * 1.5, 0, 1) * clamp((INTER_LEN - j) * 2, 0, 1);
+    neon2(g, "THE ANDROMEDA GALAXY", cx, cssH * 0.1, 26 * s, "#ffc34d");
+    g.globalAlpha = 1;
+  }
+  g.textBaseline = "top";
+}
+// =====================================================================================
 //  MORE FUN (v2026.10.03f): flavour ORDERS, PETS WITH POWERS, a COIN SHOP, MINI-GAMES between worlds, a TROPHY ROOM,
 //  BARTENDER LEVELS, DECORATE YOUR DINER, ENDLESS MODE, HOLIDAY EVENTS, STORY SCENES with Bocian Bogdan,
 //  ONE-BUTTON MODE for little ones, and a friendly BREAK REMINDER
@@ -41904,6 +42600,7 @@ const FP = {
     keys: false,
     settings: false,
     more: false,
+    howto: false,
   },
   BRK = { open: false, t: 0 };
 const FLAV_NAMES = ["STRAWBERRY", "CHOCOLATE", "MINT"],
@@ -42259,7 +42956,7 @@ function funServe(c, s, demo) {
 }
 function funSpawn(c, demo) {
   if (!c || c.type.evil || c.type.glutton) return;
-  if (Math.random() < (demo ? 0.3 : 0.38)) c.want = Math.floor(Math.random() * 3);
+  if (COMFORT.flav && Math.random() < (demo ? 0.3 : 0.38)) c.want = Math.floor(Math.random() * 3); // (unless flavour orders are off)
 }
 function funPourFlavor(P0, demo) {
   if (demo || oneBtn() || DF().kid) {
@@ -42272,7 +42969,7 @@ function funPourFlavor(P0, demo) {
   return P0.flav ?? 0;
 }
 function funCycleFlav(P0, d = 1) {
-  if (!P0) return;
+  if (!P0 || !COMFORT.flav) return; // (flavour orders off: there's only the one)
   P0.flav = ((P0.flav ?? 0) + d + 3) % 3;
   sfx("click");
   G.callouts.push({
@@ -43778,42 +44475,44 @@ function funHud(g, s, t, fD, sx, sy) {
   }
   if (G.state === "play" && !G.demo) {
     // your flavour, the endless counter
-    const f = P1.flav ?? 0;
-    g.font = fD(12);
-    g.fillStyle = FLAV_HEX[f];
-    g.textAlign = "left";
-    HUDHIT.flav = [8 * s, cssH - 66 * s, 260 * s, 22 * s]; // (click it - or right-click anywhere - to change flavour)
-    g.fillText(
-      "FLAVOUR: " +
-        FLAV_NAMES[f] +
-        (oneBtn() || DF().kid
-          ? "  (AUTO)"
-          : lastDev === "touch" || coarse
-            ? ""
-            : lastDev === "pad"
-              ? "  (SELECT)"
-              : "  (E)"),
-      16 * s,
-      cssH - 56 * s
-    );
-    {
-      const o = laneOrder(P1.lane);
-      if (o !== null && !(oneBtn() || DF().kid)) {
-        const ok = o === f;
-        g.font = fD(11);
-        g.fillStyle = ok ? "#5ff5c8" : "#ffc34d";
-        g.fillText(
-          ok
-            ? "✔ ORDER ON THIS BAR: " + FLAV_NAMES[o]
-            : "ORDER ON THIS BAR: " +
-                FLAV_NAMES[o] +
-                " - SWITCH WITH " +
-                (lastDev === "pad" ? "SELECT" : lastDev === "touch" || coarse ? "THE FLAVOUR BUTTON" : "E"),
-          16 * s,
-          cssH - 40 * s
-        );
-      }
-    } // (what this bar wants) g.textAlign = "center";
+    if (COMFORT.flav) {
+      const f = P1.flav ?? 0;
+      g.font = fD(12);
+      g.fillStyle = FLAV_HEX[f];
+      g.textAlign = "left";
+      HUDHIT.flav = [8 * s, cssH - 66 * s, 260 * s, 22 * s]; // (click it - or right-click anywhere - to change flavour)
+      g.fillText(
+        "FLAVOUR: " +
+          FLAV_NAMES[f] +
+          (oneBtn() || DF().kid
+            ? "  (AUTO)"
+            : lastDev === "touch" || coarse
+              ? ""
+              : lastDev === "pad"
+                ? "  (SELECT)"
+                : "  (E)"),
+        16 * s,
+        cssH - 56 * s
+      );
+      {
+        const o = laneOrder(P1.lane);
+        if (o !== null && !(oneBtn() || DF().kid)) {
+          const ok = o === f;
+          g.font = fD(11);
+          g.fillStyle = ok ? "#5ff5c8" : "#ffc34d";
+          g.fillText(
+            ok
+              ? "✔ ORDER ON THIS BAR: " + FLAV_NAMES[o]
+              : "ORDER ON THIS BAR: " +
+                  FLAV_NAMES[o] +
+                  " - SWITCH WITH " +
+                  (lastDev === "pad" ? "SELECT" : lastDev === "touch" || coarse ? "THE FLAVOUR BUTTON" : "E"),
+            16 * s,
+            cssH - 40 * s
+          );
+        }
+      } // (what this bar wants) g.textAlign = "center";
+    } // (v1.4.5: none of this when flavour orders are off)
     if (G.endless) {
       g.font = fD(14);
       g.fillStyle = "#ff5fa8";
@@ -43869,6 +44568,7 @@ function funMenuText() {
   // the comfort settings: CALM MODE, FLAVOUR SHAPES, VIBRATION (only where the device can buzz)
   if ($k("vCalm")) $k("vCalm").textContent = COMFORT.calm ? "ON" : "OFF";
   if ($k("vShapes")) $k("vShapes").textContent = COMFORT.shapes ? "ON" : "OFF";
+  if ($k("vFlav")) $k("vFlav").textContent = COMFORT.flav ? "ON" : "OFF";
   if ($k("vTxt")) $k("vTxt").textContent = TXT_NAMES[COMFORT.txt];
   if ($k("vLefty")) $k("vLefty").textContent = COMFORT.lefty ? "ON" : "OFF";
   if ($k("vBuzz")) {
@@ -43900,7 +44600,7 @@ function funMenuText() {
   if ($k("bDaily") && ev && EVENT_NAMES[ev]) $k("bDaily").title = EVENT_NAMES[ev];
 }
 // the menu's own screens: the coin shop, the trophies, the galaxy map, the cup tournament
-const FP_IDS = ["shop", "trophies", "map", "cup", "prof", "news", "keys", "settings", "more"],
+const FP_IDS = ["shop", "trophies", "map", "cup", "prof", "news", "keys", "settings", "more", "howto"],
   fpAny = () => FP_IDS.some((k) => FP[k]),
   fpWhich = () => FP_IDS.find((k) => FP[k]) || "shop",
   FP_BTN = {
@@ -43910,6 +44610,7 @@ const FP_IDS = ["shop", "trophies", "map", "cup", "prof", "news", "keys", "setti
     cup: "bCup",
     prof: "bProf",
     news: "bNews",
+    howto: "bHow",
     keys: "bKeys",
     settings: "bSettings",
     more: "bMore",
@@ -43921,6 +44622,7 @@ const FP_IDS = ["shop", "trophies", "map", "cup", "prof", "news", "keys", "setti
     cup: "cupList",
     prof: "profList",
     news: "newsBack",
+    howto: "howBack",
     keys: "kmList",
     settings: "bSound",
     more: "bFree",
@@ -43943,6 +44645,7 @@ function openFP(id) {
     cup: buildCup,
     prof: buildProf,
     news: buildNews,
+    howto: () => {},
     keys: buildKeys,
     settings: () => {},
     more: () => {},
@@ -44149,6 +44852,21 @@ function funPanelsInit() {
     funMenuText();
     sfx("click");
   };
+  $k("bFlav").onclick = () => {
+    COMFORT.flav = !COMFORT.flav;
+    store.set("flavours", COMFORT.flav);
+    if (!COMFORT.flav) for (const p of PL) p.flav = 0;
+    funMenuText();
+    showPanels();
+    sfx("click");
+  };
+  const openHow = () => {
+    openFP("howto");
+    setTimeout(() => ($k("howto").scrollTop = 0), 60); // (start at the top, not at the DONE button)
+  };
+  $k("bHow").onclick = openHow;
+  $k("bHow2").onclick = openHow;
+  $k("howBack").onclick = () => closeFP("howto");
   $k("bShapes").onclick = () => {
     COMFORT.shapes = !COMFORT.shapes;
     store.set("shapes", COMFORT.shapes);
@@ -48646,7 +49364,7 @@ function newFaceFor(type, demo) {
   }
   if (now && G.nfIntro && Math.random() < 0.12) return TYPE_OF[now[1]];
   if (met.length && Math.random() < 0.07) return TYPE_OF[met[Math.floor(Math.random() * met.length)][1]];
-  return null;
+  return godFor(demo) || animalFor(demo); // (or, now and then, one of the old gods - gods.ts - or one of the animals)
 }
 function newFaceServed(c) {
   const ls = NF_LINES[c.type.kind];
@@ -48657,7 +49375,9 @@ function newFaceServed(c) {
     c,
     c.type.kind === "hussar" ? "#ff8a8a" : c.type.kind === "shaka" ? "#ffd24d" : "#9fe8c8"
   );
-  if (c.type.kind === "gorilla") sfx("bump", c.x);
+  if (ANIMAL_KINDS.has(c.type.kind)) animalServedSfx(c);
+  else if (GOD_KINDS.has(c.type.kind)) sfx("chime", c.x, 1);
+  else if (c.type.kind === "gorilla") sfx("bump", c.x);
   else if (NF_APES.has(c.type.kind)) sfx("squawk", c.x);
 }
 
@@ -48707,6 +49427,8 @@ function crossAt(x, y, s, c, flared) {
 
 // ---- THE TORSO (torso space: the hips at 0,0, the shoulders at -th, facing right) ----
 function newFaceTorso(kind, c, t, A, tw, th, body, L, angry, step) {
+  if (ANIMAL_KINDS.has(kind)) return animalTorso(kind, c, t, A, tw, th, L); // (the animals - animals.ts)
+  if (GOD_KINDS.has(kind)) return godTorso(kind, c, t, A, tw, th, L); // (the old gods - gods.ts)
   const top = -th,
     sd = c.seed * 91;
   const chest = (cc) => {
@@ -48919,6 +49641,8 @@ function newFaceTorso(kind, c, t, A, tw, th, body, L, angry, step) {
 
 // ---- THE HEAD (centred on x,hy, facing right) ----
 function newFaceHead(kind, x, hy, t, c, A, L, H) {
+  if (ANIMAL_KINDS.has(kind)) return animalHead(kind, x, hy, t, c, A, L, H);
+  if (GOD_KINDS.has(kind)) return godHead(kind, x, hy, t, c, A, L, H);
   const { eye, brows, mouthAt, shadedHead, ink } = H,
     sk = L.skin;
   if (NF_APES.has(kind)) {
@@ -49125,6 +49849,8 @@ function newFaceHead(kind, x, hy, t, c, A, L, H) {
 
 // ---- BEHIND THE BODY: the hussar's wings, shields on backs, the spider monkey's tail ----
 function newFaceBack(kind, c, t, A, tw, th, moving) {
+  if (ANIMAL_KINDS.has(kind)) return animalBack(kind, c, t, A, tw, th, moving);
+  if (GOD_KINDS.has(kind)) return godBack(kind, c, t, A, tw, th, moving);
   const top = -th;
   if (kind === "hussar") {
     // a tall wooden frame rising behind him, set with eagle feathers - they rustle as he walks
@@ -49260,6 +49986,8 @@ function newFaceBack(kind, c, t, A, tw, th, moving) {
 
 // ---- IN FRONT: a lance with its pennant (it streams out BEHIND the lance - away from where he walks), a spear, a sword ----
 function newFaceFront(kind, c, t, A, tw, th, hx, hy, holding, moving) {
+  if (ANIMAL_KINDS.has(kind)) return;
+  if (GOD_KINDS.has(kind)) return godFront(kind, c, t, A, tw, th, hx, hy, holding, moving);
   if (!holding) return;
   if (kind === "hussar") {
     const tilt = 0.08,
@@ -49317,6 +50045,770 @@ function newFaceFront(kind, c, t, A, tw, th, hx, hy, holding, moving) {
     line(sx, sy, sx + 2.6, sy - 6, 1.6, A(col("#6a4a2a")));
     line(sx - 3, sy - 1.6, sx + 4, sy + 1.2, 1.6, A(col("#c8a040")));
     disc(sx + 3, sy - 7, 1.4, A(col("#c8a040")));
+  }
+}
+// =====================================================================================
+//  THE ANIMALS COME FOR A SHAKE (v1.4.5): an OWL, a FOX, a WOLF, a LION, a ZEBRA, a SPRINGBOK, a HIPPO, a RHINO, a GIRAFFE
+//  and an ELEPHANT walk in on their hind legs like everybody else (from stage 2, now and then). The first time each one
+//  comes in during a game there's a callout and a true fact about it. Drawn through the same hooks as the new faces
+//  (newfaces.ts): a torso, a head, a tail behind - in each one's own colours and markings.
+// =====================================================================================
+const ANIMALS                             = [
+  ["owl", "AN OWL!", "OWLS CAN TURN THEIR HEADS ABOUT THREE-QUARTERS OF THE WAY ROUND"],
+  ["fox", "A FOX!", "A FOX WRAPS ITS BUSHY TAIL ROUND ITSELF TO KEEP WARM WHEN IT SLEEPS"],
+  ["wolf", "A WOLF!", "WOLVES LIVE IN FAMILIES CALLED PACKS - AND HOWL TO KEEP IN TOUCH"],
+  ["lion", "A LION!", "A LION'S ROAR CAN BE HEARD UP TO 8 KM AWAY"],
+  ["zebra", "A ZEBRA!", "NO TWO ZEBRAS HAVE THE SAME STRIPES"],
+  ["springbok", "A SPRINGBOK!", "SOUTH AFRICA'S NATIONAL ANIMAL - IT CAN LEAP 2 METRES STRAIGHT UP"],
+  ["hippo", "A HIPPO!", "HIPPOS CAN'T SWIM - THEY WALK AND BOUNCE ALONG THE RIVER BOTTOM"],
+  ["rhino", "A RHINO!", "A RHINO'S HORN IS MADE OF KERATIN - THE SAME STUFF AS YOUR FINGERNAILS"],
+  ["giraffe", "A GIRAFFE!", "A GIRAFFE'S LONG NECK HAS SEVEN BONES - THE SAME NUMBER AS YOURS"],
+  ["elephant", "AN ELEPHANT!", "AN ELEPHANT'S TRUNK HAS ABOUT 40,000 MUSCLES"],
+];
+const ANIMAL_KINDS = new Set(ANIMALS.map((a) => a[0]));
+// fur / skin colours: [main, darker, lighter belly or face], and the shirt/scarf/waistcoat they wear to the pub
+const AN_LOOK = {
+  owl: { fur: "#8a6a4a", dk: "#5a4030", lt: "#e8d8b8", wear: "#3a6a8a", tw: 18, speed: 0.9 },
+  fox: { fur: "#d8702a", dk: "#9a4a1a", lt: "#f6efe4", wear: "#2a5a3a", tw: 16, speed: 1.25 },
+  wolf: { fur: "#8a8e98", dk: "#5a5e68", lt: "#d8dade", wear: "#8a2a2a", tw: 18, speed: 1.1 },
+  lion: { fur: "#d8a050", dk: "#8a4a18", lt: "#f0d8a0", wear: "#6a2a6a", tw: 20, speed: 0.95 },
+  zebra: { fur: "#f4f4f0", dk: "#1a1a1e", lt: "#ffffff", wear: "#d84a3a", tw: 18, speed: 1.1 },
+  springbok: { fur: "#c88a4a", dk: "#5a3a22", lt: "#fbf6ee", wear: "#007749", tw: 15, speed: 1.3 },
+  hippo: { fur: "#8a7a92", dk: "#5e5068", lt: "#e0a8b8", wear: "#f0c040", tw: 26, speed: 0.7 },
+  rhino: { fur: "#8e9094", dk: "#5e6064", lt: "#b8babe", wear: "#3a4a7a", tw: 24, speed: 0.75 },
+  giraffe: { fur: "#e8b85a", dk: "#8a4a20", lt: "#f8e8c0", wear: "#4a8ac8", tw: 16, speed: 1.0 },
+  elephant: { fur: "#9a9ca4", dk: "#6a6c74", lt: "#c8cad0", wear: "#c83a5a", tw: 26, speed: 0.7 },
+};
+const AN_LINES = {
+  owl: ["HOO-HOOT!", "WHO-O-O MADE THIS? DELICIOUS!"],
+  fox: ["YIP YIP!", "SLY AND SATISFIED!"],
+  wolf: ["AWOOOOO!", "THE PACK WILL LOVE THIS!"],
+  lion: ["ROARRR! LOVELY!", "FIT FOR A KING!"],
+  zebra: ["NEIGH-CE ONE!", "STRIPE-TASTIC!"],
+  springbok: ["BOING BOING!", "LEKKER, BRU!"],
+  hippo: ["HRUMPH! MORE!", "GLUG GLUG GLUG"],
+  rhino: ["*SNORT* GOOD!", "HORN-Y-BELIEVABLE!"],
+  giraffe: ["A LONG WAY DOWN!", "*SLUUURP*"],
+  elephant: ["PAWOOOO!", "I'LL NEVER FORGET IT!"],
+};
+for (const [k, a] of Object.entries(AN_LOOK)) {
+  NF_LOOK[k] = { skin: a.fur, pants: a.fur, shoes: a.dk, body: a.wear, arm: a.fur, tw: a.tw };
+  LOOKS[k] = { skin: col(a.fur), pants: col(a.fur), shoes: col(a.dk) };
+  NF_KINDS.add(k);
+  NF_LINES[k] = AN_LINES[k];
+  const big = k === "hippo" || k === "elephant" || k === "rhino";
+  const ty = {
+    kind: k,
+    speed: a.speed,
+    push: big ? 100 : 145,
+    w: big ? 1.25 : 1.0,
+    newface: true,
+    animal: true,
+  };
+  TYPES.push(ty);
+  TYPE_OF[k] = ty;
+}
+Object.assign(NICE, {
+  owl: "OWL",
+  fox: "FOX",
+  wolf: "WOLF",
+  lion: "LION",
+  zebra: "ZEBRA",
+  springbok: "SPRINGBOK",
+  hippo: "HIPPO",
+  rhino: "RHINO",
+  giraffe: "GIRAFFE",
+  elephant: "ELEPHANT",
+});
+// who walks in: from stage 2, now and then one of the animals; the first visit of each kind in a game gets its callout
+function animalFor(demo) {
+  if (G.level < 2 || Math.random() >= (DF().kid ? 0.1 : 0.07)) return null;
+  const a = ANIMALS[Math.floor(Math.random() * ANIMALS.length)],
+    seen = G.anSeen || (G.anSeen = {});
+  if (!seen[a[0]] && !demo) {
+    seen[a[0]] = true;
+    callout(a[1], "#ffd24d", 2.4);
+    G.callouts.push({ text: a[2], c: "#ffe6a0", life: 3.6, max: 3.6, sub: true });
+  }
+  return TYPE_OF[a[0]];
+}
+function animalServedSfx(c) {
+  const k = c.type.kind;
+  if (k === "lion" || k === "wolf") sfx(k === "wolf" ? "howl" : "groan", c.x);
+  else if (k === "owl") sfx("chirp", c.x);
+  else if (k === "elephant" || k === "hippo" || k === "rhino") sfx("snort", c.x);
+  else sfx("squawk", c.x);
+}
+// ---- THE TORSO (torso space: hips at 0,0, shoulders at -th, facing right): fur, the markings, and a bit of pub wear ----
+function animalTorso(kind, c, t, A, tw, th, L) {
+  const a = AN_LOOK[kind],
+    fur = col(a.fur),
+    dk = col(a.dk),
+    lt = col(a.lt),
+    wear = col(a.wear),
+    top = -th;
+  // a rounded furry body, darker at the back
+  quad4(
+    -tw / 2 - 1,
+    top + 2,
+    tw / 2 + 1,
+    top + 2,
+    tw / 2 - 2,
+    -1,
+    -tw / 2 + 2,
+    -1,
+    A(fur),
+    A(fur),
+    A(shade(fur, 0.85)),
+    A(shade(fur, 0.85))
+  );
+  disc(-tw / 2 + 1, top + 4, 4.5, A(shade(fur, 0.88)));
+  disc(tw / 2 - 1, top + 4, 4.5, A(fur));
+  disc(0, top + 3, tw / 2, A(fur), 4.5);
+  disc(1, -7, tw / 2 - 1.5, A(shade(fur, 0.93)), 6);
+  if (kind === "owl") {
+    disc(3, top + 13, tw / 2 - 2, A(lt), th / 2 - 2); // the pale speckled breast
+    for (let i = 0; i < 9; i++) {
+      const x = -3 + (i % 3) * 4 + (Math.floor(i / 3) % 2) * 2,
+        y = top + 7 + Math.floor(i / 3) * 5;
+      line(x - 1, y, x + 1, y + 1.4, 1, A(dk));
+    }
+  } else if (kind === "fox" || kind === "wolf" || kind === "springbok" || kind === "lion") {
+    disc(4, top + 12, tw / 2 - 3, A(lt), th / 2 - 3); // the pale chest and belly
+    if (kind === "springbok")
+      quad4(-tw / 2 + 1, top + 14, tw / 2 - 1, top + 12, tw / 2 - 1, top + 15, -tw / 2 + 1, top + 17, A(dk)); // the dark band along its side
+  } else if (kind === "zebra") {
+    for (let i = 0; i < 6; i++) {
+      const y = top + 3 + i * 4.3;
+      quad4(-tw / 2 + 1, y, tw / 2 - 1, y + 1.2, tw / 2 - 1, y + 3, -tw / 2 + 1, y + 1.8, A(dk));
+    }
+  } else if (kind === "giraffe") {
+    for (let i = 0; i < 8; i++) {
+      const x = -tw / 2 + 3 + (i % 3) * 5 + (Math.floor(i / 3) % 2) * 2.5,
+        y = top + 4 + Math.floor(i / 3) * 7;
+      poly([x - 2, y - 2, x + 2, y - 2.4, x + 2.6, y + 1.6, x - 1.6, y + 2.2], A(dk));
+    }
+  } else if (kind === "hippo") {
+    disc(3, top + 15, tw / 2 - 2, A(shade(lt, 0.92)), th / 2 - 3); // the pinkish belly
+  } else if (kind === "rhino" || kind === "elephant") {
+    for (let i = 0; i < 4; i++) line(-tw / 2 + 2, top + 6 + i * 5, tw / 2 - 2, top + 7 + i * 5, 0.8, A(dk)); // wrinkled hide
+  }
+  // ...and a little something to wear to the pub
+  if (kind === "fox" || kind === "wolf") {
+    quad4(-tw / 2, top + 1, tw / 2, top + 1, tw / 2 - 1, top + 5, -tw / 2 + 1, top + 5, A(wear));
+    quad4(tw / 2 - 5, top + 4, tw / 2 - 2, top + 4, tw / 2 - 1, top + 13, tw / 2 - 4, top + 13, A(wear)); // a scarf
+    for (let i = 0; i < 3; i++) line(tw / 2 - 4.5 + i, top + 13, tw / 2 - 4.5 + i, top + 15, 0.7, A(wear));
+  } else if (kind === "lion" || kind === "rhino") {
+    quad4(-tw / 2 + 1, top + 2, -1, top + 2, 0, -2, -tw / 2 + 2, -2, A(wear));
+    for (let i = 0; i < 3; i++) disc(-2, top + 7 + i * 6, 0.9, A(col("#f0d060"))); // a smart waistcoat, gold buttons
+  } else if (kind === "hippo" || kind === "elephant" || kind === "giraffe") {
+    tri(tw / 2 - 6, top + 2, tw / 2 - 1, top - 1, tw / 2 - 1, top + 5, A(wear));
+    tri(tw / 2 - 6, top + 2, tw / 2 - 11, top - 1, tw / 2 - 11, top + 5, A(wear));
+    disc(tw / 2 - 6, top + 2, 1.4, A(shade(wear, 0.8))); // a bow tie
+  } else if (kind === "zebra" || kind === "springbok") {
+    quad4(
+      -tw / 2 + 1,
+      top + 18,
+      tw / 2 - 1,
+      top + 18,
+      tw / 2 - 1,
+      top + 20.5,
+      -tw / 2 + 1,
+      top + 20.5,
+      A(wear)
+    ); // a belt, a sash
+  } else if (kind === "owl") {
+    rect(tw / 2 - 5, top + 3, 4, 3, A(wear)); // a little satchel strap
+    line(-tw / 2 + 2, top + 2, tw / 2 - 3, top + 16, 1.2, A(wear));
+  }
+}
+// ---- THE HEAD (centred at x, hy; facing right) ----
+function animalHead(kind, x, hy, t, c, A, L, H) {
+  const { eye, mouthAt, ink } = H,
+    a = AN_LOOK[kind],
+    fur = col(a.fur),
+    dk = col(a.dk),
+    lt = col(a.lt);
+  const blink = H.eyes === "closed";
+  if (kind === "owl") {
+    // a round head, ear tufts, a pale heart-shaped face with two huge eyes, a little hooked beak
+    tri(x - 7, hy - 8, x - 3, hy - 9, x - 7, hy - 15, A(dk));
+    tri(x + 3, hy - 9, x + 7, hy - 8, x + 7, hy - 15, A(dk));
+    disc(x, hy, 10.5, A(fur));
+    disc(x + 1, hy + 0.5, 9.5, A(lt), 9);
+    for (const ex of [-3.4, 4.2]) {
+      disc(x + ex, hy - 1, 4.4, A(col("#f0a020")));
+      if (!blink) disc(x + ex + 0.6, hy - 1, 2.3, ink);
+      else line(x + ex - 3, hy - 1, x + ex + 3, hy - 1, 1, ink);
+      disc(x + ex - 0.6, hy - 2, 0.6, A(C.white));
+    }
+    tri(x - 0.4, hy + 2, x + 2.4, hy + 2, x + 1.2, hy + 6, A(col("#e8b030")));
+    return;
+  }
+  if (kind === "fox" || kind === "wolf") {
+    const wolf = kind === "wolf";
+    // big pointed ears, a long pointed snout, a pale muzzle and cheeks, a black nose
+    tri(x - 7, hy - 4, x - 1, hy - 7, x - 6, hy - (wolf ? 16 : 18), A(fur));
+    tri(x - 5.5, hy - 6, x - 2.5, hy - 7, x - 5.4, hy - (wolf ? 13 : 15), A(shade(lt, 0.9)));
+    if (!wolf) tri(x - 6.4, hy - 15, x - 5, hy - 15.4, x - 6, hy - 18, A(col("#2a1a12"))); // black ear tips
+    disc(x - 1, hy, 9, A(fur), 8.5);
+    quad4(x + 2, hy - 4, x + 15, hy + 2, x + 14, hy + 5, x + 2, hy + 6, A(fur));
+    quad4(x + 3, hy + 1, x + 14, hy + 3, x + 13, hy + 5.5, x + 1, hy + 7, A(lt)); // the pale lower muzzle
+    disc(x - 1, hy + 4, 4.5, A(lt), 3.5); // a pale cheek
+    disc(x + 14.5, hy + 2.4, 1.8, ink); // the nose
+    if (!blink) {
+      disc(x + 4, hy - 2, 1.6, A(col(wolf ? "#e8c040" : "#f0a020")));
+      disc(x + 4.4, hy - 2, 0.9, ink);
+    } else line(x + 2.5, hy - 2, x + 5.5, hy - 2, 1, ink);
+    mouthAt(x + 11, hy + 5.6, 1.8);
+    return;
+  }
+  if (kind === "lion") {
+    // a great shaggy mane round a golden face, a broad muzzle, a dark nose
+    for (let i = 0; i < 14; i++) {
+      const an = (i / 14) * 6.283 + Math.sin(t * 2 + i) * 0.04,
+        r = 17 + (i % 2) * 3;
+      tri(
+        x - 1,
+        hy,
+        x - 1 + Math.cos(an - 0.26) * 9,
+        hy + Math.sin(an - 0.26) * 9,
+        x - 1 + Math.cos(an) * r,
+        hy + Math.sin(an) * r,
+        A(i % 2 ? dk : shade(dk, 1.15))
+      );
+    }
+    disc(x - 1, hy, 14.5, A(dk));
+    disc(x + 1, hy + 0.5, 8.5, A(fur), 9);
+    disc(x + 5, hy + 4, 5, A(lt), 4); // the muzzle
+    disc(x + 7.5, hy + 1.6, 1.6, A(col("#5a2a1a")));
+    tri(x - 3, hy - 7, x + 1, hy - 8, x - 1, hy - 11, A(fur)); // a round ear peeping out of the mane
+    if (!blink) {
+      disc(x + 3, hy - 2.5, 1.5, A(col("#d0a020")));
+      disc(x + 3.4, hy - 2.5, 0.8, ink);
+    } else line(x + 1.6, hy - 2.5, x + 4.6, hy - 2.5, 1, ink);
+    mouthAt(x + 6, hy + 6.4, 2.2);
+    return;
+  }
+  if (kind === "zebra") {
+    // a long horse-like head, black and white stripes, a dark muzzle, a stiff striped mane, upright ears
+    for (let i = 0; i < 6; i++) rect(x - 6 + i * 1.6, hy - 14 + (i % 2), 1.5, 6, A(i % 2 ? dk : fur)); // the mane
+    tri(x - 3, hy - 7, x, hy - 8, x - 2, hy - 15, A(fur));
+    disc(x - 1, hy - 1, 8, A(fur), 8);
+    quad4(x + 2, hy - 5, x + 15, hy + 1, x + 14, hy + 8, x + 1, hy + 6, A(fur));
+    for (let i = 0; i < 4; i++) line(x - 5 + i * 3.6, hy - 7 + i * 0.6, x - 3 + i * 3.6, hy + 5, 1.4, A(dk)); // stripes
+    disc(x + 14, hy + 4.5, 3.6, A(dk), 4); // the dark muzzle
+    disc(x + 15, hy + 3, 0.8, A(col("#5a5a60")));
+    if (!blink) eye(x + 3, hy - 2.2, 1.4);
+    else line(x + 1.6, hy - 2.2, x + 4.4, hy - 2.2, 1, ink);
+    return;
+  }
+  if (kind === "springbok") {
+    // lyre-shaped horns, a white face with a dark stripe through the eye, a slender muzzle
+    polyline([x - 2, hy - 7, x - 4, hy - 14, x - 2, hy - 20, x - 4, hy - 23], 1.6, A(col("#3a2a1a")));
+    polyline([x + 1, hy - 7, x, hy - 14, x + 2, hy - 20, x + 1, hy - 23], 1.6, A(col("#4a3a2a")));
+    for (let i = 0; i < 4; i++) line(x - 4, hy - 9 - i * 3, x - 2, hy - 9 - i * 3, 0.6, A(col("#7a6a5a"))); // ridged
+    tri(x - 4, hy - 4, x - 1, hy - 6, x - 9, hy - 10, A(fur)); // a long ear
+    disc(x - 1, hy, 7.5, A(fur), 7.5);
+    quad4(x + 1, hy - 4, x + 12, hy + 1, x + 11, hy + 5, x + 1, hy + 5, A(lt));
+    line(x + 1, hy - 1, x + 11, hy + 2.6, 1.6, A(dk)); // the dark stripe from eye to mouth
+    disc(x + 11.6, hy + 2.6, 1.4, ink);
+    if (!blink) eye(x + 3, hy - 2.4, 1.3);
+    else line(x + 1.6, hy - 2.4, x + 4.4, hy - 2.4, 1, ink);
+    return;
+  }
+  if (kind === "hippo") {
+    // a huge wide muzzle, little ears and eyes up on top, big nostrils, two stubby teeth
+    disc(x - 3, hy - 6, 2.4, A(dk));
+    disc(x - 1, hy - 1, 9, A(fur), 8);
+    disc(x + 6, hy + 4, 9.5, A(fur), 7);
+    disc(x + 7, hy + 6, 8, A(shade(col(a.lt), 0.85)), 4.5); // the pink-lipped jowls
+    disc(x + 12, hy + 0.6, 1.1, ink);
+    disc(x + 9, hy + 0, 1.1, ink);
+    if (!blink) {
+      disc(x + 2, hy - 5, 2.2, A(fur));
+      eye(x + 2.6, hy - 5.4, 1.2);
+    } else line(x + 1, hy - 5, x + 4, hy - 5, 1, ink);
+    rect(x + 11, hy + 8.5, 1.6, 2.4, A(C.white));
+    rect(x + 6, hy + 9, 1.6, 2.2, A(C.white));
+    mouthAt(x + 9, hy + 8.4, 3.4);
+    return;
+  }
+  if (kind === "rhino") {
+    // a long heavy head, a great horn on the nose and a smaller one behind it, tufted ears
+    tri(x - 4, hy - 6, x - 1, hy - 8, x - 5, hy - 13, A(fur));
+    disc(x - 1, hy, 9, A(fur), 8.5);
+    quad4(x + 2, hy - 5, x + 15, hy - 1, x + 15, hy + 7, x + 1, hy + 7, A(fur));
+    tri(x + 10, hy - 2.6, x + 15, hy - 1.6, x + 15, hy - 14, A(col("#d8d0c0"))); // the big front horn
+    tri(x + 6, hy - 4, x + 9, hy - 3, x + 8, hy - 9, A(col("#c8c0b0")));
+    for (let i = 0; i < 3; i++) line(x - 5, hy - 2 + i * 3, x - 1, hy - 1 + i * 3, 0.7, A(dk)); // folds
+    if (!blink) eye(x + 3, hy - 1, 1.1);
+    else line(x + 2, hy - 1, x + 4.2, hy - 1, 1, ink);
+    mouthAt(x + 12, hy + 5.6, 2);
+    return;
+  }
+  if (kind === "giraffe") {
+    // the long neck rising from the shoulders, patched; the head up top with its two little horns (ossicones)
+    const nx = x - 3,
+      ny = hy - 22;
+    quad4(x - 6, hy + 8, x + 2, hy + 8, nx + 3, ny + 3, nx - 3, ny + 3, A(fur));
+    for (let i = 0; i < 4; i++) disc(x - 2 - i * 0.4, hy + 3 - i * 6, 1.8, A(dk), 1.4);
+    for (let i = 0; i < 5; i++) rect(x - 7 + i * 0.3, hy + 6 - i * 6, 2, 4, A(dk)); // a short mane down the back of it
+    line(nx - 2, ny - 4, nx - 3, ny - 10, 1.6, A(fur));
+    line(nx + 1, ny - 4, nx + 1, ny - 10, 1.6, A(fur));
+    disc(nx - 3, ny - 10.4, 1.4, A(dk));
+    disc(nx + 1, ny - 10.4, 1.4, A(dk)); // the ossicones
+    tri(nx - 3, ny - 2, nx, ny - 3, nx - 9, ny - 6, A(fur)); // an ear
+    disc(nx, ny, 6.5, A(fur), 6);
+    quad4(nx + 2, ny - 3, nx + 12, ny + 1, nx + 11, ny + 6, nx + 1, ny + 5, A(fur));
+    disc(nx + 11, ny + 3.4, 2.6, A(shade(fur, 0.8)), 2.6);
+    disc(nx - 1, ny + 1, 1.6, A(dk), 1.2);
+    if (!blink) eye(nx + 3, ny - 1, 1.3);
+    else line(nx + 1.6, ny - 1, nx + 4.4, ny - 1, 1, ink);
+    mouthAt(nx + 9, ny + 5, 1.8);
+    return;
+  }
+  if (kind === "elephant") {
+    // a great flapping ear, a long trunk curling forward, small tusks, a little eye
+    const flap = Math.sin(t * 2.4 + c.ph) * 1.4;
+    disc(x - 7 + flap * 0.3, hy + 3, 12 + flap * 0.4, A(dk), 14);
+    disc(x - 6 + flap * 0.3, hy + 3, 10, A(shade(col(a.lt), 0.95)), 9); // the ear
+    disc(x + 1, hy - 1, 9.5, A(fur), 9);
+    const sw = Math.sin(t * 1.8 + c.ph) * 2,
+      tr = [
+        x + 8,
+        hy + 1,
+        x + 14,
+        hy + 6,
+        x + 16 + sw * 0.4,
+        hy + 14,
+        x + 14 + sw,
+        hy + 21,
+        x + 18 + sw,
+        hy + 23,
+      ];
+    polyline(tr, 6.4, A(shade(fur, 0.82)));
+    polyline(tr, 4.8, A(fur)); // the long trunk, curling up at the tip
+    for (let i = 1; i < 5; i++)
+      line(x + 13 + i * 0.6, hy + 4 + i * 3.8, x + 17 + i * 0.4, hy + 4 + i * 3.8, 0.7, A(dk));
+    polyline([x + 7, hy + 7, x + 11, hy + 11, x + 15, hy + 10.5], 2.6, A(col("#fbf8ee"))); // a tusk
+    if (!blink) eye(x + 4, hy - 2, 1.2);
+    else line(x + 3, hy - 2, x + 5.4, hy - 2, 1, ink);
+    return;
+  }
+}
+// ---- BEHIND THEM: the tails ----
+function animalBack(kind, c, t, A, tw, th, moving) {
+  const a = AN_LOOK[kind],
+    fur = col(a.fur),
+    dk = col(a.dk),
+    lt = col(a.lt),
+    sw = Math.sin(t * (moving ? 6 : 2.2) + c.ph) * (moving ? 3 : 1.6),
+    bx = -tw / 2 + 1,
+    by = -6;
+  if (kind === "fox" || kind === "wolf") {
+    // a big bushy tail (the fox's with a white tip)
+    const pts = [bx, by, bx - 7, by + 2 + sw * 0.3, bx - 14, by - 1 + sw, bx - 19, by - 6 + sw];
+    polyline(pts, kind === "fox" ? 7 : 6, A(fur));
+    disc(bx - 18, by - 5 + sw, 4, A(kind === "fox" ? lt : shade(fur, 0.8)));
+    polyline([bx - 3, by + 1, bx - 12, by + 1 + sw], 2, A(shade(fur, 0.85)));
+  } else if (
+    kind === "lion" ||
+    kind === "zebra" ||
+    kind === "giraffe" ||
+    kind === "elephant" ||
+    kind === "rhino" ||
+    kind === "hippo"
+  ) {
+    // a thin tail with a tuft at the end
+    const len = kind === "hippo" || kind === "rhino" ? 8 : 15;
+    polyline([bx, by, bx - len * 0.5, by + 5 + sw * 0.4, bx - len, by + 10 + sw], 1.3, A(shade(fur, 0.85)));
+    if (kind !== "hippo") disc(bx - len, by + 11 + sw, 2.2, A(dk), 3);
+  } else if (kind === "springbok") {
+    polyline([bx, by - 2, bx - 4, by + 2 + sw * 0.3], 2, A(lt));
+  } else if (kind === "owl") {
+    for (let i = 0; i < 3; i++)
+      quad4(
+        bx,
+        by - 3 + i * 2,
+        bx + 1,
+        by - 1 + i * 2,
+        bx - 7,
+        by + 6 + i * 2,
+        bx - 8,
+        by + 3 + i * 2,
+        A(i % 2 ? dk : fur)
+      ); // tail feathers
+  }
+}
+// =====================================================================================
+//  THE OLD GODS DROP IN (v1.4.5): from the old Norse and Germanic tales ODIN, THOR and FREYJA, and from the old Slavic
+//  ones PERUN, VELES and MOKOSH - each with the signs the stories give them (Odin's one eye, his hat, his spear and two
+//  ravens; Thor's red beard and short-handled hammer; Freyja's golden necklace and falcon-feather cloak; Perun's axe and
+//  his lightning; Veles's horns, his fur and his staff; Mokosh's headscarf and her distaff of wool). Rarely, from stage
+//  3; their first visit in a game gets a callout and a line from the old stories. Drawn through the new-face hooks.
+// =====================================================================================
+const GODS                             = [
+  [
+    "odin",
+    "ODIN, THE ALL-FATHER!",
+    "HE GAVE AN EYE TO DRINK FROM THE WELL OF WISDOM - HIS TWO RAVENS BRING HIM THE NEWS",
+  ],
+  ["thor", "THOR, GOD OF THUNDER!", "THURSDAY IS NAMED AFTER HIM - 'THOR'S DAY'"],
+  ["freyja", "FREYJA!", "IN THE OLD TALES SHE RIDES A CHARIOT PULLED BY TWO CATS"],
+  ["perun", "PERUN, THE SLAVIC GOD OF THUNDER!", "HIS TREE WAS THE MIGHTY OAK"],
+  ["veles", "VELES!", "SLAVIC GOD OF CATTLE, OF THE WOODS AND THE UNDERWORLD - PERUN'S OLD RIVAL"],
+  ["mokosh", "MOKOSH, MOTHER EARTH!", "THE OLD SLAVS' GODDESS OF THE EARTH, OF SPINNING AND WEAVING"],
+  [
+    "marzanna",
+    "MARZANNA, LADY OF WINTER!",
+    "EVERY SPRING IN POLAND A STRAW MARZANNA IS SENT DOWN THE RIVER - GOODBYE, WINTER!",
+  ],
+];
+const GOD_KINDS = new Set(GODS.map((g) => g[0]));
+const GOD_LOOK = {
+  odin: { skin: "#e8c8a8", pants: "#3a3a4a", shoes: "#3a2a1a", body: "#3a4a6a", arm: "#3a4a6a", tw: 19 },
+  thor: { skin: "#f0c8a0", pants: "#5a4030", shoes: "#3a2a1a", body: "#8a2a1e", arm: "#f0c8a0", tw: 22 },
+  freyja: { skin: "#f6dcc4", pants: "#e8e0f4", shoes: "#8a6a3a", body: "#2a7a6a", arm: "#f6dcc4", tw: 17 },
+  perun: { skin: "#e8c4a0", pants: "#3a3a52", shoes: "#5a3a1a", body: "#c8402a", arm: "#c8402a", tw: 21 },
+  veles: { skin: "#c8a080", pants: "#3a2a1a", shoes: "#2a1a10", body: "#5a3a22", arm: "#5a3a22", tw: 20 },
+  mokosh: { skin: "#ecc8a8", pants: "#f0e8d8", shoes: "#6a3a1a", body: "#f2ece0", arm: "#f2ece0", tw: 18 },
+  marzanna: { skin: "#f0eae6", pants: "#7ab0dc", shoes: "#4a6a9a", body: "#8ec0e8", arm: "#8ec0e8", tw: 17 },
+};
+const GOD_LINES = {
+  odin: ["WISDOM... AND A SHAKE.", "MY RAVENS SAID IT WAS GOOD."],
+  thor: ["BY THUNDER, THAT'S GOOD!", "ANOTHER! FOR THE ROAD!"],
+  freyja: ["SPLENDID!", "MY CATS WILL BE JEALOUS."],
+  perun: ["GROM! THUNDERING GOOD!", "NA ZDROWIE!"],
+  veles: ["MMM... EARTHY.", "THE WOODS SAY THANK YOU."],
+  mokosh: ["BLESS YOUR HANDS, CHILD.", "WOVEN WITH LOVE!"],
+  marzanna: ["BRRR... DELIGHTFUL.", "SO COLD, SO GOOD!", "SPRING CAN WAIT!"],
+};
+for (const [k, v] of Object.entries(GOD_LOOK)) {
+  NF_LOOK[k] = v;
+  LOOKS[k] = { skin: col(v.skin), pants: col(v.pants), shoes: col(v.shoes) };
+  NF_KINDS.add(k);
+  NF_LINES[k] = GOD_LINES[k];
+  const ty = {
+    kind: k,
+    speed: k === "mokosh" || k === "odin" ? 0.75 : 0.9,
+    push: 130,
+    w: k === "thor" ? 1.15 : 1.0,
+    newface: true,
+    god: true,
+  };
+  TYPES.push(ty);
+  TYPE_OF[k] = ty;
+}
+for (const k of ["odin", "freyja", "veles", "mokosh", "marzanna"]) ROBED.add(k); // (their cloaks and dresses reach the floor)
+Object.assign(NICE, {
+  odin: "ODIN",
+  thor: "THOR",
+  freyja: "FREYJA",
+  perun: "PERUN",
+  veles: "VELES",
+  mokosh: "MOKOSH",
+  marzanna: "MARZANNA",
+});
+function godFor(demo) {
+  if (G.level < 3 || Math.random() >= 0.035) return null;
+  const g = GODS[Math.floor(Math.random() * GODS.length)],
+    seen = G.anSeen || (G.anSeen = {});
+  if (!seen[g[0]] && !demo) {
+    seen[g[0]] = true;
+    callout(g[1], "#ffe080", 2.6);
+    G.callouts.push({ text: g[2], c: "#ffe6a0", life: 3.8, max: 3.8, sub: true });
+    sfx(g[0] === "thor" || g[0] === "perun" ? "thunder" : "chime", X0, 2);
+  }
+  return TYPE_OF[g[0]];
+}
+// ---- THE TORSO (hips at 0,0, shoulders at -th, facing right) ----
+function godTorso(kind, c, t, A, tw, th, L) {
+  const lk = GOD_LOOK[kind],
+    body = col(lk.body),
+    top = -th;
+  quad4(
+    -tw / 2,
+    top,
+    tw / 2,
+    top,
+    tw / 2 - 2,
+    -2,
+    -tw / 2 + 2,
+    -2,
+    A(body),
+    A(body),
+    A(shade(body, 0.8)),
+    A(shade(body, 0.8))
+  );
+  disc(-tw / 2, top + 3, 3.4, A(shade(body, 0.85)));
+  disc(tw / 2, top + 3, 3.4, A(body));
+  if (kind === "odin") {
+    // a long grey-blue cloak over a dark tunic, a silver brooch
+    quad4(-tw / 2 - 2, top - 1, tw / 2 + 2, top - 1, tw / 2 + 3, 0, -tw / 2 - 3, 0, A(col("#5a6a8a")));
+    quad4(2, top + 1, tw / 2, top + 1, tw / 2 - 1, -1, 3, -1, A(col("#2a2a3a")));
+    disc(tw / 2 - 3, top + 3, 2, A(col("#d8dce4")));
+    rect(-tw / 2, -8, tw, 2.4, A(col("#6a4a2a")));
+  } else if (kind === "thor") {
+    // a red tunic over broad bare arms, a great belt (his belt of strength) with a big buckle
+    rect(-tw / 2 + 1, top + 1, 4, th - 4, A(shade(body, 1.15)));
+    rect(-tw / 2, -9, tw, 4, A(col("#6a4a2a")));
+    rect(-2, -9.5, 5, 5, A(col("#d8b040")));
+    rect(-1, -8.5, 3, 3, A(col("#6a4a2a")));
+  } else if (kind === "freyja") {
+    // a green gown and, over her shoulders, a cloak of falcon feathers; her golden necklace, Brisingamen
+    for (let i = 0; i < 7; i++) {
+      const x = -tw / 2 + 1 + (i % 4) * 4,
+        y = top + 1 + Math.floor(i / 4) * 5;
+      tri(x, y, x + 4, y, x + 2, y + 6, A(col(i % 2 ? "#8a6a4a" : "#b89070")));
+    }
+    for (let i = 0; i < 5; i++) disc(-4 + i * 2.2, top + 3 + Math.sin(i * 0.8) * 1.2, 1.2, A(col("#ffd040")));
+    disc(0.4, top + 5.6, 1.8, A(col("#ff8a40")));
+    rect(-tw / 2 + 1, -8, tw - 2, 2, A(col("#d8b040")));
+  } else if (kind === "perun") {
+    // a red cloak pinned at the shoulder, a silver mail shirt beneath, an oak-leaf brooch
+    rect(-tw / 2 + 2, top + 2, tw - 4, th - 6, A(col("#a8acb6")));
+    for (let yy = top + 3; yy < -4; yy += 2.2)
+      for (let xx = -tw / 2 + 3; xx < tw / 2 - 2; xx += 2.2) disc(xx, yy, 0.6, A(col("#c8ccd6")));
+    quad4(-tw / 2 - 2, top - 1, -tw / 2 + 5, top - 1, -tw / 2 + 3, -1, -tw / 2 - 3, -1, A(body));
+    disc(tw / 2 - 3, top + 3, 2.2, A(col("#4a8a3a")));
+    rect(-tw / 2, -8, tw, 2.4, A(col("#5a3a1a")));
+  } else if (kind === "veles") {
+    // a shaggy bearskin cloak, a coarse shirt
+    for (let i = 0; i < 12; i++) {
+      const x = -tw / 2 + (i % 4) * 5,
+        y = top + Math.floor(i / 4) * 7;
+      disc(x + 2, y + 3, 3, A(shade(body, 0.8 + (i % 3) * 0.12)));
+    }
+    rect(-tw / 2 + 1, -8, tw - 2, 2.4, A(col("#3a2a1a")));
+  } else if (kind === "marzanna") {
+    // an icy blue gown with frost patterns, a white shawl edged like snow
+    for (let i = 0; i < 4; i++) {
+      const x = -tw / 2 + 3 + i * 4,
+        y = top + 8 + (i % 2) * 6;
+      for (let a = 0; a < 3; a++)
+        line(
+          x - Math.cos(a * 1.05) * 2,
+          y - Math.sin(a * 1.05) * 2,
+          x + Math.cos(a * 1.05) * 2,
+          y + Math.sin(a * 1.05) * 2,
+          0.6,
+          A(C.white)
+        );
+    } // little frost stars
+    quad4(-tw / 2 - 1, top, tw / 2 + 1, top, tw / 2, top + 6, -tw / 2, top + 6, A(col("#f6faff")));
+    for (let i = 0; i < 5; i++) disc(-tw / 2 + 1 + i * 4, top + 6, 1.6, A(col("#f6faff")));
+    rect(-tw / 2 + 1, -8, tw - 2, 2, A(col("#9ac0e0")));
+  } else if (kind === "mokosh") {
+    // a white linen dress with red embroidery at the neck, the hem and the sleeves
+    for (let i = 0; i < 6; i++) disc(-5 + i * 2, top + 2, 0.9, A(col(i % 2 ? "#c8302a" : "#2a2a2a")));
+    for (let i = 0; i < 4; i++) {
+      const x = -tw / 2 + 3 + i * 4;
+      tri(x, -10, x + 3, -10, x + 1.5, -7, A(col("#c8302a")));
+    }
+    rect(-tw / 2 + 1, top + 12, tw - 2, 2.2, A(col("#c8302a")));
+  }
+}
+// ---- THE HEAD (centred at x, hy; facing right) ----
+function godHead(kind, x, hy, t, c, A, L, H) {
+  const { eye, brows, mouthAt, shadedHead, ink } = H,
+    sk = col(GOD_LOOK[kind].skin);
+  if (kind === "odin") {
+    // a long grey beard, one eye (a patch over the other), a wide-brimmed traveller's hat
+    shadedHead(x, hy, 8, 9, sk);
+    eye(x + 4.5, hy - 1, 1.5);
+    line(x - 2, hy - 6, x + 3, hy + 1, 1, ink);
+    disc(x + 1, hy - 1.5, 2, ink); // the patch
+    poly([x - 4, hy + 2, x + 7, hy + 2, x + 6, hy + 16, x + 1, hy + 19, x - 2, hy + 12], A(col("#c8c8cc")));
+    for (let i = 0; i < 3; i++) line(x + i * 2, hy + 4, x + i * 2 - 1, hy + 15, 0.7, A(col("#9a9aa2")));
+    mouthAt(x + 4, hy + 4, 1.8);
+    disc(x, hy - 7.5, 15, A(col("#3a3a4a")), 3); // the broad brim
+    disc(x - 1, hy - 10, 7.5, A(col("#4a4a5a")), 5); // the crown of the hat
+    return;
+  }
+  if (kind === "thor") {
+    // a great red beard and red hair, plaited; a plain iron helmet
+    shadedHead(x, hy, 8.5, 9, sk);
+    eye(x + 1.5, hy - 1, 1.5);
+    eye(x + 5.5, hy - 1, 1.5);
+    brows(hy - 4);
+    poly([x - 2, hy + 3, x + 8, hy + 3, x + 7, hy + 11, x + 3, hy + 14, x - 1, hy + 10], A(col("#c8501e")));
+    polyline([x + 3, hy + 12, x + 3, hy + 18], 2, A(col("#c8501e"))); // a plait in the beard
+    mouthAt(x + 4.5, hy + 4, 2);
+    for (let i = 0; i < 3; i++)
+      polyline([x - 7, hy - 2 + i * 3, x - 9, hy + 6 + i * 3], 2.4, A(col("#d8602a"))); // his hair
+    disc(x, hy - 5, 9, A(col("#7a7e88")), 6);
+    rect(x - 9, hy - 5, 18, 2, A(col("#5a5e68")));
+    return;
+  }
+  if (kind === "freyja") {
+    // long golden hair with a braid, a circlet of gold
+    for (let i = 0; i < 5; i++)
+      polyline(
+        [x - 6 + i * 0.6, hy - 6, x - 9 + i, hy + 6, x - 8 + i, hy + 16],
+        2.6,
+        A(col(i % 2 ? "#f0c850" : "#e0b040"))
+      );
+    shadedHead(x, hy, 8, 9, sk);
+    eye(x + 1.5, hy - 1, 1.5);
+    eye(x + 5.5, hy - 1, 1.5);
+    brows(hy - 4);
+    mouthAt(x + 4, hy + 4.4, 1.6);
+    disc(x - 1, hy - 6, 8.5, A(col("#f0c850")), 4);
+    rect(x - 7, hy - 6, 14, 1.6, A(col("#ffd860")));
+    disc(x + 2, hy - 5.4, 1.2, A(col("#5fd0ff")));
+    return;
+  }
+  if (kind === "perun") {
+    // a copper-gold beard and long hair, a pointed iron helmet
+    shadedHead(x, hy, 8.5, 9, sk);
+    eye(x + 1.5, hy - 1, 1.5);
+    eye(x + 5.5, hy - 1, 1.5);
+    brows(hy - 4);
+    poly([x - 5, hy + 1, x + 8, hy + 1, x + 7, hy + 11, x + 2, hy + 14, x - 3, hy + 10], A(col("#c8902a")));
+    mouthAt(x + 4.5, hy + 4, 2);
+    for (let i = 0; i < 3; i++)
+      polyline([x - 7, hy - 2 + i * 3, x - 8, hy + 7 + i * 3], 2.2, A(col("#b8802a")));
+    poly([x - 9, hy - 4, x + 9, hy - 4, x, hy - 17], A(col("#8a8e98")));
+    rect(x - 9, hy - 5, 18, 2, A(col("#c8a040")));
+    return;
+  }
+  if (kind === "veles") {
+    // a shaggy dark beard, long hair, and curving horns
+    polyline([x - 3, hy - 7, x - 9, hy - 13, x - 7, hy - 19], 2.4, A(col("#c8b090")));
+    polyline([x + 2, hy - 7, x + 5, hy - 14, x + 2, hy - 19], 2.4, A(col("#d8c0a0")));
+    for (let i = 0; i < 4; i++) polyline([x - 6 + i, hy - 5, x - 9 + i, hy + 8], 2.4, A(col("#3a2a1a")));
+    shadedHead(x, hy, 8, 9, sk);
+    eye(x + 1.5, hy - 1, 1.5);
+    eye(x + 5.5, hy - 1, 1.5);
+    brows(hy - 4);
+    poly([x - 5, hy + 1, x + 8, hy + 1, x + 6, hy + 13, x + 1, hy + 17, x - 3, hy + 11], A(col("#3a2a1a")));
+    mouthAt(x + 4.5, hy + 4, 2);
+    disc(x - 1, hy - 6, 8, A(col("#3a2a1a")), 4);
+    return;
+  }
+  if (kind === "marzanna") {
+    // pale as frost, long pale braids woven with straw, a crown of frosted twigs and ice crystals
+    for (const ox2 of [-7, -4]) {
+      polyline([x + ox2, hy - 4, x + ox2 - 1, hy + 8, x + ox2 + 1, hy + 18], 3, A(col("#e0c87a")));
+      for (let i = 0; i < 4; i++)
+        line(x + ox2 - 1.4, hy + 2 + i * 4, x + ox2 + 1.4, hy + 3.4 + i * 4, 0.7, A(col("#c8a860"))); // straw in the braid
+    }
+    shadedHead(x, hy, 8, 9, sk);
+    eye(x + 1.5, hy - 1, 1.5);
+    eye(x + 5.5, hy - 1, 1.5);
+    brows(hy - 4);
+    disc(x + 6, hy + 2.2, 1.2, A(col("#c8dcf4")), 0.8); // a cold, blue-rosy cheek
+    mouthAt(x + 4, hy + 4.4, 1.6);
+    disc(x - 1, hy - 6, 8.5, A(col("#e8d488")), 4); // her pale straw-gold hair
+    for (let i = 0; i < 6; i++) {
+      const tx = x - 7 + i * 2.8;
+      line(tx, hy - 7, tx + (i % 2 ? 1 : -1), hy - 13 - (i % 3) * 2, 1, A(col("#8a6a4a")));
+      disc(tx + (i % 2 ? 1 : -1), hy - 13 - (i % 3) * 2, 1, A(col("#e8f6ff")));
+    } // the crown of frosted twigs
+    R.setAdd(true);
+    for (let i = 0; i < 3; i++) glow(x - 4 + i * 4, hy - 13, 3, A(withA(col("#bfe8ff"), 0.6)));
+    R.setAdd(false);
+    return;
+  }
+  if (kind === "mokosh") {
+    // a kind old face, a red headscarf with a white pattern, tied under the chin
+    disc(x - 1, hy - 1, 10.5, A(col("#c8302a")), 11);
+    for (let i = 0; i < 6; i++) disc(x - 7 + i * 2.6, hy - 7 + (i % 2), 0.8, A(C.white));
+    shadedHead(x + 1, hy + 0.5, 7.5, 8.5, sk);
+    eye(x + 2.5, hy - 0.5, 1.4);
+    eye(x + 6, hy - 0.5, 1.4);
+    brows(hy - 3.6);
+    line(x + 1, hy + 2.6, x + 2.6, hy + 3, 0.6, A(shade(sk, 0.75))); // laughter lines
+    mouthAt(x + 5, hy + 4.6, 1.8);
+    tri(x - 2, hy + 8, x + 4, hy + 8, x + 1, hy + 13, A(col("#c8302a")));
+    return;
+  }
+}
+// ---- BEHIND: Odin's ravens on his shoulders; Freyja's feather cloak; Veles's fur ----
+function godBack(kind, c, t, A, tw, th, moving) {
+  const top = -th;
+  if (kind === "freyja") {
+    for (let i = 0; i < 5; i++) {
+      const y = top + 2 + i * 6;
+      quad4(
+        -tw / 2,
+        y,
+        -tw / 2 + 2,
+        y,
+        -tw / 2 - 4 - i,
+        y + 9,
+        -tw / 2 - 7 - i,
+        y + 7,
+        A(col(i % 2 ? "#8a6a4a" : "#b89070"))
+      );
+    }
+  } else if (kind === "veles") {
+    quad4(-tw / 2 - 2, top, -tw / 2 + 3, top, -tw / 2 + 1, 4, -tw / 2 - 6, 4, A(col("#4a2e1a")));
+  }
+}
+// ---- IN FRONT: Thor's hammer, Odin's spear, Perun's axe, Veles's staff, Mokosh's distaff of wool ----
+function godFront(kind, c, t, A, tw, th, hx, hy, holding, moving) {
+  if (!holding) return;
+  if (kind === "thor") {
+    // the short-handled hammer, Mjolnir, gripped in his hand and raised (where the counter can't hide it)
+    const bx = hx + 1,
+      by = hy - 16;
+    line(hx, hy, bx, by + 4, 2.6, A(col("#6a4a2a")));
+    rect(bx - 8, by - 5, 16, 9, A(col("#7a7e88")));
+    rect(bx - 8, by - 5, 16, 2.2, A(col("#a8acb6")));
+    for (let i = 0; i < 3; i++) disc(bx - 5 + i * 5, by, 0.9, A(col("#c8a040")));
+  } else if (kind === "odin") {
+    // Huginn and Muninn, Thought and Memory, perched on his shoulders
+    for (const [sx, ph] of [
+      [-tw / 2 - 1, 0],
+      [tw / 2 - 2, 1.6],
+    ]         ) {
+      const y = -th - 3 + Math.sin(t * 3 + ph + c.ph) * 0.8;
+      disc(sx, y, 3.8, A(col("#34344c")), 3.2);
+      disc(sx + 3, y - 2.6, 2.4, A(col("#34344c")));
+      tri(sx + 4.8, y - 3.2, sx + 7.8, y - 2.4, sx + 4.8, y - 1.6, A(col("#c8a040")));
+      disc(sx + 3.6, y - 3, 0.6, A(col("#ffd040")));
+      polyline([sx - 3, y - 1, sx, y - 2.4, sx + 2, y - 0.6], 1, A(col("#8a8ab8"))); // (a blue-black sheen on the wing)
+      tri(sx - 3, y, sx - 7, y + 3, sx - 3, y + 2, A(col("#34344c")));
+    }
+    line(hx + 8, hy + 46, hx + 12, hy - 34, 1.6, A(col("#8a6a3a")));
+    tri(hx + 10.4, hy - 33, hx + 13.6, hy - 33, hx + 12.6, hy - 44, A(col("#c8ccd6"))); // Gungnir, his spear
+  } else if (kind === "perun") {
+    // his axe - and now and then a crackle of lightning round its head
+    const ax = hx + 1,
+      ay = hy - 22; // (raised, the axe head up by his shoulder)
+    line(hx, hy + 4, ax, ay - 6, 1.8, A(col("#6a4a2a")));
+    poly([ax, ay - 6, ax + 8, ay - 10, ax + 9, ay + 2, ax, ay - 1], A(col("#a8acb6")));
+    if (Math.sin(t * 5 + c.ph) > 0.6 && !COMFORT.calm) {
+      R.setAdd(true);
+      polyline(
+        [ax + 9, ay - 12, ax + 13, ay - 16, ax + 11, ay - 19, ax + 15, ay - 24],
+        1.2,
+        A(col("#fff4a0"))
+      );
+      glow(ax + 8, ay - 8, 9, A(withA(col("#fff0a0"), 0.6)));
+      R.setAdd(false);
+    }
+  } else if (kind === "veles") {
+    line(hx + 9, hy + 46, hx + 11, hy - 24, 2, A(col("#5a3a1a")));
+    polyline([hx + 11, hy - 24, hx + 15, hy - 28, hx + 13, hy - 32], 1.6, A(col("#5a3a1a"))); // a crooked herdsman's staff
+  } else if (kind === "marzanna") {
+    // a few snowflakes always drifting down around her
+    R.setAdd(true);
+    for (let i = 0; i < 6; i++) {
+      const f = (t * 0.35 + i / 6 + c.seed) % 1,
+        sx = -tw / 2 - 6 + ((i * 7) % (tw + 14)) + Math.sin(t * 1.5 + i) * 2,
+        sy = -th - 22 + f * (th + 30);
+      disc(sx, sy, 1, A(withA(C.white, 0.8 * (1 - f))));
+    }
+    R.setAdd(false);
+  } else if (kind === "mokosh") {
+    line(hx + 8, hy + 40, hx + 11, hy - 10, 1.4, A(col("#8a6a3a")));
+    disc(hx + 11, hy - 13, 4.4, A(col("#f4f0e8")), 5.6); // the distaff, wound with wool
+    for (let i = 0; i < 3; i++)
+      line(hx + 8, hy - 15 + i * 3, hx + 14, hy - 14 + i * 3, 0.5, A(col("#d8d0c0")));
+    line(hx + 11, hy - 8, hx + 6, hy + 14, 0.5, A(col("#f4f0e8"))); // the thread, down to her hand
   }
 }
 // =====================================================================================
@@ -51181,22 +52673,26 @@ function drawAttract(g, s, t) {
       per = two ? 10 : 20;
     const top = cssH * 0.24,
       rowH = Math.min(36 * s, (cssH * 0.62) / per);
-    // the font shrinks until the widest line fits its column (the arcade font is very wide)
-    const line = (r, i) =>
-      String(i + 1).padStart(2, " ") +
-      ".  " +
-      String(r.n || "???")
-        .padEnd(4, " ")
-        .slice(0, 4) +
-      "  " +
-      String(r.s).padStart(7, "0") +
-      "   " +
-      (r.sec || "");
-    const colW = (two ? cssW * 0.44 : cssW) * 0.92;
+    // (v1.4.5) PROPER COLUMNS - the rank, the name, the score and the level, each at its own fixed place - so every line
+    // lines up whatever its length (a line used to be centred as a whole, so "LEVEL 12 HARD" pushed it sideways)
+    const colW = (two ? cssW * 0.44 : cssW) * 0.92,
+      nm = (r) => String(r.n || "???").slice(0, 4),
+      sc = (r) => String(r.s).padStart(7, "0");
     let fs = Math.max(6, Math.min(16, (rowH / s) * 0.55));
-    g.font = fD(fs);
-    const widest = Math.max(...rows.map((r, i) => g.measureText(line(r, i)).width));
-    if (widest > colW) fs = Math.max(5, (fs * colW) / widest);
+    const widths = () => {
+      g.font = fD(fs);
+      const gap = g.measureText("  ").width,
+        wR = g.measureText("20.").width,
+        wN = Math.max(g.measureText("WWWW").width, ...rows.map((r) => g.measureText(nm(r)).width)),
+        wS = g.measureText("0000000").width,
+        wL = Math.max(0, ...rows.map((r) => g.measureText(r.sec || "").width));
+      return { gap, wR, wN, wS, wL, all: wR + gap + wN + gap + wS + gap + wL };
+    };
+    let Wd = widths();
+    if (Wd.all > colW) {
+      fs = Math.max(5, (fs * colW) / Wd.all);
+      Wd = widths();
+    }
     rows.forEach((r, i) => {
       const col2 = two ? Math.floor(i / 10) : 0,
         row = two ? i % 10 : i,
@@ -51205,7 +52701,14 @@ function drawAttract(g, s, t) {
       if (ATTRACT.t < 0.3 + i * 0.12) return;
       g.font = fD(fs);
       g.fillStyle = r.def ? "rgba(185,168,184,.7)" : cols[(i + Math.floor(t * 4)) % cols.length];
-      g.fillText(line(r, i), x, y);
+      const L0 = x - Wd.all / 2;
+      g.textAlign = "right";
+      g.fillText(i + 1 + ".", L0 + Wd.wR, y);
+      g.textAlign = "left";
+      g.fillText(nm(r), L0 + Wd.wR + Wd.gap, y);
+      g.fillText(sc(r), L0 + Wd.wR + Wd.gap + Wd.wN + Wd.gap, y);
+      g.fillText(r.sec || "", L0 + Wd.wR + Wd.gap + Wd.wN + Wd.gap + Wd.wS + Wd.gap, y);
+      g.textAlign = "center";
     });
     if (blink) neon(pressText(), cssH * 0.9, 16, "#ffffff", 10);
   } else if (ph === "cast") {
@@ -51683,7 +53186,7 @@ function drawEggs(g, s) {
 // THE VERSION (from v1.2.0, 5 October 2026): MAJOR.MINOR.PATCH - a new MINOR for a batch of new things, a new PATCH for
 // fixes and small touches - with the day it was made next to it. (Before this the versions were named after the date,
 // like v2026.10.05c.)
-const GAME_VERSION = "v1.4.3",
+const GAME_VERSION = "v1.4.4",
   GAME_DATE = "06.10.2026",
   VERSION_TEXT = GAME_VERSION + "  ·  " + GAME_DATE;
 const FB = '"Chakra Petch", "Segoe UI", sans-serif';
@@ -51804,7 +53307,22 @@ function drawHud(fps) {
     if (crtOn && !CRT_ACTIVE) drawScanlines(g);
     return;
   } // (the full-screen scenes: just their own words)
-  if (G.state === "jump" && G.jump) {
+  if (G.state === "jump" && G.jump && G.jump.inter) {
+    interHud(g, s); // (the great jump to Andromeda - intergal.ts)
+    const DS = DSIGN;
+    g.globalAlpha = DS.fl;
+    neon2(g, "SPACE PUB", DS.x * u, (DS.y - 10 * DS.s) * u, 30 * DS.s * u, "#ff5fa8");
+    g.globalAlpha = 1;
+    g.textAlign = "right";
+    g.textBaseline = "bottom";
+    g.font = fD(20);
+    g.fillStyle = "hsl(" + Math.round((t * 25) % 360) + " 90% 65%)";
+    g.fillText("GL", cssW - 12, cssH - 8);
+    g.textBaseline = "top";
+    g.textAlign = "center";
+    drawEggs(g, s);
+    return; // (just the journey - no score bar)
+  } else if (G.state === "jump" && G.jump) {
     // the hyperspace jump: where we're off to, then where we've arrived
     const j = G.jump.t,
       cx = cssW / 2,
@@ -55909,12 +57427,30 @@ function degNote(tr, chordPc, deg, tp) {
     k = ((n % sc.length) + sc.length) % sc.length;
   return tr.root + tp + sc[k] + 12 * oc;
 }
+// (v1.4.5) CHIP PULSE WAVES: the old game consoles' thin, bright "pulse" sound - a square wave that's on for only an
+// eighth or a quarter of each cycle. Built once per duty and kept.
+const PULSE_W                               = {};
+function pulseWave(duty) {
+  const k = String(duty);
+  if (!PULSE_W[k]) {
+    const n = 48,
+      re = new Float32Array(n),
+      im = new Float32Array(n);
+    for (let i = 1; i < n; i++) {
+      re[i] = (2 / (i * Math.PI)) * Math.sin(i * Math.PI * duty) * Math.cos(i * Math.PI * duty);
+      im[i] = (2 / (i * Math.PI)) * Math.sin(i * Math.PI * duty) * Math.sin(i * Math.PI * duty);
+    }
+    PULSE_W[k] = AC.createPeriodicWave(re, im);
+  }
+  return PULSE_W[k];
+}
 function note2(wave, m, dur, vol, bus, t, o           = {}) {
   // one synth note with optional filter, vibrato and swell
   const osc = AC.createOscillator(),
     g = AC.createGain();
   let last = osc;
-  osc.type = wave;
+  if (o.duty) osc.setPeriodicWave(pulseWave(o.duty));
+  else osc.type = wave;
   osc.frequency.setValueAtTime(mf(m) * (o.slide ? 0.94 : 1), t);
   if (o.slide) osc.frequency.exponentialRampToValueAtTime(mf(m), t + 0.05);
   if (o.det) osc.detune.value = o.det;
@@ -55924,6 +57460,10 @@ function note2(wave, m, dur, vol, bus, t, o           = {}) {
     l.frequency.value = o.vib;
     lg.gain.value = mf(m) * 0.012;
     l.connect(lg);
+    if (o.vibDelay) {
+      lg.gain.setValueAtTime(0, t);
+      lg.gain.linearRampToValueAtTime(mf(m) * 0.014, t + o.vibDelay + 0.12);
+    } // (it creeps in once the note has held)
     lg.connect(osc.frequency);
     l.start(t);
     l.stop(t + dur + 0.1);
@@ -56185,7 +57725,7 @@ function playStep2(tr, t0) {
       while (i + n < mot.length && mot[i + n] === ".") n++;
       const m = degNote(tr, pc, +tok, tp) + L.oct + (sc.up || 0);
       const d = st * 2 * n * 0.95,
-        o = {
+        o           = {
           vib: L.vib,
           lp: L.lp,
           nasal: L.nasal,
@@ -56194,15 +57734,36 @@ function playStep2(tr, t0) {
           pluck: L.pluck,
           slide: L.slide && Math.random() < 0.4,
         };
-      note2(L.wave, m, d, L.vol, leadBus, t, o);
-      if (L.wave2) note2(L.wave2, m, d, L.vol * 0.6, leadBus, t, { ...o, det: 7 });
+      // (v1.4.5) a square lead plays as a chip PULSE - a quarter-wave in one section, a thinner eighth-wave in the next -
+      // and a long held note gets the chip-tune's delayed vibrato
+      if (L.wave === "square" && !L.lp) o.duty = SEQ2.sec % 2 ? 0.125 : 0.25;
+      if (!o.vib && n >= 3 && (L.wave === "square" || L.wave === "triangle")) {
+        o.vib = 5.5;
+        o.vibDelay = Math.min(0.35, d * 0.4);
+      }
+      note2(L.wave, m, d, o.duty ? L.vol * 0.9 : L.vol, leadBus, t, o);
+      if (L.wave2) note2(L.wave2, m, d, L.vol * 0.6, leadBus, t, { ...o, det: 7, duty: undefined });
       if (L.breath) noise(Math.min(d, 0.25), 0.012, 3000, 2000, leadBus, t, "bandpass");
       if (sc.up && mk !== "f") note2(L.wave, m - 5, d, L.vol * 0.45, leadBus, t, o); // a harmony line when the section lifts
     }
   }
+  // ---- (v1.4.5) the CHIP ARPEGGIO: on the lively tracks, once the song is going, the chord sparkles high up in a fast
+  //      pulse-wave arpeggio - the old consoles' way of playing a whole chord on one voice ----
+  const chippy =
+    (L.wave === "square" || L.wave === "triangle") && tr.bpm >= 100 && tr.comp !== "arp" && !tr.folk;
+  if (chippy && SEQ2.sec > 0 && SEQ2.sec % 2 === 0 && !sc.drums) {
+    const an = 72 + (tones[s % tones.length] % 12) + (s % 6 >= 3 ? 12 : 0);
+    note2("square", an, st * 0.85, 0.016, leadBus, t, { duty: 0.125, stacc: true });
+  }
   // ---- drums ----
   const pat = DRUMS[sc.drums || tr.drums] || {};
-  for (const k in pat) if (pat[k][s] === "x") drum(k, t, B2, onBeat ? 1 : 0.8);
+  // (v1.4.5) a DRUM FILL in the last bar of a section, rolling into the next: toms tumbling down, snare hits to finish
+  const lastBar =
+    bar === sc.chords.length - 1 && Object.keys(pat).length > 0 && SEQ2.sec + 1 < tr.form.length;
+  if (lastBar && s >= 12 && div === 4) {
+    if (s < 14) tone("sine", 260 - (s - 12) * 50, 150 - (s - 12) * 25, 0.18, 0.24, B2, t);
+    else drum("s", t, B2, s === 15 ? 1 : 0.8);
+  } else for (const k in pat) if (pat[k][s] === "x") drum(k, t, B2, onBeat ? 1 : 0.8);
   if (bar === 0 && s === 0 && SEQ2.sec > 0) noise(1.2, 0.12, 8000, 3000, B2, t, "highpass"); // a cymbal at each new section
   // ---- the special sounds that give each planet its flavour ----
   if (tr.extra === "anvil" && s === 12 && bar % 2 === 1)
@@ -56556,6 +58117,7 @@ function showPanels() {
   $("cup").hidden = !FP.cup;
   $("prof").hidden = !FP.prof;
   $("news").hidden = !FP.news;
+  $("howto").hidden = !FP.howto;
   $("keys").hidden = !FP.keys;
   {
     const over = JB.open || SB.open || WD.open || CS.open || ATTRACT.on || G.state !== "menu"; // (the music box, the sticker book... open on top)
@@ -56573,6 +58135,7 @@ function showPanels() {
   $("over").hidden = G.state !== "over";
   $("touch").hidden = !((lastDev === "touch" || (coarse && lastDev !== "pad")) && G.state === "play");
   $("tHoly").hidden = G.level < 2;
+  $("tFlav").hidden = !COMFORT.flav;
   $("tCross").hidden = G.level < 2;
   pourText();
   layoutText();
@@ -57565,6 +59128,20 @@ profWire();
 //  the game, and where the motion capture, the folk songs and the fonts come from. Both from the menu at any time.
 // =====================================================================================
 const NEWS = [
+  {
+    ver: "v1.4.4",
+    title: "THE GREAT JUMP",
+    items: [
+      "The great jump to Andromeda - out of the Milky Way, across 2.5 million light-years",
+      "Animals come for a shake: an owl, a fox, a wolf, a lion, a zebra, a springbok, a hippo, a rhino, a giraffe, an elephant",
+      "The old Norse and Slavic gods drop in - Odin, Thor, Freyja, Perun, Veles, Mokosh and Marzanna",
+      "HOW TO PLAY on the menu; flavour orders can be turned off; better chip-tune music",
+      "Meteors burst on the shield in hyperspace; Austrians with Sachertorte; weather less often",
+      "Every customer has a name tag now, for longer - and it never hides a shake",
+      "A spider drops in on its thread, caterpillars crawl the counters, and worms peek out",
+      "The planets in the side windows look right again",
+    ],
+  },
   {
     ver: "v1.4.3",
     title: "COSMIC WEATHER",

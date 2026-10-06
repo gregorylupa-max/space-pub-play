@@ -2215,6 +2215,7 @@ const DICT_ROWS                             = [
   ],
   ["TOO SLOW - BYE!", "TE STADIG - TOTSIENS!", "ZA WOLNO - PA!"],
   ["IN A HURRY", "HAASTIG", "W POŚPIECHU"],
+  ["NAVAJO LADY", "NAVAJO-DAME", "PANI Z PLEMIENIA NAWAHO"],
   [
     "run along the counter (grab tips) - hold it, or tap twice, for a TURBO run",
     "hardloop langs die toonbank (vat fooitjies) - hou dit, of tik twee keer, vir 'n TURBO-lopie",
@@ -4364,6 +4365,7 @@ const TYPES = [
   { kind: "cowboy", speed: 1.0, push: 140, w: 1.05, lasso: true },
   { kind: "oom", speed: 0.9, push: 130, w: 1.1, lekker: true },
   { kind: "apache", speed: 1.05, push: 145, w: 1.0, tracker: true },
+  { kind: "dine", speed: 0.85, push: 135, w: 1.05 }, // (v1.3.6) a Diné (Navajo) lady: velvet, silver and turquoise
   // CREATURES OF THE NIGHT (and of long ago):
   // a vampire (from level 3) - evil like the devils: refuse him, splash him or show him the cross. Now and then he turns into a
   //   bat and flutters a long way up the bar at once.
@@ -4667,6 +4669,9 @@ const REGULARS2 = [
   "cowboy",
   "oom",
   "apache",
+  "apache",
+  "dine",
+  "dine",
   "kid",
   "kid",
   "explorer",
@@ -15204,6 +15209,7 @@ const LOOKS = {
   farmer: { skin: col("#f0c8a0"), pants: col("#3a5a8a"), shoes: col("#5a3a1a") },
   cosmonaut: { skin: col("#e8ecf4"), pants: col("#d8dce8"), shoes: col("#7a8296") },
   tannie: { skin: col("#f0c8a0"), pants: col("#3a5a8a"), shoes: col("#3a2a1a") },
+  dine: { skin: col("#b47a50"), pants: col("#2a6a8a"), shoes: col("#5a3a20") }, // (a long tiered skirt, moccasins)
   folkpl: { skin: col("#f0c8a0"), pants: col("#d02030"), shoes: col("#2a1a10") },
   afrotrad: { skin: col("#f0c8a0"), pants: col("#f2ece0"), shoes: col("#3a2a1a") },
   taikonaut: { skin: col("#eef0f4"), pants: col("#e0e4ec"), shoes: col("#5a6070") },
@@ -15322,6 +15328,7 @@ const HUMANS = new Set([
   "monk",
   "hindu",
   "tannie",
+  "dine",
   "folkpl",
   "afrotrad",
   "zombie",
@@ -15536,7 +15543,8 @@ function customerBody(c, t, a) {
   if (c.tone === undefined && kind === "madam") c.tone = SKINS[Math.floor(c.seed * 13) % 2];
   if (c.tone === undefined && (ANCIENTS.includes(kind) || ["creature", "babayaga"].includes(kind)))
     c.tone = LOOKS[kind].skin;
-  if (c.tone === undefined && kind === "apache") c.tone = SKINS[2 + Math.floor(c.seed * 2)];
+  if (c.tone === undefined && (kind === "apache" || kind === "dine"))
+    c.tone = SKINS[2 + Math.floor(c.seed * 2)];
   if (c.tone === undefined && kind === "afrotrad") c.tone = SKINS[4 + (Math.floor(c.seed * 13) % 2)];
   if (c.tone === undefined && kind === "elder") c.tone = SKINS[4 + (Math.floor(c.seed * 7) % 2)];
   if (c.tone === undefined && kind === "docker") c.tone = SKINS[Math.floor(c.seed * 5) % 2];
@@ -15809,6 +15817,7 @@ function customerBody(c, t, a) {
     const robed =
       ROBED.has(kind) ||
       kind === "tannie" ||
+      kind === "dine" ||
       (kind === "hindu" && c.seed < 0.5) ||
       ((kind === "folkpl" || kind === "afrotrad") && c.seed < 0.6); // (long dresses and skirts)
     if (robed && side > 0) {
@@ -16086,124 +16095,132 @@ function customerBody(c, t, a) {
                                                                   ? col("#16161c")
                                                                   : kind === "zombie"
                                                                     ? col(c.cured ? "#6a8ab0" : "#4a5a6a")
-                                                                    : kind === "tannie"
-                                                                      ? col("#3a5a8a")
-                                                                      : kind === "folkpl"
-                                                                        ? col(
-                                                                            c.seed < 0.6
-                                                                              ? "#f8f4ec"
-                                                                              : "#f0ece0"
-                                                                          )
-                                                                        : kind === "afrotrad"
+                                                                    : kind === "dine"
+                                                                      ? col(
+                                                                          c.seed < 0.5 ? "#5a2a6a" : "#7a1a2a"
+                                                                        )
+                                                                      : kind === "tannie"
+                                                                        ? col("#3a5a8a")
+                                                                        : kind === "folkpl"
                                                                           ? col(
-                                                                              [
-                                                                                "#f2ece0",
-                                                                                "#1c1a1a",
-                                                                                "#e8e0d0",
-                                                                              ][afroStyle(c)]
+                                                                              c.seed < 0.6
+                                                                                ? "#f8f4ec"
+                                                                                : "#f0ece0"
                                                                             )
-                                                                          : kind === "kid"
+                                                                          : kind === "afrotrad"
                                                                             ? col(
                                                                                 [
-                                                                                  "#ff5fa8",
-                                                                                  "#5fb0ff",
-                                                                                  "#ffd040",
-                                                                                  "#5ff5a8",
-                                                                                ][Math.floor(c.seed * 4) % 4]
+                                                                                  "#f2ece0",
+                                                                                  "#1c1a1a",
+                                                                                  "#e8e0d0",
+                                                                                ][afroStyle(c)]
                                                                               )
-                                                                            : kind === "explorer"
-                                                                              ? col("#c8b078")
-                                                                              : kind === "rugby"
-                                                                                ? col("#006a3a")
-                                                                                : kind === "elder"
-                                                                                  ? col("#a8784a")
-                                                                                  : kind === "docker"
-                                                                                    ? col("#2a4a7a")
-                                                                                    : kind === "plcrew"
-                                                                                      ? col(
-                                                                                          c.seed < 0.5
-                                                                                            ? "#f4f4f6"
-                                                                                            : "#e86a2a"
-                                                                                        )
-                                                                                      : kind === "knight"
-                                                                                        ? col("#7a5a40")
-                                                                                        : kind === "monk"
-                                                                                          ? col("#e8902a")
-                                                                                          : kind === "hindu"
-                                                                                            ? col(
-                                                                                                c.seed < 0.5
-                                                                                                  ? [
-                                                                                                      "#e0307a",
-                                                                                                      "#ff8a20",
-                                                                                                      "#2a9a8a",
-                                                                                                    ][
-                                                                                                      Math.floor(
-                                                                                                        c.seed *
-                                                                                                          6
-                                                                                                      ) % 3
-                                                                                                    ]
-                                                                                                  : "#f4ecd8"
-                                                                                              )
-                                                                                            : kind ===
-                                                                                                "businessman"
-                                                                                              ? col("#3a3a46")
+                                                                            : kind === "kid"
+                                                                              ? col(
+                                                                                  [
+                                                                                    "#ff5fa8",
+                                                                                    "#5fb0ff",
+                                                                                    "#ffd040",
+                                                                                    "#5ff5a8",
+                                                                                  ][
+                                                                                    Math.floor(c.seed * 4) % 4
+                                                                                  ]
+                                                                                )
+                                                                              : kind === "explorer"
+                                                                                ? col("#c8b078")
+                                                                                : kind === "rugby"
+                                                                                  ? col("#006a3a")
+                                                                                  : kind === "elder"
+                                                                                    ? col("#a8784a")
+                                                                                    : kind === "docker"
+                                                                                      ? col("#2a4a7a")
+                                                                                      : kind === "plcrew"
+                                                                                        ? col(
+                                                                                            c.seed < 0.5
+                                                                                              ? "#f4f4f6"
+                                                                                              : "#e86a2a"
+                                                                                          )
+                                                                                        : kind === "knight"
+                                                                                          ? col("#7a5a40")
+                                                                                          : kind === "monk"
+                                                                                            ? col("#e8902a")
+                                                                                            : kind === "hindu"
+                                                                                              ? col(
+                                                                                                  c.seed < 0.5
+                                                                                                    ? [
+                                                                                                        "#e0307a",
+                                                                                                        "#ff8a20",
+                                                                                                        "#2a9a8a",
+                                                                                                      ][
+                                                                                                        Math.floor(
+                                                                                                          c.seed *
+                                                                                                            6
+                                                                                                        ) % 3
+                                                                                                      ]
+                                                                                                    : "#f4ecd8"
+                                                                                                )
                                                                                               : kind ===
-                                                                                                  "farmer"
+                                                                                                  "businessman"
                                                                                                 ? col(
-                                                                                                    "#3a5a8a"
+                                                                                                    "#3a3a46"
                                                                                                   )
                                                                                                 : kind ===
-                                                                                                    "vampire"
+                                                                                                    "farmer"
                                                                                                   ? col(
-                                                                                                      "#16121c"
+                                                                                                      "#3a5a8a"
                                                                                                     )
                                                                                                   : kind ===
-                                                                                                      "werewolf"
-                                                                                                    ? c.wolf
-                                                                                                      ? col(
-                                                                                                          "#6a6a78"
-                                                                                                        )
-                                                                                                      : col(
-                                                                                                          "#8a3a2a"
-                                                                                                        )
+                                                                                                      "vampire"
+                                                                                                    ? col(
+                                                                                                        "#16121c"
+                                                                                                      )
                                                                                                     : kind ===
-                                                                                                        "devil"
-                                                                                                      ? col(
-                                                                                                          "#2a1020"
-                                                                                                        )
-                                                                                                      : kind ===
-                                                                                                            "angel" ||
-                                                                                                          kind ===
-                                                                                                            "pontiff"
+                                                                                                        "werewolf"
+                                                                                                      ? c.wolf
                                                                                                         ? col(
-                                                                                                            "#f6f2ea"
+                                                                                                            "#6a6a78"
+                                                                                                          )
+                                                                                                        : col(
+                                                                                                            "#8a3a2a"
+                                                                                                          )
+                                                                                                      : kind ===
+                                                                                                          "devil"
+                                                                                                        ? col(
+                                                                                                            "#2a1020"
                                                                                                           )
                                                                                                         : kind ===
-                                                                                                            "bishop"
+                                                                                                              "angel" ||
+                                                                                                            kind ===
+                                                                                                              "pontiff"
                                                                                                           ? col(
-                                                                                                              "#6a2a7a"
+                                                                                                              "#f6f2ea"
                                                                                                             )
                                                                                                           : kind ===
-                                                                                                              "miner"
+                                                                                                              "bishop"
                                                                                                             ? col(
-                                                                                                                "#c84a3a"
+                                                                                                                "#6a2a7a"
                                                                                                               )
                                                                                                             : kind ===
-                                                                                                                "trucker"
+                                                                                                                "miner"
                                                                                                               ? col(
-                                                                                                                  "#c03a3a"
+                                                                                                                  "#c84a3a"
                                                                                                                 )
                                                                                                               : kind ===
-                                                                                                                  "pilot"
+                                                                                                                  "trucker"
                                                                                                                 ? col(
-                                                                                                                    "#6a4020"
+                                                                                                                    "#c03a3a"
                                                                                                                   )
                                                                                                                 : kind ===
-                                                                                                                    "ringhead"
+                                                                                                                    "pilot"
                                                                                                                   ? col(
-                                                                                                                      "#f0e0b0"
+                                                                                                                      "#6a4020"
                                                                                                                     )
-                                                                                                                  : shirt;
+                                                                                                                  : kind ===
+                                                                                                                      "ringhead"
+                                                                                                                    ? col(
+                                                                                                                        "#f0e0b0"
+                                                                                                                      )
+                                                                                                                    : shirt;
   const armC = NF_LOOK[kind]
       ? col(NF_LOOK[kind].arm)
       : alienSkin
@@ -17813,6 +17830,17 @@ function drawTorsoBase(kind, c, t, A, tw, th, body, L, angry, step) {
       rect(-tw / 2 + 2, -4, tw - 4, 3, A(col("#4a3a20")));
       rect(3, top + 4, 1.4, 6, A(col("#202020")));
     } // khaki shirt, a comb in the pocket
+    if (kind === "dine") {
+      // a velvet blouse with silver buttons, a squash-blossom necklace of silver and turquoise, a silver concho belt
+      for (let i = 0; i < 4; i++) disc(0.5, top + 4 + i * 4.5, 0.8, A(col("#d8dce4")));
+      for (let i = 0; i < 9; i++) {
+        const a = Math.PI * (0.12 + i * 0.095);
+        disc(Math.cos(a) * 7, top + 1 + Math.sin(a) * 7, 1.1, A(col(i % 2 ? "#d8dce4" : "#30c0b0")));
+      }
+      disc(0, top + 9, 1.8, A(col("#d8dce4")));
+      rect(-tw / 2 + 1, -6, tw - 2, 3, A(col("#3a2410")));
+      for (let i = 0; i < 4; i++) disc(-tw / 2 + 3 + i * ((tw - 6) / 3), -4.5, 1.7, A(col("#d8dce4")), 1.3);
+    }
     if (kind === "apache") {
       for (let i = 0; i < 3; i++)
         rect(-tw / 2 + 1, top + 4 + i * 3, tw - 2, 1.6, A(col(["#e03030", "#ffd040", "#f4f4f4"][i])));
@@ -18281,6 +18309,19 @@ function drawHead(kind, x, hy, t, c, A, angry, look, L, mouth = "flat", eyes = "
     disc(x, hy - 9, 17, A(col("#8a5a2a")), 3.2);
     disc(x, hy - 13, 8, A(col("#9a6a34")), 5);
     rect(x - 7, hy - 11, 14, 2, A(col("#5a3418"))); // cowboy hat
+  } else if (kind === "dine") {
+    // a Diné (Navajo) lady: dark hair in a traditional bun (the tsiiyéél) bound with white yarn, turquoise earrings
+    const sk = L.skin;
+    shadedHead(x, hy + 1, 10, 11, sk);
+    disc(x - 1, hy - 5, 10.5, A(col("#14100c")), 6);
+    disc(x - 9, hy - 1, 5.5, A(col("#14100c")), 6);
+    for (let i = 0; i < 3; i++) rect(x - 11.5, hy - 4 + i * 2.6, 5, 1.3, A(col("#f6f2ea")));
+    eye(x - 2, hy + 1, 1.8);
+    eye(x + 5, hy + 1, 1.8);
+    disc(x - 5, hy + 4.5, 1.6, A(col("#ff9a7a", 0.35)));
+    mouthAt(x + 2, hy + 6.5, 2.4);
+    disc(x - 6.5, hy + 5, 1.5, A(col("#30c0b0")));
+    disc(x - 6.5, hy + 5, 0.6, A(col("#d8dce4")));
   } else if (kind === "tannie") {
     // an Afrikaner tannie: a white kappie (sunbonnet) with a deep brim, a kind smile, a white apron
     const sk = L.skin;
@@ -36930,6 +36971,7 @@ const NICE = {
   cowboy: "COWBOY",
   oom: "OOM KOOS",
   apache: "APACHE RIDER",
+  dine: "NAVAJO LADY",
   vampire: "VAMPIRE",
   werewolf: "WEREWOLF",
   rex: "T-REX",
@@ -49315,8 +49357,8 @@ function drawEggs(g, s) {
 // THE VERSION (from v1.2.0, 5 October 2026): MAJOR.MINOR.PATCH - a new MINOR for a batch of new things, a new PATCH for
 // fixes and small touches - with the day it was made next to it. (Before this the versions were named after the date,
 // like v2026.10.05c.)
-const GAME_VERSION = "v1.3.5",
-  GAME_DATE = "05.10.2026",
+const GAME_VERSION = "v1.3.6",
+  GAME_DATE = "06.10.2026",
   VERSION_TEXT = GAME_VERSION + "  ·  " + GAME_DATE;
 const FB = '"Chakra Petch", "Segoe UI", sans-serif';
 let FD = '"Bungee", "Impact", sans-serif';
@@ -55164,6 +55206,14 @@ profWire();
 //  the game, and where the motion capture, the folk songs and the fonts come from. Both from the menu at any time.
 // =====================================================================================
 const NEWS = [
+  {
+    ver: "v1.3.6",
+    title: "A NAVAJO LADY",
+    items: [
+      "A new customer: a Navajo lady in velvet, silver and turquoise",
+      "The Apache tracker comes in more often",
+    ],
+  },
   {
     ver: "v1.3.5",
     title: "NEW FANS, EASY TURBO",

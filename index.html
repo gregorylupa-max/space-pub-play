@@ -2217,6 +2217,41 @@ const DICT_ROWS                             = [
   ["TOO SLOW - BYE!", "TE STADIG - TOTSIENS!", "ZA WOLNO - PA!"],
   ["IN A HURRY", "HAASTIG", "W POŚPIECHU"],
   ["NAVAJO LADY", "NAVAJO-DAME", "PANI Z PLEMIENIA NAWAHO"],
+  [
+    "A RED DWARF: A SMALL, COOL, RED STAR",
+    "'N ROOI DWERG: 'N KLEIN, KOEL, ROOI STER",
+    "CZERWONY KARZEŁ: MAŁA, CHŁODNA, CZERWONA GWIAZDA",
+  ],
+  [
+    "THREE OUT OF EVERY FOUR STARS IN OUR GALAXY ARE RED DWARFS",
+    "DRIE UIT ELKE VIER STERRE IN ONS STERRESTELSEL IS ROOI DWERGE",
+    "TRZY NA CZTERY GWIAZDY W NASZEJ GALAKTYCE TO CZERWONE KARŁY",
+  ],
+  [
+    "NOW AND THEN IT FLARES - SUDDENLY MUCH BRIGHTER, FOR A FEW MINUTES",
+    "SO NOU EN DAN VLAM DIT OP - SKIELIK BAIE HELDERDER, VIR 'N PAAR MINUTE",
+    "CZASEM ROZBŁYSKA - NAGLE O WIELE JAŚNIEJSZY, NA KILKA MINUT",
+  ],
+  [
+    "THEY BURN SO SLOWLY THAT THEY CAN SHINE FOR TRILLIONS OF YEARS",
+    "HULLE BRAND SO STADIG DAT HULLE TRILJOENE JARE LANK KAN SKYN",
+    "PALĄ SIĘ TAK WOLNO, ŻE MOGĄ ŚWIECIĆ BILIONY LAT",
+  ],
+  [
+    "PROXIMA CENTAURI, THE NEAREST STAR TO THE SUN, IS A RED DWARF",
+    "PROXIMA CENTAURI, DIE NAASTE STER AAN DIE SON, IS 'N ROOI DWERG",
+    "PROXIMA CENTAURI, NAJBLIŻSZA SŁOŃCU GWIAZDA, TO CZERWONY KARZEŁ",
+  ],
+  [
+    "MIRROR BAR!  THIS TIME YOU SERVE FROM THE LEFT",
+    "SPIEËLKROEG!  HIERDIE KEER BEDIEN JY VAN LINKS",
+    "LUSTRZANY BAR!  TYM RAZEM PODAJESZ Z LEWEJ",
+  ],
+  [
+    "MIRROR BAR!  THIS TIME YOU SERVE FROM THE TOP",
+    "SPIEËLKROEG!  HIERDIE KEER BEDIEN JY VAN BO",
+    "LUSTRZANY BAR!  TYM RAZEM PODAJESZ Z GÓRY",
+  ],
   ["MOUSE", "MUIS", "MYSZ"],
   [
     "press and hold up your bar to run there · hold at the taps to pour · click a bar to jump to it",
@@ -5933,6 +5968,23 @@ function playerInput(id) {
   }
   let dragL = !!th.dragL,
     dragR = !!th.dragR;
+  // a MIRROR BAR: running goes the way it looks on the screen (wide: right is towards the door; tall: down is)
+  let rl = hl,
+    rr = hr,
+    ru = hu,
+    rd = hd;
+  if (mirrorPlay()) {
+    if (VERT) {
+      ru = hd;
+      rd = hu;
+    } else {
+      rl = hr;
+      rr = hl;
+    }
+    const t0 = dragL;
+    dragL = dragR;
+    dragR = t0;
+  }
   if (!id && th.runTo != null) {
     dragL = dragL || P1.x > th.runTo + 6;
     dragR = dragR || (P1.x < th.runTo - 6 && !pour);
@@ -5945,8 +5997,8 @@ function playerInput(id) {
       jump,
       upHeld: hu,
       downHeld: hd,
-      left: hl || dragL,
-      right: hr || dragR,
+      left: rl || dragL,
+      right: rr || dragR,
       pour,
       holy,
       cross,
@@ -5957,8 +6009,8 @@ function playerInput(id) {
     jump,
     upHeld: hl,
     downHeld: hr,
-    left: hu || dragL,
-    right: hd || dragR,
+    left: ru || dragL,
+    right: rd || dragR,
     pour,
     holy,
     cross,
@@ -6029,7 +6081,8 @@ function laneAt(wx, wy) {
 function bindPointer(canvas) {
   const world = (e) => {
     const r = canvas.getBoundingClientRect(),
-      wx = (e.clientX - r.left) / u - ox,
+      wx0 = (e.clientX - r.left) / u - ox,
+      wx = MIRW ? PW - wx0 : wx0, // (a mirror bar: the pointer is turned round with it)
       wy = (e.clientY - r.top) / u - oy,
       F = miniFit(); // (a mini-game or the bonus round fitted on a tall screen: into its own units)
     return F ? [(wx - F.x) / F.s, (wy - F.y) / F.s] : [wx, wy];
@@ -11353,6 +11406,7 @@ function viewBox(pad = 20) {
     B: (H - oy + pad - F.y) / F.s,
   };
 }
+let MIRW = false; // (a mirror bar on screen in the wide view, this frame)
 function draw() {
   const pw = RW,
     ph = RH,
@@ -11381,12 +11435,33 @@ function draw() {
   const AP = shownPlayers(),
     apx = AP.length ? AP.reduce((a, p) => a + p.x, 0) / AP.length : TAPX,
     apl = AP.length ? AP.reduce((a, p) => a + p.lane, 0) / AP.length : 1.5;
-  const ctx2 = G.state === "bonus" || VERT ? 0 : -(apx - TAPX) * 0.04,
+  // MIRROR BAR (wide view): the whole pub is drawn the other way round - this frame's verdict, for the HUD and the mouse too
+  {
+    const VS0 = G.state === "paused" ? G.prev : G.state;
+    MIRW =
+      mirrorPlay() &&
+      !VERT &&
+      !(G.state === "ending" && G.end) &&
+      !(VS0 === "bonus" && bonus) &&
+      !(VS0 === "mini" && G.mini) &&
+      !(G.state === "story" && G.story) &&
+      !(G.state === "approach" && G.appr) &&
+      !(G.state === "jump" && G.jump) &&
+      !SB.open &&
+      !CS.open &&
+      !WD.open &&
+      !(ATTRACT.on && (ATTRACT.phase === "cast" || ATTRACT.phase === "space"));
+  }
+  const ctx2 = G.state === "bonus" || VERT ? 0 : -(apx - TAPX) * 0.04 * (MIRW ? -1 : 1),
     cty = G.state === "bonus" || VERT ? 0 : -(apl - 1.5) * 7;
   CAM.x += (ctx2 - CAM.x) * Math.min(1, cdt * 3);
   CAM.y += (cty - CAM.y) * Math.min(1, cdt * 3);
   push();
   translate(ox + sx + CAM.x, oy + sy + CAM.y);
+  if (MIRW) {
+    translate(PW, 0);
+    scaleXY(-1, 1);
+  } // (the mirror bar)
   if (G.roll && G.state === "play") {
     translate(PW / 2, PH / 2);
     rotate(G.roll);
@@ -12512,7 +12587,7 @@ function laneT(l) {
 }
 function projL(l, x, y, side = 0) {
   if (VERT) {
-    const r = vpt(l, x, y - LYf(l, x), side);
+    const r = vpt(l, vMx(x), y - LYf(l, x), side);
     return [r[0], r[1]];
   }
   const yc = LYf(l, VX),
@@ -21549,8 +21624,11 @@ function vpt(l, x, h, side = 0) {
   ];
 }
 // draw something that was made for the side view at its spot in the tall view: upright, scaled by distance
+// (a MIRROR BAR in the tall view: everything ON the bars swaps ends - the taps far away at the top, the doors near at the
+//  bottom - while the room itself stays put)
+const vMx = (x) => (VERT && mirrorPlay() ? VNEAR + VFAR - x : x);
 function vAt(l, x, side, fn) {
-  const [px, py, sc] = vpt(l, x, 0, side);
+  const [px, py, sc] = vpt(l, vMx(x), 0, side);
   push();
   translate(px, py);
   scaleBy(sc);
@@ -21928,7 +22006,7 @@ function drawVert(V, t) {
     for (const it of F.items) list.push({ x: it.x, f: () => vAt(it.lane, it.x, 0, () => drawFiredItem(it)) });
     list.push({ x: F.bx, f: () => vAt(F.lane, F.bx, VSIDE.p, () => drawBoss(F, t)) });
   }
-  list.sort((a, b) => a.x - b.x);
+  list.sort((a, b) => (G.mirror ? b.x - a.x : a.x - b.x)); // (far things first - on a mirror bar the far end is the taps)
   for (const it of list) it.f();
   if (hasPw("freeze")) for (const c of customers) if (c.state === "walk") drawIce(c, t);
   drawPowerFx(t);
@@ -28526,6 +28604,9 @@ function drawDeepSpace(t) {
       case "pulsar":
         drawPulsarScene(L, Rr, T, B, f, t);
         break;
+      case "reddwarf":
+        drawRedDwarf(L, Rr, T, B, f, t);
+        break;
       case "blackhole":
         drawBlackHoleScene(L, Rr, T, B, f, t);
         break;
@@ -28767,6 +28848,13 @@ const SPACE_CAPS                                     = {
     [0, "SUNRISE, SEEN FROM SPACE"],
     [0.33, "THAT THIN BLUE LINE IS ALL THE AIR THE PLANET HAS"],
     [0.62, "ON THE SPACE STATION THE SUN RISES ABOUT 16 TIMES A DAY"],
+  ],
+  reddwarf: [
+    [0, "A RED DWARF: A SMALL, COOL, RED STAR"],
+    [0.22, "THREE OUT OF EVERY FOUR STARS IN OUR GALAXY ARE RED DWARFS"],
+    [0.44, "NOW AND THEN IT FLARES - SUDDENLY MUCH BRIGHTER, FOR A FEW MINUTES"],
+    [0.64, "THEY BURN SO SLOWLY THAT THEY CAN SHINE FOR TRILLIONS OF YEARS"],
+    [0.82, "PROXIMA CENTAURI, THE NEAREST STAR TO THE SUN, IS A RED DWARF"],
   ],
   pulsar: [
     [0, "A PULSAR: A DEAD STAR ONLY ABOUT 20 KM ACROSS"],
@@ -29172,6 +29260,77 @@ function drawBlackHole(cx, cy, Rd, t, fade) {
     glow(x, y, Rd * 0.06, c2("#ffd890", 0.4 * (1 - ph)));
   } // gas spiralling in
   R.setAdd(false);
+}
+// A RED DWARF (v1.3.8): a small, cool, deep-red star with a boiling surface and dark starspots. Now and then it FLARES -
+// suddenly much brighter, a loop of glowing gas leaping off it and a flash across the sky - while a little planet goes
+// round it close in, always showing it the same face (one side in endless day, the other in endless night).
+function drawRedDwarf(L, Rr, T, B, f, t) {
+  const w = Rr - L,
+    h = B - T,
+    fade = Math.min(1, f * 5, (1 - f) * 5),
+    cx = L + w * 0.5,
+    cy = T + h * 0.42,
+    Rd = Math.min(w, h) * 0.15,
+    c2 = (hx, a) => withA(col(hx), a * fade),
+    flareAt = (a, b) => (f > a && f < b ? Math.sin(((f - a) / (b - a)) * Math.PI) : 0),
+    fl = Math.max(flareAt(0.47, 0.6), flareAt(0.76, 0.84));
+  if (fl > 0.5) showSfx("whoosh", "rdflare" + (f < 0.7 ? 1 : 2));
+  const orb = t * 0.5,
+    px = cx + Math.cos(orb) * Rd * 2.7,
+    py = cy + Math.sin(orb) * Rd * 0.8,
+    pr = Rd * 0.2,
+    planet = () => {
+      // the night side, then the day side facing the star (it never turns round)
+      disc(px, py, pr, c2("#1a1220", 1));
+      const dx = cx - px,
+        dy = cy - py,
+        dl = Math.hypot(dx, dy) || 1;
+      disc(px + (dx / dl) * pr * 0.35, py + (dy / dl) * pr * 0.35, pr * 0.72, c2("#c86a4a", 1));
+      disc(px + (dx / dl) * pr * 0.55, py + (dy / dl) * pr * 0.55, pr * 0.42, c2("#f0a070", 0.9));
+      R.setAdd(true);
+      glow(px + (dx / dl) * pr * 0.6, py + (dy / dl) * pr * 0.6, pr * 0.7, c2("#ff8a5a", 0.3 + fl * 0.4));
+      R.setAdd(false);
+    };
+  if (Math.sin(orb) < 0) planet(); // (behind the star)
+  R.setAdd(true);
+  glow(cx, cy, Rd * (3.2 + fl * 3), c2("#ff3a1a", 0.22 + fl * 0.35));
+  glow(cx, cy, Rd * 1.6, c2("#ff5a2a", 0.4));
+  R.setAdd(false);
+  disc(cx, cy, Rd, c2("#b8261a", 1));
+  // the boiling surface: big convection cells welling up and sinking back, and a few dark starspots
+  for (let i = 0; i < 26; i++) {
+    const a = hash(i * 3.1) * 6.283,
+      r = Math.sqrt(hash(i * 7.7)) * Rd * 0.82,
+      k = 0.5 + 0.5 * Math.sin(t * (0.6 + hash(i) * 0.8) + i);
+    disc(
+      cx + Math.cos(a) * r,
+      cy + Math.sin(a) * r,
+      Rd * (0.1 + hash(i * 1.3) * 0.08),
+      c2(k > 0.5 ? "#e0442a" : "#9a1e14", 0.5)
+    );
+  }
+  for (let i = 0; i < 3; i++) {
+    const a = 1.2 + i * 2.1 + t * 0.05,
+      r = Rd * (0.3 + i * 0.18);
+    disc(cx + Math.cos(a) * r, cy + Math.sin(a) * r, Rd * (0.09 - i * 0.015), c2("#4a0a08", 0.75));
+  }
+  R.setAdd(true);
+  glow(cx - Rd * 0.25, cy - Rd * 0.25, Rd * 0.6, c2("#ff9a5a", 0.25 + fl * 0.5)); // (the hot middle, brighter in a flare)
+  if (fl > 0) {
+    // the flare: a loop of glowing gas leaping off the surface, and the whole sky lit up
+    const pts = [];
+    for (let i = 0; i <= 16; i++) {
+      const u = i / 16,
+        a = -1.1 + u * 1.1,
+        r = Rd * (1 + Math.sin(u * Math.PI) * 0.9 * fl);
+      pts.push(cx + Math.cos(a) * r, cy + Math.sin(a) * r);
+    }
+    polyline(pts, Rd * 0.07, c2("#ffd0a0", fl));
+    polyline(pts, Rd * 0.16, c2("#ff7a3a", fl * 0.4));
+    rect(L, T, w, h, c2("#ffb080", 0.12 * fl));
+  }
+  R.setAdd(false);
+  if (Math.sin(orb) >= 0) planet(); // (in front of the star)
 }
 function drawPulsarScene(L, Rr, T, B, f, t) {
   const w = Rr - L,
@@ -30611,7 +30770,7 @@ const HISTORY          = [
 //      in great waves behind it (it flies right to left, so the flags stream out to the right) ----
 function drawFlagTow(x, y, q, t, fade, nat) {
   const A = (c) => withA(col(c), fade),
-    own = nat; // (the tug flies the same flag it tows - a South African tug with the South African flag, a Polish tug with the Polish one)
+    own = nat === "pl" ? "za" : "pl"; // (v1.3.8: friends - a South African tug tows the Polish flag, a Polish tug tows the South African one)
   // one big flag on a long cable behind the tug (South Africa one time, Poland the next)
   const fx = x + 110 * q,
     fy = y - 40 * q;
@@ -39535,8 +39694,30 @@ function kids2GameStart() {
   G.freeServed = 0;
   G.petEggSaid = false;
   G.tagSeen = {}; // (name tags: fresh every game)
+  G.mirror = false;
+}
+// ---- MIRROR BARS (v1.3.8): now and then (every fifth stop, from stop 4) the pub is the other way round - in the wide view
+//      the taps are on the LEFT and the customers come in from the right; in the tall view you serve from the TOP and
+//      they walk in from the bottom. The game itself is the same (only what you see, and which way the controls go).
+// (a mirror bar shows only in the pub itself - never in the cups round, a mini-game or the trip)
+function mirrorPlay() {
+  return !!G.mirror && ["play", "lost", "clear", "fired"].includes(G.state === "paused" ? G.prev : G.state);
+}
+function mirrorLevel() {
+  return !G.demo && !G.ta && !G.brush && !G.versus && G.level >= 4 && G.level % 5 === 4;
 }
 function kids2LevelStart() {
+  G.mirror = mirrorLevel();
+  if (G.mirror)
+    G.callouts.push({
+      text: VERT
+        ? "MIRROR BAR!  THIS TIME YOU SERVE FROM THE TOP"
+        : "MIRROR BAR!  THIS TIME YOU SERVE FROM THE LEFT",
+      c: "#9fd0ff",
+      life: 3.4,
+      max: 3.4,
+      sub: true,
+    });
   if (G.free) G.total = 1e9; // (the customers just keep coming)
   mouseLevelStart();
   petLevelStart();
@@ -44110,6 +44291,19 @@ const PIXFONT                         = {
 };
 // write txt with its middle at (x, y), each dot px big (never mirrored, whatever the drawing around it is doing)
 function pixText(txt        , x        , y        , px        , c) {
+  if (M[0] * M[3] - M[1] * M[2] < 0) {
+    // (drawn in a mirrored pub: flip it back round its middle, so the words still read the right way)
+    push();
+    translate(x, 0);
+    scaleXY(-1, 1);
+    translate(-x, 0);
+    const ok = pixTextRaw(txt, x, y, px, c);
+    pop();
+    return ok;
+  }
+  return pixTextRaw(txt, x, y, px, c);
+}
+function pixTextRaw(txt        , x        , y        , px        , c) {
   const up = txt.toUpperCase(),
     gw = (ch) => ((PIXFONT[ch] || PIXFONT[" "]).length === 25 ? 5 : 3); // (M and W are 5 dots wide, the rest 3)
   const w = [...up].reduce((a, ch) => a + (gw(ch) + 1) * px, -px);
@@ -48701,7 +48895,7 @@ function spacePlan(n)             {
     } /* (the very first is always South Africa winning the Rugby World Cup; after that any, at random) */,
     { kind: "space", len: 9 },
     (() => {
-      const what = ["eclipse", "pulsar", "sunrise", "blackhole", "supernova", "nstar"][n % 6];
+      const what = ["eclipse", "pulsar", "sunrise", "reddwarf", "blackhole", "supernova", "nstar"][n % 7];
       return { kind: "fly", what, len: what === "nstar" ? 34 : 28 };
     })(),
     { kind: "space", len: 12 },
@@ -49644,7 +49838,7 @@ function drawEggs(g, s) {
 // THE VERSION (from v1.2.0, 5 October 2026): MAJOR.MINOR.PATCH - a new MINOR for a batch of new things, a new PATCH for
 // fixes and small touches - with the day it was made next to it. (Before this the versions were named after the date,
 // like v2026.10.05c.)
-const GAME_VERSION = "v1.3.7",
+const GAME_VERSION = "v1.3.8",
   GAME_DATE = "06.10.2026",
   VERSION_TEXT = GAME_VERSION + "  ·  " + GAME_DATE;
 const FB = '"Chakra Petch", "Segoe UI", sans-serif';
@@ -49737,7 +49931,7 @@ function drawHud(fps) {
     inGame = G.state !== "menu" && !ending;
   const fD = (px) => Math.round(px * s * TXT()) + "px " + FD,
     fB = (px, w = 600) => w + " " + Math.round(px * s * TXT()) + "px " + FB; // (TEXT SIZE in the settings makes it all bigger)
-  const sx = (wx) => (wx + ox) * u,
+  const sx = (wx) => ((MIRW ? PW - wx : wx) + ox) * u, // (a mirror bar: words over the pub follow it)
     sy = (wy) => (wy + oy) * u;
   g.textBaseline = "top";
   g.textAlign = "center";
@@ -55510,6 +55704,15 @@ profWire();
 //  the game, and where the motion capture, the folk songs and the fonts come from. Both from the menu at any time.
 // =====================================================================================
 const NEWS = [
+  {
+    ver: "v1.3.8",
+    title: "MIRROR BARS",
+    items: [
+      "Mirror bars: every fifth stop you serve from the left (or from the top on a tall screen)",
+      "A red dwarf star in the deep-space show",
+      "The Polish tug tows the South African flag - and the other way round",
+    ],
+  },
   {
     ver: "v1.3.7",
     title: "SLAVIC TALES",

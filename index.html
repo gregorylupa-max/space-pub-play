@@ -257,6 +257,7 @@ body.retro .table { font-size: 10px; gap: 5px; }
     <button id="bRush">BOSS RUSH <b id="vRush"></b></button>
     <button id="bMap">GALAXY MAP <b id="vMap"></b></button>
     <button id="bCup">CUP TOURNAMENT <b id="vCup"></b></button>
+    <button id="bSolar" class="wide">SOLAR SYSTEM TOUR <b>THE SUN TO PLUTO</b></button>
     <h3 class="sec">YOUR COLLECTION</h3>
     <button id="bWard">HATS &amp; PETS <b id="vWard"></b></button>
     <button id="bStickers">STICKER BOOK <b id="vStickers"></b></button>
@@ -2932,6 +2933,14 @@ const DICT_ROWS                             = [
   ["✓ DONE TODAY", "✓ VANDAG KLAAR", "✓ DZIŚ ZROBIONE"],
   // v2026.10.04ar: challenge modes, controls, the music box, the galaxy map
   ["TIME ATTACK", "TYDJAG", "NA CZAS"],
+  ["SOLAR SYSTEM TOUR", "SONNESTELSEL-TOER", "PODRÓŻ PRZEZ UKŁAD SŁONECZNY"],
+  ["THE SUN TO PLUTO", "VAN DIE SON TOT PLUTO", "OD SŁOŃCA DO PLUTONA"],
+  [
+    "THE SOLAR SYSTEM - FROM THE SUN TO PLUTO",
+    "DIE SONNESTELSEL - VAN DIE SON TOT PLUTO",
+    "UKŁAD SŁONECZNY - OD SŁOŃCA DO PLUTONA",
+  ],
+  ["...AND THAT'S OUR SOLAR SYSTEM!", "...EN DIS ONS SONNESTELSEL!", "...I TO JEST NASZ UKŁAD SŁONECZNY!"],
   ["BOSS RUSH", "BAAS-STORMLOOP", "SZTURM NA BOSSÓW"],
   ["CONTROLS: CHOOSE YOUR KEYS", "KONTROLES: KIES JOU SLEUTELS", "STEROWANIE: WYBIERZ KLAWISZE"],
   ["CONTROLS", "KONTROLES", "STEROWANIE"],
@@ -7981,7 +7990,7 @@ function update(dt) {
     }
     pr.chant -= dt;
     if (angry.length && pr.chant <= 0) {
-      pr.chant = 1.05 - angry[0].protest.anger * 0.3;
+      pr.chant = 1.45 - angry[0].protest.anger * 0.3; // (v1.4.1: a slower chant, in step with the slower march)
       sfx("chant", angry[0].x, angry.length);
     }
     if (!angry.length) {
@@ -8096,7 +8105,7 @@ function update(dt) {
           dt *
           (G.mind && c.type.kind === "astro" ? 1.45 : 1) *
           (hasPw("slow") ? 0.5 : 1) *
-          (c.protest && !c.protest.calm ? 1 + c.protest.anger * 0.55 : 1) *
+          (c.protest && !c.protest.calm ? 0.75 + c.protest.anger * 0.25 : 1) * // (v1.4.1: protesters march slowly - never faster than anyone else)
           (c.type.sprints ? 1.7 : 1) *
           (c.wolf ? 1.6 : 1) *
           (c.hyde ? 1.6 : 1) *
@@ -11083,7 +11092,7 @@ function startJump() {
 }
 function updateJump(dt) {
   const J = G.jump;
-  J.t += dt;
+  J.t += dt * 1.6; // (v1.4.1: the whole trip plays faster - about 6 seconds instead of 10 - and back to the bar sooner)
   if (J.t > 1.6 && !J.rev) {
     J.rev = true;
     sfx("turbo");
@@ -11105,6 +11114,7 @@ function updateJump(dt) {
     G.state = "play";
     startLevel();
     G.pourLock = [true, true];
+    G.fromJump = true; // (we've done the hyperspace part: on arrival the bar just glides into orbit)
     startApproach();
     if (STORY[G.level] && !(G.loop && G.level === 1)) startStory(G.level, "approach");
     if (G.tourCall) {
@@ -16360,9 +16370,9 @@ function customerBody(c, t, a) {
   if (c.happy > 0 && mouth === "flat") mouth = "smile";
   // protesters do the toyi-toyi: a bouncing high-knee march, chanting, a fist (or a placard) pumping in the air
   const toyi = c.protest && !c.protest.calm && c.state === "walk" && !showing,
-    tt = t * Math.min(7, 5.2 + (c.protest ? c.protest.anger * 1.6 : 0)) + c.ph; // (a steady, bouncy march - v1.3.3: calmer, it looked like shaking)
+    tt = t * Math.min(4.2, 3.4 + (c.protest ? c.protest.anger * 0.8 : 0)) + c.ph; // (a steady, bouncy march - v1.3.3: calmer, it looked like shaking; v1.4.1: slower and gentler still)
   if (toyi) {
-    lift += Math.abs(Math.sin(tt)) * 2.6;
+    lift += Math.abs(Math.sin(tt)) * 2;
     lean = 0.03;
     tilt = Math.sin(tt) * (c.fan && c.fan.flag ? 0.02 : 0.03);
     mouth = Math.sin(tt * 0.5) > 0 ? "open" : angry ? "frown" : "flat";
@@ -28908,7 +28918,10 @@ function drawDeepSpace(t) {
     sn = ATTRACT.sn || 0;
   {
     const c0 = spaceNow();
-    WORLD_NOW = !!(c0 && c0.item.kind === "fly" && c0.item.what in WORLD_FNS);
+    WORLD_NOW =
+      !!(c0 && c0.item.kind === "fly" && c0.item.what in WORLD_FNS) ||
+      !!ATTRACT.tour ||
+      !!(ATTRACT.on && ATTRACT.tourShow);
   }
   const cur0 = spaceNow(),
     desc = cur0 && cur0.item.kind === "descend" ? cur0 : null,
@@ -40891,17 +40904,18 @@ function drawStopMood(t) {
 //      as it turns),
 //    - then a soft day/night edge (the Sun is to the left), and a glowing atmosphere where there is one.
 // =====================================================================================
+// (in order outwards from the Sun: the SOLAR SYSTEM TOUR - every other full-screen show, or from PLAY MORE)
 const TOUR_WORLDS = [
   "sun",
+  "mercury",
+  "venus",
   "earth",
+  "moon",
   "mars",
   "jupiter",
   "saturn",
-  "moon",
-  "venus",
-  "neptune",
-  "mercury",
   "uranus",
+  "neptune",
   "pluto",
 ];
 // (the facts: checked against NASA's planet fact sheets)
@@ -41520,7 +41534,9 @@ function drawWorldFly(what, L, Rr, T, B, f, t) {
     r = Math.min(w, h) * (VERT ? 0.3 : 0.26) * (WORLD_SIZE[what] || 1),
     inF = ease(clamp(f / 0.16, 0, 1)),
     outF = ease(clamp((f - 0.84) / 0.16, 0, 1)),
-    x = L + w * 0.54 + (1 - inF) * (w * 0.5 + r * 2.4) - outF * (w * 0.5 + r * 2.6) - (f - 0.5) * w * 0.08,
+    // (v1.4.1: it HOLDS STILL in the middle while it turns - a slow drift moved it one screen pixel at a time, and
+    //  Saturn's thin rings stepped and shimmered; now it only moves in the smooth glides in and out)
+    x = L + w * 0.54 + (1 - inF) * (w * 0.5 + r * 2.4) - outF * (w * 0.5 + r * 2.6),
     y = T + h * (VERT ? 0.45 : 0.44);
   if (what !== "sun") {
     // the faint light of the far-off Sun, off to the left, so the day side makes sense
@@ -41532,6 +41548,24 @@ function drawWorldFly(what, L, Rr, T, B, f, t) {
   translate(x, y);
   fn(r, t);
   pop();
+}
+
+// ---- THE SOLAR SYSTEM TOUR (PLAY MORE): the whole show of worlds in order - the Sun, then outwards to Pluto - each with
+//      its facts, then back to the menu (any key or tap ends it sooner) ----
+function planetTourPlan()             {
+  const P             = [{ kind: "space", len: 6, title: "THE SOLAR SYSTEM - FROM THE SUN TO PLUTO" }];
+  for (const w of TOUR_WORLDS) P.push({ kind: "fly", what: w, len: 24 }, { kind: "space", len: 2 });
+  P.push({ kind: "space", len: 6, title: "...AND THAT'S OUR SOLAR SYSTEM!" });
+  return P;
+}
+function startPlanetTour() {
+  if (G.state !== "menu") return;
+  startAttract(false);
+  ATTRACT.tour = true;
+  ATTRACT.tourShow = true;
+  ATTRACT.plan = planetTourPlan();
+  ATTRACT_LEN.space = ATTRACT.plan.reduce((a, p) => a + p.len, 0);
+  ATTRACT.t = 0;
 }
 // =====================================================================================
 //  MORE FUN (v2026.10.03f): flavour ORDERS, PETS WITH POWERS, a COIN SHOP, MINI-GAMES between worlds, a TROPHY ROOM,
@@ -43357,14 +43391,14 @@ function funHud(g, s, t, fD, sx, sy) {
   }
   if (G.state === "approach" && G.appr) {
     const A0 = G.appr,
-      a = Math.min(1, A0.t / 0.8, (APPROACH_LEN - A0.t) / 0.6),
+      a = Math.min(1, A0.t / 0.5, (APPROACH_LEN - A0.t) / 0.5),
       v = here();
     // "WARP TO ..." flashes in the middle, then GLIDES UP to the top and fades into the stop's name (v1.3.4 - it used
     // to jump there in one go)
-    const mv = clamp((A0.t - 1.1) / 0.7, 0, 1),
+    const mv = A0.orbit ? 1 : clamp((A0.t - 0.6) / 0.45, 0, 1),
       ek = mv * mv * (3 - 2 * mv);
-    if (A0.t < 1.8) {
-      g.globalAlpha = (A0.t < 0.9 && Math.floor(A0.t * 4) % 2 ? 0.55 : 1) * (1 - ek);
+    if (A0.t < 1.05 && !A0.orbit) {
+      g.globalAlpha = (A0.t < 0.5 && Math.floor(A0.t * 6) % 2 ? 0.55 : 1) * (1 - ek);
       neon2(
         g,
         (G.level > 1 ? "WARP TO " : "HELLO, ") + (v.place || v.name),
@@ -43391,8 +43425,8 @@ function funHud(g, s, t, fD, sx, sy) {
     );
     fitText(g, v.region, cssW / 2, cssH * 0.07 + 62 * s, cssW - 24, "600 ", 13 * s, "#5ff5c8");
     fitText(g, v.sub || "", cssW / 2, cssH * 0.07 + 82 * s, cssW - 24, "600 ", 13 * s, "#fff3e2");
-    if (v.fact && A0.t > 1.8) {
-      const fa = Math.min(1, (A0.t - 1.8) / 0.4);
+    if (v.fact && A0.t > 1.0) {
+      const fa = Math.min(1, (A0.t - 1.0) / 0.3);
       g.globalAlpha = Math.max(0, Math.min(a, fa));
       const bw = Math.min(cssW - 24, 820 * s),
         bx = (cssW - bw) / 2,
@@ -43730,6 +43764,12 @@ function funPanelsInit() {
   $k("gmBack").onclick = () => closeFP("map");
   $k("gmPlay").onclick = () => gmPlay();
   $k("bCup").onclick = () => openFP("cup");
+  $k("bSolar").onclick = () => {
+    if (G.state !== "menu") return;
+    sfx("click");
+    closeFP("more");
+    startPlanetTour();
+  }; // (v1.4.1) the Solar System tour, the Sun to Pluto
   $k("bMore").onclick = () => openFP("more");
   $k("bSettings").onclick = () => openFP("settings");
   $k("moreBack").onclick = () => closeFP("more");
@@ -43892,20 +43932,25 @@ function funAfterStart() {
 //  ARRIVING: before every stage, a short look at the place - the planet (or moon, or star, or nebula) big in space,
 //  our diner sailing round it in orbit, and its name, where it is, and one true fact
 // =====================================================================================
-const APPROACH_LEN = 5.5; // (short and sweet - any key or tap skips it)
+const APPROACH_LEN = 4; // (short and sweet - any key or tap skips it; v1.4.1: quicker still, 5.5 s before)
 // what each stop looks like from space: b = body colours [dark, lit], bands, craters, clouds, cap, spot, ring, heart, extras
 const WORLDS          = [
-  { b: ["#7a7470", "#a8a29a"], craters: 14, sun: 1 }, // Mercury
-  { b: ["#c8a050", "#f0d890"], clouds: "#fff0c0", swirl: 1, sun: 0.6 }, // Venus
-  { b: ["#8a8a90", "#c8c8cc"], craters: 12, earth: 1 }, // the Moon (Earth behind)
-  { b: ["#a8401a", "#d8703a"], spots: "#7a2a10", cap: 1 }, // Mars
+  { real: "mercury", b: ["#7a7470", "#a8a29a"], craters: 14, sun: 1 }, // Mercury
+  { real: "venus", b: ["#c8a050", "#f0d890"], clouds: "#fff0c0", swirl: 1, sun: 0.6 }, // Venus
+  { real: "moonball", b: ["#8a8a90", "#c8c8cc"], craters: 12, earth: 1 }, // the Moon (Earth behind)
+  { real: "mars", b: ["#a8401a", "#d8703a"], spots: "#7a2a10", cap: 1 }, // Mars
   { b: ["#6a6a6e", "#9a9a9e"], craters: 9, bright: 1, belt: 1, small: 0.6 }, // Ceres in the asteroid belt
   { b: ["#c8b8a0", "#f0e8dc"], cracks: "#a86a3a", giant: "jupiter" }, // Europa, with Jupiter
-  { b: ["#c8a868", "#f0d8a0"], bands: ["#e8d0a0", "#c8a870", "#f0e0c0", "#b89868"], ring: 0.3 }, // Saturn
+  {
+    real: "saturn",
+    b: ["#c8a868", "#f0d8a0"],
+    bands: ["#e8d0a0", "#c8a870", "#f0e0c0", "#b89868"],
+    ring: 0.3,
+  }, // Saturn
   { b: ["#c87a28", "#f0a848"], haze: "#ffc870", giant: "saturn" }, // Titan, with Saturn
-  { b: ["#5fb8c8", "#a8e8ee"], ring: 1.45, thin: 1 }, // Uranus
-  { b: ["#1a3ab0", "#3a6ae8"], spot: "#10206a", wisps: 1 }, // Neptune
-  { b: ["#b89070", "#dcc0a0"], heart: 1, charon: 1, small: 0.7 }, // Pluto
+  { real: "uranus", b: ["#5fb8c8", "#a8e8ee"], ring: 1.45, thin: 1 }, // Uranus
+  { real: "neptune", b: ["#1a3ab0", "#3a6ae8"], spot: "#10206a", wisps: 1 }, // Neptune
+  { real: "pluto", b: ["#b89070", "#dcc0a0"], heart: 1, charon: 1, small: 0.7 }, // Pluto
   { comet: 1 }, // a comet
   { twin: 1, b: ["#a86a30", "#d8a060"], small: 0.7 }, // Alpha Centauri
   { b: ["#7a3a2a", "#b06048"], red: 1, small: 0.8 }, // Proxima b
@@ -43977,7 +44022,8 @@ const WORLDS          = [
 function startApproach() {
   G.apprCalls = G.callouts;
   G.callouts = [];
-  G.appr = { t: 0 };
+  G.appr = { t: 0, orbit: !!G.fromJump }; // (orbit: straight after the trip - no warp, no "WARP TO...")
+  G.fromJump = false;
   G.state = "approach";
 }
 function funApproachUpdate(dt) {
@@ -44001,6 +44047,17 @@ function funApproachUpdate(dt) {
 }
 function drawWorld(Wd, x, y, r, t) {
   if (!Wd.b) return;
+  if (Wd.real) {
+    // (v1.4.1) a real Solar System body: the planet tour's own painter - turning, shaded, with its moons
+    const fn = Wd.real === "moonball" ? wMoonBall : WORLD_FNS[Wd.real];
+    if (fn) {
+      push();
+      translate(x, y);
+      fn(r, t);
+      pop();
+      return;
+    }
+  }
   if (Wd.puffy) r *= 1.2;
   if (Wd.superRing) {
     push();
@@ -44044,37 +44101,69 @@ function drawWorld(Wd, x, y, r, t) {
     pop();
   };
   if (Wd.ring) ringArc(Math.PI, Math.PI * 2, Wd.thin ? 0.5 : 0.8); // the back of the rings
-  disc(x, y, r, c0);
-  disc(x - r * 0.1, y - r * 0.1, r * 0.9, c1);
+  // (v1.4.1) the body, rounded: a darker rim, a softer middle
+  disc(x, y, r, shade(c0, 0.8));
+  disc(x, y, r * 0.985, c0);
+  disc(x - r * 0.05, y - r * 0.04, r * 0.9, c1);
+  const rot = t * 0.06; // (features sit on the sphere and turn with it)
   if (Wd.bands)
     for (let i = -4; i <= 4; i++) {
       const yy = y + i * r * 0.2,
         ww = r * Math.sqrt(Math.max(0, 1 - ((yy - y) / r) ** 2));
       rect(x - ww, yy - r * 0.07, ww * 2, r * 0.12, withA(col(Wd.bands[(i + 8) % Wd.bands.length]), 0.6));
     }
+  push();
+  translate(x, y);
   if (Wd.craters)
-    for (let i = 0; i < Wd.craters; i++) {
-      const a = hash(i * 3.1) * 6.283,
-        d = Math.sqrt(hash(i * 7.7)) * r * 0.8,
+    for (let i = 0; i < Wd.craters * 2; i++) {
+      const lon = hash(i * 3.1) * 6.283,
+        lat = (hash(i * 7.7) - 0.5) * 2.4,
         cr = r * (0.05 + hash(i) * 0.1);
-      disc(x + Math.cos(a) * d, y + Math.sin(a) * d, cr, withA(c0, 0.8));
-      disc(x + Math.cos(a) * d - cr * 0.2, y + Math.sin(a) * d - cr * 0.2, cr * 0.7, withA(c1, 0.6));
-    }
+      onSphere(r, rot, lon, lat, cr, withA(shade(c1, 1.15), 0.9));
+      onSphere(r, rot, lon - 0.015, lat + 0.015, cr * 0.8, withA(c0, 0.85));
+    } // craters, a bright rim and a shadowed floor
+  if (Wd.spots)
+    for (let i = 0; i < 9; i++)
+      onSphere(
+        r,
+        rot,
+        hash(i * 5) * 6.283,
+        (hash(i * 9) - 0.5) * 2,
+        r * (0.12 + hash(i) * 0.15),
+        withA(col(Wd.spots), 0.55),
+        1.5,
+        0.7
+      );
+  if (Wd.cap) polarCap(r, 1.1, col("#f4f0ec"));
+  if (Wd.land)
+    for (let i = 0; i < 9; i++)
+      onSphere(
+        r,
+        rot,
+        hash(i * 6) * 6.283,
+        (hash(i * 8) - 0.5) * 1.8,
+        r * (0.16 + hash(i * 2) * 0.1),
+        withA(col(Wd.land), 0.9)
+      );
+  if (Wd.clouds)
+    for (let i = 0; i < 14; i++)
+      onSphere(
+        r,
+        rot * 1.4 + t * 0.02,
+        hash(i * 7) * 6.283,
+        (hash(i * 3) - 0.5) * 2.2,
+        r * (0.07 + hash(i * 4) * 0.06),
+        withA(col(Wd.clouds), Wd.swirl ? 0.45 : 0.6),
+        3,
+        0.7
+      );
+  if (Wd.spot) onSphere(r, rot, 0.8, -0.3, r * 0.18, col(Wd.spot), 1.5, 0.65);
+  pop();
   if (Wd.bright) {
     R.setAdd(true);
     glow(x + r * 0.2, y - r * 0.1, r * 0.12, withA(C.white, 0.7));
     R.setAdd(false);
   }
-  if (Wd.spots)
-    for (let i = 0; i < 6; i++)
-      disc(
-        x + (hash(i * 5) - 0.5) * r * 1.2,
-        y + (hash(i * 9) - 0.5) * r,
-        r * (0.12 + hash(i) * 0.15),
-        withA(col(Wd.spots), 0.55),
-        r * 0.08
-      );
-  if (Wd.cap) disc(x, y - r * 0.86, r * 0.32, col("#f4f0ec"), r * 0.1);
   if (Wd.cracks)
     for (let i = 0; i < 9; i++) {
       const a = hash(i * 2.2) * 6.283,
@@ -44094,28 +44183,6 @@ function drawWorld(Wd, x, y, r, t) {
         withA(col(Wd.cracks), 0.7)
       );
     }
-  if (Wd.clouds)
-    for (let i = 0; i < 8; i++) {
-      const yy = y + (hash(i * 3) - 0.5) * r * 1.4,
-        off = Math.sin(t * 0.2 + i) * r * 0.2;
-      disc(
-        x + (hash(i * 7) - 0.5) * r + off,
-        yy,
-        r * 0.3,
-        withA(col(Wd.clouds), Wd.swirl ? 0.45 : 0.55),
-        r * 0.07
-      );
-    }
-  if (Wd.land)
-    for (let i = 0; i < 5; i++)
-      disc(
-        x + (hash(i * 6) - 0.5) * r,
-        y + (hash(i * 8) - 0.5) * r,
-        r * 0.2,
-        withA(col(Wd.land), 0.9),
-        r * 0.14
-      );
-  if (Wd.spot) disc(x + r * 0.3, y + r * 0.15, r * 0.18, col(Wd.spot), r * 0.11);
   if (Wd.wisps)
     for (let i = 0; i < 4; i++) {
       const yy = y - r * 0.5 + i * r * 0.32,
@@ -44245,7 +44312,20 @@ function drawWorld(Wd, x, y, r, t) {
         line(rx, ry, rx - sl, ry + r * 0.12, r * 0.015, withA(col(Wd.rain), 0.75));
     }
   }
-  if (!Wd.rogue) disc(x + r * 0.32, y + r * 0.26, r * 1.02, withA(col("#02030c"), 0.5), r * 0.8); // night side
+  // (v1.4.1) a shine of sunlight, a smooth night side that stays inside the planet, and an atmosphere where there's air
+  push();
+  translate(x, y);
+  if (!Wd.rogue) {
+    sunSheen(r, Wd.ocean ? 0.2 : 0.12);
+    nightSide(r, 0.28, 0.82);
+  }
+  if (Wd.clouds || Wd.haze || Wd.wisps || Wd.bands || Wd.puffy || Wd.ocean || Wd.land)
+    atmosphere(
+      r,
+      col(Wd.haze || (Wd.ocean || Wd.land ? "#7ab8ff" : Wd.b[1])),
+      Wd.haze || Wd.puffy ? 0.5 : 0.35
+    );
+  pop();
   if (Wd.ring) ringArc(0, Math.PI, Wd.thin ? 0.65 : 0.9); // and the front
   if (Wd.superRing) {
     push();
@@ -44279,8 +44359,10 @@ function drawApproach(t) {
     u0 = A0.t / APPROACH_LEN;
   deepSky(L, Rr, T, B, t, 40 + A0.t, G.level * 5, h * 1.05);
   // the WARP: stars streaming out from the middle of the screen while the place grows from a speck into view
-  const zoom = ease(clamp(A0.t / 1.6, 0, 1)),
-    warp = 1 - zoom,
+  // (straight after a hyperspace trip the bar just eases into orbit - the place is already there, settling into view;
+  //  only at the very start of a game does it warp in from a speck)
+  const zoom = A0.orbit ? 0.82 + 0.18 * ease(clamp(A0.t / 1.2, 0, 1)) : ease(clamp(A0.t / 1.0, 0, 1)),
+    warp = A0.orbit ? 0 : 1 - zoom,
     cx0 = L + w * 0.5,
     cy0 = T + h * 0.5;
   if (warp > 0.01) {
@@ -44402,26 +44484,25 @@ function drawApproach(t) {
     glow(px, py, 8 * k, withA(C.white, 0.9));
     R.setAdd(false);
   }
-  if (Wd.earth) planetEarth(L + w * 0.82, T + h * 0.2, 46 * k, t, () => true);
+  if (Wd.earth) {
+    push();
+    translate(L + w * 0.82, T + h * 0.2);
+    wEarth(52 * k, t, false);
+    pop();
+  }
   if (Wd.giant === "jupiter") {
-    const gx = L + w * 0.84,
-      gy = T + h * 0.24,
-      gr = 120 * k;
-    disc(gx, gy, gr, col("#c8905a"));
-    for (let i = -4; i <= 4; i++) {
-      const yy = gy + i * gr * 0.2,
-        ww = gr * Math.sqrt(Math.max(0, 1 - ((yy - gy) / gr) ** 2));
-      rect(gx - ww, yy - gr * 0.06, ww * 2, gr * 0.1, withA(col(i % 2 ? "#e8c090" : "#a86a3a"), 0.7));
-    }
-    disc(gx + gr * 0.3, gy + gr * 0.3, gr * 0.14, col("#c8502a"), gr * 0.09);
-    disc(gx + gr * 0.3, gy + gr * 0.2, gr, withA(col("#02030c"), 0.45), gr * 0.8);
+    push();
+    translate(L + w * 0.84, T + h * 0.24);
+    wJupiter(120 * k, t);
+    pop();
   }
   if (Wd.giant === "saturn") {
-    const gx = L + w * 0.84,
-      gy = T + h * 0.22,
-      gr = 90 * k;
-    drawSaturn(gx, gy, gr, 0.26, col("#e0b070"), col("#9a6a3a"), -0.18);
+    push();
+    translate(L + w * 0.84, T + h * 0.22);
+    wSaturn(110 * k, t);
+    pop();
   }
+
   if (Wd.twin)
     for (const [dx, dy, rr, c] of [
       [0.12, 0.2, 70, "#ffd060"],
@@ -44633,7 +44714,7 @@ function drawApproach(t) {
   };
   if (!front) diner();
   if (Wd.b) drawWorld(Wd, px, py, r, t);
-  if (Wd.charon)
+  if (Wd.charon && !Wd.real)
     drawWorld({ b: ["#7a7a84", "#a8a8b4"], craters: 4 }, px + r * 1.6, py - r * 0.6, r * 0.45, t);
   if (Wd.moons)
     for (let i = 0; i < Wd.moons; i++) {
@@ -50161,6 +50242,7 @@ function startAttract(quiet = true) {
 } // (it opens with the deep-space show, then dives down into the diner)
 function stopAttract() {
   ATTRACT.on = false;
+  ATTRACT.tour = false;
   ATTRACT.phase = "";
   if (G.state === "menu") {
     resetGame(true);
@@ -50284,9 +50366,7 @@ function spacePlan(n)             {
       const what = ["eclipse", "pulsar", "sunrise", "reddwarf", "blackhole", "supernova", "nstar"][n % 7];
       return { kind: "fly", what, len: what === "nstar" ? 34 : 28 };
     })(),
-    { kind: "space", len: 8 },
-    { kind: "fly", what: TOUR_WORLDS[(n * 2) % TOUR_WORLDS.length], len: 28 }, // the planet tour: a world from the Solar System...
-    { kind: "space", len: 8 },
+    { kind: "space", len: 12 },
     { kind: "scene", sc, len: sc.len },
     { kind: "space", len: 18, gag: gag(1) },
     {
@@ -50303,9 +50383,7 @@ function spacePlan(n)             {
     ...iconPair(n),
     { kind: "space", len: 14 },
     { kind: "fly", what: fl2, len: 14, ...flyDepth() },
-    { kind: "space", len: 8 },
-    { kind: "fly", what: TOUR_WORLDS[(n * 2 + 1) % TOUR_WORLDS.length], len: 28 }, // ...and another, before we head home
-    { kind: "space", len: 8 },
+    { kind: "space", len: 12 },
     { kind: "descend", len: 24 },
   ].map((it          ) => (it.kind === "scene" && !it.len ? { ...it, len: it.sc.len } : it)); // (a moment in history each show: South Africa first, then Poland, taking turns)   // (one big flag each show, South Africa or Poland at random)
 }
@@ -50374,7 +50452,11 @@ function setAttractPhase(ph) {
               : null,
       };
     }); // (mostly Polish and South African: they love this place)
-    ATTRACT.plan = spacePlan((ATTRACT.sn = (ATTRACT.sn ?? Math.floor(Math.random() * 40)) + 1));
+    ATTRACT.sn = (ATTRACT.sn ?? Math.floor(Math.random() * 40)) + 1;
+    // (v1.4.1) every other time round, the show is the SOLAR SYSTEM TOUR - the Sun, then each world out to Pluto, in
+    // order, with its facts - and then on into the demo as usual
+    ATTRACT.tourShow = ATTRACT.sn % 2 === 0;
+    ATTRACT.plan = ATTRACT.tourShow ? planetTourPlan() : spacePlan(ATTRACT.sn);
     ATTRACT_LEN.space = ATTRACT.plan.reduce((a, p) => a + p.len, 0);
   }
   if (ph === "demo") {
@@ -50470,6 +50552,11 @@ function attractTick(dt) {
         if (c.still < dt * 1.5) c.catchT = 0;
       }
     }
+  if (ATTRACT.tour && ATTRACT.t > ATTRACT_LEN.space) {
+    stopAttract(); // (the Solar System tour is over: back to the menu - and a minute before the show starts by itself)
+    lastInput = performance.now();
+    return;
+  }
   if (ATTRACT.t > ATTRACT_LEN[ATTRACT.phase]) setAttractPhase(ATTRACT_NEXT[ATTRACT.phase]);
 }
 // keys, clicks and touches end the attract loop first (Enter / Space / Start jump straight into a game)
@@ -50932,11 +51019,13 @@ function drawAttract(g, s, t) {
     } // a quiet caption
     {
       const nm =
-        cur && cur.item.kind === "fly" && !SPACE_CAPS[cur.item.what]
-          ? FLY_NAMES[cur.item.what]
-          : cur && cur.item.gag
-            ? FLY_NAMES[cur.item.gag]
-            : null;
+        cur && cur.item.title
+          ? cur.item.title
+          : cur && cur.item.kind === "fly" && !SPACE_CAPS[cur.item.what]
+            ? FLY_NAMES[cur.item.what]
+            : cur && cur.item.gag
+              ? FLY_NAMES[cur.item.gag]
+              : null;
       if (nm) {
         const len = cur.item.len || 10,
           f = cur.ph / len,
@@ -51272,7 +51361,7 @@ function drawEggs(g, s) {
 // THE VERSION (from v1.2.0, 5 October 2026): MAJOR.MINOR.PATCH - a new MINOR for a batch of new things, a new PATCH for
 // fixes and small touches - with the day it was made next to it. (Before this the versions were named after the date,
 // like v2026.10.05c.)
-const GAME_VERSION = "v1.4.1",
+const GAME_VERSION = "v1.4.2",
   GAME_DATE = "06.10.2026",
   VERSION_TEXT = GAME_VERSION + "  ·  " + GAME_DATE;
 const FB = '"Chakra Petch", "Segoe UI", sans-serif';
@@ -57154,6 +57243,15 @@ profWire();
 //  the game, and where the motion capture, the folk songs and the fonts come from. Both from the menu at any time.
 // =====================================================================================
 const NEWS = [
+  {
+    ver: "v1.4.2",
+    title: "THE SOLAR SYSTEM TOUR",
+    items: [
+      "The Solar System tour in order, the Sun to Pluto, with true facts - every other show, or from PLAY MORE",
+      "Every stop's world looks far better on arrival - and the trip between levels is quicker",
+      "After the trip the bar glides straight into orbit; calmer protesters",
+    ],
+  },
   {
     ver: "v1.4.1",
     title: "THE PLANET TOUR",

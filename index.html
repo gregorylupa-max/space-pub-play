@@ -1,6 +1,6 @@
 <!doctype html>
 <html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><link rel="manifest" href="manifest.webmanifest"><meta name="theme-color" content="#0a0610"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"><meta name="apple-mobile-web-app-title" content="Astro Café"><link rel="apple-touch-icon" href="apple-touch-icon.png"><link rel="icon" type="image/png" href="icon-192.png"><script>if('serviceWorker' in navigator && /^https?:/.test(location.protocol))addEventListener('load',function(){navigator.serviceWorker.register('sw.js').catch(function(){});});</script></head><body>
-<title>Astro Café: Space Shake Tapper</title>
+<title>Astro Café: Cosmic Arcade</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bungee&family=Press+Start+2P&family=Chakra+Petch:wght@500;600;700&display=swap">
@@ -230,7 +230,7 @@ body.retro .table { font-size: 10px; gap: 5px; }
 <div id="crash" hidden><div class="box"><h2>OOPS - THE GAME GOT STUCK</h2><p>Sorry! Something went wrong. Press COLD START to start again - your stars, stickers, coins and high scores are kept.</p><button id="crashReset" class="primary">↻ COLD START</button><button id="crashMenu">BACK TO THE MENU</button><small id="crashMsg"></small></div></div>
 
 <section id="menu" class="panel" aria-label="Astro Café menu">
-  <h1 class="logo">ASTRO<span>CAFÉ</span><small>SPACE SHAKE TAPPER</small></h1>
+  <h1 class="logo">ASTRO<span>CAFÉ</span><small>COSMIC ARCADE</small></h1>
   <p class="tag">Four bars, one soda jerk, a galaxy of thirsty customers. Pour, slide, catch the empties, and never let a shake hit the floor.</p>
   <div class="buttons">
     <button id="bStart" class="primary">START <kbd>Enter</kbd></button>
@@ -53747,7 +53747,7 @@ function drawAttract(g, s, t) {
     g.globalAlpha = k;
     neon("ASTRO", cssH * 0.3 + bob, Math.min(84, cssW / 9 / s), "#ff5fa8", 26);
     neon("CAFÉ", cssH * 0.3 + 78 * s + bob, Math.min(84, cssW / 9 / s), "#5ff5c8", 26);
-    neon("SPACE SHAKE TAPPER", cssH * 0.3 + 138 * s, 20, "#ffc34d", 10);
+    neon("COSMIC ARCADE", cssH * 0.3 + 138 * s, 20, "#ffc34d", 10);
     neon("A SPACE MILKSHAKE BAR ARCADE GAME", cssH * 0.3 + 168 * s, 11, "#bfe4ff", 6);
     g.globalAlpha = 1;
     if (blink) neon(pressText(), cssH * 0.68, 22, "#ffffff", 12);
@@ -54361,7 +54361,7 @@ function drawEggs(g, s) {
 // THE VERSION (from v1.2.0, 5 October 2026): MAJOR.MINOR.PATCH - a new MINOR for a batch of new things, a new PATCH for
 // fixes and small touches - with the day it was made next to it. (Before this the versions were named after the date,
 // like v2026.10.05c.)
-const GAME_VERSION = "v1.4.8",
+const GAME_VERSION = "v1.4.9",
   GAME_DATE = "06.10.2026",
   VERSION_TEXT = GAME_VERSION + "  ·  " + GAME_DATE;
 const FB = '"Chakra Petch", "Segoe UI", sans-serif';
@@ -60583,10 +60583,15 @@ profWire();
 // =====================================================================================
 const NEWS = [
   {
+    ver: "v1.4.9",
+    title: "ASTRO CAFÉ: COSMIC ARCADE",
+    items: ["The full name of the game is now ASTRO CAFÉ: COSMIC ARCADE"],
+  },
+  {
     ver: "v1.4.8",
     title: "ASTRO CAFÉ",
     items: [
-      "The game has a new name: ASTRO CAFÉ: SPACE SHAKE TAPPER - your scores and progress are all kept",
+      "The game has a new name: ASTRO CAFÉ: COSMIC ARCADE - your scores and progress are all kept",
       "The power company that cuts the lights is SPACEKOM now",
       "The full-screen show: the minibus taxi, then the whole Solar System tour, two great sky events, a UFO, the Moon robots and the big flag",
       "Travel posters of South Africa and Poland on the cafe walls - and their famous places drift past the windows",

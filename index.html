@@ -6923,6 +6923,7 @@ const FLY_SAY = {
 };
 function update(dt) {
   dangerUpdate(dt); // (the music feels the danger)
+  musxUpdate(dt); // (v1.4.7) ...and how well you are doing
   voiceUpdate();
   modesUpdate(dt);
   G.time += dt;
@@ -54056,7 +54057,7 @@ function drawEggs(g, s) {
 // THE VERSION (from v1.2.0, 5 October 2026): MAJOR.MINOR.PATCH - a new MINOR for a batch of new things, a new PATCH for
 // fixes and small touches - with the day it was made next to it. (Before this the versions were named after the date,
 // like v2026.10.05c.)
-const GAME_VERSION = "v1.4.6",
+const GAME_VERSION = "v1.4.7",
   GAME_DATE = "06.10.2026",
   VERSION_TEXT = GAME_VERSION + "  ·  " + GAME_DATE;
 const FB = '"Chakra Petch", "Segoe UI", sans-serif';
@@ -58136,6 +58137,127 @@ const TRACKS          = [
       { prog: "F D7 Gm C7 Am D7 Gm F", m: "a b c d e b d f" },
     ],
   },
+  // ---- (v1.4.7) FOUR NEW TUNES for the big moments: the great jump, the heart of Andromeda, the moon-robot picture
+  //      and the Solar System tour (all our own) ----
+  {
+    title: "HYPERSPACE HIGHWAY",
+    where: "The great jump to Andromeda",
+    mood: "racing chip-tune",
+    bpm: 150,
+    steps: 16,
+    swing: 0,
+    root: 57,
+    scale: MIN,
+    keys: [0, 3, -2],
+    lead: { wave: "square", oct: 12, vol: 0.1, echo: 0.3 },
+    bass: "octaves",
+    comp: "stab",
+    drums: "dnb",
+    extra: "zap",
+    motifs: {
+      a: "0 . 2 . 4 . 7 .",
+      b: "6 . 4 . 2 . 4 .",
+      c: "4 . . 2 4 . 5 .",
+      d: "7 . . . 6 . 4 .",
+      e: "0 2 4 7 9 7 4 2",
+      f: "0 . . . - - - -",
+    },
+    form: [
+      { prog: "Am Am F G", m: "- - - -", drums: "intro" },
+      { prog: "Am F C G Am F G G", m: "a b a c a b d f" },
+      { prog: "F G Am Am F G E7 E7", m: "c d e b c d e f", up: 12 },
+      { prog: "Am F C G Am F G Am", m: "a b c d e e d f" },
+    ],
+  },
+  {
+    title: "HEART OF ANDROMEDA",
+    where: "The heart of Andromeda",
+    mood: "slow and starry",
+    bpm: 84,
+    steps: 16,
+    swing: 0,
+    root: 52,
+    scale: LYD,
+    keys: [0, 2],
+    lead: { wave: "triangle", wave2: "sine", oct: 12, vol: 0.09, vib: 5, swell: true, echo: 0.5 },
+    bass: "hush",
+    comp: "softpad",
+    drums: "none",
+    extra: "chimes",
+    motifs: {
+      a: "4 . . . 2 . . .",
+      b: "7 . . 6 4 . . .",
+      c: "9 . . . 7 . 6 .",
+      d: "4 . . . . . . .",
+      e: "2 . 4 . 6 . 7 .",
+      f: "0 . . . . . . .",
+    },
+    form: [
+      { prog: "E E F# F#", m: "- - - -" },
+      { prog: "E F# E F# C#m F# E E", m: "a b a c e c d f" },
+      { prog: "A A E E A B E E", m: "c b e d c b a f", up: 12, drums: "heart" },
+    ],
+  },
+  {
+    title: "INVASION OF THE MOON ROBOTS",
+    where: "Tonight's picture (1957)",
+    mood: "B-movie theremin",
+    bpm: 108,
+    steps: 16,
+    swing: 0.12,
+    root: 50,
+    scale: HMIN,
+    keys: [0, -2],
+    lead: { wave: "sine", oct: 12, vol: 0.11, vib: 6.5, slide: true, swell: true, echo: 0.45 }, // (a THEREMIN: all wobble and swoop)
+    bass: "walk",
+    comp: "rhodes",
+    drums: "brush",
+    extra: "zap",
+    motifs: {
+      a: "4 . . 3 . . 0 .",
+      b: "7 . . . 6 . 4 .",
+      c: "3 . 4 . 3 . 0 .",
+      d: "-1 . . . . . - -",
+      e: "7 . 8 . 7 . 4 .",
+      f: "0 . . . . . . .",
+    },
+    form: [
+      { prog: "Dm Dm Bb A7", m: "- - - d", drums: "none" },
+      { prog: "Dm Dm Bb A7 Dm Gm A7 Dm", m: "a b c d a b e f" },
+      { prog: "Gm Gm Dm Dm Bb A7 Dm Dm", m: "e c b d e c a f", up: 12 },
+    ],
+  },
+  {
+    title: "CLOCKWORK ORRERY",
+    where: "The Solar System tour",
+    mood: "music-box waltz",
+    bpm: 126,
+    steps: 12,
+    div: 4,
+    swing: 0,
+    root: 60,
+    scale: MAJ,
+    keys: [0, 5, -3],
+    lead: { wave: "triangle", wave2: "sine", oct: 12, vol: 0.115, pluck: true, echo: 0.4 }, // (a music box: plucked and bright)
+    bass: "waltz",
+    comp: "waltz",
+    drums: "waltz",
+    extra: "chimes",
+    motifs: {
+      a: "0 . 2 . 4 .",
+      b: "7 . . 6 4 .",
+      c: "5 . 4 . 2 .",
+      d: "4 . . . - .",
+      e: "2 4 7 . 4 .",
+      f: "0 . . . . .",
+    },
+    form: [
+      { prog: "C G7", m: "a d", drums: "none" },
+      { prog: "C C F C G7 G7 C C", m: "a b c d a e c f" },
+      { prog: "F F C C D7 D7 G7 G7", m: "c e b d c e a d", up: 12 },
+      { prog: "C C F Fm C G7 C C", m: "a b c d e c b f" },
+    ],
+  },
   {
     title: "HERO OF THE GALAXY",
     where: "The ending",
@@ -58233,6 +58355,12 @@ const TRACKS          = [
 const VICTORY_TRACK = TRACKS.length - 3,
   DEEP_TRACK = TRACKS.length - 2,
   DESCENT_TRACK = TRACKS.length - 1;
+// (v1.4.7) the new tunes for the big moments, found by name
+const trackNamed = (t) => TRACKS.findIndex((x) => x.title === t),
+  HYPER_TRACK = trackNamed("HYPERSPACE HIGHWAY"),
+  CORE_TRACK = trackNamed("HEART OF ANDROMEDA"),
+  ROBOT_TRACK = trackNamed("INVASION OF THE MOON ROBOTS"),
+  ORRERY_TRACK = trackNamed("CLOCKWORK ORRERY");
 // the music box names each tune after the stops it plays at now (after the tour was rebuilt)
 TRACKS.forEach((tr, i) => {
   const vs = VENUES.filter((v) => v.trk === i).map((v) =>
@@ -58393,6 +58521,38 @@ function tensionStep(t, s, st) {
     note2("triangle", 33, st * 3, 0.32 * v, B2, t, { att: 0.004 });
     if (v > 0.6) drum("k", t, B2, 0.5 * v);
   } // (and a low pulse on every beat)
+}
+// (v1.4.7) MUSIC THAT PLAYS ALONG: the band feels how you're doing -
+//   - HEAT: the Shake Fever meter filling up (a run of serves without a slip) brings in more of the band: a shaker,
+//     then a harmony voice on the tune, then the chip sparkle and open hi-hats - and in Shake Fever, the lot, a touch faster;
+//   - BOSS: while a world's boss is in the pub, heavier drums - a kick on every beat, tom rolls, stabs - and a touch faster;
+//   - LOSING A LIFE: the music drops - muffled, as if under water - and opens back up as play starts again.
+const MUSX = { heat: 0, boss: false, lp: -1 };
+function musxUpdate(dt) {
+  const live = G.state === "play" && !G.demo;
+  const want = live ? (G.fever > 0 ? 1 : clamp((G.streak || 0) / FEVER_AT, 0, 1)) : 0;
+  MUSX.heat += (want - MUSX.heat) * Math.min(1, dt * (want > MUSX.heat ? 1.5 : 0.6));
+  MUSX.boss = live && G.boss === true && !G.bossDone;
+}
+// a rising whoosh of noise, getting louder - a riser into a big new section
+function riser(dur, vol, bus, t) {
+  const src = AC.createBufferSource(),
+    fl = AC.createBiquadFilter(),
+    gn = AC.createGain();
+  src.buffer = noiseBuf;
+  src.loop = true;
+  fl.type = "bandpass";
+  fl.Q.value = 1.2;
+  fl.frequency.setValueAtTime(500, t);
+  fl.frequency.exponentialRampToValueAtTime(7000, t + dur);
+  gn.gain.setValueAtTime(0.0001, t);
+  gn.gain.exponentialRampToValueAtTime(vol, t + dur * 0.95);
+  gn.gain.linearRampToValueAtTime(0.0001, t + dur + 0.03);
+  src.connect(fl);
+  fl.connect(gn);
+  gn.connect(bus);
+  src.start(t, Math.random() * 1.5);
+  src.stop(t + dur + 0.06);
 }
 function playStep2(tr, t0) {
   tensionStep(t0, SEQ2.step, 60 / tr.bpm / (tr.folk ? 4 : tr.div || (tr.steps === 12 ? 6 : 4)));
@@ -58587,7 +58747,11 @@ function playStep2(tr, t0) {
   // ---- melody ----
   const mk = sc.mot[bar % sc.mot.length],
     mot = tr.motifs[mk],
-    L = tr.lead;
+    L = tr.lead,
+    heat = MUSX.heat,
+    again = SEQ2.loop >= 1, // (v1.4.7) second time round the song: richer
+    nsec = SEQ2.sec + 1 < tr.form.length ? tr.form[SEQ2.sec + 1] : tr.form[1], // (the section coming next)
+    lastOfSec = bar === sc.chords.length - 1;
   if (mot && s % 2 === 0) {
     const i = s / 2,
       tok = mot[i % mot.length];
@@ -58612,30 +58776,115 @@ function playStep2(tr, t0) {
         o.vib = 5.5;
         o.vibDelay = Math.min(0.35, d * 0.4);
       }
-      note2(L.wave, m, d, o.duty ? L.vol * 0.9 : L.vol, leadBus, t, o);
-      if (L.wave2) note2(L.wave2, m, d, L.vol * 0.6, leadBus, t, { ...o, det: 7, duty: undefined });
+      const vol = o.duty ? L.vol * 0.9 : L.vol,
+        up1 = degNote(tr, pc, +tok + 1, tp) + L.oct + (sc.up || 0), // (the next note up the scale)
+        h = hash(bar * 13.1 + i * 3.7 + SEQ2.sec * 7.3 + SEQ2.loop * 1.9);
+      // (v1.4.7) CHIP ORNAMENTS, second time round: now and then a quick TRILL on a long note, or a GRACE NOTE flicked
+      // in just before one - the way the old game composers dressed up a repeat
+      let t1 = t,
+        d1 = d;
+      if (again && n >= 4 && h < 0.3 && !L.swell) {
+        for (let k = 0; k < 6; k++)
+          note2(L.wave, k % 2 ? up1 : m, st * 0.5, vol * 0.9, leadBus, t + k * st * 0.5, {
+            duty: o.duty,
+            stacc: true,
+          });
+        t1 = t + st * 3;
+        d1 = Math.max(st, d - st * 3);
+      } else if (again && n >= 2 && h < 0.6)
+        note2(L.wave, up1, 0.05, vol * 0.75, leadBus, t - 0.05, { duty: o.duty, stacc: true });
+      note2(L.wave, m, d1, vol, leadBus, t1, o);
+      if (L.wave2) note2(L.wave2, m, d1, L.vol * 0.6, leadBus, t1, { ...o, det: 7, duty: undefined });
       if (L.breath) noise(Math.min(d, 0.25), 0.012, 3000, 2000, leadBus, t, "bandpass");
-      if (sc.up && mk !== "f") note2(L.wave, m - 5, d, L.vol * 0.45, leadBus, t, o); // a harmony line when the section lifts
+      if (sc.up && mk !== "f")
+        note2(L.wave, m - 5, d, L.vol * 0.45, leadBus, t, o); // a harmony line when the section lifts
+      // (v1.4.7) a HARMONY VOICE a third below the tune: second time round, or when the band is fired up
+      else if ((again || heat > 0.6) && mk !== "f")
+        note2(
+          L.wave === "sine" ? "triangle" : L.wave,
+          degNote(tr, pc, +tok - 2, tp) + L.oct,
+          d,
+          L.vol * 0.36,
+          leadBus,
+          t,
+          { ...o, duty: o.duty ? 0.5 : undefined, slide: false, vib: undefined }
+        );
+    } else if ((tok === "." || tok === "-") && i % 2 === 1 && ((again && SEQ2.sec % 2 === 1) || heat > 0.6)) {
+      // (v1.4.7) a COUNTER-MELODY: while the tune holds a note or rests, a soft plucked voice answers it from below
+      let cm = degNote(tr, pc, [4, 2, 0, 2, 4, 5, 4, 2][i % 8], tp);
+      while (cm < 57) cm += 12;
+      while (cm > 76) cm -= 12;
+      note2("triangle", cm, st * 1.8, 0.034, leadBus, t, { pluck: true, att: 0.003 });
+    }
+    // (v1.4.7) a PICK-UP into the next section: where the tune rests at the very end of a section, two quick notes
+    // lead into the next one's first chord
+    if (lastOfSec && tok === "-" && i >= mot.length - 2 && mot.length >= 6) {
+      const wrap = SEQ2.sec + 1 >= tr.form.length,
+        tp2 = wrap ? tr.keys[(SEQ2.loop + 1) % tr.keys.length] : tp,
+        nch = chord(nsec.chords[0]),
+        npc2 = (nch.pc + tp2 + 120) % 12,
+        pm = degNote(tr, npc2, i === mot.length - 2 ? -2 : -1, tp2) + L.oct + (nsec.up || 0);
+      note2(L.wave, pm, st * 1.6, L.vol * 0.7, leadBus, t, {
+        duty: L.wave === "square" ? 0.25 : undefined,
+        stacc: true,
+      });
     }
   }
   // ---- (v1.4.5) the CHIP ARPEGGIO: on the lively tracks, once the song is going, the chord sparkles high up in a fast
   //      pulse-wave arpeggio - the old consoles' way of playing a whole chord on one voice ----
   const chippy =
     (L.wave === "square" || L.wave === "triangle") && tr.bpm >= 100 && tr.comp !== "arp" && !tr.folk;
-  if (chippy && SEQ2.sec > 0 && SEQ2.sec % 2 === 0 && !sc.drums) {
+  if (
+    (chippy && SEQ2.sec > 0 && SEQ2.sec % 2 === 0 && !sc.drums) ||
+    (heat > 0.85 && tr.bpm >= 90 && tr.comp !== "arp" && !sc.drums)
+  ) {
     const an = 72 + (tones[s % tones.length] % 12) + (s % 6 >= 3 ? 12 : 0);
     note2("square", an, st * 0.85, 0.016, leadBus, t, { duty: 0.125, stacc: true });
   }
   // ---- drums ----
   const pat = DRUMS[sc.drums || tr.drums] || {};
-  // (v1.4.5) a DRUM FILL in the last bar of a section, rolling into the next: toms tumbling down, snare hits to finish
-  const lastBar =
-    bar === sc.chords.length - 1 && Object.keys(pat).length > 0 && SEQ2.sec + 1 < tr.form.length;
-  if (lastBar && s >= 12 && div === 4) {
-    if (s < 14) tone("sine", 260 - (s - 12) * 50, 150 - (s - 12) * 25, 0.18, 0.24, B2, t);
-    else drum("s", t, B2, s === 15 ? 1 : 0.8);
+  // (v1.4.5) a DRUM FILL in the last bar of a section, rolling into the next. (v1.4.7) Four kinds, taking turns: toms
+  // tumbling down - a snare roll getting louder - a kick-snare-tom break - or a noise RISER whooshing up (always the riser
+  // before a section that lifts, and before the song goes round again in a new key, with a chip "whoop" on top)
+  const hasDrums = Object.keys(pat).length > 0,
+    wrapBar = lastOfSec && SEQ2.sec === tr.form.length - 1 && hasDrums && tr.form.length > 2,
+    lastBar = lastOfSec && hasDrums && (SEQ2.sec + 1 < tr.form.length || wrapBar),
+    fs = tr.steps - 4,
+    r = s - fs;
+  if (lastBar && r >= 0) {
+    const kind = wrapBar || nsec.up ? 3 : (SEQ2.sec + SEQ2.loop) % 3;
+    if (kind === 0) {
+      if (r < 2) tone("sine", 260 - r * 50, 150 - r * 25, 0.18, 0.24, B2, t);
+      else drum("s", t, B2, r === 3 ? 1 : 0.8);
+    } else if (kind === 1) {
+      drum("s", t, B2, 0.45 + r * 0.18);
+      drum("s", t + st * 0.5, B2, 0.3 + r * 0.18); // (a roll: two hits a step)
+    } else if (kind === 2) {
+      if (r === 0) drum("k", t, B2, 1);
+      else if (r === 2) tone("sine", 210, 130, 0.2, 0.26, B2, t);
+      else drum("s", t, B2, r === 3 ? 1 : 0.75);
+    } else {
+      if (r === 0) riser(st * 4, 0.09, B2, t);
+      if (r === 0 || r === 2) drum("k", t, B2, 0.7);
+      if (r === 3) drum("s", t, B2, 1);
+      if (r === 0 && wrapBar) tone("square", mf(72 + pc), mf(91 + pc), st * 3.6, 0.016, leadBus, t); // (whoop!)
+    }
   } else for (const k in pat) if (pat[k][s] === "x") drum(k, t, B2, onBeat ? 1 : 0.8);
-  if (bar === 0 && s === 0 && SEQ2.sec > 0) noise(1.2, 0.12, 8000, 3000, B2, t, "highpass"); // a cymbal at each new section
+  if (bar === 0 && s === 0 && SEQ2.sec > 0) {
+    noise(1.2, 0.12, 8000, 3000, B2, t, "highpass"); // a cymbal at each new section
+    if (hasDrums) drum("k", t, B2, 1); // (and a kick under it)
+  }
+  // (v1.4.7) THE BAND PLAYS ALONG (see MUSX): more of it as the Fever meter fills; heavier with a boss in the pub
+  if (hasDrums && !(lastBar && r >= 0)) {
+    if (heat > 0.35 && s % 2 === 0) drum("z", t, B2, 0.5 + heat * 0.5);
+    if (heat > 0.85 && s % 4 === 2) drum("o", t, B2, 0.7);
+    if (MUSX.boss) {
+      if (onBeat) drum("k", t, B2, 0.9);
+      if (bar % 2 === 1 && s >= fs && s % 2 === 0) tone("sine", 240 - (s - fs) * 30, 140, 0.2, 0.24, B2, t);
+      if (bar % 2 === 0 && s === 0)
+        for (const x of tones) cn(55 + (x % 12), st * 2, 0.026, "sawtooth", { lp: 1600, stacc: true });
+    }
+  }
   // ---- the special sounds that give each planet its flavour ----
   if (tr.extra === "anvil" && s === 12 && bar % 2 === 1)
     for (const k of [1, 2.76, 5.4]) tone("sine", 820 * k, 810 * k, 0.6, 0.05 / k, B2, t);
@@ -58679,7 +58928,7 @@ function playStep2(tr, t0) {
     for (const k of [1, 2.4, 3]) ping(mf(72 + pc) * k, 2.2, 0.03 / k, B2, t);
 }
 function advance2(tr) {
-  const hurry = 1 + 0.12 * DNG.v; // (danger: a little faster)
+  const hurry = 1 + 0.12 * DNG.v + (MUSX.boss ? 0.04 : 0) + (G.fever > 0 && G.state === "play" ? 0.04 : 0); // (danger, a boss, Shake Fever: a little faster)
   if (tr.folk) {
     SEQ2.next += 60 / tr.bpm / 4 / hurry; // (folk tunes step in sixteenths)
     SEQ2.step = (SEQ2.step + 1) % tr.len;
@@ -58711,8 +58960,13 @@ function musicWanted() {
   if (G.state === "ending") return VICTORY_TRACK;
   if (ATTRACT.on && ATTRACT.phase === "space") {
     const cur = spaceNow();
-    return cur && cur.item.kind === "descend" ? DESCENT_TRACK : DEEP_TRACK; // the deep-space show: mysterious music - and a mysterious arrival as we tilt down to the pub
+    if (cur && cur.item.kind === "descend") return DESCENT_TRACK; // a mysterious arrival as we tilt down to the pub
+    if (cur && cur.item.what === "invasion") return ROBOT_TRACK; // (v1.4.7) the B-movie gets its theremin
+    if (ATTRACT.tourShow) return ORRERY_TRACK; // (v1.4.7) the Solar System tour: a clockwork music-box waltz
+    return DEEP_TRACK; // the deep-space show: mysterious music
   }
+  if (G.state === "jump" && G.jump && G.jump.inter) return HYPER_TRACK; // (v1.4.7) the great jump to Andromeda
+  if (G.state === "jump" && G.jump && G.jump.core) return CORE_TRACK; // (v1.4.7) the heart of Andromeda
   if (G.state === "over" && G.won) return VICTORY_TRACK;
   if (G.state === "story") return DEEP_TRACK; // Bogdan's story: the mysterious deep-space tune
   if (["play", "lost", "clear", "bonus", "paused", "jump", "approach", "mini"].includes(G.state))
@@ -58726,7 +58980,8 @@ let curTrack = -1;
 // curve (it used to stop dead and leave a silence), then the new one starts and swells in on a matching curve. If the
 // old tune is wanted back while it's fading, it simply swells back up. (In the music box a pick changes quickly.)
 const MFADE                                    = { to: null, at: 0 };
-const musTarget = (tr) => (tr >= 0 ? (tr === DEEP_TRACK ? 0.2 : 0.3) : 0);
+const musTarget = (tr) =>
+  tr >= 0 ? (tr === DEEP_TRACK ? 0.2 : tr === ORRERY_TRACK ? 0.24 : tr === CORE_TRACK ? 0.26 : 0.3) : 0;
 function musRamp(from, to, start, dur) {
   if (!musicBus) return;
   const g = musicBus.gain,
@@ -58745,6 +59000,20 @@ function musRamp(from, to, start, dur) {
     g.linearRampToValueAtTime(Math.max(0.0001, to), start + dur);
   }
 }
+// each tune gets its own echo: timed to its beat, as wet as its style wants
+function setEchoFor(want, now) {
+  if (!leadEcho || want < 0) return;
+  const tr = TRACKS[want],
+    div = tr.div || (tr.steps === 12 ? 6 : 4),
+    st = want === 0 ? STEP : 60 / tr.bpm / div;
+  leadEcho.dl.delayTime.setTargetAtTime(Math.min(0.95, st * 3), now, 0.05);
+  leadEcho.wet.gain.setTargetAtTime(want === 0 ? 0.3 : (tr.lead.echo ?? 0.3) * 0.9, now, 0.1);
+  leadEcho.fb.gain.setTargetAtTime(
+    want === 0 ? 0.34 : Math.min(0.5, 0.2 + (tr.lead.echo ?? 0.3) * 0.5),
+    now,
+    0.1
+  );
+}
 function schedule() {
   if (!AC) return;
   const now = AC.currentTime,
@@ -58756,10 +59025,16 @@ function schedule() {
     MFADE.to = want;
     MFADE.at = now + fadeOut;
     musRamp(musicBus ? musicBus.gain.value : 0, 0.0001, now, fadeOut);
+    if (leadEcho && !JB.open) {
+      // (v1.4.7) a softer goodbye: the echo opens up, so the old tune's last notes trail away into the distance
+      leadEcho.fb.gain.setTargetAtTime(0.55, now, 0.3);
+      leadEcho.wet.gain.setTargetAtTime(0.5, now, 0.3);
+    }
   } else if (want === curTrack && MFADE.to !== null) {
     // changed its mind: the old tune is wanted after all - swell it back
     MFADE.to = null;
     musRamp(musicBus ? musicBus.gain.value : 0, musTarget(curTrack), now, 0.8);
+    setEchoFor(curTrack, now);
   }
   if (want !== curTrack && (curTrack < 0 || (MFADE.to === want && now >= MFADE.at))) {
     // switch tunes: start the new one from its top, swelling in
@@ -58779,19 +59054,15 @@ function schedule() {
       musicBus.gain.setValueAtTime(0.0001, now);
       musRamp(0.0001, musTarget(want), now + 0.1, JB.open ? 0.6 : want === DEEP_TRACK ? 3.2 : 2);
     }
-    if (musLP) musLP.frequency.setTargetAtTime(want === DEEP_TRACK ? 1100 : 20000, now, 0.8); // deep space: gentle and muffled, like it's coming from far away
-    if (leadEcho && want >= 0) {
-      const tr = TRACKS[want],
-        div = tr.div || (tr.steps === 12 ? 6 : 4),
-        st = want === 0 ? STEP : 60 / tr.bpm / div; // each tune gets its own echo: timed to its beat, as wet as its style wants
-      leadEcho.dl.delayTime.setTargetAtTime(Math.min(0.95, st * 3), now, 0.05);
-      leadEcho.wet.gain.setTargetAtTime(want === 0 ? 0.3 : (tr.lead.echo ?? 0.3) * 0.9, now, 0.1);
-      leadEcho.fb.gain.setTargetAtTime(
-        want === 0 ? 0.34 : Math.min(0.5, 0.2 + (tr.lead.echo ?? 0.3) * 0.5),
-        now,
-        0.1
-      );
-    }
+    MUSX.lp = -1; // (the filter follows below)
+    setEchoFor(want, now);
+  }
+  // the music's low-pass: deep space gentle and muffled, like it's coming from far away; (v1.4.7) losing a life drops
+  // it under water for a moment - then it opens back up
+  const lpWant = curTrack === DEEP_TRACK ? 1100 : G.state === "lost" ? 650 : 20000;
+  if (musLP && lpWant !== MUSX.lp) {
+    musLP.frequency.setTargetAtTime(lpWant, now, lpWant === 650 ? 0.12 : MUSX.lp === 650 ? 0.45 : 0.8);
+    MUSX.lp = lpWant;
   }
   const play = curTrack; // (while a change is fading, the old tune plays on)
   if (play < 0) return;
@@ -60007,6 +60278,15 @@ profWire();
 //  the game, and where the motion capture, the folk songs and the fonts come from. Both from the menu at any time.
 // =====================================================================================
 const NEWS = [
+  {
+    ver: "v1.4.7",
+    title: "BETTER MUSIC",
+    items: [
+      "Four new tunes: Hyperspace Highway (the great jump), Heart of Andromeda, a theremin for the Moon Robots, and a Clockwork Orrery waltz for the Solar System tour",
+      "Drum fills, risers and pick-up notes between sections - and second time round, a harmony voice, a counter-melody, trills and grace notes",
+      "The band plays along: it builds up as your Shake Fever meter fills, gets heavier when a boss walks in, and drops under water when you lose a life",
+    ],
+  },
   {
     ver: "v1.4.6",
     title: "MOON ROBOTS & THE WHOLE SOLAR SYSTEM",

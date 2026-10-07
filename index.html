@@ -3227,6 +3227,46 @@ const DICT_ROWS                             = [
     "CZARNA DZIURA: GRAWITACJA TAK SILNA, ŻE NAWET ŚWIATŁO NIE UCIEKNIE",
   ],
   [
+    "IN THE DARK, FAR AWAY... SOMETHING VERY BRIGHT",
+    "IN DIE DONKER, VER WEG... IETS BAIE HELDERS",
+    "W CIEMNOŚCI, DALEKO... COŚ BARDZO JASNEGO",
+  ],
+  [
+    "TON 618: ONE OF THE BIGGEST BLACK HOLES EVER FOUND",
+    "TON 618: EEN VAN DIE GROOTSTE SWART GATE WAT NOG OOIT GEVIND IS",
+    "TON 618: JEDNA Z NAJWIĘKSZYCH CZARNYCH DZIUR, JAKIE ODKRYTO",
+  ],
+  [
+    "ABOUT 40 BILLION TIMES THE MASS OF OUR SUN",
+    "OMTRENT 40 MILJARD KEER DIE MASSA VAN ONS SON",
+    "OKOŁO 40 MILIARDÓW RAZY CIĘŻSZA OD NASZEGO SŁOŃCA",
+  ],
+  [
+    "THE GAS FALLING INTO IT SHINES LIKE 140 TRILLION SUNS - A QUASAR",
+    "DIE GAS WAT DAARIN VAL, SKYN SOOS 140 BILJOEN SONNE - 'N KWASAR",
+    "GAZ WPADAJĄCY DO NIEJ ŚWIECI JAK 140 BILIONÓW SŁOŃC - TO KWAZAR",
+  ],
+  [
+    "OUR WHOLE SOLAR SYSTEM WOULD FIT INSIDE ITS EDGE MANY TIMES OVER",
+    "ONS HELE SONNESTELSEL SOU BAIE KEER BINNE SY RAND PAS",
+    "CAŁY NASZ UKŁAD SŁONECZNY ZMIEŚCIŁBY SIĘ W JEJ KRAWĘDZI WIELE RAZY",
+  ],
+  [
+    "A STAR WANDERS TOO CLOSE... AND IS TORN APART",
+    "'N STER DWAAL TE NABY... EN WORD UITMEKAAR GESKEUR",
+    "GWIAZDA PODCHODZI ZA BLISKO... I ZOSTAJE ROZERWANA",
+  ],
+  [
+    "ITS LIGHT SET OUT ABOUT 11 BILLION YEARS AGO - BEFORE THE EARTH WAS BORN",
+    "SY LIG HET SO 11 MILJARD JAAR GELEDE VERTREK - VOORDAT DIE AARDE GEBORE IS",
+    "JEJ ŚWIATŁO WYRUSZYŁO OKOŁO 11 MILIARDÓW LAT TEMU - ZANIM POWSTAŁA ZIEMIA",
+  ],
+  [
+    "DON'T WORRY - IT IS VERY, VERY FAR AWAY",
+    "MOENIE BEKOMMERD WEES NIE - DIS BAIE, BAIE VER WEG",
+    "NIE MARTW SIĘ - JEST BARDZO, BARDZO DALEKO",
+  ],
+  [
     "HOT GAS SWIRLS ROUND IT IN A GLOWING DISC",
     "WARM GAS DRAAI DAAROM IN 'N GLOEIENDE SKYF",
     "GORĄCY GAZ WIRUJE WOKÓŁ NIEJ W ŚWIECĄCYM DYSKU",
@@ -29380,7 +29420,7 @@ function drawDeepSpace(t) {
     pan = desc ? ease(desc.ph / 9) * h * 1.05 : 0, // (a slow, stately tilt down...)
     PX = w * 0.14,
     panX = desc ? ease(desc.ph / 9) * PX : 0; // (...and a little to the left, so the diner glides in from the lower left)
-  GIANT_OK = !ATTRACT.tour; // (not in the Solar System tour either: the real planets are the stars of that)
+  GIANT_OK = false; // (v1.4.14: the big ringed planet in the corner is gone from the show altogether - by request)
   deepSky(L, Rr, T, B, t, at, sn, pan, panX);
   GIANT_OK = false;
   if (desc) {
@@ -29580,6 +29620,9 @@ function drawDeepSpace(t) {
         break;
       case "blackhole":
         drawBlackHoleScene(L, Rr, T, B, f, t);
+        break;
+      case "ton618": // (v1.4.14) the scariest black hole - ton618.ts
+        drawTon618(L, Rr, T, B, f, t);
         break;
       case "bats":
         for (let i = 0; i < 12; i++)
@@ -55316,6 +55359,211 @@ function drawFurmanka(x, y, k, t, dir = -1) {
   pop();
 }
 // =====================================================================================
+//  TON 618 (v1.4.14) - THE SCARIEST BLACK HOLE: one of the biggest black holes ever found, in the full-screen show.
+//    1. THE DARK: everything goes black and still... a deep rumble... and far off, one blinding point of light.
+//    2. THE QUASAR: it grows into a monster - a vast blue-white disc of gas whirling round a hole of perfect black, its
+//       light bent up over the top by the gravity, two jets firing out, the starlight behind it smeared into arcs - and a
+//       slow red glow behind it, beating like a heart.
+//    3. THE SCALE: a tiny ring floats in front of its black edge - OUR WHOLE SOLAR SYSTEM, out to Neptune. A speck.
+//    4. A STAR WANDERS TOO CLOSE: it's stretched into a long stream and spirals in - a flash, a boom.
+//    5. ...and the reassurance: don't worry - it is very, very far away.
+//  The facts in the captions: about 40 billion times the Sun's mass; its quasar shines like 140 trillion suns; the edge
+//  of the black hole is over 1,000 times as far from its middle as the Earth is from the Sun (Neptune is 30); first
+//  spotted in 1957 at the Tonantzintla Observatory in Mexico (the "TON"); its light set out about 11 billion years ago,
+//  long before the Earth was born.
+// =====================================================================================
+SPACE_CAPS.ton618 = [
+  [0, "IN THE DARK, FAR AWAY... SOMETHING VERY BRIGHT"],
+  [0.14, "TON 618: ONE OF THE BIGGEST BLACK HOLES EVER FOUND"],
+  [0.28, "ABOUT 40 BILLION TIMES THE MASS OF OUR SUN"],
+  [0.42, "THE GAS FALLING INTO IT SHINES LIKE 140 TRILLION SUNS - A QUASAR"],
+  [0.55, "OUR WHOLE SOLAR SYSTEM WOULD FIT INSIDE ITS EDGE MANY TIMES OVER"],
+  [0.7, "A STAR WANDERS TOO CLOSE... AND IS TORN APART"],
+  [0.82, "ITS LIGHT SET OUT ABOUT 11 BILLION YEARS AGO - BEFORE THE EARTH WAS BORN"],
+  [0.92, "DON'T WORRY - IT IS VERY, VERY FAR AWAY"],
+];
+function drawTon618(L, Rr, T, B, f, t) {
+  const w = Rr - L,
+    h = B - T,
+    fade = Math.min(1, f * 6, (1 - f) * 6),
+    seg = (a, b) => clamp((f - a) / (b - a), 0, 1),
+    C2 = (hx, a) => withA(col(hx), a * fade),
+    cx = L + w * 0.5,
+    cy = T + h * 0.42,
+    grow = ease(seg(0.04, 0.3)), // (from a point in the dark to filling the screen)
+    Rd = Math.min(w, h) * lerpA(0.006, 0.13, grow),
+    rx = Rd * 4.2,
+    ry = Rd * 0.75,
+    tl = ry / rx,
+    beat =
+      Math.pow(Math.max(0, Math.sin(t * 2.2)), 10) + Math.pow(Math.max(0, Math.sin(t * 2.2 - 0.5)), 14) * 0.6;
+  if (f > 0.03 && f < 0.12) showSfx("thunder", "ton-dark");
+  if (f > 0.3 && f < 0.36) showSfx("thunder", "ton-quasar");
+  // 1. THE DARK: the sky behind goes black - the show's stars fade out
+  rect(L, T, w, h, withA(col("#000004"), 0.82 * fade));
+  // the faint red heartbeat glow behind it all
+  R.setAdd(true);
+  glow(cx, cy, Math.min(w, h) * (0.55 + 0.05 * beat), C2("#ff1a2a", (0.05 + 0.12 * beat) * grow));
+  // the starlight from behind it, bent into arcs round the hole (gravitational lensing)
+  for (let i = 0; i < 70; i++) {
+    const r0 = Rd * (1.6 + hash(i * 3.1) * 5),
+      a0 = hash(i * 7.7) * 6.283 + t * 0.01,
+      ln = 0.2 + hash(i) * 0.6;
+    arc(
+      cx,
+      cy,
+      r0,
+      a0,
+      a0 + ln,
+      Math.max(0.8, Rd * 0.012),
+      C2("#dfe8ff", (0.15 + 0.25 * hash(i * 2)) * grow),
+      8
+    );
+  }
+  // 2. THE QUASAR's glow - blinding, blue-white
+  glow(cx, cy, Rd * 9, C2("#7aa8ff", 0.12 + 0.08 * grow));
+  glow(cx, cy, Rd * 4.5, C2("#e8f0ff", 0.25 + 0.2 * (1 - grow)));
+  // the jets: two narrow beams shooting out of the poles, flickering
+  if (grow > 0.3) {
+    const jl = h * 0.75 * ease(seg(0.25, 0.45)),
+      fl = 0.75 + 0.25 * Math.sin(t * 9) * Math.sin(t * 5.3);
+    for (const sd of [-1, 1]) {
+      quad4(
+        cx - Rd * 0.12,
+        cy,
+        cx + Rd * 0.12,
+        cy,
+        cx + Rd * 0.5,
+        cy + sd * jl,
+        cx - Rd * 0.5,
+        cy + sd * jl,
+        C2("#bfd8ff", 0.5 * fl),
+        C2("#bfd8ff", 0.5 * fl),
+        C2("#8a6aff", 0),
+        C2("#8a6aff", 0)
+      );
+      for (let i = 0; i < 6; i++) {
+        const u = (t * 0.6 + i / 6) % 1;
+        glow(
+          cx + Math.sin(i * 2.1 + t) * Rd * 0.15 * u,
+          cy + sd * jl * u,
+          Rd * (0.25 + u * 0.5),
+          C2("#c8b0ff", 0.25 * (1 - u))
+        );
+      } // (knots of gas racing out along it)
+    }
+  }
+  // the disc: white-hot near the hole, blue, violet, out to a dull deep red at the edge
+  const BANDS = [
+    [1.15, 1.5, "#ffffff", 0.7],
+    [1.5, 2.1, "#d8e8ff", 0.5],
+    [2.1, 2.9, "#8ab0ff", 0.38],
+    [2.9, 3.6, "#8a6ad8", 0.26],
+    [3.6, 4.2, "#a03a5a", 0.16],
+  ]         ;
+  const discHalf = (front) => {
+    for (const [r1, r2, c, a] of BANDS) {
+      const flick = 0.82 + 0.18 * Math.sin(t * 2.4 + r1 * 5);
+      ringBand(
+        cx,
+        cy,
+        Rd * r1,
+        Rd * r2,
+        tl,
+        front ? 0 : Math.PI,
+        front ? Math.PI : Math.PI * 2,
+        C2(c, a * flick),
+        40
+      );
+    }
+  };
+  discHalf(false); // the far half
+  for (const [r1, r2, c, a] of [
+    [1.06, 1.25, "#ffffff", 0.8],
+    [1.25, 1.55, "#d8e8ff", 0.55],
+    [1.55, 1.9, "#8ab0ff", 0.3],
+  ]         ) // ...its light bent up and over the top of the hole
+    ringBand(cx, cy, Rd * r1, Rd * r2, 1, Math.PI * 1.02, Math.PI * 1.98, C2(c, a), 32);
+  ringBand(cx, cy, Rd * 1.04, Rd * 1.16, 1, Math.PI * 0.06, Math.PI * 0.94, C2("#c8dcff", 0.35), 24);
+  R.setAdd(false);
+  disc(cx, cy, Rd, withA(col("#000000"), fade)); // THE EDGE: the event horizon - nothing ever comes back
+  R.setAdd(true);
+  arc(cx, cy, Rd * 1.02, 0, 6.283, Math.max(1, Rd * 0.035), C2("#ffffff", 0.9), 56); // the photon ring
+  discHalf(true); // the near half, in front
+  for (let i = 0; i < 60; i++) {
+    const u = (i / 60) * 6.283 + t * (0.9 - (i % 3) * 0.2),
+      rr = Rd * (1.3 + hash(i) * 2.6),
+      x = cx + Math.cos(u) * rr * (rx / Rd),
+      y = cy + Math.sin(u) * rr * (ry / Rd);
+    glow(x, y, Rd * 0.14, C2("#f0f6ff", 0.13 * (0.4 + 0.6 * Math.cos(u)))); // (hot clumps - brighter coming towards us)
+  }
+  R.setAdd(false);
+  // 3. THE SCALE: our Solar System, out to Neptune's orbit, floated in front of the black edge - a speck
+  const sc = seg(0.55, 0.6) * (1 - seg(0.68, 0.71));
+  if (sc > 0) {
+    const sx = cx - Rd * 0.35,
+      sy = cy - Rd * 0.25,
+      rN = Math.max(1.4, Rd / 35), // (the edge is over 1,000 times the Earth-Sun distance; Neptune is 30)
+      a = sc * fade;
+    R.setAdd(true);
+    glow(sx, sy, rN * 3, withA(col("#ffd24d"), 0.6 * a));
+    R.setAdd(false);
+    arc(sx, sy, rN, 0, 6.283, 0.8, withA(col("#9fe0ff"), a), 16);
+    disc(sx, sy, Math.max(0.8, rN * 0.15), withA(col("#ffe08a"), a));
+    // a pointer and its label
+    const lx = cx - Rd * 0.25,
+      ly = cy + Rd * 0.55;
+    line(sx + rN, sy + rN, lx, ly - 4, 1, withA(col("#ffd24d"), a));
+    pixText("OUR SOLAR SYSTEM", lx, ly + 2, Math.max(1.6, Rd * 0.024), withA(col("#ffd24d"), a));
+    // and the dashed outline of the edge itself, so you can see how big it is
+    for (let i = 0; i < 40; i += 2)
+      arc(
+        cx,
+        cy,
+        Rd * 0.985,
+        (i / 40) * 6.283,
+        ((i + 1) / 40) * 6.283,
+        1.2,
+        withA(col("#ff6a6a"), 0.7 * a),
+        3
+      );
+  }
+  // 4. A STAR WANDERS TOO CLOSE: stretched into a stream (spaghettified) and spiralling into the disc - then a flash
+  const st = seg(0.7, 0.86);
+  if (st > 0 && st < 1) {
+    const an = 0.5 - st * 4.6, // (coming in from the lower right, round behind and into the disc)
+      dd = Rd * lerpA(5.2, 1.2, ease(st)),
+      ex = 1.35,
+      ey = 0.42,
+      x = cx + Math.cos(an) * dd * ex,
+      y = cy + Math.sin(an) * dd * ey,
+      sr = Rd * 0.22 * (1 - st * 0.7);
+    R.setAdd(true);
+    for (let n = 1; n <= 24; n++) {
+      const u = n / 24,
+        ba = an + u * 1.6 * Math.min(1, st * 2),
+        bd = dd * (1 + u * 0.4);
+      glow(
+        cx + Math.cos(ba) * bd * ex,
+        cy + Math.sin(ba) * bd * ey,
+        sr * (1 - u * 0.7),
+        C2("#ffd890", 0.45 * (1 - u) * Math.min(1, st * 3))
+      );
+    } // (its torn-off tail)
+    glow(x, y, sr * 2.6, C2("#ffe8a0", 0.5));
+    R.setAdd(false);
+    disc(x, y, sr, C2("#fff4c0", 1));
+  }
+  if (f > 0.855 && f < 0.88) showSfx("boom", "ton-star");
+  const flash = Math.max(0, 1 - Math.abs(f - 0.865) / 0.025);
+  if (flash > 0) {
+    R.setAdd(true);
+    glow(cx, cy, Rd * 6, C2("#ffffff", 0.6 * flash));
+    rect(L, T, w, h, C2("#dfe8ff", 0.25 * flash));
+    R.setAdd(false);
+  }
+}
+// =====================================================================================
 //  EASY TO PICK UP, HARD TO MASTER (v2026.10.04ag)
 //
 //  THE COACH - for a brand-new player, on the first few levels: a bouncing arrow and a few words, right where the action
@@ -56633,12 +56881,13 @@ function demoShowPlan(n)             {
     { kind: "space", len: 5 },
     // ALL the sky's great events, every show (starting from a different one each time): a total eclipse, a supernova,
     // a sunrise over a planet, a pulsar, a black hole, a red dwarf, a neutron star being born
-    ...[0, 1, 2, 3, 4, 5, 6].flatMap((i) => {
-      const what = ["eclipse", "supernova", "sunrise", "pulsar", "blackhole", "reddwarf", "nstar"][
-        (n + i) % 7
+    // (v1.4.14: and TON 618, the scariest black hole of them all)
+    ...[0, 1, 2, 3, 4, 5, 6, 7].flatMap((i) => {
+      const what = ["eclipse", "supernova", "sunrise", "pulsar", "blackhole", "ton618", "reddwarf", "nstar"][
+        (n + i) % 8
       ];
       return [
-        { kind: "fly", what, len: what === "nstar" ? 34 : 28 },
+        { kind: "fly", what, len: what === "nstar" ? 34 : what === "ton618" ? 40 : 28 },
         { kind: "space", len: 5 },
       ];
     }),
@@ -57650,7 +57899,7 @@ function drawEggs(g, s) {
 // THE VERSION (from v1.2.0, 5 October 2026): MAJOR.MINOR.PATCH - a new MINOR for a batch of new things, a new PATCH for
 // fixes and small touches - with the day it was made next to it. (Before this the versions were named after the date,
 // like v2026.10.05c.)
-const GAME_VERSION = "v1.4.13",
+const GAME_VERSION = "v1.4.14",
   GAME_DATE = "06.10.2026",
   VERSION_TEXT = GAME_VERSION + "  ·  " + GAME_DATE;
 const FB = '"Chakra Petch", "Segoe UI", sans-serif';
@@ -59090,7 +59339,10 @@ function audio() {
   if (MY.mode === "mine") playMine();
   return AC;
 }
-function tone(type, f0, f1, dur, vol, bus = fxBus, when = AC.currentTime, attack = 0.004, detune = 0) {
+// (v1.4.14) NO CLICKS: a sound asked for "now" starts 10 ms ahead - by the time the sound card gets it, "now" has
+// already gone by, and a sound started in the past jumps in mid-way through its soft fade-in (a click, a crackle)
+const SOON = 0.01;
+function tone(type, f0, f1, dur, vol, bus = fxBus, when = AC.currentTime + SOON, attack = 0.004, detune = 0) {
   const o = AC.createOscillator(),
     gn = AC.createGain();
   o.type = type;
@@ -59105,7 +59357,7 @@ function tone(type, f0, f1, dur, vol, bus = fxBus, when = AC.currentTime, attack
   o.start(when);
   o.stop(when + dur + 0.03);
 }
-function noise(dur, vol, f0, f1, bus = fxBus, when = AC.currentTime, type = "lowpass") {
+function noise(dur, vol, f0, f1, bus = fxBus, when = AC.currentTime + SOON, type = "lowpass") {
   const s = AC.createBufferSource(),
     fl = AC.createBiquadFilter(),
     gn = AC.createGain();
@@ -59170,7 +59422,7 @@ function glass(out, when, vol = 0.06, base = 2600) {
 }
 function sfx(name, x , kind ) {
   if (!AC || AC.state !== "running" || (G.state === "menu" && name !== "click" && !SHOW_SFX.on)) return;
-  const now = AC.currentTime,
+  const now = AC.currentTime + SOON,
     out = fxOut(x),
     R2 = Math.random;
   switch (name) {
@@ -62103,8 +62355,8 @@ function drum(kind, t, bus, accent = 1) {
     noise(0.08, 0.15, 2500, 1500, bus, t + 0.012, "bandpass");
   } else if (kind === "z") noise(0.05, 0.03, 7000, 5000, bus, t, "bandpass");
 }
-// DANGER MUSIC (v2026.10.04ap): when a customer gets close to your end of the bar, the band plays a touch faster and a
-// tension layer comes in - a ticking hi-hat and a low pulse - and it all relaxes again once the danger is past
+// DANGER MUSIC (v2026.10.04ap): when a customer gets close to your end of the bar, the band brings in a
+// tension layer (never faster) - a ticking hi-hat and a low pulse - and it all relaxes again once the danger is past
 const DNG = { v: 0 };
 function dangerUpdate(dt) {
   let want = 0;
@@ -62127,8 +62379,8 @@ function tensionStep(t, s, st) {
 }
 // (v1.4.7) MUSIC THAT PLAYS ALONG: the band feels how you're doing -
 //   - HEAT: the Shake Fever meter filling up (a run of serves without a slip) brings in more of the band: a shaker,
-//     then a harmony voice on the tune, then the chip sparkle and open hi-hats - and in Shake Fever, the lot, a touch faster;
-//   - BOSS: while a world's boss is in the pub, heavier drums - a kick on every beat, tom rolls, stabs - and a touch faster;
+//     then a harmony voice on the tune, then the chip sparkle and open hi-hats - and in Shake Fever, the lot (at the same tempo);
+//   - BOSS: while a world's boss is in the pub, heavier drums - a kick on every beat, tom rolls, stabs (at the same tempo);
 //   - LOSING A LIFE: the music drops - muffled, as if under water - and opens back up as play starts again.
 const MUSX = { heat: 0, boss: false, lp: -1 };
 function musxUpdate(dt) {
@@ -62531,9 +62783,9 @@ function playStep2(tr, t0) {
     for (const k of [1, 2.4, 3]) ping(mf(72 + pc) * k, 2.2, 0.03 / k, B2, t);
 }
 function advance2(tr) {
-  const hurry =
-    (1 + 0.12 * DNG.v + (MUSX.boss ? 0.04 : 0) + (G.fever > 0 && G.state === "play" ? 0.04 : 0)) *
-    (G.free && G.state === "play" && !G.demo ? 0.92 : 1); // (relax mode: the band plays a little slower and softer) // (danger, a boss, Shake Fever: a little faster)
+  // (v1.4.14: the band NEVER speeds up any more - not near the end of a level, not in danger, not for a boss or Shake
+  //  Fever; those still bring in their extra layers, at the same steady tempo. Relax mode: a little slower and softer)
+  const hurry = G.free && G.state === "play" && !G.demo ? 0.92 : 1;
   if (tr.folk) {
     SEQ2.next += 60 / tr.bpm / 4 / hurry; // (folk tunes step in sixteenths)
     SEQ2.step = (SEQ2.step + 1) % tr.len;
@@ -62672,17 +62924,22 @@ function schedule() {
   }
   const play = curTrack; // (while a change is fading, the old tune plays on)
   if (play < 0) return;
+  // (v1.4.14) NO CRACKLE WHEN THE SCREEN IS BUSY: the band is booked further ahead (0.3 s), so a slow frame can't make
+  // it late - and a note that would still be late is quietly skipped (keeping the beat) instead of being started in
+  // the past, where it would jump in half-way through and crackle
+  const AHEAD = 0.3,
+    LATE = now + 0.008;
   if (play === 0) {
     if (mus.next < now - 0.25) mus.next = now + 0.05;
-    while (mus.next < now + 0.15) {
-      playStep(mus.next);
+    while (mus.next < now + AHEAD) {
+      if (mus.next >= LATE) playStep(mus.next);
       advance();
     }
   } else {
     const tr = TRACKS[play];
     if (SEQ2.next < now - 0.25) SEQ2.next = now + 0.05;
-    while (SEQ2.next < now + 0.15) {
-      playStep2(tr, SEQ2.next);
+    while (SEQ2.next < now + AHEAD) {
+      if (SEQ2.next >= LATE) playStep2(tr, SEQ2.next);
       advance2(tr);
     }
   }
@@ -63884,6 +64141,19 @@ profWire();
 //  the game, and where the motion capture, the folk songs and the fonts come from. Both from the menu at any time.
 // =====================================================================================
 const NEWS = [
+  {
+    ver: "v1.4.14",
+    title: "TON 618 - THE SCARIEST BLACK HOLE",
+    items: [
+      "A NEW EVENT IN THE FULL-SCREEN SHOW",
+      "A QUASAR: 40 BILLION SUNS' WORTH OF BLACK HOLE",
+      "OUR SOLAR SYSTEM, A SPECK AT ITS EDGE",
+      "A STAR TORN APART",
+      "NO MORE BIG PLANET IN THE CORNER OF THE SHOW",
+      "THE MUSIC KEEPS A STEADY TEMPO - NO SPEEDING UP",
+      "NO MORE SHORT CRACKLES IN THE SOUND",
+    ],
+  },
   {
     ver: "v1.4.13",
     title: "THE FURMANKA & MORE DETAIL",

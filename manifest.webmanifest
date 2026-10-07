@@ -1,6 +1,6 @@
 {
-  "name": "Space Pub",
-  "short_name": "Space Pub",
+  "name": "Astro Café: Space Shake Tapper",
+  "short_name": "Astro Café",
   "description": "A space milkshake bar arcade game: pour, slide, catch the empties - for kids and grown-ups.",
   "start_url": "./",
   "scope": "./",

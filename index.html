@@ -43602,6 +43602,8 @@ const CW
                
                
                  
+              
+                  
   = {
   phase: "island",
   t: 0,
@@ -43636,13 +43638,15 @@ const CW
 };
 // Koos's little stories on the island, one after another (with the words that go with them)
 const CW_ACTS                             = [
-  ["wake", 7, "KOOS VAN SCHOOR WAKES UP ON A DESERT ISLAND... AGAIN"],
-  ["fish", 9, "GONE FISHING. SOMETHING'S BITING!"],
+  ["wake", 8, "KOOS VAN SCHOOR WAKES UP ON A DESERT ISLAND... AGAIN"],
+  ["spyglass", 9, "THE SPYGLASS: A SHIP? A SAIL? ...JUST A CLOUD"],
+  ["fish", 11, "GONE FISHING. SOMETHING'S BITING!"],
   ["castle", 9, "A SANDCASTLE - THE FINEST ON THE ISLAND"],
   ["klaas", 8, "A CHAT WITH KLAAS THE COCONUT. KLAAS SAYS NOTHING, AS USUAL"],
   ["gull", 8, "LUNCH TIME... HEY! THAT WAS MY SANDWICH!"],
   ["bottle", 9, 'A MESSAGE IN A BOTTLE! IT SAYS: "WISH YOU WERE HERE"'],
   ["crab", 7, "OUCH! A CRAB PINCHES HIS TOE"],
+  ["relax", 12, "PINA COLADA TIME - DESERT ISLAND LIFE ISN'T ALL BAD"],
   ["hammock", 11, "A NAP IN THE HAMMOCK - THE SHIPS GO BY WITHOUT A CLUE"],
 ];
 const CW_WEATHER = [
@@ -43677,10 +43681,15 @@ function cwBox() {
     w,
     h,
     k,
-    hz: T + h * (tall ? 0.52 : 0.46),
-    iy: T + h * (tall ? 0.78 : 0.82),
+    hz: T + h * (tall ? 0.5 : 0.44),
+    // (v1.4.11) the island further out, small in a wide sea - all alone out there
+    iy: T + h * (tall ? 0.68 : 0.7),
     cx: L + w * 0.5,
-    rw: Math.min(w * (tall ? 0.44 : 0.36), 400 * k),
+    rw: Math.min(w * (tall ? 0.34 : 0.2), 230 * k),
+    ks: k * (tall ? 0.95 : 0.85), // (the island's own scale)
+    palmTop: null                   ,
+    hammock: null                   ,
+    rodTip: null                   ,
   };
 }
 function startCastaway() {
@@ -43750,6 +43759,8 @@ const cwStorm = () => CW.phase === "play" && (CW.level - 1) % 4 === 1;
 function castawayUpdate(dt) {
   const b = cwBox();
   CW.t += dt;
+  CW.kv = dt > 0 ? (CW.kx - (CW.kxLast ?? CW.kx)) / dt : 0; // (how fast Koos is walking - for his legs)
+  CW.kxLast = CW.kx;
   CW.msgT = Math.max(0, CW.msgT - dt);
   CW.hurt = Math.max(0, CW.hurt - dt);
   CW.cool = Math.max(0, CW.cool - dt);
@@ -43792,12 +43803,12 @@ function castawayUpdate(dt) {
         ? "pirate"
         : CW_SHIPS[Math.floor(Math.random() * CW_SHIPS.length)];
     const dir = Math.random() < 0.5 ? 1 : -1,
-      depth = 0.55 + Math.random() * 0.5;
+      depth = kind === "pirate" ? 0.62 : 0.3 + Math.random() * 0.3; // (far out on the horizon - the island is so alone)
     CW.ships.push({
       kind,
       dir,
       x: dir > 0 ? b.L - 200 * b.k : b.Rr + 200 * b.k,
-      y: b.hz + (4 + depth * 26) * b.k,
+      y: b.hz + (3 + depth * 24) * b.k,
       s: depth * b.k,
       spd: (kind === "sub" ? 28 : kind === "yacht" ? 60 : 38) * b.k * (0.8 + Math.random() * 0.4),
       t: 0,
@@ -43824,7 +43835,7 @@ function castawayUpdate(dt) {
   if (CW.heli >= 0) return cwHeliUpdate(dt, b);
   if (fire && CW.cool <= 0) {
     CW.cool = 0.17;
-    CW.shots.push({ x0: CW.kx, y0: b.iy - 40 * b.k, x: CW.aimX, y: CW.aimY, t: 0, len: 0.2 });
+    CW.shots.push({ x0: CW.kx, y0: b.iy - 80 * b.ks, x: CW.aimX, y: CW.aimY, t: 0, len: 0.2 });
     sfx("throw");
   }
   if (flareEdge && CW.flareCool <= 0) cwFlare(b);
@@ -43889,6 +43900,8 @@ function cwIslandUpdate(dt, b, fireEdge) {
   // Koos strolls to where each little story happens
   const spot = {
     wake: 0,
+    spyglass: 0.4,
+    relax: 0.18,
     fish: 0.55,
     castle: -0.25,
     klaas: -0.42,
@@ -43929,6 +43942,30 @@ function cwLifeUpdate(dt, b) {
   if (Math.random() < dt * 0.08 && !CW.life.some((l) => l.kind === "dolphins"))
     CW.life.push({ kind: "dolphins", x: b.L + b.w * (0.1 + Math.random() * 0.6), t: 0, len: 6, dir: 1 });
   if (!CW.life.some((l) => l.kind === "shark")) CW.life.push({ kind: "shark", t: 0, len: 1e9 });
+  // (v1.4.11) orcas leaping, an octopus far out waving its arms - and, while Koos sleeps, DIVERS pop up to have a look
+  if (Math.random() < dt * 0.06 && !CW.life.some((l) => l.kind === "orca"))
+    CW.life.push({
+      kind: "orca",
+      x: b.L + b.w * (0.1 + Math.random() * 0.8),
+      t: 0,
+      len: 7,
+      dir: Math.random() < 0.5 ? 1 : -1,
+    });
+  if (Math.random() < dt * 0.04 && !CW.life.some((l) => l.kind === "octopus"))
+    CW.life.push({ kind: "octopus", x: b.L + b.w * (0.08 + Math.random() * 0.84), t: 0, len: 12 });
+  const nowAct = CW_ACTS[CW.act % CW_ACTS.length][0],
+    asleep = CW.phase === "island" && (nowAct === "hammock" || (nowAct === "wake" && CW.actT < 3.5));
+  if (asleep && Math.random() < dt * 0.5 && CW.life.filter((l) => l.kind === "diver").length < 2) {
+    const side = Math.random() < 0.5 ? -1 : 1;
+    CW.life.push({
+      kind: "diver",
+      x: b.cx + side * b.rw * (1.25 + Math.random() * 0.5),
+      t: 0,
+      len: 6.5,
+      side,
+      peek: 1.6 + Math.random() * 1.5,
+    });
+  }
   if (Math.random() < dt * 0.15 && CW.life.filter((l) => l.kind === "bird").length < 3)
     CW.life.push({
       kind: "bird",
@@ -44194,9 +44231,11 @@ window.addEventListener("contextmenu", (e) => {
   }
 });
 // ---------------------------------------------------------------- drawing
+// (v1.4.11: all of it redone - a deeper, lonelier sea, a starry night with the Milky Way, finer ships, more sea life,
+//  and Koos himself with proper walking legs, a big bushy beard, a spyglass and a fishing rod)
 function drawCastaway(t) {
   const b = cwBox(),
-    { L, Rr, T, B, w, h, k, hz, iy, cx, rw } = b,
+    { L, Rr, T, B, w, h, k, hz } = b,
     tod = CW.tod,
     night = cwNight(),
     dusk = Math.max(0, 1 - Math.abs(tod - 0.5) / 0.08) + Math.max(0, 1 - Math.abs(tod - 0.97) / 0.06),
@@ -44207,194 +44246,195 @@ function drawCastaway(t) {
         : tod > 0.95
           ? 1 - (tod - 0.95) / 0.05
           : 0;
-  // the sky
-  const day1 = col("#5ab0f0"),
-    day2 = col("#bfe6ff"),
-    n1 = col("#05081c"),
-    n2 = col("#1a2048"),
-    sun1 = col("#ff7a4a"),
-    sun2 = col("#ffd090");
   const mixc = (a, c2, f) => mix(a, c2, clamp(f, 0, 1));
-  let top = mixc(day1, n1, dark),
-    bot = mixc(day2, n2, dark);
-  top = mixc(top, col("#3a2a6a"), dusk * 0.6);
-  bot = mixc(bot, sun1, dusk * 0.8);
+  // ---- the sky ----
+  let top = mixc(col("#4aa0ea"), col("#02040f"), dark),
+    bot = mixc(col("#c4e8ff"), col("#121a40"), dark);
   if (cwStorm()) {
     top = mixc(top, col("#2a3040"), 0.7);
     bot = mixc(bot, col("#5a6070"), 0.7);
   }
   vgrad(L, T, w, hz - T + 2, top, bot);
-  // stars at night
-  if (dark > 0.05) {
-    for (let i = 0; i < 90; i++) {
-      const tw = 0.5 + 0.5 * Math.sin(t * 2 + i * 7.1);
-      rect(
-        L + hash(i * 3.7) * w,
-        T + hash(i * 1.9) * (hz - T) * 0.9,
-        1.4,
-        1.4,
-        withA(C.white, dark * (0.3 + 0.6 * tw))
-      );
+  // SUNSET AND SUNRISE: the sky burns - bands of violet, rose, flaming orange and gold down to the sea
+  if (dusk > 0.02 && !cwStorm()) {
+    const sh = hz - T,
+      bands = ["#2a1a5a", "#6a2a7a", "#c83a6a", "#ff5a3a", "#ff8a2a", "#ffc04a", "#ffe8a0"];
+    for (let i = 0; i < bands.length - 1; i++) {
+      const y0 = T + sh * (i / (bands.length - 1)) * 0.98,
+        y1 = T + sh * ((i + 1) / (bands.length - 1));
+      vgrad(L, y0, w, y1 - y0 + 1, withA(col(bands[i]), dusk * 0.85), withA(col(bands[i + 1]), dusk * 0.85));
     }
   }
+  if (dark > 0.05) cwNightSky(t, b, dark);
   // the sun (or the moon) sailing over
   {
     const day = tod < 0.55 || tod > 0.95,
       f = day ? ((tod + 0.05) % 1) / 0.6 : (tod - 0.55) / 0.4,
       sx = L + w * (0.1 + 0.8 * f),
-      sy = hz - Math.sin(f * Math.PI) * (hz - T) * 0.75;
+      sy = hz - Math.sin(f * Math.PI) * (hz - T) * 0.78;
     R.setAdd(true);
-    glow(sx, sy, 90 * k, withA(day ? sun2 : col("#c8d8ff"), 0.35));
-    R.setAdd(false);
-    disc(sx, sy, (day ? 22 : 16) * k, day ? mixc(col("#fff4c0"), sun1, dusk) : col("#eef0f8"));
-    if (!day) {
-      disc(sx - 4 * k, sy - 3 * k, 3.4 * k, col("#c8ccd8"));
-      disc(sx + 5 * k, sy + 4 * k, 2.6 * k, col("#c8ccd8"));
+    glow(sx, sy, 110 * k, withA(day ? col("#ffd890") : col("#c8d8ff"), day ? 0.35 : 0.25));
+    if (day && dusk > 0.05) {
+      // the low sun, huge and red-gold, its rays fanning out over the sky
+      glow(sx, sy, 260 * k, withA(col("#ff7a3a"), 0.35 * dusk));
+      for (let i = 0; i < 12; i++) {
+        const a = Math.PI + (i / 11) * Math.PI,
+          rl = (220 + 60 * Math.sin(t * 0.3 + i)) * k;
+        quad4(
+          sx,
+          sy,
+          sx,
+          sy,
+          sx + Math.cos(a - 0.04) * rl,
+          sy + Math.sin(a - 0.04) * rl,
+          sx + Math.cos(a + 0.04) * rl,
+          sy + Math.sin(a + 0.04) * rl,
+          withA(col("#ffd8a0"), 0.12 * dusk),
+          withA(col("#ffd8a0"), 0.12 * dusk),
+          withA(col("#ffd8a0"), 0),
+          withA(col("#ffd8a0"), 0)
+        );
+      }
     }
+    R.setAdd(false);
+    disc(
+      sx,
+      sy,
+      (day ? 22 + dusk * 14 : 15) * k,
+      day ? mixc(col("#fff4c0"), col("#ff6a3a"), dusk) : col("#eef0f8"),
+      (day ? 22 + dusk * 14 : 15) * k * (1 - dusk * 0.12)
+    );
+    if (!day)
+      for (const [dx, dy, r] of [
+        [-4, -3, 3.4],
+        [5, 4, 2.6],
+        [2, -6, 1.6],
+      ])
+        disc(sx + dx * k, sy + dy * k, r * k, col("#c8ccd8"));
+    // the moon's (or sun's) path on the sea
+    R.setAdd(true);
+    for (let i = 0; i < 14; i++) {
+      const yy = hz + 4 * k + i * i * 1.2 * k,
+        ww = (6 + i * 3) * k * (0.6 + 0.4 * Math.sin(t * 2 + i));
+      if (yy < B)
+        rect(
+          sx - ww / 2 + Math.sin(t + i) * 4 * k,
+          yy,
+          ww,
+          1.6 * k,
+          withA(day ? col("#fff0c0") : col("#dce8ff"), 0.22 * (1 - i / 14))
+        );
+    }
+    R.setAdd(false);
   }
-  // clouds
-  for (let i = 0; i < 5; i++) {
-    const cxx = L + ((hash(i * 4.1) * w + t * (6 + i * 2) * k) % (w + 200)) - 100,
-      cyy = T + h * (0.08 + hash(i * 2.3) * 0.2),
-      cc = withA(mixc(col("#ffffff"), col("#4a4e6a"), dark * 0.8 + (cwStorm() ? 0.5 : 0)), 0.75);
-    for (let j = 0; j < 4; j++)
-      disc(
-        cxx + j * 16 * k,
-        cyy + Math.sin(j * 2) * 3 * k,
-        (12 + hash(i + j) * 8) * k,
-        cc,
-        (7 + hash(j) * 4) * k
-      );
+  // clouds, drifting
+  for (let i = 0; i < 6; i++) {
+    const cxx = L + ((hash(i * 4.1) * w + t * (5 + i * 2) * k) % (w + 240)) - 120,
+      cyy = T + h * (0.06 + hash(i * 2.3) * 0.18),
+      cc = withA(
+        mixc(
+          mixc(col("#ffffff"), col("#ff9a7a"), dusk * 0.8),
+          col("#3a3e5a"),
+          dark * 0.8 + (cwStorm() ? 0.5 : 0)
+        ),
+        dark > 0.5 ? 0.45 : 0.85
+      ),
+      lit = withA(col("#ffd070"), 0.8 * dusk); // (at sunset the clouds glow gold underneath)
+    for (let j = 0; j < 5; j++) {
+      const ccx = cxx + j * 15 * k,
+        ccy = cyy + Math.sin(j * 2 + i) * 3 * k - (j === 2 ? 4 * k : 0),
+        cr = (11 + hash(i + j) * 9) * k;
+      disc(ccx, ccy, cr, cc, (6 + hash(j + i) * 4) * k);
+      if (dusk > 0.05) disc(ccx, ccy + 3 * k, cr * 0.9, lit, 2 * k);
+    }
   }
   // birds far off
   for (const l of CW.life)
     if (l.kind === "bird") {
       const fl = Math.sin(l.t * 8) * 4 * k;
-      polyline([l.x - 6 * k, l.y - fl, l.x, l.y, l.x + 6 * k, l.y - fl], 1.4 * k, withA(col("#2a2a34"), 0.8));
+      polyline(
+        [l.x - 6 * k, l.y - fl, l.x, l.y, l.x + 6 * k, l.y - fl],
+        1.4 * k,
+        withA(col(dark > 0.5 ? "#8a90a8" : "#2a2a34"), 0.8)
+      );
     }
-  // the sea
-  const sea1 = mixc(mixc(col("#2a8ac8"), col("#0a1838"), dark), col("#c86a5a"), dusk * 0.3),
-    sea2 = mixc(col("#0a4a80"), col("#040a1c"), dark);
+  // ---- the sea: deep, wide and empty, the swell rolling in towards you ----
+  const sea1 = mixc(mixc(col("#3a96d0"), col("#0a1838"), dark), col("#ff9a6a"), dusk * 0.45),
+    sea2 = mixc(mixc(col("#063a6e"), col("#02060f"), dark), col("#3a1a4a"), dusk * 0.4);
   vgrad(L, hz, w, B - hz, sea1, sea2);
-  rect(L, hz, w, 1.5 * k, withA(C.white, 0.35));
-  // the glitter path under the sun / moon, and the swell
-  for (let i = 0; i < 26; i++) {
-    const yy = hz + 6 * k + (i * (B - hz)) / 26,
-      amp = (cwStorm() ? 9 : 4) * k * (0.4 + i / 26);
-    const pts = [];
-    for (let x = L; x <= Rr + 20; x += 40) pts.push(x, yy + Math.sin(x * 0.02 + t * 1.4 + i) * amp * 0.3);
-    polyline(pts, 1 + i * 0.05, withA(col("#ffffff"), 0.05 + 0.04 * Math.sin(t + i)));
+  if (dusk > 0.02) {
+    // the sea on fire with the sunset: gold and rose near the horizon, fading into the deep
+    vgrad(L, hz, w, (B - hz) * 0.45, withA(col("#ffa050"), 0.6 * dusk), withA(col("#c84a6a"), 0));
   }
-  // the ships far out (behind the island)
+  rect(L, hz, w, 1.2 * k, withA(C.white, 0.3));
+  for (let i = 0; i < 34; i++) {
+    const f = i / 34,
+      yy = hz + 3 * k + f * f * (B - hz),
+      amp = (cwStorm() ? 9 : 4) * k * (0.2 + f * 1.4),
+      step2 = 30 + f * 60;
+    const pts = [];
+    for (let x = L - 20; x <= Rr + 40; x += step2)
+      pts.push(x, yy + Math.sin(x * (0.03 - f * 0.02) + t * (1 + f) + i * 1.7) * amp * 0.35);
+    polyline(
+      pts,
+      0.8 + f * 2,
+      withA(col("#ffffff"), (0.03 + 0.06 * f) * (0.6 + 0.4 * Math.sin(t * 0.7 + i)))
+    );
+  }
+  // ---- far out: the ships and the sea life ----
   for (const s of CW.ships) cwDrawShip(s, t, dark, b);
-  // the sea life
-  cwDrawLife(t, b, dark);
+  cwDrawLife(t, b, dark, false);
   // fireworks over the party yacht at night
   if (dark > 0.5)
     for (const s of CW.ships)
       if (s.kind === "yacht") {
-        const f = (t * 0.6 + s.x * 0.001) % 1,
-          fx = s.x + Math.sin(Math.floor(t * 0.6) * 3) * 30 * s.s,
-          fy = s.y - (60 + f * 40) * s.s;
-        R.setAdd(true);
-        if (f > 0.4)
-          for (let i = 0; i < 12; i++) {
-            const a = (i / 12) * 6.283,
-              rr = (f - 0.4) * 60 * s.s;
-            disc(
-              fx + Math.cos(a) * rr,
-              fy + Math.sin(a) * rr,
-              1.6 * k,
-              withA(col(["#ff5fa8", "#ffd24d", "#5ff5c8"][i % 3]), 1 - f)
-            );
-          }
-        R.setAdd(false);
+        for (let n = 0; n < 2; n++) {
+          const f = (t * 0.5 + n * 0.5 + s.x * 0.001) % 1,
+            fx = s.x + Math.sin(Math.floor(t * 0.5 + n * 0.5) * 3 + n) * 40 * s.s,
+            fy = s.y - (70 + f * 50) * s.s;
+          R.setAdd(true);
+          if (f < 0.35) disc(fx, s.y - f * 300 * s.s, 1.4 * k, withA(col("#fff0c0"), 0.9));
+          else
+            for (let i = 0; i < 16; i++) {
+              const a = (i / 16) * 6.283,
+                rr = (f - 0.35) * 70 * s.s;
+              disc(
+                fx + Math.cos(a) * rr,
+                fy + Math.sin(a) * rr + (f - 0.35) * 20 * s.s,
+                1.5 * k,
+                withA(col(["#ff5fa8", "#ffd24d", "#5ff5c8", "#9fb0ff"][(i + n) % 4]), 1 - f)
+              );
+            }
+          R.setAdd(false);
+        }
       }
-  // THE ISLAND: a hump of sand in the swell, a palm tree, a hammock, Klaas the coconut, the SOS in the sand
-  const rise = Math.sin(t * 0.8) * 1.5 * k;
-  disc(cx, iy + 18 * k + rise, rw * 1.18, withA(col("#7ad0e8"), 0.35), 22 * k); // (the shallows)
-  disc(cx, iy + 10 * k, rw, mixc(col("#f0d898"), col("#3a3424"), dark * 0.8), 26 * k);
-  disc(cx - rw * 0.2, iy + 2 * k, rw * 0.7, mixc(col("#f8e4b0"), col("#4a4230"), dark * 0.8), 16 * k);
-  for (let i = 0; i < 7; i++)
-    disc(
-      cx - rw * 0.8 + i * rw * 0.27,
-      iy + 24 * k + Math.sin(t * 2 + i) * 2 * k,
-      14 * k,
-      withA(C.white, 0.35),
-      3 * k
-    ); // foam
-  // "SOS" scratched in the sand
-  pixText("SOS", cx + rw * 0.35, iy + 14 * k, 1.6 * k, withA(col("#8a6a3a"), 0.8 - dark * 0.4));
-  // the palm tree
-  {
-    const px = cx - rw * 0.55,
-      sway = Math.sin(t * 0.9) * (cwStorm() ? 0.12 : 0.04);
-    const pts = [];
-    for (let i = 0; i <= 8; i++)
-      pts.push(px + Math.sin((i / 8) * 1.4) * 22 * k + sway * i * 6 * k, iy - i * 15 * k);
-    polyline(pts, 7 * k, mixc(col("#8a5a2a"), col("#2a1a10"), dark * 0.7));
-    for (let i = 1; i < 8; i++)
-      line(
-        pts[i * 2] - 3.5 * k,
-        pts[i * 2 + 1],
-        pts[i * 2] + 3.5 * k,
-        pts[i * 2 + 1] + 2 * k,
-        1 * k,
-        withA(col("#5a3a1a"), 0.7)
-      );
-    const tx = pts[16],
-      ty = pts[17];
-    for (let i = 0; i < 7; i++) {
-      const a = -Math.PI + (i / 6) * Math.PI + Math.sin(t * 1.3 + i) * 0.06 + sway,
-        lp = [];
-      for (let j = 0; j <= 5; j++)
-        lp.push(tx + Math.cos(a) * j * 13 * k, ty + Math.sin(a) * j * 9 * k + j * j * 1.8 * k);
-      polyline(lp, 5 * k, mixc(col("#3a9a3a"), col("#0a2a14"), dark * 0.7));
-    }
-    for (let i = 0; i < 3; i++) disc(tx - 4 * k + i * 5 * k, ty + 6 * k, 4 * k, col("#6a4a22")); // coconuts
-    // the hammock, from the palm to a driftwood post
-    const hx2 = cx - rw * 0.15;
-    line(hx2, iy, hx2, iy - 34 * k, 3 * k, col("#8a6a4a"));
-    const hpts = [];
-    for (let i = 0; i <= 10; i++) {
-      const u = i / 10;
-      hpts.push(lerpA(px + 10 * k, hx2, u), iy - 34 * k + Math.sin(u * Math.PI) * 14 * k);
-    }
-    polyline(hpts, 4 * k, col("#e8d0a0"));
-    // Klaas the coconut, with a drawn-on face
-    const kx2 = cx - rw * 0.48,
-      ky2 = iy - 2 * k;
-    disc(kx2, ky2, 6 * k, col("#6a4a22"));
-    disc(kx2 - 2 * k, ky2 - 1.5 * k, 0.9 * k, col("#f4f0e8"));
-    disc(kx2 + 2 * k, ky2 - 1.5 * k, 0.9 * k, col("#f4f0e8"));
-    arc(kx2, ky2 + 1 * k, 2.5 * k, 0.3, Math.PI - 0.3, 0.8 * k, col("#f4f0e8"), 6);
-  }
-  // the island's own story props
+  // ---- THE ISLAND ----
+  cwDrawIsland(t, b, dark);
   if (CW.phase === "island") cwDrawProps(t, b, dark);
-  // KOOS
   cwDrawKoos(t, b, dark);
-  // the threats
+  cwDrawLife(t, b, dark, true); // (the divers and the shark, nearer than the island's far side)
+  // the threats, the coconuts in flight, the effects
   for (const f of CW.foes) cwDrawFoe(f, t, b);
-  // the coconuts in flight
   for (const sh of CW.shots) {
     const u = sh.t / sh.len,
       x = lerpA(sh.x0, sh.x, u),
       y = lerpA(sh.y0, sh.y, u) - Math.sin(u * Math.PI) * 30 * k;
     disc(x, y, 4 * k * (1 - u * 0.5), col("#6a4a22"));
+    disc(x - 1 * k, y - 1 * k, 1.4 * k, col("#a8804a"));
   }
-  // effects
   for (const e of CW.fx) cwDrawFx(e, t, b);
-  // the rescue helicopter
   if (CW.heli >= 0) cwDrawHeli(t, b);
   // the storm: rain and lightning
   if (cwStorm()) {
-    for (let i = 0; i < 120; i++) {
+    for (let i = 0; i < 140; i++) {
       const x = L + ((hash(i * 2.1) * w + t * 300) % w),
         y = T + ((hash(i * 3.3) * h + t * 700 + i * 13) % h);
       line(x, y, x - 4 * k, y + 14 * k, 1, withA(col("#c8d8f0"), 0.35));
     }
-    if (t % 7 < 0.15) rect(L, T, w, h, withA(C.white, 0.35 * (1 - (t % 7) / 0.15)));
+    if (t % 7 < 0.15 && !COMFORT.calm) rect(L, T, w, h, withA(C.white, 0.3 * (1 - (t % 7) / 0.15)));
   }
+  // a soft vignette - the edges of the world
+  vgrad(L, B - h * 0.18, w, h * 0.18, withA(C.black, 0), withA(C.black, 0.35));
   // the aim (in the game)
   if (CW.phase === "play" && CW.heli < 0) {
     const ax = CW.aimX,
@@ -44407,161 +44447,539 @@ function drawCastaway(t) {
     line(ax, ay + 6 * k, ax, ay + 18 * k, 1.6 * k, cc);
   }
 }
+// THE NIGHT SKY: thousands of stars, twinkling, the MILKY WAY arching across as a glowing band with its dark dust lane,
+// and now and then a shooting star
+function cwNightSky(t, b, dark) {
+  const { L, T, w, hz, k } = b,
+    sh = hz - T;
+  R.setAdd(true);
+  // the Milky Way: a soft band of light from low on the left up over to the right
+  const band = (u) => [L + u * w, T + sh * (0.85 - u * 0.75 + Math.sin(u * 3) * 0.06)];
+  for (let i = 0; i < 26; i++) {
+    const u = i / 25,
+      [x, y] = band(u);
+    glow(x, y, (60 + 30 * Math.sin(i * 1.7)) * k, withA(col(i % 3 ? "#9fb0e8" : "#d8c8f0"), 0.13 * dark));
+  }
+  for (let i = 0; i < 420; i++) {
+    const u = hash(i * 1.37),
+      [x, y] = band(u),
+      off = (hash(i * 2.71) - 0.5) * (40 + 30 * hash(i)) * k;
+    rect(x + off * 0.4, y + off, 1.1, 1.1, withA(C.white, (0.25 + 0.5 * hash(i * 5.1)) * dark));
+  }
+  R.setAdd(false);
+  for (let i = 0; i < 18; i++) {
+    const u = i / 17,
+      [x, y] = band(u);
+    disc(x + 8 * k, y + 4 * k, (14 + 8 * hash(i)) * k, withA(col("#02040f"), 0.22 * dark), 5 * k); // (the dark dust lane)
+  }
+  // the stars - lots of them, of every brightness, twinkling
+  for (let i = 0; i < 260; i++) {
+    const x = L + hash(i * 3.7) * w,
+      y = T + Math.pow(hash(i * 1.9), 1.3) * sh * 0.97,
+      big = hash(i * 9.1) > 0.93,
+      tw = 0.55 + 0.45 * Math.sin(t * (1.5 + hash(i) * 3) + i * 7.1);
+    rect(
+      x,
+      y,
+      big ? 2 : 1.2,
+      big ? 2 : 1.2,
+      withA(col(i % 7 ? "#ffffff" : i % 2 ? "#ffd8b0" : "#b8d0ff"), dark * (0.25 + 0.65 * tw))
+    );
+    if (big && tw > 0.8) {
+      R.setAdd(true);
+      line(x - 3 * k, y + 1, x + 4 * k, y + 1, 0.6, withA(C.white, 0.4 * dark));
+      line(x + 1, y - 3 * k, x + 1, y + 4 * k, 0.6, withA(C.white, 0.4 * dark));
+      R.setAdd(false);
+    }
+  }
+  // a shooting star now and then
+  const ph = (t % 11) / 11;
+  if (ph < 0.08) {
+    const q = ph / 0.08,
+      sx = L + w * (0.15 + hash(Math.floor(t / 11)) * 0.6) + q * 200 * k,
+      sy = T + sh * 0.15 + q * 90 * k;
+    R.setAdd(true);
+    line(sx - 70 * k, sy - 32 * k, sx, sy, 1.4, withA(C.white, 0.8 * (1 - q) * dark));
+    glow(sx, sy, 5 * k, withA(C.white, 0.9 * (1 - q) * dark));
+    R.setAdd(false);
+  }
+}
+// THE ISLAND: a little hump of sand alone in the sea - the shallows round it, foam, a tall palm, the hammock, Klaas
+function cwDrawIsland(t, b, dark) {
+  const { k, iy, cx, rw, ks } = b,
+    mixc = (a, c2, f) => mix(a, c2, clamp(f, 0, 1));
+  disc(cx, iy + 10 * ks, rw * 1.35, withA(mixc(col("#7ad8e8"), col("#1a3a5a"), dark), 0.4), 16 * ks); // (the shallows)
+  disc(cx, iy + 7 * ks, rw * 1.08, withA(mixc(col("#9ae8f0"), col("#2a4a6a"), dark), 0.45), 10 * ks);
+  disc(cx, iy + 5 * ks, rw, mixc(col("#e8cf8a"), col("#2e2a1e"), dark * 0.82), 16 * ks);
+  disc(cx - rw * 0.15, iy, rw * 0.78, mixc(col("#f8e4b0"), col("#3a3426"), dark * 0.82), 10 * ks);
+  for (let i = 0; i < 12; i++)
+    disc(
+      cx - rw * 0.7 + hash(i * 3.3) * rw * 1.4,
+      iy + 1 * ks + hash(i) * 6 * ks,
+      1.2 * ks,
+      withA(col("#c8a868"), 0.6)
+    ); // shells and pebbles
+  // the foam: a ring of surf breaking softly round it
+  for (let i = 0; i < 14; i++) {
+    const a = (i / 14) * 6.283 + t * 0.05,
+      fx = cx + Math.cos(a) * rw * 1.03,
+      fy = iy + 6 * ks + Math.sin(a) * 15 * ks,
+      fr = (5 + 3 * Math.sin(t * 1.8 + i)) * ks;
+    if (Math.sin(a) > -0.3) disc(fx, fy, fr, withA(C.white, 0.35 + 0.2 * Math.sin(t * 2 + i)), fr * 0.35);
+  }
+  // "SOS" in the sand, in pebbles
+  pixText("SOS", cx + rw * 0.42, iy + 6 * ks, 1.2 * ks, withA(col("#8a6a3a"), 0.85 - dark * 0.4));
+  // THE PALM TREE: tall, its trunk ringed, leaning, its fronds swaying in the breeze
+  {
+    const px = cx - rw * 0.55,
+      sway = Math.sin(t * 0.9) * (cwStorm() ? 0.14 : 0.04);
+    const pts = [];
+    for (let i = 0; i <= 20; i++)
+      pts.push(px + Math.sin((i / 20) * 1.5) * 40 * ks + sway * i * 6 * ks, iy - i * 15 * ks);
+    polyline(pts, 7.5 * ks, mixc(col("#8a5a2a"), col("#24160c"), dark * 0.75));
+    for (let i = 1; i < 20; i++)
+      line(
+        pts[i * 2] - 4 * ks,
+        pts[i * 2 + 1],
+        pts[i * 2] + 4 * ks,
+        pts[i * 2 + 1] + 2 * ks,
+        1.2 * ks,
+        withA(col("#4a2e14"), 0.7)
+      );
+    const tx = pts[40],
+      ty = pts[41];
+    // a big full crown: two layers of long arching fronds, each feathered with leaflets on both sides
+    for (let layer = 0; layer < 2; layer++)
+      for (let i = 0; i < 12; i++) {
+        const a =
+            -Math.PI -
+            0.35 +
+            (i / 11) * (Math.PI + 0.7) +
+            Math.sin(t * 1.3 + i + layer) * 0.07 +
+            sway +
+            layer * 0.13,
+          len = (layer ? 11 : 14) * ks,
+          lp = [];
+        for (let j = 0; j <= 7; j++)
+          lp.push(
+            tx + Math.cos(a) * j * len,
+            ty - (layer ? 6 * ks : 0) + Math.sin(a) * j * len * 0.62 + j * j * 0.75 * ks
+          );
+        const gc = mixc(
+          col(layer ? (i % 2 ? "#5cc850" : "#4ab848") : i % 2 ? "#3aa040" : "#2e8a36"),
+          col("#0a2a14"),
+          dark * 0.75
+        );
+        polyline(lp, 5 * ks, gc);
+        for (let j = 1; j < 7; j++)
+          for (const sd of [-1, 1])
+            line(
+              lp[j * 2],
+              lp[j * 2 + 1],
+              lp[j * 2] + Math.cos(a + sd * 1.25) * (7 - j * 0.5) * ks,
+              lp[j * 2 + 1] + Math.sin(a + sd * 1.25) * (7 - j * 0.5) * ks * 0.6 + 4 * ks,
+              1.5 * ks,
+              gc
+            ); // (the leaflets)
+      }
+    for (let i = 0; i < 4; i++)
+      disc(tx - 6 * ks + i * 4 * ks, ty + 6 * ks + (i % 2) * 2 * ks, 3.6 * ks, col("#6a4a22")); // coconuts
+    b.palmTop = [tx, ty];
+    // the hammock, from the palm to a driftwood post
+    const hx2 = cx - rw * 0.08;
+    line(hx2, iy, hx2 - 2 * ks, iy - 34 * ks, 3 * ks, col("#8a6a4a"));
+    const hpts = [];
+    for (let i = 0; i <= 12; i++) {
+      const u = i / 12;
+      hpts.push(
+        lerpA(px + 14 * ks, hx2 - 2 * ks, u),
+        iy - 34 * ks + Math.sin(u * Math.PI) * 14 * ks + Math.sin(t * 0.8) * Math.sin(u * Math.PI) * 2 * ks
+      );
+    }
+    polyline(hpts, 4.5 * ks, mixc(col("#e8d0a0"), col("#4a4030"), dark * 0.7));
+    for (let i = 1; i < 12; i += 2)
+      line(
+        hpts[i * 2],
+        hpts[i * 2 + 1],
+        hpts[i * 2] + 1 * ks,
+        hpts[i * 2 + 1] + 4 * ks,
+        0.8 * ks,
+        col("#c8a870")
+      ); // the fringe
+    b.hammock = hpts;
+  }
+  // KLAAS THE COCONUT, his face drawn on: he blinks, he looks at Koos, he hops when something happens
+  {
+    const A = CW.phase === "island" ? CW_ACTS[CW.act % CW_ACTS.length][0] : "play",
+      kx2 = cx - rw * 0.4,
+      hop =
+        (A === "klaas" && Math.sin(CW.actT * 3) > 0.6) ||
+        CW.fx.some((e) => e.kind === "pts" && e.n > 0 && e.t < 0.4)
+          ? Math.abs(Math.sin(t * 10)) * 5 * ks
+          : 0,
+      ky2 = iy - 5 * ks - hop,
+      look = clamp((CW.kx - kx2) / (60 * ks), -1, 1),
+      blink = (t + 0.7) % 3.6 < 0.14;
+    disc(kx2, iy, 6 * ks, withA(C.black, 0.25), 2 * ks);
+    disc(kx2, ky2, 6.4 * ks, col("#5a3a1a"));
+    disc(kx2 - 1.5 * ks, ky2 - 1.5 * ks, 4 * ks, col("#7a5228"));
+    for (let i = 0; i < 5; i++)
+      line(
+        kx2 - 5 * ks + i * 2.4 * ks,
+        ky2 - 5 * ks,
+        kx2 - 4 * ks + i * 2.4 * ks,
+        ky2 - 2 * ks,
+        0.6 * ks,
+        col("#3a2410")
+      ); // fibres
+    for (const ex of [-2.2, 2.2]) {
+      if (blink)
+        line(
+          kx2 + ex * ks - 1.2 * ks,
+          ky2 - 1 * ks,
+          kx2 + ex * ks + 1.2 * ks,
+          ky2 - 1 * ks,
+          0.6 * ks,
+          col("#f4f0e8")
+        );
+      else {
+        disc(kx2 + ex * ks, ky2 - 1 * ks, 1.5 * ks, col("#f4f0e8"));
+        disc(kx2 + ex * ks + look * 0.6 * ks, ky2 - 1 * ks, 0.7 * ks, col("#1a1008"));
+      }
+    }
+    if (A === "klaas" && CW.actT > 6.5)
+      disc(kx2, ky2 + 2.4 * ks, 1.4 * ks, col("#1a1008")); // ("...!" - the end of the chat: he's surprised)
+    else arc(kx2, ky2 + 1.4 * ks, 2.4 * ks, 0.3, Math.PI - 0.3, 0.7 * ks, col("#f4f0e8"), 6);
+    if (A === "klaas" && CW.actT > 6.5 && CW.actT < 7.6)
+      pixText("?", kx2 + 8 * ks, ky2 - 10 * ks, 1.4 * ks, col("#ffd24d"));
+  }
+  void k;
+}
 function cwDrawShip(s, t, dark, b) {
   const q = s.s,
     x = s.x,
-    y = s.y + (s.kind === "sub" ? Math.max(0, Math.sin(s.t * 0.4)) * -0 : 0),
     f = s.dir,
     hit = s.hitT > 0 ? 1 : 0,
     lit = dark > 0.5,
-    bob = Math.sin(t * 1.2 + x * 0.01) * 1.2 * q;
+    bob = Math.sin(t * 1.2 + x * 0.01) * 1.2 * q,
+    roll = Math.sin(t * 0.9 + x * 0.02) * 0.02;
+  let y = s.y;
+  // the submarine: cruising under (a periscope and its wake), SURFACING (water streaming off), on the surface, then DIVING
+  let sub = 0;
+  if (s.kind === "sub") {
+    const c = s.t % 22;
+    sub = c < 5 ? 0 : c < 8 ? (c - 5) / 3 : c < 15 ? 1 : c < 18 ? 1 - (c - 15) / 3 : 0;
+  }
   push();
   translate(x, y + bob);
+  rotate(roll);
   scaleXY(f * q, q);
-  const hull = (c) => (hit ? col("#ffffff") : col(c));
+  const hull = (c) => (hit ? col("#ffffff") : mix(col(c), col("#0a1020"), lit ? 0.45 : 0)),
+    win = lit ? col("#ffe08a") : col("#2a4a7a");
+  // its wake behind it
+  for (let i = 0; i < 5; i++)
+    line(
+      -95 - i * 18,
+      7 + i * 0.8,
+      -120 - i * 26,
+      7 + i * 1.6,
+      1.4,
+      withA(C.white, (0.4 - i * 0.07) * (s.kind === "sub" && sub < 0.2 ? 0.5 : 1))
+    );
   if (s.kind === "cruise") {
-    quad4(-90, -8, 90, -8, 78, 8, -84, 8, hull("#f4f4f8"));
-    rect(-84, 2, 164, 6, hull("#2a4a9a"));
-    rect(-70, -26, 140, 18, hull("#ffffff"));
-    rect(-54, -40, 104, 14, hull("#f0f0f4"));
-    rect(-20, -54, 30, 14, hull("#e8e8f0"));
-    rect(20, -64, 14, 22, hull("#c8302a"));
+    quad4(-96, -10, 92, -10, 80, 8, -86, 8, hull("#f4f4f8"));
+    rect(-86, 2, 166, 6, hull("#1a3a8a"));
+    rect(-86, -1, 166, 2, hull("#c8302a"));
+    for (let i = 0; i < 16; i++) disc(-78 + i * 10, -4, 1.4, win); // portholes
+    rect(-76, -28, 150, 18, hull("#ffffff"));
+    rect(-60, -44, 118, 16, hull("#f4f4f8"));
+    rect(-30, -58, 64, 14, hull("#eef0f6"));
     for (let r = 0; r < 3; r++)
-      for (let i = 0; i < 12; i++)
-        rect(-64 + i * 11, -22 + r * 7 - (r > 1 ? 21 : 0), 5, 3, lit ? col("#ffe8a0") : col("#3a5a8a"));
-    // tourists taking photos: little flashes
-    if (Math.sin(t * 9 + x) > 0.97) {
+      for (let i = 0; i < (r === 2 ? 8 : 14); i++)
+        rect((r === 2 ? -26 : r === 1 ? -54 : -70) + i * (r === 2 ? 7.5 : 8.6), -24 - r * 16, 5, 4, win);
+    for (let i = 0; i < 6; i++) {
+      rect(-66 + i * 24, -12, 16, 4, hull("#ff9a20"));
+      line(-64 + i * 24, -12, -62 + i * 24, -16, 0.8, hull("#9aa0aa"));
+    } // lifeboats
+    line(-76, -28.5, 74, -28.5, 0.8, hull("#9aa0aa"));
+    line(-60, -44.5, 58, -44.5, 0.8, hull("#9aa0aa")); // railings
+    quad4(26, -76, 44, -76, 46, -58, 22, -58, hull("#e8e8f0"));
+    rect(25, -72, 20, 5, hull("#c8302a"));
+    rect(25, -66, 20, 3, hull("#1a3a8a")); // the funnel
+    for (let i = 0; i < 4; i++)
+      disc(32 + i * 6 - ((t * 8) % 6), -82 - i * 6, 3 + i * 1.6, withA(col("#c8c8d0"), 0.35 - i * 0.07));
+    // tourists at the rail taking photos
+    for (let i = 0; i < 9; i++) {
+      disc(-50 + i * 11, -50, 1.6, col(["#ff5f6f", "#ffd24d", "#5fb0ff", "#7dd05f"][i % 4]));
+      disc(-50 + i * 11, -53, 1.2, col("#e8b890"));
+    }
+    if (Math.sin(t * 9 + x) > 0.95) {
       R.setAdd(true);
-      glow(-30 + ((t * 37) % 80), -30, 8, withA(C.white, 0.9));
+      glow(-50 + Math.floor((t * 3) % 9) * 11, -52, 8, withA(C.white, 0.9));
       R.setAdd(false);
     }
   } else if (s.kind === "yacht") {
-    quad4(-60, -6, 70, -10, 56, 6, -52, 6, hull("#ffffff"));
-    rect(-40, -20, 70, 12, hull("#e8eef8"));
-    quad4(-30, -20, 30, -20, 22, -30, -24, -30, hull("#f4f8ff"));
-    rect(-38, -16, 66, 4, col("#1a2a4a"));
-    for (let i = 0; i < 6; i++) {
+    quad4(-66, -6, 78, -12, 62, 6, -56, 6, hull("#ffffff"));
+    rect(-56, 1, 116, 3, hull("#1a2a4a"));
+    quad4(-46, -22, 40, -22, 50, -6, -50, -6, hull("#f4f8ff"));
+    quad4(-30, -34, 24, -34, 32, -22, -36, -22, hull("#eef4ff"));
+    rect(-42, -18, 80, 5, col("#1a2a4a"));
+    rect(-26, -31, 50, 4, col("#1a2a4a")); // tinted windows
+    line(0, -34, 0, -52, 1, hull("#c8ccd6"));
+    line(-4, -46, 4, -46, 1, hull("#c8ccd6"));
+    disc(0, -52, 1.6, col("#ff4040"));
+    for (let i = 0; i < 7; i++) {
+      disc(
+        -34 + i * 9,
+        -37 - Math.abs(Math.sin(t * 5 + i)) * 2,
+        1.6,
+        col(["#ff5fa8", "#5ff5c8", "#ffd24d"][i % 3])
+      ); // the party, dancing
       R.setAdd(true);
       glow(
-        -36 + i * 13,
-        -24,
+        -36 + i * 11,
+        -26,
         5,
-        withA(col(["#ff5fa8", "#5ff5c8", "#ffd24d"][i % 3]), 0.6 + 0.4 * Math.sin(t * 6 + i))
+        withA(col(["#ff5fa8", "#5ff5c8", "#ffd24d"][i % 3]), (lit ? 0.6 : 0.3) + 0.4 * Math.sin(t * 6 + i))
       );
       R.setAdd(false);
     }
   } else if (s.kind === "cargo") {
-    quad4(-95, -10, 95, -10, 84, 8, -88, 8, hull("#3a3a46"));
-    rect(-95, -2, 190, 3, hull("#c8302a"));
-    for (let i = 0; i < 7; i++)
-      for (let r = 0; r < 2; r++)
-        rect(
-          -80 + i * 20,
-          -22 - r * 10,
-          18,
-          9,
-          col(["#c84a2a", "#2a6ac8", "#e8b830", "#3a9a5a"][(i + r) % 4])
-        );
-    rect(64, -36, 18, 26, hull("#f0f0f0"));
+    quad4(-100, -12, 100, -12, 88, 8, -92, 8, hull("#2a3a4a"));
+    rect(-92, 2, 180, 6, hull("#a8302a"));
+    rect(-100, -12, 200, 2, hull("#e8e8e8"));
+    for (let i = 0; i < 8; i++)
+      for (let r = 0; r < 3; r++) {
+        const cc = col(["#c84a2a", "#2a6ac8", "#e8b830", "#3a9a5a", "#e87a2a"][(i * 3 + r) % 5]);
+        rect(-84 + i * 19, -22 - r * 9, 18, 8.5, hit ? col("#fff") : mix(cc, col("#0a1020"), lit ? 0.5 : 0));
+        for (let j = 0; j < 4; j++)
+          line(
+            -82 + i * 19 + j * 4.5,
+            -21.5 - r * 9,
+            -82 + i * 19 + j * 4.5,
+            -14.5 - r * 9,
+            0.4,
+            withA(C.black, 0.3)
+          );
+      }
+    rect(70, -44, 20, 32, hull("#f0f0f0"));
+    rect(70, -44, 20, 5, hull("#2a3a4a"));
+    for (let i = 0; i < 3; i++) rect(72 + i * 6, -36, 4, 3, win); // the bridge
+    line(-60, -40, -60, -12, 1.6, hull("#e8b830"));
+    line(-60, -40, -36, -30, 1.2, hull("#e8b830")); // a crane
+    line(80, -44, 80, -56, 1, hull("#5a6474"));
   } else if (s.kind === "navy" || s.kind === "pirate") {
     const pir = s.kind === "pirate";
-    quad4(-90, -8, 96, -12, 80, 8, -84, 8, hull(pir ? "#6a4a2a" : "#7a8494"));
-    rect(-40, -24, 60, 16, hull(pir ? "#5a3a1a" : "#8a94a4"));
-    if (pir) {
+    quad4(-90, -8, 100, -12, 84, 8, -84, 8, hull(pir ? "#6a4a2a" : "#6e7888"));
+    if (!pir) {
+      rect(-84, 3, 168, 5, hull("#4a5262"));
+      quad4(-44, -26, 28, -26, 34, -8, -50, -8, hull("#828c9c"));
+      quad4(-26, -42, 14, -42, 18, -26, -30, -26, hull("#8a94a4"));
+      for (let i = 0; i < 4; i++) rect(-22 + i * 8, -38, 5, 3, win);
+      line(-6, -42, -6, -72, 1.6, hull("#5a6474"));
+      rect(-14, -64, 16, 2.4, hull("#5a6474"));
+      disc(-6, -74, 3, hull("#c8ccd6")); // the radar dome
+      line(-14 - Math.cos(t * 2) * 8, -58, 2 + Math.cos(t * 2) * 8, -58, 1.4, hull("#5a6474")); // a turning radar
+      disc(50, -14, 6, hull("#6e7888"), 4);
+      line(52, -15, 80, -18, 2.6, hull("#5a6474")); // the gun
+      rect(-80, -12, 30, 4, hull("#5a6474"));
+      pixText("H", -66, -9, 1.6, col("#e8e8e8")); // the helicopter deck
+      pixText("D-07", 20, -2, 1.6, col("#ffffff"));
+      line(-6, -72, -18, -64, 0.6, hull("#c8ccd6"));
+      quad4(-18, -64, -10, -64, -10, -60, -18, -60, col("#4a8ae8")); // a pennant
+    } else {
+      rect(-40, -24, 60, 16, hull("#5a3a1a"));
       // the robot pirates' rusty ship: black sails with our gear-and-bolt emblem, robot crew, a robot parrot
       for (const mx of [-30, 30]) {
-        line(mx, -24, mx, -90, 2.4, col("#3a2a1a"));
-        quad4(mx - 22, -84, mx + 22, -84, mx + 20, -40, mx - 20, -40, col("#1a1a22"));
-        disc(mx, -62, 7, col("#c8ccd6"));
-        disc(mx, -62, 3, col("#1a1a22"));
+        line(mx, -24, mx, -92, 2.4, col("#3a2a1a"));
+        quad4(
+          mx - 22,
+          -86,
+          mx + 22,
+          -86,
+          mx + 20 + Math.sin(t * 2) * 2,
+          -40,
+          mx - 20 + Math.sin(t * 2) * 2,
+          -40,
+          col("#1a1a22")
+        );
+        disc(mx, -64, 7, col("#c8ccd6"));
+        disc(mx, -64, 3, col("#1a1a22"));
         for (let i = 0; i < 6; i++)
-          rect(mx - 1.5 + Math.cos(i) * 7, -63.5 + Math.sin(i) * 7, 3, 3, col("#c8ccd6"));
+          rect(mx - 1.5 + Math.cos(i) * 7, -65.5 + Math.sin(i) * 7, 3, 3, col("#c8ccd6"));
       }
+      quad4(30, -96, 44, -94, 44, -88, 30, -90, col("#1a1a22")); // a flag
       for (let i = 0; i < 3; i++) {
         rect(-20 + i * 16, -36, 7, 12, col("#a8acb8"));
         disc(-16.5 + i * 16, -39, 3.4, col("#c8ccd6"));
-        disc(-15.5 + i * 16, -39.5, 1, col("#ff4040"));
+        disc(-15.5 + i * 16, -39.5, 1, col(Math.sin(t * 4 + i) > 0 ? "#ff4040" : "#801010"));
       }
-      disc(60, -20, 4, col("#3ac04a"));
+      disc(60, -20 + Math.sin(t * 6) * 1, 4, col("#3ac04a"));
       tri(63, -21, 68, -20, 63, -18, col("#ffd24d")); // the robot parrot
       for (let i = 0; i < 4; i++) disc(-60 + i * 30, -2, 2.5, col("#1a1a1a")); // gun ports
-    } else {
-      rect(-10, -44, 16, 20, hull("#8a94a4"));
-      line(-2, -44, -2, -70, 1.6, col("#5a6474"));
-      rect(-12, -66, 20, 3, col("#5a6474"));
-      rect(40, -16, 22, 6, col("#5a6474"));
-      line(60, -13, 84, -16, 2.6, col("#5a6474"));
-      pixText("D-07", -60, -2, 2, col("#ffffff"));
+      if (s.sunk)
+        for (let i = 0; i < 6; i++)
+          disc(-40 + i * 16, -10 - ((t * 20 + i * 7) % 30), 3, withA(col("#c8c8d0"), 0.5)); // smoke
     }
   } else if (s.kind === "carrier") {
-    quad4(-120, -10, 120, -10, 104, 8, -110, 8, hull("#6a7484"));
-    rect(-130, -14, 260, 5, hull("#5a6474"));
-    rect(30, -40, 22, 26, hull("#7a8494"));
-    line(40, -40, 40, -58, 1.6, col("#5a6474"));
-    for (let i = 0; i < 4; i++) {
-      tri(-100 + i * 26, -16, -84 + i * 26, -16, -92 + i * 26, -20, col("#a8b0c0"));
+    quad4(-124, -10, 124, -10, 108, 8, -112, 8, hull("#646e7e"));
+    rect(-132, -15, 264, 6, hull("#525c6c"));
+    for (let i = 0; i < 12; i++) rect(-124 + i * 22, -13, 10, 1.4, col("#f4f4f0")); // deck markings
+    line(-130, -12, 128, -12, 0.6, col("#e8d040"));
+    quad4(26, -44, 52, -44, 54, -15, 24, -15, hull("#7a8494"));
+    for (let i = 0; i < 3; i++) rect(29 + i * 7, -40, 5, 3, win);
+    line(38, -44, 38, -64, 1.6, hull("#5a6474"));
+    line(30 - Math.cos(t * 2.4) * 8, -58, 46 + Math.cos(t * 2.4) * 8, -58, 1.4, hull("#5a6474")); // the radar turning
+    for (let i = 0; i < 5; i++) {
+      const jx = -110 + i * 24;
+      tri(jx, -16, jx + 14, -16, jx + 7, -20, col("#a8b0c0"));
+      tri(jx + 4, -16, jx + 10, -16, jx + 7, -24, col("#8a92a2"));
+    } // parked jets
+    // now and then a jet launches off the bow
+    const lc = (t * 0.15 + x * 0.001) % 1;
+    if (lc < 0.3) {
+      const u = lc / 0.3,
+        jx = -40 + u * 260,
+        jy = -18 - Math.max(0, u - 0.5) * 80;
+      tri(jx, jy, jx + 14, jy, jx + 7, jy - 4, col("#c8d0e0"));
+      R.setAdd(true);
+      glow(jx - 2, jy - 1, 4, withA(col("#ffb040"), 0.8));
+      R.setAdd(false);
     }
-    for (let i = 0; i < 10; i++) rect(-120 + i * 24, -13, 10, 1.5, col("#f4f4f0"));
   } else if (s.kind === "sub") {
-    const up = Math.max(0, Math.sin(s.t * 0.5)); // (surfacing, then diving again)
-    if (up > 0.2) {
-      quad4(-70, 8 - up * 10, 70, 8 - up * 10, 60, 10, -60, 10, col("#2a2e38"));
-      rect(-10, -14 - up * 8, 22, 18, col("#3a3e48"));
+    const dy = (1 - sub) * 18;
+    if (sub > 0.02) {
+      quad4(-74, 6 - 12 * sub + dy, 70, 6 - 12 * sub + dy, 62, 10, -64, 10, hull("#2a2e38"));
+      disc(70, 4 - 12 * sub + dy, 6, hull("#2a2e38"), 5);
+      quad4(
+        -12,
+        -18 * sub + dy - 6,
+        14,
+        -18 * sub + dy - 6,
+        16,
+        6 - 12 * sub + dy,
+        -14,
+        6 - 12 * sub + dy,
+        hull("#3a3e48")
+      ); // the sail
+      line(-12, -12 * sub + dy, -22, -12 * sub + dy + 2, 2, hull("#3a3e48"));
+      // water streaming off as it surfaces (or foaming as it dives)
+      if (sub < 1)
+        for (let i = 0; i < 10; i++)
+          disc(-70 + i * 15, 8 - ((t * 30 + i * 9) % 12) * sub, 2.4, withA(C.white, 0.6));
+      tri(-74, 6 - 12 * sub + dy, -84, -4 - 10 * sub + dy, -80, 8, hull("#2a2e38")); // the tail fin
     }
-    line(4, 6 - up * 20, 4, -28 - up * 8, 1.6, col("#3a3e48"));
-    rect(4, -30 - up * 8, 8, 3, col("#3a3e48")); // the periscope
-    for (let i = 0; i < 3; i++)
-      arc(4, 6, 6 + i * 5, Math.PI, 2 * Math.PI, 0.8, withA(C.white, 0.4 - i * 0.1), 8);
+    if (sub < 0.95) {
+      line(4, 6, 4, -26, 1.6, hull("#3a3e48"));
+      rect(4, -28, 8, 3, hull("#3a3e48")); // the periscope
+      R.setAdd(true);
+      if (Math.sin(t * 3) > 0.7) glow(12, -27, 3, withA(C.white, 0.7));
+      R.setAdd(false);
+      for (let i = 0; i < 3; i++)
+        arc(4, 6, 6 + i * 6 + ((t * 6) % 6), Math.PI, 2 * Math.PI, 0.8, withA(C.white, 0.4 - i * 0.12), 8);
+    }
   }
   if (s.signaled) {
     R.setAdd(true);
-    glow(0, -60, 10, withA(col("#ffd24d"), 0.6 + 0.4 * Math.sin(t * 8)));
+    glow(0, -70, 10, withA(col("#ffd24d"), 0.6 + 0.4 * Math.sin(t * 8)));
     R.setAdd(false); // (a lamp blinking back: "we see you!")
   }
-  // its wake
-  for (let i = 0; i < 4; i++)
-    line(-f * 0 + 90 + i * 14, 8 + i, 110 + i * 20, 8 + i, 1.2, withA(C.white, 0.35 - i * 0.07));
   pop();
 }
-function cwDrawLife(t, b, dark) {
-  const { k, hz, iy, cx, rw } = b;
+function cwDrawLife(t, b, dark, near) {
+  const { k, hz, iy, cx, rw, ks } = b;
   for (const l of CW.life) {
+    if (near !== (l.kind === "diver" || l.kind === "shark")) continue;
     if (l.kind === "whale") {
       const u = l.t / l.len,
-        y = hz + 26 * k;
+        y = hz + 24 * k;
       if (l.breach && u > 0.35 && u < 0.6) {
-        // up out of the water in a great arc
         const a = (u - 0.35) / 0.25,
-          wy = y - Math.sin(a * Math.PI) * 40 * k;
+          wy = y - Math.sin(a * Math.PI) * 42 * k;
         push();
         translate(l.x + a * 40 * k, wy);
         rotate(-0.8 + a * 1.6);
         disc(0, 0, 26 * k, col("#3a4a62"), 10 * k);
-        disc(4 * k, 4 * k, 18 * k, col("#e8ecf0"), 5 * k);
-        tri(-24 * k, 0, -36 * k, -8 * k, -34 * k, 8 * k, col("#3a4a62"));
+        disc(4 * k, 5 * k, 18 * k, col("#e8ecf0"), 4.5 * k);
+        for (let i = 0; i < 5; i++)
+          line(-8 * k + i * 5 * k, 3 * k, -6 * k + i * 5 * k, 8 * k, 0.6 * k, col("#a8b0c0")); // throat grooves
+        tri(-24 * k, 0, -38 * k, -10 * k, -36 * k, 10 * k, col("#3a4a62"));
+        line(4 * k, 6 * k, 14 * k, 14 * k, 3 * k, col("#3a4a62")); // a long flipper
+        disc(18 * k, -2 * k, 1.2 * k, col("#e8ecf0"));
         pop();
-        if (a > 0.85)
-          for (let i = 0; i < 8; i++)
+        if (a > 0.82)
+          for (let i = 0; i < 10; i++)
             disc(
-              l.x + 40 * k + (i - 4) * 6 * k,
-              y - (1 - a) * 80 * k - (i % 3) * 4 * k,
+              l.x + 40 * k + (i - 5) * 6 * k,
+              y - (1 - a) * 90 * k - (i % 3) * 5 * k,
               3 * k,
-              withA(C.white, 0.7)
+              withA(C.white, 0.75)
             );
       } else {
-        disc(l.x, y + 4 * k, 22 * k, col("#3a4a62"), 6 * k); // the back
-        const sp = (l.t * 0.5) % 1;
+        const sw = Math.sin(l.t * 0.8) * 2 * k;
+        disc(l.x, y + 4 * k + sw, 24 * k, col("#3a4a62"), 6 * k); // the back, rising and sinking
+        tri(
+          l.x - 24 * k,
+          y + 3 * k,
+          l.x - 34 * k,
+          y - 6 * k + (u > 0.8 ? -6 * k : 0),
+          l.x - 30 * k,
+          y + 4 * k,
+          col("#3a4a62")
+        ); // the tail
+        const sp = (l.t * 0.45) % 1;
         if (sp < 0.4)
-          for (let i = 0; i < 8; i++) {
-            const a = -Math.PI / 2 + (i - 3.5) * 0.18;
+          for (let i = 0; i < 9; i++) {
+            const a2 = -Math.PI / 2 + (i - 4) * 0.16;
             disc(
-              l.x + Math.cos(a) * sp * 50 * k,
-              y - Math.sin(-a) * sp * 50 * k * -1 - sp * 30 * k,
+              l.x + 10 * k + Math.cos(a2) * sp * 40 * k,
+              y - sp * 50 * k - Math.sin(-a2) * 0,
               2.2 * k,
-              withA(C.white, 0.7 * (1 - sp / 0.4))
+              withA(C.white, 0.75 * (1 - sp / 0.4))
             );
           } // the spout
       }
+    } else if (l.kind === "orca") {
+      // an orca: a tall black dorsal fin, then a leap - black and white
+      const u = l.t / l.len,
+        x = l.x + l.dir * l.t * 30 * k,
+        y = hz + 32 * k;
+      if (u > 0.4 && u < 0.62) {
+        const a = (u - 0.4) / 0.22;
+        push();
+        translate(x, y - Math.sin(a * Math.PI) * 30 * k);
+        scaleXY(l.dir, 1);
+        rotate(-0.7 + a * 1.4);
+        disc(0, 0, 18 * k, col("#141418"), 7 * k);
+        disc(3 * k, 4 * k, 12 * k, col("#f4f4f4"), 3 * k);
+        disc(12 * k, -2 * k, 3 * k, col("#f4f4f4"), 1.6 * k); // the eye patch
+        tri(-2 * k, -6 * k, 4 * k, -6 * k, 0, -18 * k, col("#141418"));
+        tri(-16 * k, 0, -26 * k, -8 * k, -26 * k, 8 * k, col("#141418"));
+        pop();
+      } else if (u < 0.4 || u > 0.66) {
+        tri(x - 4 * k, y, x + 4 * k, y, x + l.dir * 1 * k, y - 16 * k, col("#141418"));
+        line(x - 10 * k, y + 1, x + 10 * k, y + 1, 1, withA(C.white, 0.5));
+      }
+    } else if (l.kind === "octopus") {
+      // far out: a great octopus's arms rising out of the sea, waving slowly, then sinking back
+      const ko = k * 0.55,
+        u = l.t / l.len,
+        up = Math.min(1, u * 5, (1 - u) * 5),
+        y = hz + 20 * ko;
+      for (let i = 0; i < 5; i++) {
+        const pts = [];
+        for (let j = 0; j <= 8; j++) {
+          const v = j / 8;
+          pts.push(
+            l.x + (i - 2) * 9 * ko + Math.sin(t * 1.4 + i + v * 3) * 8 * ko * v,
+            y - v * 34 * ko * up * (0.7 + 0.3 * Math.sin(i * 2.1))
+          );
+        }
+        polyline(pts, 3.2 * ko * (1 - 0.0), col(dark > 0.5 ? "#4a2a4a" : "#a04a6a"));
+        for (let j = 1; j < 8; j += 2)
+          disc(pts[j * 2], pts[j * 2 + 1], 0.8 * ko, withA(col("#f0c0d0"), 0.7 * up)); // suckers
+      }
+      if (up > 0.6) disc(l.x, y + 2 * ko, 10 * ko, col(dark > 0.5 ? "#4a2a4a" : "#a04a6a"), 3 * ko);
     } else if (l.kind === "dolphins") {
       for (let i = 0; i < 3; i++) {
         const u = (l.t * 0.8 + i * 0.25) % 1,
@@ -44572,76 +44990,163 @@ function cwDrawLife(t, b, dark) {
           translate(x, y);
           rotate(-1 + u * 2);
           disc(0, 0, 10 * k, col("#6a7a96"), 3.6 * k);
+          disc(1 * k, 1.4 * k, 7 * k, col("#c8d0dc"), 1.6 * k);
           tri(-2 * k, -3 * k, 2 * k, -3 * k, 0, -8 * k, col("#6a7a96"));
+          tri(-10 * k, 0, -14 * k, -3 * k, -14 * k, 3 * k, col("#6a7a96"));
           pop();
-        }
+        } else
+          for (let j = 0; j < 4; j++)
+            disc(x + (j - 1.5) * 3 * k, hz + 30 * k - (1 - u) * 40 * k, 1.6 * k, withA(C.white, 0.7));
       }
     } else if (l.kind === "shark") {
-      // a fin circling the island
-      const a = t * 0.25,
-        x = cx + Math.cos(a) * rw * 1.4,
-        y = iy + 34 * k + Math.sin(a) * 8 * k;
-      tri(x - 6 * k, y, x + 6 * k, y, x + Math.sign(-Math.sin(a)) * 2 * k, y - 14 * k, col("#4a5468"));
-      line(x - 12 * k, y + 1, x + 12 * k, y + 1, 1, withA(C.white, 0.5));
+      // a fin circling the island, with its tail fin flicking behind
+      const a = t * 0.22,
+        x = cx + Math.cos(a) * rw * 1.5,
+        y = iy + 18 * ks + Math.sin(a) * 10 * ks,
+        d = -Math.sign(Math.sin(a)) || 1;
+      tri(x - 7 * ks, y, x + 7 * ks, y, x + d * 4 * ks, y - 16 * ks, col("#4a5468"));
+      tri(
+        x - d * 18 * ks,
+        y,
+        x - d * 22 * ks,
+        y - 6 * ks + Math.sin(t * 6) * 2 * ks,
+        x - d * 20 * ks,
+        y,
+        col("#4a5468")
+      );
+      for (let i = 0; i < 3; i++)
+        line(
+          x - d * (10 + i * 8) * ks,
+          y + 1 + i,
+          x - d * (2 + i * 8) * ks,
+          y + 1 + i,
+          1,
+          withA(C.white, 0.45 - i * 0.12)
+        );
+    } else if (l.kind === "diver") {
+      // a diver pops up: mask, snorkel, a look round - sees Koos stir, ducks - and only the bubbles are left
+      const kd = ks * 1.5,
+        u = l.t,
+        up = u < 0.4 ? u / 0.4 : u < l.peek ? 1 : u < l.peek + 0.25 ? 1 - (u - l.peek) / 0.25 : 0,
+        x = l.x,
+        y = iy + 14 * kd;
+      if (up > 0.02) {
+        const hy = y - 8 * kd * up;
+        disc(x, hy, 6 * kd, col("#1a1a22"));
+        rect(x - 4.5 * kd, hy - 2.4 * kd, 9 * kd, 4 * kd, withA(col("#9fe0ff"), 0.85));
+        rect(x - 4.5 * kd, hy - 2.4 * kd, 9 * kd, 0.8 * kd, col("#ffd24d"));
+        const look = Math.sin(u * 3) * 1.2 * kd;
+        disc(x - 1.5 * kd + look, hy - 0.4 * kd, 0.9 * kd, col("#1a1a22"));
+        disc(x + 1.5 * kd + look, hy - 0.4 * kd, 0.9 * kd, col("#1a1a22"));
+        line(x + 5 * kd, hy, x + 5 * kd, hy - 10 * kd, 1.4 * kd, col("#ffb020")); // the snorkel
+        for (let i = 0; i < 3; i++)
+          arc(x, y, (6 + i * 4) * kd, Math.PI, 2 * Math.PI, 0.7, withA(C.white, 0.5 - i * 0.15), 8);
+      }
+      if (u > l.peek)
+        for (let i = 0; i < 6; i++) {
+          const bt = (u - l.peek) * 2 + i * 0.4;
+          disc(
+            x + Math.sin(bt * 3 + i) * 3 * kd,
+            y - ((bt * 6) % 6) * kd,
+            (1 + (i % 3) * 0.6) * kd,
+            withA(C.white, 0.7 * Math.max(0, 1 - (u - l.peek) / 4))
+          );
+        } // the bubbles
     }
   }
-  void dark;
 }
 // the props for Koos's little stories on the island
 function cwDrawProps(t, b, dark) {
-  const { k, iy, cx, rw } = b,
+  const { iy, cx, rw, ks } = b,
+    k = ks,
     A = CW_ACTS[CW.act % CW_ACTS.length][0],
     u = CW.actT;
-  if (A === "castle") {
-    const x = cx - rw * 0.32,
-      g = Math.min(1, u / 5),
-      tide = u > 6.5 ? Math.min(1, (u - 6.5) / 1.5) : 0;
-    if (tide < 1) {
-      rect(x - 12 * k, iy - 12 * k * g * (1 - tide), 24 * k, 12 * k * g * (1 - tide), col("#e8c890"));
-      for (let i = 0; i < 3; i++)
-        rect(
-          x - 12 * k + i * 9 * k,
-          iy - 18 * k * g * (1 - tide),
-          6 * k,
-          6 * k * g * (1 - tide),
-          col("#e8c890")
-        );
+  if (A === "relax") {
+    // the reclining chair (made from driftwood and an old sail) and a sun umbrella from a palm frond
+    const x = cx + rw * 0.18,
+      y = iy;
+    line(x - 16 * k, y, x - 8 * k, y - 8 * k, 1.6 * k, col("#8a6a4a"));
+    line(x + 14 * k, y, x + 10 * k, y - 8 * k, 1.6 * k, col("#8a6a4a"));
+    quad4(
+      x - 12 * k,
+      y - 9 * k,
+      x + 14 * k,
+      y - 9 * k,
+      x + 12 * k,
+      y - 6 * k,
+      x - 12 * k,
+      y - 6 * k,
+      col("#e8e0d0")
+    );
+    quad4(
+      x - 14 * k,
+      y - 9 * k,
+      x - 9 * k,
+      y - 9 * k,
+      x - 20 * k,
+      y - 24 * k,
+      x - 25 * k,
+      y - 22 * k,
+      col("#e8e0d0")
+    );
+    for (let i = 0; i < 4; i++)
+      line(x - 12 * k + i * 6 * k, y - 9 * k, x - 12 * k + i * 6 * k, y - 6 * k, 1 * k, col("#5fb0e8")); // the stripes
+    line(x + 22 * k, y, x + 18 * k, y - 46 * k, 1.4 * k, col("#8a6a4a"));
+    for (let i = 0; i < 7; i++) {
+      const a = Math.PI + 0.3 + (i / 6) * (Math.PI - 0.6);
+      polyline(
+        [
+          x + 18 * k,
+          y - 46 * k,
+          x + 18 * k + Math.cos(a) * 14 * k,
+          y - 46 * k + Math.sin(a) * 6 * k + 6 * k,
+          x + 18 * k + Math.cos(a) * 24 * k,
+          y - 46 * k + 12 * k,
+        ],
+        3 * k,
+        col(i % 2 ? "#4ab848" : "#3aa040")
+      );
     }
-    if (tide > 0) disc(x, iy + 4 * k, 30 * k * tide, withA(col("#7ad0e8"), 0.6 * (1 - tide * 0.5)), 6 * k);
-  } else if (A === "fish") {
-    const x = CW.kx + 18 * k,
-      bite = u > 3 && u < 6,
-      boot = u > 6;
-    const tipX = x + 60 * k,
-      tipY = iy - 50 * k + (bite ? Math.sin(t * 20) * 3 * k : 0);
-    line(x, iy - 30 * k, tipX, tipY, 1.4 * k, col("#8a6a4a"));
-    const lx = boot ? tipX - 4 * k : tipX + 10 * k,
-      ly = boot ? iy - 30 * k + Math.sin(t * 3) * 4 * k : iy + 30 * k;
-    line(tipX, tipY, lx, ly, 0.6, withA(C.white, 0.7));
-    if (boot) {
-      rect(lx - 5 * k, ly, 8 * k, 10 * k, col("#3a2a1a"));
-      rect(lx - 5 * k, ly + 7 * k, 13 * k, 4 * k, col("#3a2a1a")); // an old boot!
+    // the little table: a crate, and a radio playing
+    rect(x + 16 * k, y - 7 * k, 9 * k, 7 * k, col("#a8804a"));
+    if (Math.sin(t * 4) > 0)
+      pixText("♪", x + 22 * k, y - 16 * k - ((t * 6) % 6) * k, 1.2 * k, withA(col("#ffd24d"), 0.8));
+  } else if (A === "castle") {
+    const x = cx - rw * 0.22,
+      g = Math.min(1, u / 6),
+      tide = u > 7.5 ? Math.min(1, (u - 7.5) / 1.5) : 0,
+      hh = g * (1 - tide);
+    if (hh > 0.02) {
+      rect(x - 13 * k, iy - 10 * k * hh, 26 * k, 10 * k * hh, col("#e8c890"));
+      for (let i = 0; i < 4; i++)
+        rect(x - 13 * k + i * 7.5 * k, iy - 15 * k * hh, 4.5 * k, 5 * k * hh, col("#e8c890"));
+      rect(x - 4 * k, iy - 20 * k * hh, 8 * k, 20 * k * hh, col("#f0d098"));
+      line(x, iy - 20 * k * hh, x, iy - 28 * k * hh, 0.8 * k, col("#8a6a4a"));
+      tri(x, iy - 28 * k * hh, x + 6 * k, iy - 26 * k * hh, x, iy - 24 * k * hh, col("#ff5f6f")); // a little flag
+      rect(x - 2 * k, iy - 5 * k * hh, 4 * k, 5 * k * hh, col("#b89860")); // the door
     }
+    if (tide > 0)
+      disc(x + 10 * k, iy + 4 * k, 36 * k * tide, withA(col("#7ad0e8"), 0.6 * (1 - tide * 0.5)), 7 * k);
   } else if (A === "gull") {
     const f = clamp((u - 2) / 3, 0, 1),
       gx = lerpA(b.L - 30, CW.kx, f) + (u > 5 ? (u - 5) * 160 * k : 0),
       gy = lerpA(b.T + b.h * 0.2, iy - 40 * k, Math.sin((f * Math.PI) / 2)) - (u > 5 ? (u - 5) * 60 * k : 0);
-    cwDrawGull(gx, gy, k, t, false);
-    if (u < 5) rect(CW.kx + 10 * k, iy - 38 * k, 10 * k, 5 * k, col("#e8c070"));
-    else rect(gx - 4 * k, gy + 4 * k, 9 * k, 4 * k, col("#e8c070")); // the sandwich, going...
+    cwDrawGull(gx, gy, k * 1.2, t, false);
+    if (u > 5) rect(gx - 4 * k, gy + 4 * k, 9 * k, 4 * k, col("#e8c070")); // the sandwich, going...
   } else if (A === "bottle") {
-    const bx = lerpA(cx + rw * 1.4, cx + rw * 0.75, Math.min(1, u / 4)),
-      by = iy + 20 * k + Math.sin(t * 2) * 2 * k;
+    const bx = lerpA(cx + rw * 1.5, cx + rw * 0.8, Math.min(1, u / 4)),
+      by = iy + 10 * k + Math.sin(t * 2) * 2 * k;
     if (u < 4.5) {
       push();
       translate(bx, by);
-      rotate(0.5);
+      rotate(0.5 + Math.sin(t * 2) * 0.2);
       rect(-3 * k, -8 * k, 6 * k, 14 * k, withA(col("#7ac08a"), 0.85));
       rect(-1.5 * k, -11 * k, 3 * k, 3 * k, col("#8a5a2a"));
+      rect(-1.5 * k, -4 * k, 3 * k, 6 * k, col("#f4ecd4")); // the note inside
       pop();
-    } else rect(CW.kx + 8 * k, iy - 44 * k, 12 * k, 9 * k, col("#f4ecd4")); // the note, unrolled
+    }
   } else if (A === "crab") {
-    const x = lerpA(cx + rw * 0.9, CW.kx + 10 * k, Math.min(1, u / 3));
+    const x = lerpA(cx + rw * 0.95, CW.kx + 12 * k, Math.min(1, u / 3)) + (u > 4.5 ? (u - 4.5) * 50 * k : 0);
     cwDrawCrab(x, iy, k, t, false);
   }
   void dark;
@@ -44651,28 +45156,139 @@ function cwDrawGull(x, y, k, t, robo) {
   disc(x, y, 6 * k, col(robo ? "#a8acb8" : "#f4f4f4"), 4 * k);
   polyline([x - 14 * k, y - fl, x - 4 * k, y - 2 * k, x, y], 2 * k, col(robo ? "#8a8e98" : "#e8e8e8"));
   polyline([x + 14 * k, y - fl, x + 4 * k, y - 2 * k, x, y], 2 * k, col(robo ? "#8a8e98" : "#e8e8e8"));
+  line(x - 14 * k, y - fl, x - 10 * k, y - fl * 0.7, 2 * k, col("#3a3a40")); // wing tips
+  line(x + 14 * k, y - fl, x + 10 * k, y - fl * 0.7, 2 * k, col("#3a3a40"));
   tri(x + 5 * k, y - 1 * k, x + 10 * k, y, x + 5 * k, y + 1.5 * k, col("#ffb020"));
   disc(x + 3 * k, y - 2 * k, 1 * k, col(robo ? "#ff3030" : "#1a1a1a"));
 }
 function cwDrawCrab(x, y, k, t, robo) {
   const c = col(robo ? "#9aa0ae" : "#e0503a"),
-    st = Math.sin(t * 14) * 2 * k;
+    st = Math.sin(t * 14) * 2 * k,
+    pinch = Math.sin(t * 6) > 0.5 ? 2 * k : 0;
   for (let i = 0; i < 3; i++) {
-    line(x - 6 * k, y - 3 * k, x - 12 * k - i * 2 * k, y + st * (i % 2 ? 1 : -1), 1.2 * k, c);
-    line(x + 6 * k, y - 3 * k, x + 12 * k + i * 2 * k, y - st * (i % 2 ? 1 : -1), 1.2 * k, c);
+    polyline(
+      [
+        x - 6 * k,
+        y - 3 * k,
+        x - 10 * k - i * 2 * k,
+        y - 6 * k,
+        x - 12 * k - i * 2 * k,
+        y + st * (i % 2 ? 1 : -1),
+      ],
+      1.2 * k,
+      c
+    );
+    polyline(
+      [
+        x + 6 * k,
+        y - 3 * k,
+        x + 10 * k + i * 2 * k,
+        y - 6 * k,
+        x + 12 * k + i * 2 * k,
+        y - st * (i % 2 ? 1 : -1),
+      ],
+      1.2 * k,
+      c
+    );
   }
   disc(x, y - 5 * k, 9 * k, c, 5 * k);
-  disc(x - 9 * k, y - 12 * k, 3.5 * k, c);
-  disc(x + 9 * k, y - 12 * k, 3.5 * k, c); // the claws
+  disc(x - 1 * k, y - 7 * k, 5 * k, mix(c, col("#ffffff"), 0.2), 2 * k);
+  for (const sd of [-1, 1]) {
+    line(x + sd * 6 * k, y - 6 * k, x + sd * 9 * k, y - 11 * k, 1.6 * k, c);
+    disc(x + sd * 10 * k, y - 13 * k, 3.4 * k, c);
+    tri(
+      x + sd * 10 * k,
+      y - 16 * k,
+      x + sd * (13 * k + pinch * 0.5),
+      y - 18 * k - pinch,
+      x + sd * 12 * k,
+      y - 14 * k,
+      c
+    ); // the claws, snapping
+  }
   line(x - 3 * k, y - 9 * k, x - 3 * k, y - 14 * k, 1 * k, c);
   line(x + 3 * k, y - 9 * k, x + 3 * k, y - 14 * k, 1 * k, c);
   disc(x - 3 * k, y - 15 * k, 1.4 * k, col(robo ? "#ff3030" : "#1a1a1a"));
   disc(x + 3 * k, y - 15 * k, 1.4 * k, col(robo ? "#ff3030" : "#1a1a1a"));
   if (robo) for (let i = 0; i < 3; i++) disc(x - 4 * k + i * 4 * k, y - 6 * k, 0.9 * k, col("#5a5e6a")); // rivets
 }
+// THE UFO: a gleaming saucer that wobbles as it hovers - its ring of lights chasing round, its dome glowing with a little
+// pilot inside, landing lights pulsing underneath - and the tractor beam, sparkles rising up through it
+function cwDrawUfo(x, y, k, t, beam, groundY, alpha = 1) {
+  const tilt = Math.sin(t * 1.7) * 0.08,
+    A = (c) => withA(c, c[3] * alpha);
+  if (beam > 0.05) {
+    R.setAdd(true);
+    const bw = 12 * k,
+      gw = 38 * k;
+    quad4(
+      x - bw,
+      y + 8 * k,
+      x + bw,
+      y + 8 * k,
+      x + gw,
+      groundY,
+      x - gw,
+      groundY,
+      withA(col("#9fffd0"), 0.32 * beam * alpha),
+      withA(col("#9fffd0"), 0.32 * beam * alpha),
+      withA(col("#9fffd0"), 0.06 * beam * alpha),
+      withA(col("#9fffd0"), 0.06 * beam * alpha)
+    );
+    for (let i = 0; i < 14; i++) {
+      const v = (t * 0.6 + i * 0.13) % 1,
+        sx = x + (hash(i * 3.1) - 0.5) * lerpA(gw, bw, v) * 1.6,
+        sy = lerpA(groundY, y + 10 * k, v);
+      disc(sx, sy, 1.4 * k, withA(col("#e8fff4"), 0.8 * beam * alpha * (1 - v)));
+    }
+    glow(x, groundY, gw * 1.2, withA(col("#9fffd0"), 0.25 * beam * alpha));
+    R.setAdd(false);
+  }
+  push();
+  translate(x, y);
+  rotate(tilt);
+  R.setAdd(true);
+  glow(0, 6 * k, 40 * k, withA(col("#9fe8ff"), 0.25 * alpha));
+  R.setAdd(false);
+  disc(0, 4 * k, 36 * k, A(col("#3a4050")), 7 * k); // the underside
+  for (let i = 0; i < 3; i++) {
+    R.setAdd(true);
+    glow(
+      (i - 1) * 14 * k,
+      9 * k,
+      6 * k,
+      withA(col("#ffd24d"), (0.4 + 0.6 * Math.abs(Math.sin(t * 4 + i))) * alpha)
+    );
+    R.setAdd(false);
+  } // landing lights
+  disc(0, 0, 36 * k, A(col("#b8c0d0")), 8 * k);
+  disc(0, -2 * k, 32 * k, A(col("#d8dee8")), 4 * k);
+  line(-34 * k, 1 * k, 34 * k, 1 * k, 1.2 * k, A(col("#7a8292")));
+  for (let i = 0; i < 10; i++) {
+    const a = (i / 10) * 6.283 + t * 3,
+      lx = Math.cos(a) * 30 * k,
+      ly = Math.sin(a) * 5 * k;
+    if (ly > -1.5 * k) {
+      const cc = col(["#ff5fa8", "#5ff5c8", "#ffd24d"][i % 3]);
+      disc(lx, ly + 1 * k, 2.2 * k, A(cc));
+      R.setAdd(true);
+      glow(lx, ly + 1 * k, 5 * k, withA(cc, 0.5 * alpha));
+      R.setAdd(false);
+    }
+  } // the chasing ring of lights
+  disc(0, -8 * k, 14 * k, withA(col("#9fe8ff"), 0.75 * alpha), 11 * k); // the dome
+  // the little pilot: a round green head, big black eyes - and he waves
+  disc(0, -8 * k, 5 * k, A(col("#7dd05f")));
+  disc(-1.8 * k, -9 * k, 1.6 * k, A(col("#10081c")), 2.2 * k);
+  disc(1.8 * k, -9 * k, 1.6 * k, A(col("#10081c")), 2.2 * k);
+  line(4 * k, -6 * k, 8 * k, -10 * k + Math.sin(t * 8) * 2 * k, 1.2 * k, A(col("#7dd05f")));
+  disc(-5 * k, -14 * k, 4 * k, withA(C.white, 0.45 * alpha), 2 * k); // the glint on the glass
+  pop();
+}
 function cwDrawFoe(f, t, b) {
-  const k = b.k;
-  if (f.kind === "crab") cwDrawCrab(f.x, f.y, k * 1.2, t, true);
+  const k = b.k,
+    ks = b.ks;
+  if (f.kind === "crab") cwDrawCrab(f.x, f.y, ks * 1.3, t, true);
   else if (f.kind === "gull") cwDrawGull(f.x, f.y, k * 1.3, t, true);
   else if (f.kind === "meteor" || f.kind === "ball") {
     const met = f.kind === "meteor";
@@ -44684,50 +45300,24 @@ function cwDrawFoe(f, t, b) {
     }
     disc(f.x, f.y, (met ? 7 : 5) * k, col(met ? "#6a4a3a" : "#1a1a1a"));
   } else if (f.kind === "ufo") {
-    if (f.beam > 0.05 && !f.demo) {
+    // (it comes in from far off, small, and grows; the demo one zooms away at the end with a streak)
+    const grow = Math.min(1, f.t / 2.5),
+      leave = f.demo && f.t > 14 ? Math.min(1, (f.t - 14) / 2) : 0,
+      sc = k * (0.35 + 0.65 * grow) * (1 - leave * 0.6),
+      beam = f.demo ? (f.t > 3.5 && f.t < 13 ? Math.min(1, (f.t - 3.5) * 2, (13 - f.t) * 2) : 0) : f.beam;
+    if (leave > 0) {
       R.setAdd(true);
-      quad4(
-        f.x - 12 * k,
-        f.y + 8 * k,
-        f.x + 12 * k,
-        f.y + 8 * k,
-        f.x + 34 * k,
-        b.iy,
-        f.x - 34 * k,
-        b.iy,
-        withA(col("#9fffd0"), 0.35 * f.beam),
-        withA(col("#9fffd0"), 0.35 * f.beam),
-        withA(col("#9fffd0"), 0.08 * f.beam),
-        withA(col("#9fffd0"), 0.08 * f.beam)
+      line(
+        f.x,
+        f.y,
+        f.x - 160 * k * leave,
+        f.y + 30 * k * leave,
+        3 * k,
+        withA(col("#9fe8ff"), 0.4 * (1 - leave))
       );
       R.setAdd(false);
     }
-    if (f.demo && f.t > 3 && f.t < 13) {
-      R.setAdd(true);
-      quad4(
-        f.x - 10 * k,
-        f.y + 8 * k,
-        f.x + 10 * k,
-        f.y + 8 * k,
-        f.x + 30 * k,
-        b.iy,
-        f.x - 30 * k,
-        b.iy,
-        withA(col("#9fffd0"), 0.3),
-        withA(col("#9fffd0"), 0.3),
-        withA(col("#9fffd0"), 0.06),
-        withA(col("#9fffd0"), 0.06)
-      );
-      R.setAdd(false);
-    }
-    disc(f.x, f.y + 2 * k, 34 * k, col("#5a6070"), 8 * k);
-    disc(f.x, f.y, 32 * k, col("#a8b0c0"), 7 * k);
-    disc(f.x, f.y - 7 * k, 12 * k, withA(col("#9fe8ff"), 0.8), 9 * k);
-    for (let i = 0; i < 6; i++) {
-      const a = (i / 6) * 6.283 + t * 3;
-      if (Math.sin(a) > -0.2)
-        disc(f.x + Math.cos(a) * 26 * k, f.y + 2 * k, 2.4 * k, col(i % 2 ? "#ffd24d" : "#ff5fa8"));
-    }
+    cwDrawUfo(f.x, f.y, sc, t, beam, b.iy, 1);
   }
 }
 function cwDrawFx(e, t, b) {
@@ -44823,95 +45413,335 @@ function cwDrawHeli(t, b) {
   line(x - 26 * k, y + 16 * k, x + 22 * k, y + 16 * k, 1.6 * k, col("#2a2a30"));
   if (u > 0.4 && u < 0.75) line(x, y + 10 * k, CW.kx, b.iy - 60 * k, 1.2 * k, col("#e8e0c8")); // the rope ladder
 }
-// KOOS VAN SCHOOR: sunburnt, a straw hat, a scruffy beard, a ragged red shirt, blue shorts, bare feet
+// KOOS VAN SCHOOR: sunburnt, a straw hat, a BIG BUSHY BEARD, a ragged red shirt, patched blue shorts tied with rope,
+// bare feet - and legs that really walk: thighs and shins, knees bending, a heel-and-toe step
 function cwDrawKoos(t, b, dark) {
-  const k = b.k * 1.75,
+  const ks = b.ks,
+    k = ks * 1.55,
     A = CW.phase === "island" ? CW_ACTS[CW.act % CW_ACTS.length][0] : "play",
     u = CW.actT,
     hurt = CW.hurt > 0 && Math.sin(t * 30) > 0;
   let x = CW.kx,
     y = b.iy;
   const sk = mix(col("#e8986a"), col("#3a2a20"), dark * 0.5),
-    shirt = col("#c8402a"),
-    shorts = col("#3a5ac8"),
-    hat = col("#e8c860");
+    skD = shade(sk, 0.82),
+    shirt = mix(col("#c8402a"), col("#2a1010"), dark * 0.4),
+    shorts = mix(col("#3a5ac8"), col("#101830"), dark * 0.4),
+    hat = mix(col("#e8c860"), col("#4a4020"), dark * 0.4),
+    beard = mix(col("#8a6440"), col("#2a1e14"), dark * 0.4),
+    beardD = shade(beard, 0.72);
   if (hurt) return;
-  // asleep: lying on the sand (or in the hammock)
-  const lying = (A === "wake" && u < 3.5) || A === "hammock";
-  if (lying) {
-    if (A === "hammock") {
-      x = b.cx - b.rw * 0.33;
-      y = b.iy - 26 * b.k;
-    }
+  // ---- RELAXING in his reclining chair, a pina colada in a coconut shell, a paper umbrella in it ----
+  if (A === "relax") {
+    const cxr = b.cx + b.rw * 0.18,
+      cyr = b.iy - 8 * ks,
+      sip = Math.sin(u * 0.9) > 0.85;
     push();
-    translate(x, y - 6 * k);
-    rect(-22 * k, -5 * k, 26 * k, 10 * k, shirt);
-    rect(4 * k, -4 * k, 12 * k, 8 * k, shorts);
-    rect(16 * k, -3 * k, 12 * k, 5 * k, sk);
-    disc(-28 * k, -1 * k, 7 * k, sk);
-    disc(-31 * k, 3 * k, 6 * k, col("#8a6a4a"), 4 * k); // the beard
-    disc(-26 * k, -8 * k, 10 * k, hat, 3 * k); // the hat over his face
+    translate(cxr, cyr);
+    scaleBy(k);
+    line(4, -1, 12, -1, 2.6, sk);
+    line(12, -1, 15, 5, 2.4, sk); // legs up, crossed
+    line(6, -1, 13, 1, 2.6, sk);
+    rect(-2, -4, 8, 5, shorts);
+    quad4(-10, -14, -1, -6, 2, -3, -6, -12, shirt); // leaning back
+    disc(-11, -17, 6, sk, 6.6);
+    for (let i = 0; i < 9; i++)
+      disc(-8 + (i % 3) * 2, -14 + Math.floor(i / 3) * 2, 2.6, i % 2 ? beard : beardD); // the beard
+    disc(-13, -21, 10, hat, 2.4);
+    disc(-12, -23, 5.5, hat, 3.4); // the hat, tipped back
+    line(-12, -18, -9, -18, 0.9, col("#1a1a1a")); // eyes closed, blissful
+    // the arm, the coconut cup - sipping now and then
+    const cx2 = sip ? -6 : 4,
+      cy2 = sip ? -16 : -8;
+    line(-6, -10, cx2, cy2, 2.4, sk);
+    disc(cx2, cy2 - 2, 3.4, col("#6a4a22"));
+    disc(cx2, cy2 - 3.6, 2.6, col("#fff4d8"), 1.2); // the pina colada
+    line(cx2 + 1, cy2 - 4, cx2 + 3, cy2 - 10, 0.6, col("#ff5fa8")); // the straw
+    tri(cx2 + 2, cy2 - 10, cx2 + 7, cy2 - 9, cx2 + 3, cy2 - 7, col("#ffd24d")); // the little paper umbrella
+    disc(cx2 - 1, cy2 - 5, 1, col("#ff4060")); // a cherry
     pop();
-    if (A === "hammock" || u < 3)
-      pixText("Z", x - 30 * k + Math.sin(t) * 4, y - 30 * k - ((t * 10) % 20), 2 * k, withA(C.white, 0.8));
+    if (sip) pixText("AAH...", cxr - 18 * k, cyr - 34 * k, 1.1 * k, withA(C.white, 0.85));
     return;
   }
-  const walking = CW.phase === "play" ? Math.abs(CW.aimX - x) > 30 : false,
-    step = walking ? Math.sin(t * 10) : 0,
-    face = CW.phase === "play" ? (CW.aimX < x ? -1 : 1) : 1,
-    cling = CW.foes.some((f) => f.kind === "ufo" && f.demo && f.t > 3 && f.t < 13);
+  // ---- asleep: on the sand, or swinging in the hammock ----
+  const lying = (A === "wake" && u < 3.5) || A === "hammock";
+  if (lying) {
+    if (A === "hammock" && b.hammock) {
+      const hp = b.hammock;
+      x = hp[12];
+      y = hp[13] - 3 * ks;
+    }
+    const br = Math.sin(t * 1.6) * 0.8 * k; // (breathing)
+    push();
+    translate(x, y - 6 * k);
+    rect(-22 * k, -5 * k - br * 0.5, 26 * k, 10 * k + br * 0.5, shirt);
+    rect(4 * k, -4 * k, 12 * k, 8 * k, shorts);
+    line(16 * k, 0, 27 * k, 2 * k, 4.2 * k, sk);
+    disc(28 * k, 3 * k, 2.4 * k, sk);
+    disc(-28 * k, -1 * k, 7 * k, sk);
+    for (let i = 0; i < 6; i++)
+      disc(-33 * k + (i % 3) * 3 * k, 2 * k + Math.floor(i / 3) * 3 * k, 3.6 * k, i % 2 ? beard : beardD); // the beard
+    disc(-26 * k, -8 * k, 11 * k, hat, 3 * k); // the hat over his face
+    pop();
+    for (let i = 0; i < 3; i++) {
+      const z = (t * 0.5 + i / 3) % 1;
+      pixText(
+        "Z",
+        x - 30 * k + Math.sin(t + i) * 4 * k + z * 14 * k,
+        y - 22 * k - z * 30 * k,
+        (1 + z) * k,
+        withA(C.white, 0.8 * (1 - z))
+      );
+    }
+    return;
+  }
+  // ---- standing, walking, at work ----
+  const moveV = CW.kv || 0;
+  const walking = Math.abs(moveV) > 6,
+    ph = t * 9,
+    face =
+      CW.phase === "play"
+        ? CW.aimX < x
+          ? -1
+          : 1
+        : walking
+          ? moveV < 0
+            ? -1
+            : 1
+          : A === "spyglass"
+            ? Math.sin(u * 0.7) > 0
+              ? 1
+              : -1
+            : A === "fish" || A === "bottle"
+              ? 1
+              : moveV < -1
+                ? -1
+                : 1,
+    cling = CW.foes.some((f) => f.kind === "ufo" && f.demo && f.t > 3 && f.t < 13),
+    kneel = A === "castle" && u < 7.5;
   push();
   translate(x, y);
   scaleXY(face * k, k);
-  // the legs, bare feet
-  line(-4, 0, -4 + step * 3, -18, 4, sk);
-  line(4, 0, 4 - step * 3, -18, 4, sk);
-  rect(-7 + step * 3, -2, 6, 3, sk);
-  rect(2 - step * 3, -2, 6, 3, sk);
-  // shorts, ragged shirt
-  rect(-8, -26, 16, 10, shorts);
-  quad4(-9, -44, 9, -44, 10, -26, -10, -26, shirt, shirt, shade(shirt, 0.8), shade(shirt, 0.8));
-  for (let i = 0; i < 5; i++) tri(-10 + i * 4, -26, -6 + i * 4, -26, -8 + i * 4, -22, shade(shirt, 0.8)); // the ragged hem
-  rect(-3, -40, 3, 3, withA(col("#f0c070"), 0.6)); // a patch
-  // the arms: what he's doing
-  const arm = (ax, ay, ex, ey) => {
-    line(ax, ay, ex, ey, 3.4, sk);
-    disc(ex, ey, 2.4, sk);
+  disc(0, 0, 9, withA(C.black, 0.22), 2.4); // his shadow
+  const sway = walking ? 0 : Math.sin(t * 1.4) * 0.6,
+    bobY = walking ? -Math.abs(Math.sin(ph)) * 1.4 : 0;
+  // the legs: hip, knee, ankle - a real stride (or kneeling in the sand)
+  const leg = (sd, phase2) => {
+    const hx = sd * 2.2,
+      hy = -20 + bobY;
+    let kx2, ky2, fx, fy;
+    if (kneel) {
+      kx2 = hx + (sd < 0 ? 7 : 2);
+      ky2 = -4;
+      fx = hx + (sd < 0 ? 0 : -8);
+      fy = -1;
+    } else if (walking) {
+      const s2 = Math.sin(ph + phase2),
+        lift = Math.max(0, Math.cos(ph + phase2)) * 4;
+      kx2 = hx + s2 * 3 + 1.5;
+      ky2 = -10 - lift * 0.6;
+      fx = hx + s2 * 6;
+      fy = -lift * 0.7;
+    } else {
+      kx2 = hx + 0.6 + sway * sd * 0.3;
+      ky2 = -10;
+      fx = hx + sway * sd * 0.3;
+      fy = 0;
+    }
+    line(hx, hy, kx2, ky2, 3, sk); // the thigh (a skinny castaway - he's been on coconuts for months)
+    line(kx2, ky2, fx, fy, 2.6, sk); // the shin
+    disc(kx2, ky2, 1.7, skD); // the knobbly knee
+    quad4(fx - 2, fy - 1.8, fx + 5, fy - 1.4, fx + 5.5, fy + 0.6, fx - 2, fy + 0.6, sk); // the bare foot
+    disc(fx + 5, fy - 0.4, 0.9, skD);
+  };
+  leg(-1, Math.PI); // (the far leg first)
+  // shorts, patched, tied up with a bit of rope
+  rect(-6, -27 + bobY, 12, 8, shorts);
+  quad4(-6, -19 + bobY, -0.5, -19 + bobY, -1, -16 + bobY, -5.5, -16 + bobY, shorts);
+  quad4(0.5, -19 + bobY, 6, -19 + bobY, 5.5, -16 + bobY, 1, -16 + bobY, shade(shorts, 0.9));
+  rect(-3, -25 + bobY, 3, 3, mix(shorts, col("#e8c860"), 0.5)); // a patch
+  rect(-6.5, -27.5 + bobY, 13, 1.6, col("#c8a060")); // the rope belt
+  leg(1, 0);
+  // the ragged shirt, torn at the hem and one sleeve
+  const sy0 = -45 + bobY;
+  quad4(
+    -7,
+    sy0,
+    7,
+    sy0,
+    6.5,
+    -26 + bobY,
+    -6.5,
+    -26 + bobY,
+    shirt,
+    shirt,
+    shade(shirt, 0.8),
+    shade(shirt, 0.8)
+  );
+  for (let i = 0; i < 5; i++)
+    tri(
+      -6.5 + i * 2.7,
+      -26 + bobY,
+      -3.8 + i * 2.7,
+      -26 + bobY,
+      -5.2 + i * 2.7,
+      -22.5 + bobY + (i % 2) * 1.5,
+      shade(shirt, 0.8)
+    );
+  quad4(-2, sy0, 2, sy0, 0.6, sy0 + 5, -0.6, sy0 + 5, sk); // the open neck
+  line(-2, sy0 + 2, 0, sy0 + 7, 0.8, shade(shirt, 0.6)); // a tear
+  line(2, sy0 + 1, 2, -30 + bobY, 0.6, shade(shirt, 0.7)); // the button line
+  rect(-4.5, -38 + bobY, 3, 3, mix(shirt, col("#f0c070"), 0.5)); // a patch
+  // the arms: shoulder, elbow, hand - what he's doing
+  const arm = (sxp, ex, ey, hx, hy, far = false) => {
+    const c = far ? skD : sk;
+    line(sxp * 0.8, sy0 + 3, ex, ey, 3, sxp > 0 || !far ? shirt : shade(shirt, 0.85)); // the (ragged) sleeve
+    line(ex, ey, hx, hy, 2.4, c); // a thin, bony forearm
+    disc(hx, hy, 1.9, c);
   };
   if (CW.phase === "play") {
     const thr = CW.cool > 0.08;
-    arm(6, -40, thr ? 14 : 10, thr ? -56 : -48);
-    arm(-6, -40, -10, -28);
-    if (!thr) disc(10, -50, 4, col("#6a4a22")); // a coconut ready
+    arm(-6, -10, -36 + bobY, -12, -28 + bobY, true);
+    arm(6, thr ? 12 : 10, thr ? -50 : -40 + bobY, thr ? 16 : 11, thr ? -60 : -50 + bobY);
+    if (!thr) disc(11, -53 + bobY, 4, col("#6a4a22")); // a coconut ready
   } else if (cling) {
-    arm(-6, -40, -14, -60);
-    arm(6, -40, -10, -62); // (holding on to the palm for dear life)
+    arm(-6, -12, -54, -16, -62, true);
+    arm(6, -6, -56, -12, -64); // (holding on to the palm for dear life)
+  } else if (A === "spyglass") {
+    // the brass spyglass, raised to his eye, sweeping the horizon
+    const lift = Math.min(1, u * 1.5),
+      sw = Math.sin(u * 0.9) * 0.08;
+    arm(-6, -2, -44, 6, -52 * lift - 30 * (1 - lift), true);
+    arm(6, 10, -46, 14, -53 * lift - 30 * (1 - lift));
+    push();
+    translate(6, -55 * lift - 28 * (1 - lift));
+    rotate(-0.08 - sw);
+    rect(0, -2.2, 10, 4.4, col("#c89a3a"));
+    rect(9, -2.8, 9, 5.6, col("#d8aa4a"));
+    rect(17, -3.2, 3, 6.4, col("#a87a2a"));
+    line(9, -2.8, 9, 2.8, 0.6, col("#8a6a2a"));
+    R.setAdd(true);
+    if (Math.sin(t * 2) > 0.7) glow(20, 0, 3, withA(C.white, 0.6));
+    R.setAdd(false);
+    pop();
+  } else if (A === "fish") {
+    // the fishing rod: cast, wait, a bite - tug! - reel in... an old boot
+    const cast = u < 1.2,
+      bite = u > 4.5 && u < 7.5,
+      reel = u > 7.5,
+      tug = bite ? Math.sin(t * 22) * 2 : 0;
+    arm(-6, 2, -36, 8, -38 + tug * 0.5, true);
+    arm(6, 10, -38, 12, -40 + tug * 0.5);
+    const rodA = cast ? -2.2 + u * 1.6 : bite ? -0.35 + Math.sin(t * 9) * 0.1 : reel ? -0.9 : -0.45,
+      rx = 12 + Math.cos(rodA) * 46,
+      ry = -40 + Math.sin(rodA) * 46;
+    line(10, -38, rx, ry, 1.4, col("#8a6a4a"));
+    disc(14, -39, 2, col("#3a3a40")); // the reel
+    b.rodTip = [x + face * rx * k, y + ry * k];
   } else if (A === "klaas") {
-    arm(6, -40, 14, -34);
-    arm(-6, -40, -12, -28 + Math.sin(t * 6) * 3); // (talking with his hands)
+    arm(-6, -10, -36, -14, -30 + Math.sin(t * 6) * 3, true);
+    arm(6, 12, -40, 16, -36 + Math.sin(t * 5 + 1) * 4); // (talking with his hands)
   } else if (A === "wake") {
-    arm(6, -40, 12, -60 + Math.sin(t * 4) * 2);
-    arm(-6, -40, -12, -60); // (a big stretch)
+    const st = Math.min(1, (u - 3.5) / 1.2);
+    arm(-6, -10, -50 * st - 34 * (1 - st), -12, -62 * st - 30 * (1 - st), true);
+    arm(6, 10, -50 * st - 34 * (1 - st), 12, -62 * st - 30 * (1 - st)); // (a big stretch)
   } else if (A === "castle") {
-    arm(6, -40, 14, -20 + Math.sin(t * 8) * 3);
-    arm(-6, -40, -6, -22);
+    arm(-6, -2, -32, 4, -14 + Math.sin(t * 8) * 3, true);
+    arm(6, 10, -30, 14, -12 + Math.sin(t * 8 + 1.5) * 3); // (patting the sand into shape)
+  } else if (A === "bottle") {
+    const hold = u > 4.5;
+    arm(-6, -8, -36, -10, -28, true);
+    arm(6, 12, -42, hold ? 16 : 11, hold ? -48 : -30);
+    if (hold) rect(12, -56, 10, 8, col("#f4ecd4")); // the note, unrolled
+  } else if (A === "gull") {
+    arm(-6, -8, -36, -10, -28, true);
+    arm(6, 10, -38, u < 5 ? 14 : 16, u < 5 ? -40 : -56 + Math.sin(t * 12) * 3); // (the sandwich - then shaking his fist)
+    if (u < 5) rect(12, -42, 9, 5, col("#e8c070"));
   } else {
-    arm(6, -40, 12, -30);
-    arm(-6, -40, -10, -28);
+    const sw2 = walking ? Math.sin(ph) * 4 : 0;
+    arm(-6, -8 - sw2 * 0.5, -36, -10 - sw2, -28, true);
+    arm(6, 8 + sw2 * 0.5, -36, 10 + sw2, -28);
   }
-  // the head: sunburnt, a scruffy beard, a straw hat
-  disc(0, -52, 8, sk);
-  disc(-1, -46, 7, col("#8a6a4a"), 5); // the beard
-  disc(3, -54, 1.2, col("#1a1a1a"));
+  // the head: sunburnt, a sunburnt nose, bushy brows - and THE BEARD, big and bushy and windblown
+  const hy = -53 + bobY;
+  disc(-1, hy - 2, 8, beardD); // hair at the back
+  disc(0, hy, 7, sk, 8); // (a lean, hollow-cheeked face)
+  disc(6.5, hy + 1, 2.4, mix(sk, col("#ff6a5a"), 0.4)); // the sunburnt nose
+  for (let i = 0; i < 14; i++) {
+    const a = 0.2 + (i / 13) * 2.6,
+      r = 6 + (i % 3) * 1.6,
+      wv = Math.sin(t * 2 + i) * 0.6;
+    disc(Math.cos(a) * r * 0.9 + 1 + wv, hy + 2 + Math.sin(a) * r * 1.1, 3 + (i % 2), i % 3 ? beard : beardD);
+  }
+  for (let i = 0; i < 6; i++)
+    line(-3 + i * 2, hy + 9, -4 + i * 2 + Math.sin(t * 2 + i), hy + 14, 1.1, beardD); // the straggly ends
+  disc(4, hy + 4, 2.2, mix(beard, col("#c88a6a"), 0.3), 1.4); // the moustache
+  const blink = (t + 1.3) % 4 < 0.12;
+  if (blink) line(1.5, hy - 2, 4.5, hy - 2, 1, col("#1a1a1a"));
+  else {
+    disc(3, hy - 2, 1.6, col("#f4f0e8"));
+    disc(3.6, hy - 2, 0.9, col("#1a1a1a"));
+  }
+  line(0.5, hy - 5, 5.5, hy - 5.6 + (A === "crab" && u > 3 ? -1.5 : 0), 1.3, beardD); // the bushy brow
   if (A === "crab" && u > 3) {
-    disc(2, -47, 2, col("#3a1a1a")); // "OUCH!"
-    pixText("!", 12, -70, 2, col("#ffd24d"));
+    disc(5, hy + 6, 2.2, col("#3a1a1a")); // "OUCH!"
+    pixText("!", 14, -78, 2.2, col("#ffd24d"));
   }
-  disc(0, -60, 13, hat, 3);
-  disc(0, -63, 7, hat, 5);
-  rect(-7, -62, 14, 2, col("#c8402a")); // the hat band
+  // the straw hat: a wide frayed brim, a crown, a red band
+  const tilt2 = Math.sin(t * 1.1) * 0.04;
+  push();
+  translate(0, hy - 7);
+  rotate(tilt2);
+  disc(0, 0, 15, hat, 3.2);
+  for (let i = 0; i < 9; i++) line(-14 + i * 3.5, 1, -15 + i * 3.5, 3 + (i % 2), 0.6, shade(hat, 0.7)); // frayed straw
+  disc(0, -3, 8, hat, 5.4);
+  rect(-7.5, -2.5, 15, 2, col("#c8402a"));
+  for (let i = 0; i < 4; i++) line(-6 + i * 4, -7, -5 + i * 4, -1, 0.5, shade(hat, 0.75)); // the weave
   pop();
-  void dark;
+  pop();
+  // the fishing line and what's on it
+  if (A === "fish" && CW.phase === "island" && b.rodTip) {
+    const [tx, ty] = b.rodTip,
+      reel = u > 7.5,
+      bite = u > 4.5 && u < 7.5,
+      fl = reel ? Math.min(1, (u - 7.5) / 1.5) : 0,
+      lx = lerpA(tx + 70 * ks, tx + 4 * ks, fl),
+      ly = lerpA(
+        b.iy + 20 * ks + (bite ? Math.sin(t * 20) * 2 * ks : Math.sin(t * 2) * ks),
+        ty + 14 * ks,
+        fl
+      );
+    line(tx, ty, lx, ly, 0.6, withA(C.white, 0.7));
+    if (!reel) {
+      disc(lx, ly - 1 * ks, 1.6 * ks, col("#ff4040")); // the float
+      if (bite)
+        for (let i = 0; i < 3; i++)
+          arc(
+            lx,
+            ly,
+            (3 + i * 3 + ((t * 8) % 3)) * ks,
+            Math.PI,
+            2 * Math.PI,
+            0.6,
+            withA(C.white, 0.6 - i * 0.18),
+            8
+          );
+    } else {
+      push();
+      translate(lx, ly + Math.sin(t * 4) * 1.5 * ks);
+      rotate(Math.sin(t * 3) * 0.3);
+      rect(-3 * ks, 0, 5 * ks, 8 * ks, col("#3a2a1a"));
+      rect(-3 * ks, 6 * ks, 10 * ks, 3.5 * ks, col("#3a2a1a"));
+      for (let i = 0; i < 3; i++)
+        disc(
+          -2 * ks + i * 1.6 * ks,
+          9.6 * ks + ((t * 10 + i * 3) % 4) * ks,
+          0.6 * ks,
+          withA(col("#9fe0ff"), 0.8)
+        ); // dripping
+      pop(); // an old boot!
+    }
+  }
 }
 // ---------------------------------------------------------------- the words (HUD)
 function castawayHud(g, s) {
@@ -55854,7 +56684,7 @@ function drawEggs(g, s) {
 // THE VERSION (from v1.2.0, 5 October 2026): MAJOR.MINOR.PATCH - a new MINOR for a batch of new things, a new PATCH for
 // fixes and small touches - with the day it was made next to it. (Before this the versions were named after the date,
 // like v2026.10.05c.)
-const GAME_VERSION = "v1.4.10",
+const GAME_VERSION = "v1.4.11",
   GAME_DATE = "06.10.2026",
   VERSION_TEXT = GAME_VERSION + "  ·  " + GAME_DATE;
 const FB = '"Chakra Petch", "Segoe UI", sans-serif';
@@ -62088,6 +62918,18 @@ profWire();
 //  the game, and where the motion capture, the folk songs and the fonts come from. Both from the menu at any time.
 // =====================================================================================
 const NEWS = [
+  {
+    ver: "v1.4.11",
+    title: "CASTAWAY ISLAND, REDRAWN",
+    items: [
+      "SKINNY KOOS WITH WALKING LEGS AND A BUSHY BEARD",
+      "SPYGLASS, FISHING AND A PINA COLADA RECLINER",
+      "A TALL PALM AND AN ISLAND FAR OUT AT SEA",
+      "SPECTACULAR SUNRISES, SUNSETS AND THE MILKY WAY",
+      "WHALE, ORCA, OCTOPUS, DIVERS AND A SURFACING SUB",
+      "DETAILED SHIPS, ANIMATED UFO AND KLAAS",
+    ],
+  },
   {
     ver: "v1.4.10",
     title: "CASTAWAY ISLAND & RELAX MODE",

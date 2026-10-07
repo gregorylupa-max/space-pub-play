@@ -3837,7 +3837,7 @@ function resize() {
   if (typeof layoutText === "function" && $("vLayout")) layoutText();
   dpr = gfx === "cpu" || (R && R.kind === "CPU") ? 1 : Math.min(2, window.devicePixelRatio || 1);
   if (cv) {
-    // RETRO look: draw at a low resolution (1.5 game units per pixel, like a 16-bit console) and blow it up with hard pixel edges
+    // RETRO look: draw at a low resolution (1.25 game units per pixel, like a 16-bit console) and blow it up with hard pixel edges
     // RETRO looks draw the game into a small picture; with the CRT screen on (GPU only) that picture is then shown
     // through a full-resolution TV pass, otherwise the browser just blows it up with hard pixel edges.
     CRT_ACTIVE = !!(retroLook && crtOn && QUAL >= 1 && R && R.kind === "GPU" && R.post);
@@ -3869,7 +3869,7 @@ function resize() {
 window.addEventListener("resize", resize);
 // LOOK: 0 = ARCADE (16-bit pixels, 512 colours, dithered), 1 = 8-BIT (chunky pixels, 64 colours), 2 = SMOOTH HD
 const LOOKS_UI = ["ARCADE PIXELS", "8-BIT", "SMOOTH HD"],
-  LOOK_PX = [1.5, 2, 1],
+  LOOK_PX = [1.25, 2, 1], // (v1.4.13: ARCADE a little finer - 1.25 units a pixel, so faces, hands and clothes read)
   LOOK_LEVELS = [8, 4, 0];
 let lookMode = clamp(store.get("look2", 0) | 0, 0, 2),
   retroLook = lookMode !== 2;
@@ -16069,10 +16069,59 @@ function limb(x, y, a1, l1, a2, l2, w, c1, c2, end , endR ) {
     ex = kx + Math.cos(a1 + a2) * l2,
     ey = ky + Math.sin(a1 + a2) * l2;
   line(x, y, kx, ky, w, c1);
+  limbShade(x, y, kx, ky, w, c1);
   disc(kx, ky, w * 0.55, c1);
   line(kx, ky, ex, ey, w * 0.85, c2 || c1);
-  if (end) disc(ex, ey, endR || w * 0.6, end);
+  limbShade(kx, ky, ex, ey, w * 0.85, c2 || c1);
+  limbJoint(kx, ky, a1, a2, w, c1);
+  if (end) {
+    const r = endR || w * 0.6;
+    disc(ex, ey, r, end);
+    // (v1.4.13) a hand gets a THUMB - a little nub on the inside of the palm
+    if (r >= 2 && !OUT && end[3] > 0.05) {
+      const ha = a1 + a2,
+        sd = a2 >= 0 ? 1 : -1;
+      disc(
+        ex + Math.cos(ha) * r * 0.25 - Math.sin(ha) * r * 0.75 * sd,
+        ey + Math.sin(ha) * r * 0.25 + Math.cos(ha) * r * 0.75 * sd,
+        r * 0.45,
+        withA(shade(end, 0.9), end[3])
+      );
+      disc(ex - r * 0.3, ey - r * 0.35, r * 0.32, withA(mix(end, C.white, 0.25), end[3] * 0.8)); // (a gleam on the knuckles)
+    }
+  }
   return [ex, ey];
+}
+// (v1.4.13) ROUNDED LIMBS: every arm and leg is shaded like a cylinder - a lit edge on the side facing the lamps
+// overhead, a shadow edge on the other - so they look solid instead of flat (skipped for thin things like antennae)
+const LIMB_LX = -0.5,
+  LIMB_LY = -0.87;
+function limbShade(x1, y1, x2, y2, w, c) {
+  if (OUT || w < 2.4 || !c || c[3] < 0.05) return;
+  const dx = x2 - x1,
+    dy = y2 - y1,
+    l = Math.hypot(dx, dy) || 1;
+  let nx = -dy / l,
+    ny = dx / l;
+  if (nx * LIMB_LX + ny * LIMB_LY < 0) {
+    nx = -nx;
+    ny = -ny;
+  }
+  const o = w * 0.3,
+    lw = Math.max(0.6, w * 0.2);
+  line(x1 + nx * o, y1 + ny * o, x2 + nx * o, y2 + ny * o, lw, withA(mix(c, C.white, 0.22), c[3] * 0.85));
+  line(x1 - nx * o, y1 - ny * o, x2 - nx * o, y2 - ny * o, lw, withA(shade(c, 0.7), c[3] * 0.85));
+}
+// the joint: the point of the elbow or the knee shows on the outside of the bend, catching the light
+function limbJoint(kx, ky, a1, a2, w, c) {
+  if (OUT || w < 2.4 || !c || c[3] < 0.05 || Math.abs(a2) < 0.12) return;
+  const out = a1 + a2 * 0.5 - (a2 > 0 ? Math.PI / 2 : -Math.PI / 2);
+  disc(
+    kx + Math.cos(out) * w * 0.32,
+    ky + Math.sin(out) * w * 0.32,
+    w * 0.24,
+    withA(mix(c, C.white, 0.2), c[3] * 0.8)
+  );
 }
 // two-bone reach: the angles that put a hand (or foot) on a target; bend = +1 / -1 picks which way the joint folds
 function ik(sx, sy, tx, ty, l1, l2, bend) {
@@ -16944,7 +16993,15 @@ function customerBody(c, t, a) {
     translate(fx, fy);
     rotate(toe);
     rect(-3, -2, 10, 4, A(shade(L.shoes, dk)));
-    rect(-3, 1.4, 10, 1.4, A(shade(L.shoes, dk * 0.6)));
+    // (v1.4.13) a proper shoe: a rounded toe cap with a shine, the laces, a heel
+    disc(6.6, 0, 2.1, A(shade(L.shoes, dk)), 2);
+    if (!OUT) {
+      line(4.6, -1.5, 7.4, -1.1, 0.7, A(withA(mix(L.shoes, C.white, 0.45), 0.8)));
+      disc(1.4, -1.9, 0.55, A(withA(mix(L.shoes, C.white, 0.6), 0.85)));
+      disc(3, -1.9, 0.55, A(withA(mix(L.shoes, C.white, 0.6), 0.85)));
+    }
+    rect(-3, 1.4, 10.6, 1.4, A(shade(L.shoes, dk * 0.6)));
+    rect(-3.2, 0.2, 3.2, 2.6, A(shade(L.shoes, dk * 0.5))); // the heel
     pop();
   }
 
@@ -18974,6 +19031,8 @@ function drawHead(kind, x, hy, t, c, A, angry, look, L, mouth = "flat", eyes = "
     disc(ex, ey, r * big, A(C.white), r * 1.1 * big);
     disc(ex + 0.6 + look * 0.35, ey + 0.4 + (look < 0 ? -1 : 0), r * 0.55, ink);
     disc(ex - 0.3, ey - 0.5, r * 0.25, A(C.white));
+    if (eyes !== "wide" && r >= 1.5)
+      arc(ex, ey + r * 0.2, r * 1.15, Math.PI + 0.35, Math.PI * 2 - 0.35, 0.7, A(withA(ink, 0.7)), 6); // the upper eyelid
   };
   const brows = (y, s = 1) => {
     if (angry) {
@@ -21648,6 +21707,28 @@ function playerBody(t, flying) {
     line(-8, top + 11, 9, top + 11, 1.2, col("#c8c8c0"));
     line(-3 + flap * 0.4, top + 17, 4 + flap * 0.4, top + 17, 1, col("#d8d8d0"));
     rect(-2 + flap * 0.3, top + 19, 5, 4, col("#ececea"));
+    // (v1.4.13) the apron pocket, a pen clipped in it, a bar towel tucked in the strings
+    if (!OUT) {
+      line(-2 + flap * 0.3, top + 19, 3 + flap * 0.3, top + 19, 0.6, col("#c8c8c0"));
+      line(1.5 + flap * 0.3, top + 16.6, 1.8 + flap * 0.3, top + 19.6, 0.8, col("#2a5ad0"));
+      disc(1.6 + flap * 0.3, top + 16.4, 0.5, col("#e8e8e8"));
+      quad4(
+        -7 + flap * 0.2,
+        top + 11,
+        -4 + flap * 0.2,
+        top + 11,
+        -4.6 + flap * 0.5,
+        top + 19,
+        -7.6 + flap * 0.5,
+        top + 18.4,
+        col("#e8f0ff"),
+        col("#e8f0ff"),
+        col("#b8c8e8"),
+        col("#b8c8e8")
+      );
+      for (let i = 0; i < 3; i++)
+        line(-7.2 + flap * 0.3, top + 13 + i * 2, -4.2 + flap * 0.3, top + 13 + i * 2, 0.5, col("#d04050")); // (its red check)
+    }
     for (const sp of P.splat || [])
       disc(sp.x + flap * (sp.y / 20) * 0.6, top + 12 + sp.y, sp.r, FLAVORS[sp.f][1], sp.r * 0.8); // every shake you pour leaves its mark
     rect(-8 + flap, 6, 17 - flap * 0.7, 2, col("#d0d0c4")); // grubby hem
@@ -21661,9 +21742,19 @@ function playerBody(t, flying) {
     disc(0, top + 6, 1.6, tie);
     disc(0, top + 10, 1.4, col("#ffffff"));
   }
+  // (v1.4.13) a name badge pinned on the chest - gold rim, a little star
+  if (!ST.coat && !OUT) {
+    rect(-8.6, top + 3.4, 5, 3.2, col("#d8b040"));
+    rect(-8.1, top + 3.9, 4, 2.2, col("#fff8e8"));
+    line(-7.6, top + 5.4, -4.8, top + 5.4, 0.5, col("#3a3a48"));
+    disc(-7.2, top + 4.5, 0.5, col("#e84060"));
+  }
   // head
   const hy = top - 12 + headDY,
     blink = t % 3.3 < 0.1 || idleAct === "whistle";
+  // (v1.4.13) the NECK - with a shadow under the chin
+  rect(-2.8, hy + 4, 5.6, top - hy - 3, shade(skin, 0.9));
+  rect(-2.8, hy + 4, 5.6, 2.4, shade(skin, 0.7));
   push();
   translate(0, hy + 8);
   scaleBy(0.82);
@@ -21675,6 +21766,7 @@ function playerBody(t, flying) {
   disc(-3, -4, 3.5, shade(skin, 1.12), 2.2);
   disc(fem ? 8.6 : 9, 1, fem ? 2 : 2.5, skin, fem ? 2.8 : 3.5); // nose
   disc(-9, 0, 2.4, shade(skin, 0.85), 3.2); // ear
+  if (!OUT) arc(-8.8, 0.2, 1.3, -2.4, 1.4, 0.6, shade(skin, 0.62), 6); // (its inner fold)
   hairFront(ST.style, hair, tie, ST);
   if (ST.hoops || fem) {
     const g2 = col("#ffd24d");
@@ -21717,6 +21809,14 @@ function playerBody(t, flying) {
     disc(7.2, -0.8, 1.05, INK);
     disc(2.4, -1.5, 0.4, C.white);
     disc(6.8, -1.5, 0.4, C.white);
+    if (!OUT) {
+      arc(2.3, -0.8, 1.9, Math.PI + 0.3, Math.PI * 2 - 0.3, 0.6, withA(INK, 0.75), 5);
+      arc(6.7, -0.8, 1.9, Math.PI + 0.3, Math.PI * 2 - 0.3, 0.6, withA(INK, 0.75), 5); // (the upper lids)
+      if (!brow && !lost && !sad) {
+        line(0.8, -4, 4, -4.4, 1, shade(hair, 0.9));
+        line(5.4, -4.4, 8.8, -4, 1, shade(hair, 0.9)); // (calm brows)
+      }
+    }
   }
   if (fem && !flying && !brow) {
     arc(2.4, -2.4, 2.6, Math.PI + 0.5, Math.PI * 2 - 0.4, 0.9, shade(hair, 0.85), 5);
@@ -21736,6 +21836,7 @@ function playerBody(t, flying) {
     line(5.5, -4.2 + brow * 0.6, 9, -3.2 - brow * 0.3, 1.2, hair);
   } // cross eyebrows
   disc(8, 2, 2, col("#e0a070"));
+  if (!OUT) disc(8.6, 3.2, 0.5, shade(skin, 0.55)); // (a nostril)
   const ms = running ? Math.sin(ph * 2) * 0.5 : 0;
   if (!fem) {
     if (!ST.beard)
@@ -29398,6 +29499,9 @@ function drawDeepSpace(t) {
         break;
       case "taxi":
         outlined(() => drawTaxiRace(f, L, Rr, cy + 10 * k, k * 0.6, t, true, true), INK); // (smaller - further away, out in space)
+        break;
+      case "furmanka": // (v1.4.13) the horse and hay cart trots through space, right to left (furmanka.ts)
+        outlined(() => drawFurmanka(x, cy + 6 * k, k * 0.62, t, -1), INK);
         break;
       case "convoy":
         outlined(() => drawConvoy(f, L, Rr, cy - 10 * k, k * 0.42, t), INK); // (smaller - further away)
@@ -54772,6 +54876,446 @@ function climbFront(kind, c, t, A, hx, hy, holding, moving) {
       );
 }
 // =====================================================================================
+//  THE FURMANKA (v1.4.13): an old-school horse and hay cart, the way peasants drove them in VOLHYNIA (Wołyń) in the
+//  1930s - trotting through space in the full-screen show, right after the South African minibus taxi.
+//    - THE HORSE: a chestnut with a white blaze, at a proper TROT - the legs move in diagonal pairs, each hoof planted
+//      and swept back, then lifted in an arc (front knees fold, hind hocks flex, the pasterns flick); the body bounces
+//      twice a stride, the head nods, the ears flick, the mane and the tail stream and swish, it blinks.
+//    - THE HARNESS: a padded horse collar (chomąto), and over it the painted wooden SHAFT BOW (duga) with a little bell,
+//      as the carts of the eastern borderlands had; the shafts, a belly band, the breeching, and the reins.
+//    - THE CART: a ladder-sided hay wagon (wóz drabiniasty) on wooden spoked wheels with iron rims (the front ones
+//      smaller), piled high with hay, a pitchfork stuck in the top, a lantern swinging underneath.
+//    - THE PEOPLE: the driver up front in a cap, a white linen shirt embroidered in red, a dark waistcoat and tall
+//      boots, the reins in one hand and a whip in the other (its lash flicking now and then); and a woman in a flowered
+//      headscarf riding on top of the hay, waving.
+//    - In space the hay keeps coming loose: wisps of it float away behind, and the hooves kick up puffs of star dust.
+//  Drawn facing the way it travels (dir -1 = going left); x, y = the middle of the whole team, k = scale.
+// =====================================================================================
+function drawFurmanka(x, y, k, t, dir = -1) {
+  const RATE = 1.9, // (trot strides a second)
+    G = 18, // (where the hooves and wheels meet the - imaginary - ground)
+    sp = RATE * 2 * 16, // (how fast it goes, in its own units a second: two half-strides of 16 each, a stride)
+    gp = t * RATE,
+    bounce = -Math.abs(Math.sin(gp * Math.PI * 2)) * 1.6, // (two little lifts a stride: the trot's moments of flight)
+    chest = col("#8a4a22"),
+    chestD = shade(chest, 0.72),
+    chestL = mix(chest, col("#ffd8a8"), 0.22),
+    mane = col("#3a2012"),
+    hayC = [col("#e8c860"), col("#d8b048"), col("#f0d878"), col("#c89a38")],
+    hayD = col("#a87a28"),
+    wood = col("#8a6238"),
+    woodD = col("#5a3e22"),
+    iron = col("#3a3a42");
+  push();
+  translate(x, y);
+  scaleXY(dir * k, k); // (drawn facing right; dir -1 mirrors it to face left)
+  translate(-8, 0);
+  // ---- hay coming loose, floating away behind into space ----
+  for (let i = 0; i < 12; i++) {
+    const life = (t * 0.22 + hash(i * 3.7)) % 1,
+      hx = -40 + hash(i * 1.3) * 40 - life * 120,
+      hy = -46 + hash(i * 2.9) * 18 - life * 30 + Math.sin(life * 6 + i) * 6,
+      a = life * 6 + i,
+      L = 3 + hash(i) * 3;
+    line(
+      hx - Math.cos(a) * L,
+      hy - Math.sin(a) * L,
+      hx + Math.cos(a) * L,
+      hy + Math.sin(a) * L,
+      0.8,
+      withA(hayC[i % 4], 0.85 * (1 - life))
+    );
+  }
+  // ---- THE WHEELS (the far ones first, darker), turning with the trot ----
+  const spin = (t * sp) % 1e5;
+  const wheel = (wx, wy, r, far) => {
+    const a0 = -spin / r,
+      wc = far ? woodD : wood,
+      ic = far ? shade(iron, 0.8) : iron;
+    arc(wx, wy, r, 0, 6.283, 2.4, ic, 24); // the iron tyre
+    arc(wx, wy, r - 1.8, 0, 6.283, 1.8, wc, 24); // the wooden felloe
+    for (let i = 0; i < 10; i++) {
+      const a = a0 + (i / 10) * 6.283;
+      line(wx, wy, wx + Math.cos(a) * (r - 2), wy + Math.sin(a) * (r - 2), 1, wc); // the spokes
+    }
+    disc(wx, wy, 2.6, shade(wc, 0.85));
+    disc(wx, wy, 1.2, ic); // the hub, an iron cap
+  };
+  wheel(-55, G - 13, 13, true);
+  wheel(-12, G - 10, 10, true);
+  // ---- THE CART: a ladder-sided hay wagon ----
+  quad4(-74, -4, 4, -4, 2, 2, -72, 2, wood, wood, woodD, woodD); // the bed
+  line(-60, 2, -55, G - 13, 2.2, woodD);
+  line(-14, 2, -12, G - 10, 2.2, woodD); // (the axle blocks)
+  // the lantern swinging under the back
+  {
+    const sw = Math.sin(t * 2.2) * 0.3,
+      lx = -68 + Math.sin(sw) * 6,
+      ly = 2 + Math.cos(sw) * 6;
+    line(-68, 2, lx, ly, 0.5, iron);
+    rect(lx - 1.6, ly, 3.2, 4, col("#3a3a40"));
+    rect(lx - 1.1, ly + 0.6, 2.2, 2.6, col("#ffd070"));
+    if (!OUT) {
+      R.setAdd(true);
+      glow(lx, ly + 2, 9, withA(col("#ffb040"), 0.45 + 0.1 * Math.sin(t * 9)));
+      R.setAdd(false);
+    }
+  }
+  // THE HAY: a great golden heap, overflowing the ladders
+  {
+    // one great heap, its outline a little lumpy, shaded darker underneath and lit along the top
+    const prof = [];
+    for (let i = 0; i <= 24; i++) {
+      const f = i / 24,
+        hx = -79 + f * 86,
+        hy =
+          -6 -
+          40 * Math.pow(Math.sin(Math.PI * f), 0.75) +
+          Math.sin(i * 2.7) * 1.6 +
+          Math.sin(t * 1.3 + i) * 0.3;
+      prof.push(hx, hy);
+    }
+    poly([-36, -2, ...prof, 7, -4], hayD);
+    poly([-36, -6, ...prof.map((v, i) => (i % 2 ? v + 2.2 : v + (v < -36 ? 1.5 : -1.5))), 5, -6], hayC[1]);
+    poly([-38, -26, ...prof.map((v, i) => (i % 2 ? v + 4 : v * 0.86 - 5)).slice(4, -4)], withA(hayC[2], 0.9)); // (the sunlit top)
+    for (let i = 0; i < 14; i++) {
+      // tufts and clumps in the heap
+      const u = hash(i * 4.3),
+        hx = -72 + u * 72,
+        hy = -12 - hash(i * 1.9) * 26 * Math.sin(Math.PI * (0.08 + u * 0.84));
+      disc(hx, hy, 4 + hash(i) * 4, withA(i % 2 ? hayC[3] : hayC[0], 0.55), 2.4);
+    }
+    for (let i = 0; i < 46; i++) {
+      // the straws, sticking out every which way, stirring a little
+      const u = hash(i * 1.7),
+        hx = -76 + u * 82,
+        top = -44 + Math.pow(Math.abs(u - 0.45) * 2, 1.6) * 30,
+        hy = top + hash(i * 3.3) * (-6 - top),
+        a = -Math.PI / 2 + (hash(i * 5.1) - 0.5) * 2.4 + Math.sin(t * 1.5 + i) * 0.06,
+        L = 3 + hash(i * 7.3) * 5;
+      line(hx, hy, hx + Math.cos(a) * L, hy + Math.sin(a) * L, 0.6, i % 3 ? hayD : hayC[2]);
+    }
+    // the pitchfork, stuck in the top
+    line(-66, -30, -74, -62, 1.2, wood);
+    for (let i = -1; i <= 1; i++) line(-74 + i * 1.4, -62, -75.5 + i * 1.8, -70, 0.6, iron);
+    line(-76, -62, -72, -62, 0.7, iron);
+  }
+  // the ladders: a rail along the side, the rungs - the hay bulging out between them
+  line(-76, -21, 4, -18, 1.6, wood);
+  line(-74, -4, 3, -4, 1.4, woodD);
+  for (let i = 0; i < 12; i++) {
+    const lx = -73 + i * 6.8;
+    line(lx, -4, lx - 0.6, -20.6 + (i / 11) * 2.6, 1, woodD);
+  }
+  wheel(-56, G - 13, 13, false);
+  wheel(-10, G - 10, 10, false);
+  // ---- THE SHAFTS: from the front of the cart to the horse's collar (the far one first) ----
+  const hb = bounce,
+    collarX = 72, // (the collar sits round the bottom of the neck, in front of the withers)
+    collarY = -27 + hb;
+  line(2, -6, collarX - 2, collarY + 2, 1.8, woodD);
+  // ---- THE HORSE ----
+  // a trot: the legs go in DIAGONAL PAIRS (near fore with far hind, far fore with near hind). Each hoof follows a path:
+  // planted and swept back under the body, then picked up and carried forward in an arc. The legs reach for it - knees
+  // and hocks folding the right way - by two-bone IK (characters.ts)
+  const STR = 8, // (half a stride)
+    LIFT = 7;
+  const hoofPath = (s, cx) => {
+    s = ((s % 1) + 1) % 1;
+    if (s < 0.5) return [cx + STR * (1 - 4 * s), G, 0]; // planted, sweeping back
+    const v = (s - 0.5) / 0.5,
+      e = v * v * (3 - 2 * v);
+    return [cx - STR + 2 * STR * e, G - LIFT * Math.sin(Math.PI * v), Math.sin(Math.PI * v)]; // lifted, swinging forward
+  };
+  const legC = (far) => (far ? chestD : chest);
+  const foreLeg = (s, far) => {
+    const sx = far ? 63 : 66,
+      sy = -10 + hb,
+      [hx, hy, sw] = hoofPath(s, far ? 68 : 71),
+      // the pastern flicks up behind as the hoof leaves the ground
+      pa = Math.PI / 2 - 0.35 + sw * 1.7,
+      fx = hx - Math.cos(pa) * 4.5,
+      fy = hy - Math.sin(pa) * 4.5 - 1.5,
+      [a1, a2] = ik(sx, sy, fx, fy, 13, 11, 1), // (the knee comes forward, so the cannon swings back)
+      kx = sx + Math.cos(a1) * 13,
+      ky = sy + Math.sin(a1) * 13,
+      c = legC(far);
+    line(sx, sy - 3, kx, ky, 4.4, c); // the forearm, muscled at the top
+    disc(sx, sy - 2, 4.4, c);
+    line(kx, ky, fx, fy, 2.6, c); // the cannon bone
+    disc(kx, ky, 2.2, shade(c, 0.9)); // the knee
+    void a2;
+    line(fx, fy, fx + Math.cos(pa) * 4.5, fy + Math.sin(pa) * 4.5, 2.4, c); // the pastern
+    disc(fx, fy, 1.8, shade(c, 0.85)); // the fetlock
+    const hx2 = fx + Math.cos(pa) * 4.5,
+      hy2 = fy + Math.sin(pa) * 4.5;
+    push();
+    translate(hx2, hy2);
+    rotate(pa - Math.PI / 2);
+    rect(-2.2, -0.6, 4.6, 2.6, col(far ? "#1a1410" : "#2a201a")); // the hoof
+    if (!far) rect(-2.4, -1.8, 5, 1.4, col("#f0e8dc")); // a white sock
+    pop();
+    return [hx2, hy2, sw];
+  };
+  const hindLeg = (s, far) => {
+    const hx0 = far ? 38 : 41,
+      hy0 = -16 + hb,
+      th = Math.PI / 2 - 0.55 + Math.sin(s * Math.PI * 2) * 0.12, // (the thigh, swinging a little)
+      kx = hx0 + Math.cos(th) * 12, // the stifle
+      ky = hy0 + Math.sin(th) * 12,
+      [hx, hy, sw] = hoofPath(s, far ? 40 : 43),
+      pa = Math.PI / 2 - 0.3 + sw * 1.4,
+      fx = hx - Math.cos(pa) * 4.5,
+      fy = hy - Math.sin(pa) * 4.5 - 1.5,
+      [a1] = ik(kx, ky, fx, fy, 11, 11, -1), // (the hock points back)
+      jx = kx + Math.cos(a1) * 11,
+      jy = ky + Math.sin(a1) * 11,
+      c = legC(far);
+    disc(hx0 + 1, hy0 + 2, 9, c, 11); // the haunch
+    line(kx, ky, jx, jy, 3.6, c); // the gaskin
+    disc(jx, jy, 2.2, shade(c, 0.88)); // the hock
+    line(jx, jy, fx, fy, 2.5, c); // the cannon
+    line(fx, fy, fx + Math.cos(pa) * 4.5, fy + Math.sin(pa) * 4.5, 2.4, c);
+    disc(fx, fy, 1.8, shade(c, 0.85));
+    const hx2 = fx + Math.cos(pa) * 4.5,
+      hy2 = fy + Math.sin(pa) * 4.5;
+    push();
+    translate(hx2, hy2);
+    rotate(pa - Math.PI / 2);
+    rect(-2.2, -0.6, 4.6, 2.6, col(far ? "#1a1410" : "#2a201a"));
+    pop();
+    return [hx2, hy2, sw];
+  };
+  // star dust where a hoof comes down
+  const dust = (s, cx) => {
+    const f = (((s % 1) + 1) % 1) / 0.5;
+    if (f > 1 || OUT) return;
+    R.setAdd(true);
+    for (let i = 0; i < 4; i++)
+      disc(
+        cx + STR - f * 10 - i * 2,
+        G + 1 - f * (3 + i),
+        0.8 + f * 1.5,
+        withA(col("#c8d8ff"), 0.45 * (1 - f))
+      );
+    R.setAdd(false);
+  };
+  // the far legs first (behind the body): far fore with pair B, far hind with pair A
+  const sA = gp,
+    sB = gp + 0.5;
+  hindLeg(sA, true);
+  foreLeg(sB, true);
+  // the tail: long and dark, swishing and streaming back
+  {
+    const pts = [];
+    for (let i = 0; i <= 10; i++) {
+      const f = i / 10;
+      pts.push(
+        32 - f * 14 - f * f * 4,
+        -24 + hb + f * 20 + Math.sin(t * 2.3 - f * 3) * 4 * f + Math.sin(gp * 6.283) * f
+      );
+    }
+    polyline(pts, 3.6, mane);
+    for (let j = -1; j <= 1; j++)
+      polyline(
+        pts.map((v, i) => (i % 2 ? v + j * 1.2 + Math.sin(t * 3 + j + i) * 0.6 : v - j * 0.8)),
+        1,
+        shade(mane, 1.4)
+      );
+  }
+  // the body: the barrel, the hindquarters, the chest - shaded, lit along the back
+  disc(40, -20 + hb, 13, chest, 12); // the hindquarters
+  disc(54, -20 + hb, 16, chest, 10.5); // the barrel
+  disc(66, -21 + hb, 10, chest, 11); // the chest
+  disc(52, -14 + hb, 15, withA(chestD, 0.55), 5); // (the shadow under the belly)
+  disc(48, -27 + hb, 16, withA(chestL, 0.5), 3.2); // (the light along the back)
+  // the harness on the body: the belly band, the saddle pad, the breeching round the quarters
+  rect(57, -31 + hb, 4.4, 21, col("#3a2614"));
+  rect(55, -32 + hb, 8.4, 4, col("#5a3a20"));
+  arc(40, -20 + hb, 12.5, 1.6, 3.6, 1.4, col("#3a2614"), 10);
+  // the near legs, in front of the body
+  const nh = hindLeg(sB, false),
+    nf = foreLeg(sA, false);
+  void nh;
+  void nf;
+  dust(sA, 71);
+  dust(sB, 43);
+  // THE NECK AND THE HEAD: nodding in time with the trot
+  const nod = Math.sin(gp * Math.PI * 4 + 0.6) * 0.05;
+  push();
+  translate(68, -24 + hb);
+  rotate(nod);
+  quad4(-6, 4, 6, 6, 18, -18, 10, -24, chest, chest, chestD, chestL); // the neck, arched
+  disc(9, -14, 7, chest, 8);
+  // the mane: dark locks along the top of the neck, streaming back
+  for (let i = 0; i < 9; i++) {
+    const f = i / 8,
+      mx = -4 + f * 14,
+      my = 2 - f * 25;
+    line(mx, my, mx - 5 - Math.sin(t * 4 + i) * 1.5, my + 3 + Math.sin(t * 3 + i * 1.3), 2, mane);
+  }
+  // the head: long, the cheek round, the muzzle soft; a white blaze down the face
+  push();
+  translate(14, -24);
+  rotate(0.65);
+  disc(0, 0, 6, chest, 5.5); // the cheek and the poll
+  quad4(2, -4.5, 15, -2.8, 15, 3.2, 2, 5, chest, chestL, chestD, chest);
+  disc(15.5, 0.4, 3.6, chest, 3.4); // the muzzle
+  disc(17.5, 1.2, 0.8, col("#1a0e08")); // the nostril
+  line(16, 3.4, 18, 3.2, 0.5, col("#1a0e08")); // the mouth
+  quad4(2, -3.4, 14, -2.4, 14, -0.6, 3, -1.4, col("#f4ece0")); // the blaze
+  // the eye - it blinks
+  if ((t + 0.4) % 4.2 < 0.12) line(4, -1.6, 6.6, -1.4, 0.6, col("#1a0e08"));
+  else {
+    disc(5.2, -1.6, 1.3, col("#1a0e08"));
+    disc(5.6, -2, 0.4, withA(C.white, 0.9));
+  }
+  // the ears: pricked forward, one flicking back now and then
+  const flick = Math.sin(t * 0.9) > 0.85 ? -0.7 : 0;
+  push();
+  translate(-1.5, -4.5);
+  rotate(-0.5 + flick);
+  tri(-1.6, 0, 1.6, 0, 0.6, -6, chestD);
+  pop();
+  push();
+  translate(0.5, -5);
+  rotate(-0.25);
+  tri(-1.6, 0, 1.6, 0, 0.6, -6.5, chest);
+  tri(-0.6, -0.4, 1, -0.4, 0.5, -4.6, col("#2a1a10"));
+  pop();
+  line(-1, -6, -4, -3 + Math.sin(t * 4) * 1.5, 1.6, mane); // the forelock
+  // the bridle: the headpiece, the noseband, the bit
+  line(-1, -4.4, 1, 5, 0.9, col("#2a1a0e"));
+  line(9, -3.6, 9.6, 4.4, 0.9, col("#2a1a0e"));
+  line(1, 1, 9.4, 1.6, 0.8, col("#2a1a0e"));
+  disc(14.6, 3.8, 0.9, col("#c8ccd6")); // the bit ring
+  pop();
+  pop();
+  // THE COLLAR (chomąto): a thick padded ring round the bottom of the neck, the hames on it
+  {
+    push();
+    translate(collarX, collarY);
+    rotate(-0.75);
+    scaleXY(0.62, 1);
+    arc(0, 0, 7.5, 0, 6.283, 4, col("#3a2614"), 18);
+    arc(0, 0, 7.5, -2.2, 0.9, 1.4, col("#7a5030"), 12); // (the leather, catching the light)
+    arc(0, 0, 9.8, -2.4, 0.8, 0.9, col("#c8a048"), 12); // the brass hames
+    pop();
+  }
+  // the near shaft
+  line(4, -4, collarX + 1, collarY + 3, 2, wood);
+  // THE SHAFT BOW (duga): a wooden arch over the collar, painted red with flowers, a little bell swinging under it
+  {
+    const bx = collarX - 2,
+      by = collarY + 2;
+    arc(bx, by, 15, Math.PI + 0.45, Math.PI * 2 - 0.55, 2.6, col("#c8402a"), 16);
+    arc(bx, by, 15, Math.PI + 0.9, Math.PI * 2 - 1.1, 0.7, col("#ffd24d"), 10);
+    for (let i = 0; i < 3; i++) {
+      const a = Math.PI + 1.0 + i * 0.5;
+      disc(bx + Math.cos(a) * 15, by + Math.sin(a) * 15, 0.9, col(i % 2 ? "#40a0e0" : "#f4f0e8"));
+    } // (painted flowers)
+    const bs = Math.sin(gp * Math.PI * 4) * 0.4,
+      tx = bx + Math.cos(Math.PI * 1.5 - 0.05) * 15,
+      ty = by + Math.sin(Math.PI * 1.5 - 0.05) * 15;
+    line(tx, ty, tx + Math.sin(bs) * 4, ty + Math.cos(bs) * 4, 0.5, iron);
+    disc(tx + Math.sin(bs) * 5, ty + Math.cos(bs) * 5, 1.6, col("#e8c040"), 1.9); // the bell - ting-a-ling
+  }
+  // ---- THE DRIVER: on the board at the front of the cart ----
+  {
+    const db = Math.abs(Math.sin(gp * Math.PI * 2)) * 0.8, // (bumped along by the trot)
+      sk = col("#e8b890"),
+      shirt = col("#f4f0e4"),
+      vest = col("#3a2a20");
+    rect(-6, -24, 12, 2.4, wood); // the seat board
+    // legs: thighs forward, shins down, tall black boots
+    line(-2, -24 - db, 8, -22 - db, 3.6, col("#4a4a52"));
+    line(8, -22 - db, 9, -10, 3, col("#1a1a1e"));
+    rect(7, -11.5, 5.5, 2.4, col("#1a1a1e"));
+    // the body: a white linen shirt, a dark waistcoat
+    quad4(
+      -5,
+      -40 - db,
+      3,
+      -40 - db,
+      3,
+      -24 - db,
+      -5,
+      -24 - db,
+      vest,
+      vest,
+      shade(vest, 0.8),
+      shade(vest, 0.8)
+    );
+    rect(-1, -40 - db, 2.4, 16, shirt); // (the shirt front)
+    for (let i = 0; i < 3; i++) disc(0.2, -36 + i * 4 - db, 0.5, col("#c8a048")); // buttons
+    // the reins hand, forward; the whip hand, up
+    const rh = [8, -31 - db],
+      crack = Math.sin(t * 0.7) > 0.9;
+    line(-1, -38 - db, 5, -31 - db, 2.6, shirt);
+    line(5, -31 - db, rh[0], rh[1], 2.2, shirt);
+    disc(rh[0] + 0.6, rh[1], 1.4, sk);
+    rect(rh[0] - 1.2, rh[1] - 0.6, 3, 1.2, col("#c8402a")); // (an embroidered cuff)
+    // the reins: from his hand, sagging, to the bit
+    {
+      const ex = 91, // (the bit ring, where the head carries it)
+        ey = -36 + hb,
+        pts = [];
+      for (let i = 0; i <= 10; i++) {
+        const f = i / 10;
+        pts.push(
+          lerpA(rh[0], ex, f),
+          lerpA(rh[1], ey, f) + Math.sin(f * Math.PI) * (4 + Math.sin(gp * 12.6) * 1)
+        );
+      }
+      polyline(pts, 0.6, col("#2a1a0e"));
+    }
+    line(-3, -38 - db, -8, -44 - db, 2.6, shirt);
+    disc(-8.5, -45 - db, 1.4, sk);
+    // the whip: a stick, then a long lash curling - flicked now and then (never touching the horse)
+    line(-8.5, -45 - db, -2, -66, 0.8, woodD);
+    const lp = [];
+    for (let i = 0; i <= 8; i++) {
+      const f = i / 8;
+      lp.push(
+        -2 + f * (crack ? 22 : 10) + Math.sin(t * 3 + f * 4) * 2,
+        -66 + f * (crack ? -6 : 10) + Math.sin(t * 2 + f * 5) * 1.5 * f
+      );
+    }
+    polyline(lp, 0.4, col("#3a2a1a"));
+    // the head: a weathered face, a big moustache, a cap (kaszkiet) with a peak
+    disc(-1, -45 - db, 4.4, sk, 4.8);
+    disc(2.6, -44 - db, 1.3, mix(sk, col("#d06a5a"), 0.4)); // the nose
+    disc(1.4, -42.4 - db, 2.2, col("#5a4030"), 1); // the moustache
+    disc(0.8, -46.4 - db, 0.6, col("#1a1a1a"));
+    rect(-5.6, -51.6 - db, 9.2, 3.6, col("#3a3a44")); // the cap
+    disc(-1, -51.4 - db, 4.8, col("#4a4a54"), 2);
+    rect(1.8, -48.6 - db, 4.6, 1.2, col("#1a1a22")); // its peak
+    // the embroidered collar of the shirt: red stitches
+    for (let i = 0; i < 3; i++) disc(-1.6 + i * 1.4, -40.4 - db, 0.55, col("#c8302a"));
+  }
+  // ---- THE WOMAN ON THE HAY: a flowered headscarf, an embroidered blouse, waving ----
+  {
+    const wx = -38,
+      wy = -48 + Math.abs(Math.sin(gp * Math.PI * 2)) * 0.6,
+      sk = col("#f0c8a0"),
+      wave = Math.sin(t * 5) * 0.5;
+    disc(wx, wy + 4, 8, col("#2a3a6a"), 3.4); // her skirt, spread on the hay
+    quad4(wx - 3.6, wy - 10, wx + 3.6, wy - 10, wx + 4, wy + 2, wx - 4, wy + 2, col("#f4f0e4"));
+    for (let i = 0; i < 4; i++) disc(wx - 2.4 + i * 1.6, wy - 9, 0.5, col(i % 2 ? "#c8302a" : "#2a6ad0")); // embroidery
+    line(wx + 3, wy - 8, wx + 8 + wave * 2, wy - 18, 1.8, col("#f4f0e4"));
+    disc(wx + 8.4 + wave * 2, wy - 19, 1.3, sk); // the waving hand
+    disc(wx, wy - 14, 3.8, sk, 4.2);
+    disc(wx + 2, wy - 14.4, 0.55, col("#1a1a1a"));
+    arc(wx + 1.6, wy - 12.4, 1.2, 0.2, 2.6, 0.4, col("#a03a3a"), 6); // a smile
+    // the headscarf (chustka): red with little flowers, tied under the chin
+    disc(wx - 0.6, wy - 16, 4.6, col("#d0302a"), 4);
+    quad4(wx - 5, wy - 15, wx + 0.5, wy - 15, wx - 1, wy - 9, wx - 5.4, wy - 11, col("#d0302a"));
+    for (let i = 0; i < 4; i++)
+      disc(wx - 3 + hash(i) * 4, wy - 18 + hash(i * 2.3) * 4, 0.6, col(i % 2 ? "#ffd24d" : "#f4f0e8"));
+  }
+  pop();
+}
+// =====================================================================================
 //  EASY TO PICK UP, HARD TO MASTER (v2026.10.04ag)
 //
 //  THE COACH - for a brand-new player, on the first few levels: a bouncing arrow and a few words, right where the action
@@ -56046,6 +56590,7 @@ const FLY_NAMES                         = {
   "tatras": "THE TATRA MOUNTAINS · POLAND",
   "gdansk": "GDAŃSK · ON THE BALTIC SEA, POLAND",
   "taxi": "A SOUTH AFRICAN MINIBUS TAXI - IN SPACE!",
+  "furmanka": "A FURMANKA · A HORSE AND HAY CART FROM VOLHYNIA, POLAND, 1930s",
   "flags": "SOUTH AFRICA AND POLAND · FRIENDS",
   "zeppelin": "AN AIRSHIP - A ZEPPELIN",
   "dragon": "A DRAGON OF THE STARS",
@@ -56074,6 +56619,8 @@ function demoShowPlan(n)             {
   return [
     { kind: "space", len: 4 },
     { kind: "fly", what: "taxi", len: 12 },
+    { kind: "space", len: 3 },
+    { kind: "fly", what: "furmanka", len: 16 }, // (and from Poland: a horse and hay cart, Volhynia in the 1930s)
     { kind: "space", len: 3 },
     ...planetTourPlan(),
     // A MOMENT IN HISTORY (back by request): South Africa and Poland taking turns - the peaceful ones only (no battles,
@@ -57103,7 +57650,7 @@ function drawEggs(g, s) {
 // THE VERSION (from v1.2.0, 5 October 2026): MAJOR.MINOR.PATCH - a new MINOR for a batch of new things, a new PATCH for
 // fixes and small touches - with the day it was made next to it. (Before this the versions were named after the date,
 // like v2026.10.05c.)
-const GAME_VERSION = "v1.4.12",
+const GAME_VERSION = "v1.4.13",
   GAME_DATE = "06.10.2026",
   VERSION_TEXT = GAME_VERSION + "  ·  " + GAME_DATE;
 const FB = '"Chakra Petch", "Segoe UI", sans-serif';
@@ -63337,6 +63884,18 @@ profWire();
 //  the game, and where the motion capture, the folk songs and the fonts come from. Both from the menu at any time.
 // =====================================================================================
 const NEWS = [
+  {
+    ver: "v1.4.13",
+    title: "THE FURMANKA & MORE DETAIL",
+    items: [
+      "A 1930s VOLHYNIAN HORSE AND HAY CART TROTS THROUGH THE SHOW",
+      "A REAL TROT: LEGS IN PAIRS, NODDING HEAD, STREAMING MANE",
+      "ROUNDED, SHADED ARMS AND LEGS FOR EVERY CHARACTER",
+      "THUMBS, SHOE SHINE, EYELIDS",
+      "THE BARMAN: NECK, NAME BADGE, POCKET PEN, BAR TOWEL",
+      "FINER ARCADE PIXELS",
+    ],
+  },
   {
     ver: "v1.4.12",
     title: "MUIS THE MOUSE & A GLOWING SEA",

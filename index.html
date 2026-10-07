@@ -242,6 +242,7 @@ body.retro .table { font-size: 10px; gap: 5px; }
     <button id="bDaily" class="wide">DAILY CHALLENGE: <b id="vDaily"></b></button>
     <button id="bMore" class="big">★ PLAY MORE</button>
     <button id="bSettings" class="big">⚙ SETTINGS</button>
+    <button id="bSolar2" class="wide">☉ SOLAR SYSTEM TOUR <kbd>O</kbd></button>
     <button id="bHow">? HOW TO PLAY</button>
     <button id="bNews">WHAT'S NEW &amp; CREDITS <b id="vNews"></b></button>
     <button id="bFull">FULL SCREEN <kbd>F</kbd></button>
@@ -2973,6 +2974,71 @@ const DICT_ROWS                             = [
   ["✓ DONE TODAY", "✓ VANDAG KLAAR", "✓ DZIŚ ZROBIONE"],
   // v2026.10.04ar: challenge modes, controls, the music box, the galaxy map
   ["TIME ATTACK", "TYDJAG", "NA CZAS"],
+  ["MERCURY", "MERCURIUS", "MERKURY"],
+  ["VENUS", "VENUS", "WENUS"],
+  ["EARTH", "AARDE", "ZIEMIA"],
+  ["MARS", "MARS", "MARS"],
+  ["JUPITER", "JUPITER", "JOWISZ"],
+  ["SATURN", "SATURNUS", "SATURN"],
+  ["URANUS", "URANUS", "URAN"],
+  ["NEPTUNE", "NEPTUNUS", "NEPTUN"],
+  ["PLUTO", "PLUTO", "PLUTON"],
+  [
+    "THE WHOLE SOLAR SYSTEM: THE SUN IN THE MIDDLE, EIGHT PLANETS - AND PLUTO",
+    "DIE HELE SONNESTELSEL: DIE SON IN DIE MIDDEL, AGT PLANETE - EN PLUTO",
+    "CAŁY UKŁAD SŁONECZNY: SŁOŃCE POŚRODKU, OSIEM PLANET - I PLUTON",
+  ],
+  [
+    "EVERY ORBIT IS AN ELLIPSE - WITH THE SUN NOT IN THE MIDDLE, BUT AT A FOCUS",
+    "ELKE BAAN IS 'N ELLIPS - MET DIE SON NIE IN DIE MIDDEL NIE, MAAR IN 'N BRANDPUNT",
+    "KAŻDA ORBITA TO ELIPSA - SŁOŃCE NIE JEST W JEJ ŚRODKU, LECZ W OGNISKU",
+  ],
+  [
+    "NEAR THE SUN A PLANET SPEEDS UP, FAR OUT IT SLOWS DOWN - KEPLER WORKED IT OUT IN 1609",
+    "NA AAN DIE SON GAAN 'N PLANEET VINNIGER, VER WEG STADIGER - KEPLER HET DIT IN 1609 UITGEWERK",
+    "BLISKO SŁOŃCA PLANETA PRZYSPIESZA, DALEKO ZWALNIA - KEPLER ODKRYŁ TO W 1609",
+  ],
+  [
+    "MERCURY GOES ROUND IN 88 DAYS - NEPTUNE TAKES 165 YEARS",
+    "MERCURIUS GAAN IN 88 DAE OM - NEPTUNUS VAT 165 JAAR",
+    "MERKURY OKRĄŻA SŁOŃCE W 88 DNI - NEPTUN W 165 LAT",
+  ],
+  [
+    "PLUTO'S STRETCHED ORBIT DIPS INSIDE NEPTUNE'S - FOR 20 YEARS AT A TIME",
+    "PLUTO SE UITGEREKTE BAAN DUIK BINNE NEPTUNUS S'N IN - VIR 20 JAAR OP 'N SLAG",
+    "WYDŁUŻONA ORBITA PLUTONA WCHODZI DO WNĘTRZA ORBITY NEPTUNA - NA 20 LAT",
+  ],
+  [
+    "NOT TO SCALE: NEPTUNE IS REALLY 30 TIMES FARTHER OUT THAN EARTH",
+    "NIE OP SKAAL NIE: NEPTUNUS IS EINTLIK 30 KEER VERDER AS DIE AARDE",
+    "NIE W SKALI: NEPTUN JEST NAPRAWDĘ 30 RAZY DALEJ NIŻ ZIEMIA",
+  ],
+  [
+    "TONIGHT'S PICTURE: INVASION OF THE MOON ROBOTS! (1957)",
+    "VANAAND SE FLIEK: INVAL VAN DIE MAANROBOTTE! (1957)",
+    "DZIŚ NA EKRANIE: INWAZJA ROBOTÓW Z KSIĘŻYCA! (1957)",
+  ],
+  [
+    "THE TIN MEN OF PLANET ZORB MARCH ACROSS THE MOON...",
+    "DIE BLIKMANNE VAN PLANEET ZORB MARSJEER OOR DIE MAAN...",
+    "BLASZANI LUDZIE Z PLANETY ZORB MASZERUJĄ PRZEZ KSIĘŻYC...",
+  ],
+  [
+    "...AND DOWN COMES THEIR TERRIBLE WONDER WEAPON!",
+    "...EN AF KOM HULLE VERSKRIKLIKE WONDERWAPEN!",
+    "...A Z NIEBA SPADA ICH STRASZLIWA CUDOWNA BROŃ!",
+  ],
+  [
+    "IT'S... A GIANT MILKSHAKE MACHINE?!",
+    "DIS... 'N REUSAGTIGE MELKSKOMMELMASJIEN?!",
+    "TO... GIGANTYCZNA MASZYNA DO KOKTAJLI?!",
+  ],
+  [
+    "THEY ONLY WANTED A SHAKE. INVASION CANCELLED!",
+    "HULLE WOU NET 'N SKOMMEL HÊ. INVAL GEKANSELLEER!",
+    "CHCIELI TYLKO KOKTAJL. INWAZJA ODWOŁANA!",
+  ],
+  ["THE END... OR IS IT?", "DIE EINDE... OF IS DIT?", "KONIEC... A MOŻE NIE?"],
   ["? HOW TO PLAY", "? HOE OM TE SPEEL", "? JAK GRAĆ"],
   ["HOW TO PLAY", "HOE OM TE SPEEL", "JAK GRAĆ"],
   ["FLAVOUR ORDERS:", "GEURBESTELLINGS:", "ZAMÓWIENIA SMAKÓW:"],
@@ -2994,6 +3060,7 @@ const DICT_ROWS                             = [
   ["COSMIC WEATHER: DUST STORM!", "RUIMTEWEER: STOFSTORM!", "KOSMICZNA POGODA: BURZA PYŁOWA!"],
   ["COSMIC WEATHER: ION STORM!", "RUIMTEWEER: IOONSTORM!", "KOSMICZNA POGODA: BURZA JONOWA!"],
   ["SOLAR SYSTEM TOUR", "SONNESTELSEL-TOER", "PODRÓŻ PRZEZ UKŁAD SŁONECZNY"],
+  ["☉ SOLAR SYSTEM TOUR", "☉ SONNESTELSEL-TOER", "☉ PODRÓŻ PRZEZ UKŁAD SŁONECZNY"],
   ["THE SUN TO PLUTO", "VAN DIE SON TOT PLUTO", "OD SŁOŃCA DO PLUTONA"],
   [
     "THE SOLAR SYSTEM - FROM THE SUN TO PLUTO",
@@ -29203,6 +29270,12 @@ function drawDeepSpace(t) {
       case "pulsar":
         drawPulsarScene(L, Rr, T, B, f, t);
         break;
+      case "orrery":
+        drawOrrery(L, Rr, T, B, f, t); // (the whole Solar System, every planet on its ellipse - orrery.ts)
+        break;
+      case "invasion":
+        drawInvasion(L, Rr, T, B, f, t); // (the 1950s B-movie on the Moon - invasion.ts)
+        break;
       case "reddwarf":
         drawRedDwarf(L, Rr, T, B, f, t);
         break;
@@ -41776,6 +41849,7 @@ function drawWorldFly(what, L, Rr, T, B, f, t) {
 function planetTourPlan()             {
   const P             = [{ kind: "space", len: 6, title: "THE SOLAR SYSTEM - FROM THE SUN TO PLUTO" }];
   for (const w of TOUR_WORLDS) P.push({ kind: "fly", what: w, len: 24 }, { kind: "space", len: 2 });
+  P.push({ kind: "fly", what: "orrery", len: ORRERY_LEN }, { kind: "space", len: 2 }); // (the whole system at once - orrery.ts)
   P.push({ kind: "space", len: 6, title: "...AND THAT'S OUR SOLAR SYSTEM!" });
   return P;
 }
@@ -42829,6 +42903,456 @@ function coreHud(g, s) {
     g.globalAlpha = 1;
   }
   g.textBaseline = "top";
+}
+// =====================================================================================
+//  INVASION OF THE MOON ROBOTS! (v1.4.6): a little 1950s B-movie in the full-screen show - all in flickering black and
+//  white, with film scratches and grain. Tin robots from the planet Zorb (our own invention) march across the Moon,
+//  ray guns at the ready; their WONDER WEAPON comes down out of the sky - a great flying saucer with spinning lights and
+//  a tractor beam - and lowers... a giant milkshake machine. They only wanted a shake. Invasion cancelled!
+//  (Its captions are in SPACE_CAPS - drawn by attract.ts like the star events' captions.)
+// =====================================================================================
+Object.assign(SPACE_CAPS, {
+  invasion: [
+    [0, "TONIGHT'S PICTURE: INVASION OF THE MOON ROBOTS! (1957)"],
+    [0.14, "THE TIN MEN OF PLANET ZORB MARCH ACROSS THE MOON..."],
+    [0.34, "...AND DOWN COMES THEIR TERRIBLE WONDER WEAPON!"],
+    [0.56, "IT'S... A GIANT MILKSHAKE MACHINE?!"],
+    [0.74, "THEY ONLY WANTED A SHAKE. INVASION CANCELLED!"],
+    [0.9, "THE END... OR IS IT?"],
+  ],
+});
+// a grey for the old film: (brightness 0..1, alpha)
+const FG = (v, a = 1) => withA([v * 0.98, v * 0.96, v * 0.9, 1], a); // (a touch warm, like old film stock)
+function moonRobot(x, y, s, t, ph, cheer, A) {
+  // a boxy tin robot: dome head with an antenna and a light, round eyes, a grille mouth, a box body with dials,
+  // concertina arms (one holding a ray gun), stompy legs
+  const step = Math.sin(t * 6 + ph),
+    bob = cheer ? Math.abs(Math.sin(t * 8 + ph)) * 3 : Math.abs(step) * 1.5;
+  push();
+  translate(x, y - bob * s);
+  scaleBy(s);
+  const leg = (sx, ph2) => {
+    const lift = cheer ? 0 : Math.max(0, Math.sin(t * 6 + ph + ph2)) * 3;
+    rect(sx - 3, -14 - lift, 6, 14, A(0.45));
+    rect(sx - 4.5, -3 - lift, 9, 4, A(0.3));
+  };
+  leg(-5, 0);
+  leg(5, Math.PI);
+  rect(-11, -40, 22, 26, A(0.62)); // the body
+  rect(-11, -40, 22, 3, A(0.8));
+  rect(-7, -34, 14, 9, A(0.3));
+  for (let i = 0; i < 3; i++) disc(-4 + i * 4, -29.5, 1.6, A(i === 1 ? 0.95 : 0.7)); // dials
+  rect(-6, -22, 12, 4, A(0.4));
+  // the arms: concertina tubes; up in the air when they cheer
+  for (const sd of [-1, 1]) {
+    const ax = sd * 12,
+      up = cheer ? -1 : 0,
+      ex = ax + sd * (cheer ? 4 : 2),
+      ey = cheer ? -58 : -22 + (sd > 0 ? 0 : step * 2);
+    for (let i = 0; i <= 4; i++)
+      disc(ax + ((ex - ax) * i) / 4, -36 + ((ey + 36) * i) / 4, 2.4, A(0.55 + (i % 2) * 0.15));
+    disc(ex, ey, 3, A(0.75)); // a claw
+    if (sd > 0 && !cheer) {
+      rect(ex - 1, ey - 3, 10, 4, A(0.25));
+      disc(ex + 10, ey - 1, 2, A(0.9)); // the ray gun
+    }
+    void up;
+  }
+  // the head
+  rect(-8, -52, 16, 12, A(0.7));
+  disc(0, -52, 8, A(0.85), 5);
+  disc(-3.5, -47, 2.6, A(0.15));
+  disc(3.5, -47, 2.6, A(0.15));
+  disc(-3.5, -47, 1.1, A(1));
+  disc(3.5, -47, 1.1, A(1));
+  for (let i = 0; i < 4; i++) line(-4 + i * 2.6, -43, -4 + i * 2.6, -41, 0.8, A(0.2)); // the grille
+  line(0, -57, 0, -64, 1, A(0.6));
+  disc(0, -65, 2, A(Math.sin(t * 7 + ph) > 0 ? 1 : 0.5)); // the antenna light, blinking
+  pop();
+}
+function drawInvasion(L, Rr, T, B, f, t) {
+  const w = Rr - L,
+    h = B - T,
+    k = Math.min(w, h) / 360,
+    fade = Math.min(1, f * 12, (1 - f) * 10),
+    A = (v, a = 1) => FG(v, a * fade),
+    gy = T + h * 0.7; // the lunar horizon
+  if (fade <= 0) return;
+  // the screen: a black sky, a few stars, the Earth hanging in it - then the grey Moon underfoot, craters and all
+  rect(L, T, w, h, A(0.03));
+  for (let i = 0; i < 60; i++)
+    rect(L + hash(i * 3.1) * w, T + hash(i * 5.7) * (gy - T), 1.5, 1.5, A(0.5 + 0.4 * hash(i)));
+  const ex = L + w * 0.8,
+    ey = T + h * 0.2,
+    er = 34 * k;
+  disc(ex, ey, er, A(0.55));
+  for (let i = 0; i < 5; i++)
+    disc(
+      ex - er * 0.3 + hash(i) * er * 0.6,
+      ey - er * 0.4 + hash(i * 3) * er * 0.8,
+      er * 0.25,
+      A(0.75),
+      er * 0.15
+    );
+  disc(ex + er * 0.35, ey + er * 0.1, er * 0.9, A(0.03, 0.85), er * 0.95);
+  poly(
+    [
+      L,
+      gy,
+      L + w * 0.2,
+      gy - 14 * k,
+      L + w * 0.45,
+      gy - 4 * k,
+      L + w * 0.7,
+      gy - 18 * k,
+      Rr,
+      gy - 6 * k,
+      Rr,
+      B,
+      L,
+      B,
+    ],
+    A(0.42)
+  );
+  for (let i = 0; i < 9; i++) {
+    const cx = L + hash(i * 7.3) * w,
+      cy = gy + 16 * k + hash(i * 2.1) * (B - gy - 30 * k),
+      cr = (8 + hash(i) * 20) * k;
+    disc(cx, cy, cr, A(0.3), cr * 0.3);
+    disc(cx, cy - cr * 0.06, cr * 0.8, A(0.36), cr * 0.22);
+  } // craters
+  // THE WONDER WEAPON: the saucer coming down, lights spinning, then the tractor beam
+  const sd = clamp((f - 0.3) / 0.2, 0, 1),
+    sx = L + w * 0.5,
+    sy = T + h * 0.08 + ease(sd) * h * 0.16 + Math.sin(t * 1.5) * 3 * k;
+  if (f > 0.29) {
+    const beam = clamp((f - 0.5) / 0.06, 0, 1) * (f > 0.9 ? clamp((0.97 - f) / 0.07, 0, 1) : 1);
+    if (beam > 0) {
+      R.setAdd(true);
+      quad4(
+        sx - 22 * k,
+        sy + 10 * k,
+        sx + 22 * k,
+        sy + 10 * k,
+        sx + 70 * k,
+        gy + 20 * k,
+        sx - 70 * k,
+        gy + 20 * k,
+        A(0.9, 0.3 * beam),
+        A(0.9, 0.3 * beam),
+        A(0.9, 0.05 * beam),
+        A(0.9, 0.05 * beam)
+      );
+      R.setAdd(false);
+    }
+    // the giant milkshake machine, lowered in the beam
+    const mm = clamp((f - 0.54) / 0.12, 0, 1);
+    if (mm > 0) {
+      const my = sy + 20 * k + ease(mm) * (gy - sy - 20 * k) - 4 * k,
+        mk = k * 1.1;
+      rect(sx - 26 * mk, my - 60 * mk, 52 * mk, 60 * mk, A(0.75));
+      rect(sx - 26 * mk, my - 60 * mk, 52 * mk, 6 * mk, A(0.95));
+      rect(sx - 16 * mk, my - 46 * mk, 32 * mk, 20 * mk, A(0.25)); // the window
+      disc(sx, my - 36 * mk, 6 * mk, A(Math.sin(t * 5) > 0 ? 1 : 0.6)); // a light
+      rect(sx - 4 * mk, my - 20 * mk, 8 * mk, 10 * mk, A(0.5)); // the spout
+      quad4(
+        sx - 30 * mk,
+        my - 100 * mk,
+        sx + 30 * mk,
+        my - 100 * mk,
+        sx + 24 * mk,
+        my - 60 * mk,
+        sx - 24 * mk,
+        my - 60 * mk,
+        A(0.9)
+      ); // a giant cup on top
+      disc(sx, my - 104 * mk, 30 * mk, A(1), 12 * mk);
+      disc(sx, my - 118 * mk, 8 * mk, A(0.6)); // the cherry (grey in this old film!)
+      line(sx + 8 * mk, my - 104 * mk, sx + 20 * mk, my - 140 * mk, 3 * mk, A(0.8)); // the straw
+    }
+    push();
+    translate(sx, sy);
+    scaleBy(k * (0.25 + 0.75 * ease(sd))); // (coming in from far off: small, then big)
+    disc(0, 0, 62, A(0.6), 13);
+    disc(0, -3, 58, A(0.82), 10);
+    disc(0, -14, 22, A(0.92, 0.9), 18); // the glass dome
+    disc(-6, -20, 7, A(1, 0.7));
+    for (let i = 0; i < 10; i++) {
+      const a = (i / 10) * 6.283 + t * 3,
+        lx = Math.cos(a) * 52,
+        ly = Math.sin(a) * 8;
+      if (ly > -2) disc(lx, ly + 2, 3, A(i % 2 ? 1 : 0.5));
+    } // the spinning lights round the rim
+    pop();
+  }
+  // THE ROBOTS: marching in from the right, then cheering, then queueing with their cups
+  const cheer = f > 0.66;
+  for (let i = 0; i < 5; i++) {
+    const march = clamp((f - 0.05 - i * 0.03) / 0.35, 0, 1),
+      x0 = Rr + 60 * k,
+      x1 = L + w * (0.14 + i * 0.09) + (i > 2 ? w * 0.35 : 0),
+      rx = x0 + (x1 - x0) * march,
+      ry = gy + (10 + (i % 2) * 14) * k;
+    if (rx < Rr + 50 * k) moonRobot(rx, ry, k * (0.95 + (i % 2) * 0.1), t, i * 1.3, cheer, A);
+    if (f > 0.76 && i % 2 === 0) {
+      // with a little cup each
+      const cx = rx + 14 * k,
+        cy = ry - 62 * k;
+      quad4(cx - 4 * k, cy - 9 * k, cx + 4 * k, cy - 9 * k, cx + 3 * k, cy, cx - 3 * k, cy, A(0.9));
+      line(cx + 1 * k, cy - 9 * k, cx + 3 * k, cy - 15 * k, 1 * k, A(0.7));
+    }
+  }
+  // their sign, planted in the dust
+  if (f > 0.8) {
+    const px = sx + Math.max(w * 0.14, 95 * k),
+      py = gy + 34 * k;
+    line(px, py, px, py - 60 * k, 2 * k, A(0.5));
+    rect(px - 62 * k, py - 92 * k, 124 * k, 36 * k, A(0.9));
+    pixText("WE COME IN PEACE", px, py - 82 * k, 1.15 * k, A(0.08));
+    pixText("FOR SHAKES!", px, py - 67 * k, 1.15 * k, A(0.08));
+  }
+  // THE OLD FILM: flicker, grain, scratches, a dark vignette, the odd jump in the picture
+  const fl = 0.06 + 0.05 * Math.sin(t * 37) * Math.sin(t * 13);
+  rect(L, T, w, h, A(0, fl));
+  for (let i = 0; i < 70; i++)
+    rect(
+      L + hash(i * 1.3 + Math.floor(t * 18)) * w,
+      T + hash(i * 4.7 + Math.floor(t * 18)) * h,
+      1.5,
+      1.5,
+      A(hash(i) > 0.5 ? 1 : 0, 0.35)
+    );
+  for (let i = 0; i < 2; i++) {
+    const scx = L + hash(Math.floor(t * 6) + i * 9.1) * w;
+    if (hash(Math.floor(t * 6) * 3 + i) > 0.45) line(scx, T, scx + 3, B, 1, A(0.9, 0.35));
+  }
+  for (let i = 0; i < 6; i++) {
+    const v = (6 - i) / 6;
+    rect(L, T, w * 0.04 * v, h, A(0, 0.12));
+    rect(Rr - w * 0.04 * v, T, w * 0.04 * v, h, A(0, 0.12));
+  }
+}
+// =====================================================================================
+//  THE WHOLE SOLAR SYSTEM (v1.4.6): the grand finale of the Sun-to-Pluto tour - a model of the Solar System, the Sun in
+//  the middle and every planet going round it on its own ELLIPSE, with true facts as captions. The view starts looking
+//  straight down, then tilts over so the orbits lie in perspective, the whole model slowly turning.
+//    - the orbits are the real ellipses (each planet's true eccentricity and the direction of its perihelion), with the
+//      Sun at a FOCUS, not in the middle - Mercury's and Pluto's are the stretched ones;
+//    - each planet moves by Kepler's laws: quick near the Sun, slow far out (Kepler's equation, solved each frame);
+//    - distances are squeezed (out to Pluto it's 49 times Earth's distance - that wouldn't fit any screen) but in the
+//      right order, and Pluto's orbit really does cross inside Neptune's; periods are sped up and squeezed the same way.
+//  (Its captions are in SPACE_CAPS - drawn by attract.ts like the planets' facts.)
+// =====================================================================================
+Object.assign(SPACE_CAPS, {
+  orrery: [
+    [0, "THE WHOLE SOLAR SYSTEM: THE SUN IN THE MIDDLE, EIGHT PLANETS - AND PLUTO"],
+    [0.17, "EVERY ORBIT IS AN ELLIPSE - WITH THE SUN NOT IN THE MIDDLE, BUT AT A FOCUS"],
+    [0.34, "NEAR THE SUN A PLANET SPEEDS UP, FAR OUT IT SLOWS DOWN - KEPLER WORKED IT OUT IN 1609"],
+    [0.5, "MERCURY GOES ROUND IN 88 DAYS - NEPTUNE TAKES 165 YEARS"],
+    [0.66, "PLUTO'S STRETCHED ORBIT DIPS INSIDE NEPTUNE'S - FOR 20 YEARS AT A TIME"],
+    [0.82, "NOT TO SCALE: NEPTUNE IS REALLY 30 TIMES FARTHER OUT THAN EARTH"],
+  ],
+});
+// the planets: name, semi-major axis (AU), eccentricity, longitude of perihelion (degrees), period (years), size, colours
+// (from NASA's planet fact sheets)
+const ORRERY                                                                     = [
+  ["MERCURY", 0.387, 0.206, 77, 0.241, 0.6, "#b8b0a8", "#6a625c"],
+  ["VENUS", 0.723, 0.007, 131, 0.615, 0.95, "#f4dca8", "#a08860"],
+  ["EARTH", 1, 0.017, 103, 1, 1, "#5a9ef0", "#1a3a70"],
+  ["MARS", 1.524, 0.093, 336, 1.881, 0.75, "#e06a3a", "#7a3018"],
+  ["JUPITER", 5.203, 0.048, 14, 11.86, 2.4, "#e8c49a", "#8a6440"],
+  ["SATURN", 9.537, 0.054, 93, 29.46, 2.05, "#f0d898", "#8a7440"],
+  ["URANUS", 19.19, 0.047, 173, 84.01, 1.5, "#a8e8f0", "#4a8a96"],
+  ["NEPTUNE", 30.07, 0.009, 48, 164.8, 1.45, "#5a80f0", "#20307a"],
+  ["PLUTO", 39.48, 0.249, 224, 247.9, 0.5, "#e0c8b0", "#7a6450"],
+];
+const ORRERY_LEN = 40; // (seconds: its turn in the tour)
+const ORR_FAR = 49.4; // (Pluto at its farthest, in AU: the edge of the model)
+// squeeze a real distance (AU) onto the model (0..1 of its radius) - in the right order, but the inner planets spread out
+const orrR = (au) => Math.pow(au / ORR_FAR, 0.42);
+// where a planet is in its orbit at model time tm: its position in the orbit's plane, as a real distance and direction
+function orrPos(p, tm) {
+  const [, a, e, peri, P] = p,
+    M = (tm * 0.9) / Math.pow(P, 0.55) + hash(a * 7.7) * 6.283; // (the mean anomaly: periods squeezed, but in order)
+  let E = M;
+  for (let i = 0; i < 6; i++) E = E - (E - e * Math.sin(E) - M) / (1 - e * Math.cos(E)); // Kepler's equation, by Newton
+  const x = a * (Math.cos(E) - e),
+    y = a * Math.sqrt(1 - e * e) * Math.sin(E),
+    r = Math.hypot(x, y),
+    th = Math.atan2(y, x) + (peri * Math.PI) / 180;
+  return [r, th];
+}
+function drawOrrery(L, Rr, Tp, B, f, t) {
+  // (Tp: the top of the screen - T is the translator)
+  const w = Rr - L,
+    h = B - Tp,
+    fade = Math.min(1, f * 14, (1 - f) * 12),
+    tilt = 1 - (VERT ? 0.4 : 0.6) * ease(clamp((f - 0.06) / 0.2, 0, 1)), // (looking straight down, then tipping over)
+    spin = t * 0.04, // (the whole model slowly turning)
+    rmax = Math.min(w * 0.46, (h * 0.4) / tilt, h * 0.62),
+    cx = L + w * 0.5,
+    cy = Tp + h * (VERT ? 0.45 : 0.43),
+    tm = t, // (model time)
+    pu = Math.max(3, rmax * 0.015), // (a planet's size unit)
+    focus = (n) =>
+      (f > 0.17 && f < 0.34 && (n === "MERCURY" || n === "PLUTO")) ||
+      (f > 0.66 && f < 0.82 && (n === "PLUTO" || n === "NEPTUNE"));
+  if (fade <= 0) return;
+  rect(L, Tp, w, h, withA(col("#02020a"), 0.55 * fade)); // (the sky dimmed a little, so the model stands out)
+  // a point in the plane of the Solar System (real distance au, direction th) -> the screen
+  const scr = (au, th) => {
+    const rr = orrR(au) * rmax,
+      a = th + spin;
+    return [cx + Math.cos(a) * rr, cy + Math.sin(a) * rr * tilt];
+  };
+  // ---- the orbits: thin coloured ellipses (brighter for the ones the caption is talking about) ----
+  for (const p of ORRERY) {
+    const [n, a, e, peri, , , c1] = p,
+      pts = [];
+    for (let i = 0; i <= 120; i++) {
+      const v = (i / 120) * 6.283, // (the true anomaly round the ellipse: r = a(1-e^2) / (1 + e cos v))
+        r = (a * (1 - e * e)) / (1 + e * Math.cos(v)),
+        [x, y] = scr(r, v + (peri * Math.PI) / 180);
+      pts.push(x, y);
+    }
+    const hi = focus(n);
+    polyline(pts, hi ? 2 : 1.2, withA(col(c1), (hi ? 0.75 : 0.28) * fade));
+  }
+  // ---- the asteroid belt, between Mars and Jupiter ----
+  for (let i = 0; i < 220; i++) {
+    const au = 2.2 + hash(i * 1.71) * 1.1,
+      th = hash(i * 3.13) * 6.283 + (tm * 0.9) / Math.pow(Math.pow(au, 1.5), 0.55),
+      [x, y] = scr(au, th);
+    rect(x, y, 1.3, 1.3, withA(col(i % 3 ? "#9a8a78" : "#c8b8a0"), 0.55 * fade));
+  }
+  // ---- the planets: those behind the Sun first, then the Sun, then those in front ----
+  const P = ORRERY.map((p) => {
+    const [r, th] = orrPos(p, tm),
+      [x, y] = scr(r, th);
+    return { p, x, y, th };
+  });
+  const planet = (o) => {
+    const [n, , , , , sz, c1, c2] = o.p,
+      pr = pu * sz,
+      dx = cx - o.x,
+      dy = cy - o.y,
+      dd = Math.hypot(dx, dy) || 1,
+      lx = (dx / dd) * pr * 0.35,
+      ly = (dy / dd) * pr * 0.35; // (lit from the Sun's side)
+    if (n === "SATURN") {
+      push();
+      translate(o.x, o.y);
+      scaleXY(1, 0.38 + 0.3 * tilt);
+      arc(0, 0, pr * 1.85, Math.PI, Math.PI * 2, pr * 0.42, withA(col("#d8c490"), 0.8 * fade), 30);
+      pop();
+    }
+    disc(o.x, o.y, pr, withA(col(c2), fade));
+    disc(o.x + lx, o.y + ly, pr * 0.72, withA(col(c1), fade));
+    if (n === "JUPITER")
+      for (const b of [-0.35, 0.1, 0.45])
+        rect(
+          o.x - pr * 0.8,
+          o.y + b * pr - pr * 0.06,
+          pr * 1.6,
+          pr * 0.12,
+          withA(col("#b07a50"), 0.6 * fade)
+        );
+    if (n === "EARTH") {
+      disc(o.x + lx * 0.6 - pr * 0.15, o.y + ly * 0.6, pr * 0.3, withA(col("#5ac060"), fade)); // (land)
+      const ma = t * 2.4;
+      disc(
+        o.x + Math.cos(ma) * pr * 2.1,
+        o.y + Math.sin(ma) * pr * 2.1 * tilt,
+        Math.max(1, pr * 0.3),
+        withA(col("#d8d8d0"), fade)
+      ); // the Moon
+    }
+    if (n === "SATURN") {
+      push();
+      translate(o.x, o.y);
+      scaleXY(1, 0.38 + 0.3 * tilt);
+      arc(0, 0, pr * 1.85, 0, Math.PI, pr * 0.42, withA(col("#e8d8a8"), 0.9 * fade), 30);
+      pop();
+    }
+    if (focus(n)) {
+      R.setAdd(true);
+      glow(o.x, o.y, pr * 4, withA(col(c1), 0.35 * fade));
+      R.setAdd(false);
+    }
+    // its name underneath
+    const ps = Math.max(1.5, Math.min(2.4, rmax * 0.004));
+    pixText(T(n), o.x, o.y + pr + 6 * ps + 2, ps, withA(col("#e8eef8"), 0.7 * fade));
+  };
+  for (const o of P) if (Math.sin(o.th + spin) < 0) planet(o); // (the far side)
+  // the Sun, blazing in the middle (at the focus of every orbit)
+  const sr = rmax * 0.06;
+  R.setAdd(true);
+  glow(cx, cy, sr * 5, withA(col("#ffb040"), 0.3 * fade));
+  R.setAdd(false);
+  push();
+  translate(cx, cy);
+  wSun(sr, t);
+  pop();
+  for (const o of P) if (Math.sin(o.th + spin) >= 0) planet(o); // (the near side)
+  // ---- A COMET on its long, thin ellipse (like Halley's: e = 0.967), swinging in past the Sun and away again - its tail
+  //      always pointing AWAY from the Sun, and longest when it's closest ----
+  {
+    const tl = f * ORRERY_LEN,
+      a = 17.8,
+      e = 0.967,
+      M = 0.17 * (tl - ORRERY_LEN * 0.55); // (it rounds the Sun a little after halfway)
+    let E = M;
+    for (let i = 0; i < 12; i++) E = E - (E - e * Math.sin(E) - M) / (1 - e * Math.cos(E));
+    const x0 = a * (Math.cos(E) - e),
+      y0 = a * Math.sqrt(1 - e * e) * Math.sin(E),
+      r = Math.hypot(x0, y0),
+      [x, y] = scr(r, Math.atan2(y0, x0) + 2.2),
+      dx = x - cx,
+      dy = y - cy,
+      dd = Math.hypot(dx, dy) || 1,
+      tail = rmax * (0.05 + 0.3 * clamp(1 - r / 8, 0, 1)),
+      ca = fade * clamp(Math.min(tl - 1, ORRERY_LEN - 2 - tl), 0, 1);
+    if (ca > 0) {
+      R.setAdd(true);
+      for (let i = 12; i >= 0; i--) {
+        const u = i / 12,
+          wob = Math.sin(t * 3 + i) * u * tail * 0.04;
+        glow(
+          x + (dx / dd) * tail * u - (dy / dd) * wob,
+          y + (dy / dd) * tail * u + (dx / dd) * wob,
+          pu * (1.2 + u * 3.2),
+          withA(col(i % 2 ? "#a8d8ff" : "#e8f4ff"), 0.32 * (1 - u) * ca)
+        );
+      }
+      glow(x, y, pu * 2.2, withA(col("#ffffff"), 0.8 * ca));
+      R.setAdd(false);
+      disc(x, y, pu * 0.5, withA(col("#ffffff"), ca));
+    }
+  }
+  // ---- and OUR BAR, making the very same trip as the tour: out from the Sun, past every planet, all the way to Pluto -
+  //      with its name on a little tag ----
+  {
+    const u = clamp((f - 0.08) / 0.86, 0, 1),
+      au = 0.3 * Math.pow(46 / 0.3, ease(u)),
+      th = -0.6 + ease(u) * 9.5 - spin,
+      [x, y] = scr(au, th),
+      [x2] = scr(
+        0.3 * Math.pow(46 / 0.3, ease(Math.min(1, u + 0.01))),
+        -0.6 + ease(Math.min(1, u + 0.01)) * 9.5 - spin
+      ),
+      ba = fade * clamp(Math.min((f - 0.08) * 30, (0.97 - f) * 30), 0, 1),
+      K = (pu * 7) / 940,
+      bob = Math.sin(t * 2.2) * pu * 0.4;
+    if (ba > 0) {
+      push();
+      translate(x, y - pu * 3 + bob);
+      scaleXY(x2 >= x ? K : -K, K);
+      drawDinerBody(t, 0.6);
+      pop();
+      const ps = Math.max(1, Math.min(1.6, rmax * 0.0028));
+      pixText("SPACE PUB", x, y - pu * 8 + bob, ps, withA(col("#ffd24d"), 0.9 * ba));
+    }
+  }
 }
 // =====================================================================================
 //  MORE FUN (v2026.10.03f): flavour ORDERS, PETS WITH POWERS, a COIN SHOP, MINI-GAMES between worlds, a TROPHY ROOM,
@@ -45040,6 +45564,7 @@ function funPanelsInit() {
     closeFP("more");
     startPlanetTour();
   }; // (v1.4.1) the Solar System tour, the Sun to Pluto
+  $k("bSolar2").onclick = $k("bSolar").onclick; // (v1.4.6) ...and straight from the main menu too (or the O key)
   $k("bMore").onclick = () => openFP("more");
   $k("bSettings").onclick = () => openFP("settings");
   $k("moreBack").onclick = () => closeFP("more");
@@ -52513,7 +53038,16 @@ function spacePlan(n)             {
     } /* (the very first is always South Africa winning the Rugby World Cup; after that any, at random) */,
     { kind: "space", len: 9 },
     (() => {
-      const what = ["eclipse", "pulsar", "sunrise", "reddwarf", "blackhole", "supernova", "nstar"][n % 7];
+      const what = [
+        "eclipse",
+        "pulsar",
+        "sunrise",
+        "invasion",
+        "reddwarf",
+        "blackhole",
+        "supernova",
+        "nstar",
+      ][n % 8]; // (invasion: the B-movie on the Moon - invasion.ts)
       return { kind: "fly", what, len: what === "nstar" ? 34 : 28 };
     })(),
     { kind: "space", len: 12 },
@@ -53522,7 +54056,7 @@ function drawEggs(g, s) {
 // THE VERSION (from v1.2.0, 5 October 2026): MAJOR.MINOR.PATCH - a new MINOR for a batch of new things, a new PATCH for
 // fixes and small touches - with the day it was made next to it. (Before this the versions were named after the date,
 // like v2026.10.05c.)
-const GAME_VERSION = "v1.4.5",
+const GAME_VERSION = "v1.4.6",
   GAME_DATE = "06.10.2026",
   VERSION_TEXT = GAME_VERSION + "  ·  " + GAME_DATE;
 const FB = '"Chakra Petch", "Segoe UI", sans-serif';
@@ -59180,6 +59714,14 @@ window.addEventListener(
   (e) => {
     if (!panelNav() || (e.target && (e.target          ).tagName === "INPUT")) return;
     const k = e.code;
+    if (k === "KeyO" && G.state === "menu" && !JB.open && !SB.open && !WD.open && !fpAny()) {
+      // (v1.4.6) O: the Solar System tour, the Sun to Pluto
+      e.preventDefault();
+      e.stopImmediatePropagation();
+      sfx("click");
+      startPlanetTour();
+      return;
+    }
     if (k === "KeyJ" && G.state === "menu" && !SB.open && !WD.open && !fpAny()) {
       e.preventDefault();
       e.stopImmediatePropagation();
@@ -59465,6 +60007,16 @@ profWire();
 //  the game, and where the motion capture, the folk songs and the fonts come from. Both from the menu at any time.
 // =====================================================================================
 const NEWS = [
+  {
+    ver: "v1.4.6",
+    title: "MOON ROBOTS & THE WHOLE SOLAR SYSTEM",
+    items: [
+      "A new picture in the full-screen show: a 1950s B-movie on the Moon, in flickering black and white",
+      "The tin men of planet Zorb invade... and they only wanted a milkshake",
+      "The Solar System tour ends with the whole system at once: every planet on its ellipse round the Sun, a comet - and our bar",
+      "The Solar System tour now has its own button on the main menu (or press O)",
+    ],
+  },
   {
     ver: "v1.4.5",
     title: "THE HEART OF ANDROMEDA",

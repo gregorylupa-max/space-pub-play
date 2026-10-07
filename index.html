@@ -8,7 +8,7 @@
 /* A retro-future diner on a moon base: neon signage in mint and strawberry pink, chrome, cream and amber. */
 :root {
   --bg: #0a0610; --ink: #fff3e2; --dim: #b9a8b8; --cyan: #5ff5c8; --magenta: #ff5fa8; --amber: #ffc34d;
-  --panel: rgba(18, 8, 22, .82); --line: rgba(255, 140, 200, .28);
+  --panel: rgba(18, 8, 22, .6); --line: rgba(255, 140, 200, .28);
   --display: "Bungee", "Impact", sans-serif; --body: "Chakra Petch", "Segoe UI", sans-serif;
   color-scheme: dark;
 }
@@ -28,7 +28,7 @@ body { user-select: none; -webkit-user-select: none; -webkit-tap-highlight-color
   display: flex; flex-direction: column; gap: 14px; padding: 26px 26px 22px;
   background: var(--panel); border: 1px solid var(--line); border-radius: 14px;
   box-shadow: 0 0 40px rgba(95, 245, 200, .12), inset 0 0 30px rgba(255, 95, 168, .06);
-  backdrop-filter: blur(3px);
+  backdrop-filter: blur(6px) saturate(1.2); -webkit-backdrop-filter: blur(6px) saturate(1.2); /* (v1.4.10: see-through - the game shows softly through the menus) */
 }
 .panel > * { flex-shrink: 0; } /* (v1.4.1: when a panel is taller than the screen it scrolls - its parts used to squash and overlap) */
 .logo { margin: 0; font-family: var(--display); font-weight: 400; font-size: clamp(34px, 8.4vw, 60px); line-height: .98; letter-spacing: .01em; text-wrap: balance;
@@ -39,7 +39,7 @@ body { user-select: none; -webkit-user-select: none; -webkit-tap-highlight-color
 .buttons { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
 button {
   font: 600 15px/1.2 var(--body); letter-spacing: .06em; color: var(--ink); cursor: pointer;
-  background: rgba(20, 22, 50, .8); border: 1px solid var(--line); border-radius: 9px; padding: 12px 12px; min-height: 48px;
+  background: rgba(20, 22, 50, .58); border: 1px solid var(--line); border-radius: 9px; padding: 12px 12px; min-height: 48px;
   display: flex; align-items: center; justify-content: center; gap: 8px; text-align: center;
 }
 button:focus { outline: none; }
@@ -258,13 +258,14 @@ body.retro .table { font-size: 10px; gap: 5px; }
   <p class="tag">Other ways to play - and everything you've collected.</p>
   <div class="buttons">
     <h3 class="sec">MORE WAYS TO PLAY</h3>
-    <button id="bFree" class="wide">FREE PLAY MODE <b>NO LOSING, NO TIMER</b></button>
+    <button id="bFree" class="wide">RELAX MODE <b>NO LOSING, NO HURRY</b></button>
     <button id="bEndless" class="wide">ENDLESS MODE <b id="vEndless"></b></button>
     <button id="bTa">TIME ATTACK <b id="vTa"></b></button>
     <button id="bRush">BOSS RUSH <b id="vRush"></b></button>
     <button id="bMap">GALAXY MAP <b id="vMap"></b></button>
     <button id="bCup">CUP TOURNAMENT <b id="vCup"></b></button>
     <button id="bSolar" class="wide">SOLAR SYSTEM TOUR <b>THE SUN TO PLUTO</b></button>
+    <button id="bCast" class="wide">CASTAWAY ISLAND <b>KOOS VAN SCHOOR</b></button>
     <h3 class="sec">YOUR COLLECTION</h3>
     <button id="bWard">HATS &amp; PETS <b id="vWard"></b></button>
     <button id="bStickers">STICKER BOOK <b id="vStickers"></b></button>
@@ -1986,6 +1987,13 @@ const DICT_ROWS                             = [
   ["BACKGROUND SOUNDS", "AGTERGRONDGELUIDE", "DŹWIĘKI TŁA"],
   ["FREE PLAY MODE", "VRYE SPEL", "TRYB SWOBODNY"],
   ["NO LOSING, NO TIMER", "GEEN VERLOOR, GEEN HORLOSIE", "BEZ PRZEGRYWANIA, BEZ ZEGARA"],
+  ["RELAX MODE", "ONTSPAN", "TRYB RELAKSU"],
+  ["NO LOSING, NO HURRY", "GEEN VERLOOR, GEEN HAASTE", "BEZ PRZEGRYWANIA, BEZ POŚPIECHU"],
+  [
+    "RELAX MODE  ·  NO LOSING, NO HURRY - JUST ENJOY IT",
+    "ONTSPAN  ·  GEEN VERLOOR, GEEN HAASTE - GENIET NET",
+    "TRYB RELAKSU  ·  BEZ PRZEGRYWANIA, BEZ POŚPIECHU - PO PROSTU CIESZ SIĘ",
+  ],
   [
     "FREE PLAY!  NO LOSING - JUST HAVE FUN",
     "VRYE SPEL!  GEEN VERLOOR NIE - NET PRET",
@@ -5801,7 +5809,8 @@ const params = () => {
     K[3] === dk &&
     K[4] === (G.loop || 0) &&
     K[5] === k5 &&
-    K[6] === k6
+    K[6] === k6 &&
+    K[7] === !!G.free
   )
     return PRM_C.p;
   K[0] = k0;
@@ -5811,8 +5820,23 @@ const params = () => {
   K[4] = G.loop || 0;
   K[5] = k5;
   K[6] = k6;
-  return (PRM_C.p = assisted(paramsRaw()));
+  K[7] = !!G.free;
+  return (PRM_C.p = assisted(relaxed(paramsRaw())));
 };
+// (v1.4.10) RELAX MODE: no hurry - customers stroll in more slowly and rest longer between steps, fewer at once, and
+// the empty glasses slide back gently
+const relaxed = (p) =>
+  G.free && !G.demo
+    ? {
+        ...p,
+        speed: p.speed * 0.68,
+        pause: p.pause * 1.35,
+        spawn: p.spawn * 1.3,
+        maxOn: Math.max(2, Math.round(p.maxOn * 0.75)),
+        empty: p.empty * 0.8,
+        group: p.group * 0.5,
+      }
+    : p;
 const paramsRaw = () => {
   const L0 = G.endless ? Math.min(20, G.endLvl || 1) : G.level,
     k2 = G.players === 2 ? 1.35 : 1,
@@ -7017,6 +7041,7 @@ function update(dt) {
     if (was > 0.55 && G.readyT <= 0.55) sfx("go");
   }
   readPads();
+  if (G.state === "castaway") return castawayUpdate(dt); // (v1.4.10: CASTAWAY ISLAND - castaway.ts)
   if (G.state === "paused") return;
   updateBell(dt);
   // CHURCH BELLS in the distance: now and then (every couple of minutes of play) a soft peal drifts in from somewhere far away
@@ -12125,6 +12150,7 @@ function draw() {
       !(G.state === "story" && G.story) &&
       !(G.state === "approach" && G.appr) &&
       !(G.state === "jump" && G.jump) &&
+      G.state !== "castaway" &&
       !SB.open &&
       !CS.open &&
       !WD.open &&
@@ -12146,7 +12172,9 @@ function draw() {
     translate(-PW / 2, -PH / 2);
   } // (the ocean raft rolls)
   const VS = G.state === "paused" ? G.prev : G.state; // (paused: keep showing whatever was paused - the cups, a mini-game)
-  if (G.state === "ending" && G.end) drawEnding(t);
+  if (G.state === "castaway")
+    drawCastaway(t); // (v1.4.10: CASTAWAY ISLAND - castaway.ts)
+  else if (G.state === "ending" && G.end) drawEnding(t);
   else if (VS === "bonus" && bonus) withFit(() => drawBonus(t));
   else if (VS === "mini" && G.mini) withFit(() => drawMini(t));
   else if (G.state === "story" && G.story) drawStory(t);
@@ -12175,7 +12203,11 @@ function draw() {
       for (const cr of CRITS) if (cr.lane === lane) drawCritter(cr, t); // (a caterpillar or a worm on the bar top)
       for (const tp of tips) if (tp.lane === lane) drawTip(tp, t);
       for (const u of powerups) if (u.lane === lane) drawPowerup(u, t);
-      for (const m of empties) if (m.lane === lane) drawGlass(m.x, LY(lane, m.x) - 3, null, 0, m.spin);
+      for (const m of empties)
+        if (m.lane === lane) {
+          glassGhosts(m, LY(lane, m.x) - 3, null, 0, m.spin, 0, col("#cfe8ff"));
+          drawGlass(m.x, LY(lane, m.x) - 3, null, 0, m.spin);
+        }
       for (const s of shakes)
         if (s.lane === lane) {
           const gy = LY(lane, s.x) - 3;
@@ -12183,6 +12215,7 @@ function draw() {
             drawHoly(s.x, gy, t);
             continue;
           }
+          glassGhosts(s, gy, s.flavor, 1, 0, glassTilt(s), FLAVORS[s.flavor][0]);
           drawGlass(s.x, gy, s.flavor, 1, 0, glassTilt(s));
           R.setAdd(true);
           line(s.x + 9, gy - 8, s.x + 40, gy - 6, 3, withA(C.white, 0.22));
@@ -12227,6 +12260,7 @@ function draw() {
   }
   const ending = G.state === "ending" && G.end;
   const deep =
+    G.state === "castaway" ||
     (ATTRACT.on && ATTRACT.phase === "space") ||
     (G.state === "jump" && !!G.jump) ||
     ((G.state === "mini" || (G.state === "paused" && G.prev === "mini")) && !!G.mini) ||
@@ -12253,6 +12287,21 @@ function draw() {
   pop();
   if (G.flash > 0.01) rect(0, 0, W, H, withA(G.flashC, 0.45 * G.flash * FLASH()));
   R.end();
+}
+// (v1.4.10) MOTION GHOSTS: a sliding glass leaves two faint see-through copies of itself just behind, where it was a
+// moment ago - like a camera's motion blur, so a fast slide reads as one smooth sweep instead of hopping frame to frame
+function glassGhosts(o, gy, flavor, full, spin, tilt, c) {
+  const dx = o._gx === undefined ? 0 : o.x - o._gx;
+  if (G.state !== "paused") o._gx = o.x;
+  if (Math.abs(dx) < 1.5 || Math.abs(dx) > 40 || MOTION() < 0.5) return;
+  for (const [f, a] of [
+    [1.0, 0.16],
+    [0.5, 0.26],
+  ]         ) {
+    OUT = withA(c, a);
+    drawGlass(o.x - dx * f, gy, flavor, full, spin, tilt);
+  }
+  OUT = null;
 }
 // who is behind the bar: normally the active players; in the "you're fired" scene, whoever hasn't left yet
 const shownPlayers = () =>
@@ -28980,6 +29029,7 @@ function drawAndromeda(ax, ay, a) {
 }
 const ANDRO_ON = () => ATTRACT.on && ATTRACT.phase === "space"; // (Andromeda hangs in the sky of the deep-space show)
 const WORLD_SINK = { v: 0, t: 0 };
+let GIANT_OK = false; // (the big ringed planet in the corner: the full-screen show only - drawDeepSpace switches it on)
 function deepSky(L, Rr, T, B, t, at, sn, pan = 0, panX = 0) {
   const w = Rr - L,
     h = B - T,
@@ -29171,9 +29221,11 @@ function deepSky(L, Rr, T, B, t, at, sn, pan = 0, panX = 0) {
     gx = L + w * 0.87 - at * 1.2,
     gy = B - gr * 1.05 - at * 0.8 + WORLD_SINK.v * gr * 3; // (low in the corner, out of the way of the sights)
   R.setAdd(true);
-  glow(gx, gy, gr * 1.5, withA(col("#ffb080"), 0.14));
+  if (GIANT_OK) glow(gx, gy, gr * 1.5, withA(col("#ffb080"), 0.14));
   R.setAdd(false);
-  drawSaturn(gx, gy, gr, 0.26, col("#e0b070"), col("#9a6a3a"), -0.18);
+  // (v1.4.10: only in the full-screen show - on a trip to a stop, a big ringed planet hanging there looked like the
+  //  wrong planet: visiting Venus, you'd see Saturn. The trips show their own destination instead.)
+  if (GIANT_OK) drawSaturn(gx, gy, gr, 0.26, col("#e0b070"), col("#9a6a3a"), -0.18);
   // and a little moon with craters, catching the same light
   const mx = L + w * (andro ? 0.6 : 0.16) + at * 1.5,
     my = T + h * (andro ? 0.12 : 0.2),
@@ -29221,7 +29273,9 @@ function drawDeepSpace(t) {
     pan = desc ? ease(desc.ph / 9) * h * 1.05 : 0, // (a slow, stately tilt down...)
     PX = w * 0.14,
     panX = desc ? ease(desc.ph / 9) * PX : 0; // (...and a little to the left, so the diner glides in from the lower left)
+  GIANT_OK = !ATTRACT.tour; // (not in the Solar System tour either: the real planets are the stars of that)
   deepSky(L, Rr, T, B, t, at, sn, pan, panX);
+  GIANT_OK = false;
   if (desc) {
     push();
     translate(panX - PX, 0);
@@ -31836,18 +31890,23 @@ function drawJump(t) {
     R.setAdd(true);
     glow(px, py, pr * 1.5, withA(V.neon, 0.25));
     R.setAdd(false);
-    disc(px, py, pr, V.wall);
-    disc(px - pr * 0.12, py - pr * 0.12, pr * 0.88, V.wall2);
-    disc(px - pr * 0.3, py - pr * 0.3, pr * 0.5, withA(C.white, 0.08));
-    for (let i = 0; i < 5; i++)
-      disc(
-        px + (hash(i * 3) - 0.5) * pr,
-        py + (hash(i * 7) - 0.6) * pr,
-        pr * (0.08 + hash(i) * 0.12),
-        withA(V.top, 0.35),
-        pr * 0.05
-      );
-    arc(px, py, pr, Math.PI * 1.02, Math.PI * 1.98, 6, withA(V.neon, 0.7), 40);
+    // (v1.4.10) the REAL world we're arriving at - Venus looks like Venus - drawn as at the stop itself
+    const Wd = WORLDS[tourStop()];
+    if (Wd && Wd.b) drawWorld(Wd, px, py, pr, t);
+    else {
+      disc(px, py, pr, V.wall);
+      disc(px - pr * 0.12, py - pr * 0.12, pr * 0.88, V.wall2);
+      disc(px - pr * 0.3, py - pr * 0.3, pr * 0.5, withA(C.white, 0.08));
+      for (let i = 0; i < 5; i++)
+        disc(
+          px + (hash(i * 3) - 0.5) * pr,
+          py + (hash(i * 7) - 0.6) * pr,
+          pr * (0.08 + hash(i) * 0.12),
+          withA(V.top, 0.35),
+          pr * 0.05
+        );
+      arc(px, py, pr, Math.PI * 1.02, Math.PI * 1.98, 6, withA(V.neon, 0.7), 40);
+    }
   }
   // stars smearing into lines as it speeds up (and shrinking back to points as it drops out of hyperspace)
   const smear = hyper ? 1 : j < 4.4 ? acc : dec;
@@ -40807,7 +40866,7 @@ function freeStart() {
   sfx("click");
   G.freeNext = true;
   startGame();
-  callout("FREE PLAY!  NO LOSING - JUST HAVE FUN", "#5ff5c8", 2.8);
+  callout("RELAX MODE  ·  NO LOSING, NO HURRY - JUST ENJOY IT", "#5ff5c8", 3.2);
 }
 function kids2GameStart() {
   G.free = !!G.freeNext;
@@ -40881,11 +40940,7 @@ function freeHud(g, s, fD) {
   g.textAlign = "left";
   g.textBaseline = "top";
   g.fillStyle = "#5ff5c8";
-  g.fillText(
-    "FREE PLAY  ·  SERVED " + G.freeServed + "  ·  NO LOSING!",
-    14 * s,
-    14 * s + (twoP() ? 96 : 66) * s
-  ); // (under the score, like the other modes)
+  g.fillText("RELAX MODE  ·  SERVED " + G.freeServed, 14 * s, 14 * s + (twoP() ? 96 : 66) * s); // (under the score, like the other modes)
 }
 // ---- hooks ----
 function kids2Served(c, s, demo) {
@@ -41038,7 +41093,7 @@ function hurrySpawn(c, demo) {
   tagSpawn(c, demo);
   if (!c || c.type.evil || c.type.glutton || c.type.boss || c.type.flyer || c.fan || c.protest || c.extra)
     return;
-  if (G.level < 2 || G.ta || G.brush || customers.some((d) => d.hurry)) return; // (one at a time)
+  if (G.level < 2 || G.ta || G.brush || G.free || customers.some((d) => d.hurry)) return; // (one at a time; never in relax mode)
   if (Math.random() >= (demo ? 0.05 : 0.08)) return;
   const max = (DF().kid ? 15 : 10) + Math.random() * 2;
   c.hurry = { t: max, max };
@@ -43498,6 +43553,1437 @@ function drawOrrery(L, Rr, Tp, B, f, t) {
   }
 }
 // =====================================================================================
+//  CASTAWAY ISLAND (v1.4.10) - from PLAY MORE. KOOS VAN SCHOOR (our own man: sunburnt, a straw hat, a ragged shirt, a
+//  scruffy beard - he talks to a coconut called Klaas) is stranded on a tiny island in the middle of the ocean.
+//    - THE ISLAND (the screensaver): day turns to sunset, night and dawn; Koos wakes up, fishes (and catches a boot),
+//      builds a sandcastle the tide takes, naps in his hammock, loses his sandwich to a seagull, gets pinched by a crab,
+//      finds a message in a bottle and has a word with Klaas. Out at sea the world goes by without noticing him:
+//      cruise ships full of tourists taking photos, a party yacht (fireworks at night), cargo ships, a navy destroyer,
+//      an aircraft carrier, a submarine's periscope; whales spout and breach, dolphins leap, a shark fin circles.
+//      And at night a UFO tries to beam him up - he hangs on to his palm tree.
+//    - DEFEND THE ISLAND (press FIRE): the arcade game, in the spirit of the old gallery shooters. Aim with the arrows
+//      (or the mouse / a finger), FIRE coconuts; shoot what threatens Koos - robot crabs, robo-gulls, a robot pirate
+//      ship's cannonballs, meteors at night, the UFO and its beam. NEVER hit the ships going by: they're his way home.
+//      SIGNAL them with a flare instead (E, or a right click / a tap on the ship): three ships signalled and a rescue
+//      helicopter comes - then the next level, with new weather: a calm day, a storm, a night of shooting stars, a
+//      full moon. Three lives; the score turns into coins.
+//  (Its own state, "castaway": update, draw, words and pointer all come here.)
+// =====================================================================================
+                                    
+const CW   
+                
+            
+              
+              
+               
+             
+               
+               
+                   
+                  
+                   
+                
+                  
+                
+                
+                
+                  
+                
+               
+               
+                    
+               
+               
+              
+               
+                   
+                    
+               
+               
+               
+                 
+  = {
+  phase: "island",
+  t: 0,
+  tod: 0.15,
+  act: 0,
+  actT: 0,
+  kx: 0,
+  aimX: 0,
+  aimY: 0,
+  ships: [],
+  foes: [],
+  shots: [],
+  fx: [],
+  life: [],
+  score: 0,
+  lives: 3,
+  level: 1,
+  signals: 0,
+  shipT: 2,
+  foeT: 3,
+  cool: 0,
+  flareCool: 0,
+  hurt: 0,
+  heli: -1,
+  msg: "",
+  msgT: 0,
+  fireWas: false,
+  flareWas: false,
+  ptr: false,
+  best: 0,
+  ufoT: 30,
+};
+// Koos's little stories on the island, one after another (with the words that go with them)
+const CW_ACTS                             = [
+  ["wake", 7, "KOOS VAN SCHOOR WAKES UP ON A DESERT ISLAND... AGAIN"],
+  ["fish", 9, "GONE FISHING. SOMETHING'S BITING!"],
+  ["castle", 9, "A SANDCASTLE - THE FINEST ON THE ISLAND"],
+  ["klaas", 8, "A CHAT WITH KLAAS THE COCONUT. KLAAS SAYS NOTHING, AS USUAL"],
+  ["gull", 8, "LUNCH TIME... HEY! THAT WAS MY SANDWICH!"],
+  ["bottle", 9, 'A MESSAGE IN A BOTTLE! IT SAYS: "WISH YOU WERE HERE"'],
+  ["crab", 7, "OUCH! A CRAB PINCHES HIS TOE"],
+  ["hammock", 11, "A NAP IN THE HAMMOCK - THE SHIPS GO BY WITHOUT A CLUE"],
+];
+const CW_WEATHER = [
+  "A CALM SUMMER DAY",
+  "A STORM IS COMING",
+  "A NIGHT OF SHOOTING STARS",
+  "FULL MOON - THEY'RE HERE!",
+];
+const CW_SHIPS = ["cruise", "yacht", "cargo", "navy", "carrier", "sub"];
+const CW_SHIP_NAMES = {
+  cruise: "A CRUISE SHIP",
+  yacht: "A PARTY YACHT",
+  cargo: "A CARGO SHIP",
+  navy: "A NAVY DESTROYER",
+  carrier: "AN AIRCRAFT CARRIER",
+  sub: "A SUBMARINE",
+};
+function cwBox() {
+  const L = -ox - 20,
+    Rr = W - ox + 20,
+    T = -oy - 20,
+    B = H - oy + 20,
+    w = Rr - L,
+    h = B - T,
+    tall = h > w,
+    k = Math.min(w / (tall ? 480 : 960), h / 540); // (a tall phone screen: everything bigger, the island fills the width)
+  return {
+    L,
+    Rr,
+    T,
+    B,
+    w,
+    h,
+    k,
+    hz: T + h * (tall ? 0.52 : 0.46),
+    iy: T + h * (tall ? 0.78 : 0.82),
+    cx: L + w * 0.5,
+    rw: Math.min(w * (tall ? 0.44 : 0.36), 400 * k),
+  };
+}
+function startCastaway() {
+  if (G.state !== "menu") return;
+  G.state = "castaway";
+  G.callouts = [];
+  G.fadeT = 0.45;
+  CW.phase = "island";
+  CW.t = 0;
+  CW.tod = 0.12;
+  CW.act = 0;
+  CW.actT = 0;
+  CW.ships = [];
+  CW.foes = [];
+  CW.shots = [];
+  CW.fx = [];
+  CW.life = [];
+  CW.shipT = 1.5;
+  CW.ufoT = 26;
+  CW.best = store.get("cwBest", 0);
+  const b = cwBox();
+  CW.kx = b.cx;
+  CW.aimX = b.cx;
+  CW.aimY = b.hz;
+  CW.fireWas = CW.flareWas = true; // (the button that opened it must be let go first)
+  showPanels();
+}
+function exitCastaway() {
+  if (G.state !== "castaway") return;
+  sfx("click");
+  toMenu();
+}
+function cwStartPlay() {
+  const b = cwBox();
+  CW.phase = "play";
+  CW.t = 0;
+  CW.score = 0;
+  CW.lives = 3;
+  CW.level = 1;
+  CW.coins = 0;
+  CW.foes = [];
+  CW.shots = [];
+  CW.fx = [];
+  CW.ships = [];
+  CW.aimX = b.cx;
+  CW.aimY = b.hz + b.h * 0.08;
+  cwLevel(1);
+  sfx("start");
+}
+function cwLevel(n) {
+  CW.level = n;
+  CW.signals = 0;
+  CW.heli = -1;
+  CW.foes = [];
+  CW.shipT = 2;
+  CW.foeT = 2.5;
+  CW.tod = [0.18, 0.47, 0.75, 0.82][(n - 1) % 4];
+  cwSay("LEVEL " + n + " · " + CW_WEATHER[(n - 1) % 4], 3);
+}
+function cwSay(m, sec) {
+  CW.msg = m;
+  CW.msgT = sec;
+}
+const cwNight = () => CW.tod > 0.55 && CW.tod < 0.95;
+const cwStorm = () => CW.phase === "play" && (CW.level - 1) % 4 === 1;
+// ---------------------------------------------------------------- update
+function castawayUpdate(dt) {
+  const b = cwBox();
+  CW.t += dt;
+  CW.msgT = Math.max(0, CW.msgT - dt);
+  CW.hurt = Math.max(0, CW.hurt - dt);
+  CW.cool = Math.max(0, CW.cool - dt);
+  CW.flareCool = Math.max(0, CW.flareCool - dt);
+  if (anyKey("Escape", "Backspace")) {
+    keys.delete("Escape");
+    keys.delete("Backspace");
+    return exitCastaway();
+  }
+  // the controls: the arrows aim, FIRE throws, the flare key signals
+  let gp = null;
+  try {
+    gp = navigator.getGamepads ? [...navigator.getGamepads()].find((g) => g) : null;
+  } catch (e) {}
+  const fire = anyKey("Space", "KeyX", "KeyJ", "KeyK", "ControlLeft", "Enter") || pad.pour || CW.ptr,
+    flare = anyKey("KeyE", "KeyQ", "KeyH", "ShiftLeft") || !!(gp && gp.buttons[2] && gp.buttons[2].pressed),
+    fireEdge = fire && !CW.fireWas,
+    flareEdge = flare && !CW.flareWas;
+  CW.fireWas = fire;
+  CW.flareWas = flare;
+  const ax =
+      (anyKey("ArrowRight", "KeyD") || pad.right ? 1 : 0) - (anyKey("ArrowLeft", "KeyA") || pad.left ? 1 : 0),
+    ay = (anyKey("ArrowDown", "KeyS") || pad.down ? 1 : 0) - (anyKey("ArrowUp", "KeyW") || pad.up ? 1 : 0);
+  // ---- sea life and ships go by in both modes ----
+  cwLifeUpdate(dt, b);
+  for (const s of CW.ships) {
+    s.x += s.dir * s.spd * dt;
+    s.t += dt;
+    if (s.hitT > 0) s.hitT -= dt;
+  }
+  CW.ships = CW.ships.filter((s) => s.x > b.L - 260 * b.k && s.x < b.Rr + 260 * b.k && !s.gone);
+  CW.shipT -= dt;
+  if (CW.shipT <= 0) {
+    CW.shipT = CW.phase === "play" ? 5 + Math.random() * 3 : 7 + Math.random() * 6;
+    const kind =
+      CW.phase === "play" &&
+      CW.level >= 2 &&
+      Math.random() < 0.28 &&
+      !CW.ships.some((s) => s.kind === "pirate")
+        ? "pirate"
+        : CW_SHIPS[Math.floor(Math.random() * CW_SHIPS.length)];
+    const dir = Math.random() < 0.5 ? 1 : -1,
+      depth = 0.55 + Math.random() * 0.5;
+    CW.ships.push({
+      kind,
+      dir,
+      x: dir > 0 ? b.L - 200 * b.k : b.Rr + 200 * b.k,
+      y: b.hz + (4 + depth * 26) * b.k,
+      s: depth * b.k,
+      spd: (kind === "sub" ? 28 : kind === "yacht" ? 60 : 38) * b.k * (0.8 + Math.random() * 0.4),
+      t: 0,
+      hp: kind === "pirate" ? 6 : 1,
+      fireT: 2.5,
+    });
+  }
+  if (CW.phase === "island") return cwIslandUpdate(dt, b, fireEdge);
+  if (CW.phase === "over") {
+    if (CW.t > 1.5 && fireEdge) {
+      CW.phase = "island";
+      CW.t = 0;
+      CW.act = 0;
+      CW.actT = 0;
+    }
+    return;
+  }
+  // ---- DEFEND THE ISLAND ----
+  CW.aimX = clamp(CW.aimX + ax * 520 * b.k * dt, b.L + 30, b.Rr - 30);
+  CW.aimY = clamp(CW.aimY + ay * 420 * b.k * dt, b.T + 40 * b.k, b.iy + 10 * b.k);
+  // Koos walks along the beach towards where you aim (a little behind it), so he can dodge too
+  const tx = clamp(CW.aimX, b.cx - b.rw * 0.7, b.cx + b.rw * 0.7);
+  CW.kx += clamp(tx - CW.kx, -150 * b.k * dt, 150 * b.k * dt);
+  if (CW.heli >= 0) return cwHeliUpdate(dt, b);
+  if (fire && CW.cool <= 0) {
+    CW.cool = 0.17;
+    CW.shots.push({ x0: CW.kx, y0: b.iy - 40 * b.k, x: CW.aimX, y: CW.aimY, t: 0, len: 0.2 });
+    sfx("throw");
+  }
+  if (flareEdge && CW.flareCool <= 0) cwFlare(b);
+  for (const sh of CW.shots) {
+    sh.t += dt;
+    if (sh.t >= sh.len && !sh.done) {
+      sh.done = true;
+      cwHitAt(sh.x, sh.y, b);
+    }
+  }
+  CW.shots = CW.shots.filter((s) => !s.done);
+  // threats
+  CW.foeT -= dt;
+  if (CW.foeT <= 0) {
+    const lv = CW.level,
+      hard = 1 + (lv - 1) * 0.18;
+    CW.foeT = Math.max(0.55, 2.2 / hard - Math.random() * 0.4);
+    const pool = ["crab", "gull", "crab", "gull"];
+    if ((lv - 1) % 4 === 2 || lv > 4) pool.push("meteor", "meteor", "meteor");
+    if ((lv - 1) % 4 === 3 || lv > 4) pool.push("meteor");
+    const kind = pool[Math.floor(Math.random() * pool.length)];
+    cwSpawnFoe(kind, b, hard);
+    if (((lv - 1) % 4 === 3 || (lv > 4 && Math.random() < 0.3)) && !CW.foes.some((f) => f.kind === "ufo"))
+      cwSpawnFoe("ufo", b, hard);
+  }
+  for (const f of CW.foes) cwFoeUpdate(f, dt, b);
+  for (const s of CW.ships)
+    if (s.kind === "pirate" && !s.sunk) {
+      s.fireT -= dt;
+      if (s.fireT <= 0 && s.x > b.L + 80 && s.x < b.Rr - 80) {
+        s.fireT = 2.6 + Math.random() * 1.5;
+        const tx2 = CW.kx + (Math.random() - 0.5) * 120 * b.k;
+        CW.foes.push({
+          kind: "ball",
+          x: s.x,
+          y: s.y - 10 * s.s,
+          x0: s.x,
+          y0: s.y - 10 * s.s,
+          tx: tx2,
+          t: 0,
+          len: 2.4,
+          hp: 1,
+        });
+        sfx("boom");
+        cwFx("smoke", s.x, s.y - 12 * s.s, 0.8);
+      }
+      if (s.sunk) s.y += dt * 20;
+    }
+  CW.foes = CW.foes.filter((f) => !f.dead);
+  for (const e of CW.fx) e.t += dt;
+  CW.fx = CW.fx.filter((e) => e.t < e.len);
+  if (CW.lives <= 0) cwGameOver();
+}
+function cwIslandUpdate(dt, b, fireEdge) {
+  CW.tod = (CW.tod + dt / 140) % 1; // (a whole day in two minutes and a bit)
+  const A = CW_ACTS[CW.act % CW_ACTS.length];
+  CW.actT += dt;
+  if (CW.actT >= A[1]) {
+    CW.act++;
+    CW.actT = 0;
+  }
+  // Koos strolls to where each little story happens
+  const spot = {
+    wake: 0,
+    fish: 0.55,
+    castle: -0.25,
+    klaas: -0.42,
+    gull: 0.15,
+    bottle: 0.62,
+    crab: 0.3,
+    hammock: -0.62,
+  }[A[0]];
+  CW.kx += clamp(b.cx + spot * b.rw - CW.kx, -60 * b.k * dt, 60 * b.k * dt);
+  // the UFO, at night now and then
+  CW.ufoT -= dt;
+  if (CW.ufoT <= 0 && cwNight() && !CW.foes.length) {
+    CW.ufoT = 70;
+    CW.foes.push({ kind: "ufo", x: b.L - 60, y: b.T + b.h * 0.22, t: 0, hp: 99, demo: true });
+    sfx("ufo");
+  }
+  for (const f of CW.foes) {
+    f.t += dt;
+    if (f.demo) {
+      f.x += (CW.kx - f.x) * Math.min(1, dt * 0.8);
+      if (f.t > 14) f.x += 400 * b.k * dt * (f.t - 14);
+      if (f.t > 17) f.dead = true;
+    }
+  }
+  CW.foes = CW.foes.filter((f) => !f.dead);
+  if (fireEdge && CW.t > 0.6) cwStartPlay();
+}
+function cwLifeUpdate(dt, b) {
+  // whales, dolphins, a shark fin, seagulls: now and then
+  if (Math.random() < dt * 0.09 && !CW.life.some((l) => l.kind === "whale"))
+    CW.life.push({
+      kind: "whale",
+      x: b.L + b.w * (0.1 + Math.random() * 0.8),
+      t: 0,
+      len: 9,
+      breach: Math.random() < 0.5,
+    });
+  if (Math.random() < dt * 0.08 && !CW.life.some((l) => l.kind === "dolphins"))
+    CW.life.push({ kind: "dolphins", x: b.L + b.w * (0.1 + Math.random() * 0.6), t: 0, len: 6, dir: 1 });
+  if (!CW.life.some((l) => l.kind === "shark")) CW.life.push({ kind: "shark", t: 0, len: 1e9 });
+  if (Math.random() < dt * 0.15 && CW.life.filter((l) => l.kind === "bird").length < 3)
+    CW.life.push({
+      kind: "bird",
+      x: b.L - 20,
+      y: b.T + b.h * (0.12 + Math.random() * 0.2),
+      t: 0,
+      len: 30,
+      sp: (40 + Math.random() * 40) * b.k,
+    });
+  for (const l of CW.life) {
+    l.t += dt;
+    if (l.kind === "bird") l.x += l.sp * dt;
+  }
+  CW.life = CW.life.filter((l) => l.t < l.len && !(l.kind === "bird" && l.x > b.Rr + 30));
+}
+function cwSpawnFoe(kind, b, hard) {
+  const side = Math.random() < 0.5 ? -1 : 1;
+  if (kind === "crab")
+    CW.foes.push({
+      kind,
+      x: b.cx + side * b.rw * 1.05,
+      y: b.iy,
+      dir: -side,
+      sp: (34 + 10 * hard) * b.k,
+      hp: 1,
+      t: 0,
+    });
+  else if (kind === "gull")
+    CW.foes.push({
+      kind,
+      x: side < 0 ? b.L - 30 : b.Rr + 30,
+      y: b.T + b.h * (0.15 + Math.random() * 0.15),
+      dir: -side,
+      sp: (110 + 20 * hard) * b.k,
+      hp: 1,
+      t: 0,
+      dive: 1.6 + Math.random() * 1.5,
+    });
+  else if (kind === "meteor") {
+    const tx = CW.kx + (Math.random() - 0.5) * b.rw * 1.4;
+    CW.foes.push({
+      kind,
+      x0: tx + side * b.w * 0.35,
+      y0: b.T,
+      tx,
+      x: 0,
+      y: 0,
+      t: 0,
+      len: (3.4 - Math.min(1.4, hard * 0.4)) * (0.9 + Math.random() * 0.3),
+      hp: 1,
+    });
+  } else if (kind === "ufo") {
+    CW.foes.push({
+      kind,
+      x: side < 0 ? b.L - 60 : b.Rr + 60,
+      y: b.T + b.h * 0.2,
+      t: 0,
+      hp: 4,
+      beam: 0,
+      grab: 0,
+    });
+    sfx("ufo");
+  }
+}
+function cwFoeUpdate(f, dt, b) {
+  f.t += dt;
+  if (f.kind === "crab") {
+    f.x += f.dir * f.sp * dt * (0.6 + 0.4 * Math.abs(Math.sin(f.t * 6)));
+    if (Math.abs(f.x - CW.kx) < 16 * b.k) {
+      f.dead = true;
+      cwHurt("OUCH! A ROBOT CRAB PINCHED KOOS!", b);
+    }
+  } else if (f.kind === "gull") {
+    if (f.t < f.dive) f.x += f.dir * f.sp * dt;
+    else {
+      // swooping down at Koos's sandwich
+      const dx = CW.kx - f.x,
+        dy = b.iy - 50 * b.k - f.y,
+        d = Math.hypot(dx, dy) || 1;
+      f.x += (dx / d) * f.sp * 1.3 * dt;
+      f.y += (dy / d) * f.sp * 1.3 * dt;
+      if (d < 14 * b.k) {
+        f.dead = true;
+        cwHurt("A ROBO-GULL GOT KOOS!", b);
+      }
+    }
+    if (f.x < b.L - 60 || f.x > b.Rr + 60) f.dead = true;
+  } else if (f.kind === "meteor" || f.kind === "ball") {
+    const u = f.t / f.len;
+    if (f.kind === "meteor") {
+      f.x = lerpA(f.x0, f.tx, u);
+      f.y = lerpA(f.y0, b.iy, u * u);
+    } else {
+      f.x = lerpA(f.x0, f.tx, u);
+      f.y = lerpA(f.y0, b.iy, u) - Math.sin(u * Math.PI) * b.h * 0.25;
+    }
+    if (u >= 1) {
+      f.dead = true;
+      cwFx("boom", f.x, b.iy - 6 * b.k, 0.8);
+      sfx("boom");
+      G.shake = Math.max(G.shake || 0, 5);
+      if (Math.abs(f.x - CW.kx) < 40 * b.k)
+        cwHurt(f.kind === "meteor" ? "A METEOR! TOO CLOSE!" : "A CANNONBALL! TOO CLOSE!", b);
+    }
+  } else if (f.kind === "ufo") {
+    f.x += (CW.kx + Math.sin(f.t * 0.7) * 120 * b.k - f.x) * Math.min(1, dt * 0.6);
+    f.y = b.T + b.h * 0.2 + Math.sin(f.t * 1.3) * 10 * b.k;
+    f.beam =
+      f.t > 3 && f.t % 7 < 4 ? Math.min(1, (f.beam || 0) + dt * 2) : Math.max(0, (f.beam || 0) - dt * 3);
+    if (f.beam > 0.6 && Math.abs(CW.kx - f.x) < 30 * b.k) {
+      f.grab += dt;
+      if (f.grab > 1.6) {
+        f.grab = 0;
+        f.t = 4.5;
+        cwHurt("BEAMED UP... AND DROPPED BACK IN THE SEA!", b);
+      }
+    } else f.grab = Math.max(0, f.grab - dt);
+  }
+}
+function cwHurt(m, b) {
+  if (CW.hurt > 0) return;
+  CW.lives--;
+  CW.hurt = 1.6;
+  cwSay(m, 2.2);
+  sfx("bonk");
+  G.shake = Math.max(G.shake || 0, 7);
+  cwFx("stars", CW.kx, b.iy - 70 * b.k, 1.2);
+}
+function cwFx(kind, x, y, len, extra = {}) {
+  CW.fx.push({ kind, x, y, t: 0, len, ...extra });
+}
+// a coconut lands: what's there?
+function cwHitAt(x, y, b) {
+  const r = 26 * b.k;
+  for (const f of CW.foes) {
+    if (f.dead) continue;
+    const fy = f.kind === "crab" ? f.y - 8 * b.k : f.y,
+      rr = f.kind === "ufo" ? r * 1.8 : r;
+    if (Math.abs(f.x - x) < rr && Math.abs(fy - y) < rr) {
+      f.hp--;
+      cwFx("pop", x, y, 0.4);
+      if (f.hp <= 0) {
+        f.dead = true;
+        const pts = { crab: 150, gull: 120, meteor: 100, ball: 80, ufo: 500 }[f.kind] || 100;
+        CW.score += pts;
+        cwFx("boom", f.x, fy, 0.7);
+        cwFx("pts", f.x, fy - 20 * b.k, 1, { n: pts });
+        sfx(f.kind === "ufo" ? "fanfare" : "smash");
+        if (f.kind === "ufo") cwSay("THE UFO FLEES - BYE BYE!", 2);
+      } else sfx("bonk");
+      return;
+    }
+  }
+  for (const s of CW.ships) {
+    if (s.sunk) continue;
+    const sw = (s.kind === "carrier" ? 120 : s.kind === "sub" ? 34 : 80) * s.s;
+    if (Math.abs(s.x - x) < sw && y > s.y - 40 * s.s && y < s.y + 8 * s.s) {
+      cwFx("pop", x, y, 0.4);
+      if (s.kind === "pirate") {
+        s.hp--;
+        s.hitT = 0.2;
+        sfx("bonk");
+        if (s.hp <= 0) {
+          s.sunk = true;
+          CW.score += 600;
+          cwFx("boom", s.x, s.y - 10 * s.s, 1);
+          cwFx("pts", s.x, s.y - 40 * s.s, 1, { n: 600 });
+          cwSay("THE ROBOT PIRATES ARE SUNK!", 2);
+          sfx("fanfare");
+        }
+      } else {
+        // never the ships going by - they're the way home!
+        CW.score = Math.max(0, CW.score - 200);
+        s.hitT = 0.4;
+        cwFx("pts", s.x, s.y - 40 * s.s, 1, { n: -200 });
+        cwSay(s.kind === "cruise" ? "OOPS! NOT THE TOURISTS!" : "OOPS! THAT'S YOUR WAY HOME!", 1.8);
+        sfx("aww");
+      }
+      return;
+    }
+  }
+  cwFx("splash", x, y, 0.6);
+}
+// the flare: signal a passing ship
+function cwFlare(b) {
+  CW.flareCool = 1.2;
+  sfx("flare");
+  cwFx("flare", CW.kx, b.iy - 40 * b.k, 1.6, { tx: CW.aimX, ty: CW.aimY });
+  for (const s of CW.ships) {
+    if (s.kind === "pirate" || s.signaled) continue;
+    const sw = (s.kind === "carrier" ? 130 : 90) * s.s;
+    if (Math.abs(s.x - CW.aimX) < sw && Math.abs(s.y - 15 * s.s - CW.aimY) < 60 * s.s + 30 * b.k) {
+      s.signaled = true;
+      CW.signals++;
+      CW.score += 250;
+      cwFx("pts", s.x, s.y - 50 * s.s, 1.2, { n: 250 });
+      sfx("bell");
+      if (CW.signals >= 3) {
+        CW.heli = 0;
+        CW.foes = [];
+        cwSay("THEY'VE SEEN HIM! HERE COMES THE RESCUE HELICOPTER!", 3);
+        sfx("bonus");
+      } else cwSay(CW_SHIP_NAMES[s.kind] + " SAW THE FLARE! " + CW.signals + " OF 3", 2);
+      return;
+    }
+  }
+  cwSay("THE FLARE GOES UP... NOBODY THERE TO SEE IT", 1.5);
+}
+function cwHeliUpdate(dt, b) {
+  CW.heli += dt;
+  if (CW.heli > 6) {
+    const bonus = 1000 * CW.level;
+    CW.score += bonus;
+    cwSay("RESCUED! +" + bonus + " - BUT THE NEXT ISLAND AWAITS...", 3);
+    sfx("fanfare");
+    cwLevel(CW.level + 1);
+  }
+}
+function cwGameOver() {
+  CW.phase = "over";
+  CW.t = 0;
+  CW.coins = Math.max(1, Math.round(CW.score / 150));
+  addCoins(CW.coins);
+  if (CW.score > CW.best) {
+    CW.best = CW.score;
+    store.set("cwBest", CW.best);
+  }
+  sfx("over");
+}
+function castawayPointer(type, x, y) {
+  if (type === "down") {
+    if (CW.phase !== "play") {
+      if (CW.phase === "island" && CW.t > 0.6) cwStartPlay();
+      else if (CW.phase === "over" && CW.t > 1.5) {
+        CW.phase = "island";
+        CW.t = 0;
+      }
+      return true;
+    }
+    CW.aimX = x;
+    CW.aimY = y;
+    // a tap on a passing ship signals it; anywhere else, a coconut
+    const b = cwBox(),
+      onShip = CW.ships.some(
+        (s) =>
+          s.kind !== "pirate" &&
+          !s.signaled &&
+          Math.abs(s.x - x) < 90 * s.s &&
+          Math.abs(s.y - 15 * s.s - y) < 60 * s.s + 20 * b.k
+      );
+    if (onShip && CW.flareCool <= 0) cwFlare(b);
+    else CW.ptr = true;
+  } else if (type === "move" && CW.phase === "play") {
+    CW.aimX = x;
+    CW.aimY = y;
+  } else if (type === "up") CW.ptr = false;
+  return true;
+}
+window.addEventListener("contextmenu", (e) => {
+  if (G.state === "castaway") {
+    e.preventDefault();
+    if (CW.phase === "play" && CW.flareCool <= 0) cwFlare(cwBox()); // (a right click: the flare)
+  }
+});
+// ---------------------------------------------------------------- drawing
+function drawCastaway(t) {
+  const b = cwBox(),
+    { L, Rr, T, B, w, h, k, hz, iy, cx, rw } = b,
+    tod = CW.tod,
+    night = cwNight(),
+    dusk = Math.max(0, 1 - Math.abs(tod - 0.5) / 0.08) + Math.max(0, 1 - Math.abs(tod - 0.97) / 0.06),
+    dark = night
+      ? 1
+      : tod > 0.45 && tod < 0.55
+        ? (tod - 0.45) / 0.1
+        : tod > 0.95
+          ? 1 - (tod - 0.95) / 0.05
+          : 0;
+  // the sky
+  const day1 = col("#5ab0f0"),
+    day2 = col("#bfe6ff"),
+    n1 = col("#05081c"),
+    n2 = col("#1a2048"),
+    sun1 = col("#ff7a4a"),
+    sun2 = col("#ffd090");
+  const mixc = (a, c2, f) => mix(a, c2, clamp(f, 0, 1));
+  let top = mixc(day1, n1, dark),
+    bot = mixc(day2, n2, dark);
+  top = mixc(top, col("#3a2a6a"), dusk * 0.6);
+  bot = mixc(bot, sun1, dusk * 0.8);
+  if (cwStorm()) {
+    top = mixc(top, col("#2a3040"), 0.7);
+    bot = mixc(bot, col("#5a6070"), 0.7);
+  }
+  vgrad(L, T, w, hz - T + 2, top, bot);
+  // stars at night
+  if (dark > 0.05) {
+    for (let i = 0; i < 90; i++) {
+      const tw = 0.5 + 0.5 * Math.sin(t * 2 + i * 7.1);
+      rect(
+        L + hash(i * 3.7) * w,
+        T + hash(i * 1.9) * (hz - T) * 0.9,
+        1.4,
+        1.4,
+        withA(C.white, dark * (0.3 + 0.6 * tw))
+      );
+    }
+  }
+  // the sun (or the moon) sailing over
+  {
+    const day = tod < 0.55 || tod > 0.95,
+      f = day ? ((tod + 0.05) % 1) / 0.6 : (tod - 0.55) / 0.4,
+      sx = L + w * (0.1 + 0.8 * f),
+      sy = hz - Math.sin(f * Math.PI) * (hz - T) * 0.75;
+    R.setAdd(true);
+    glow(sx, sy, 90 * k, withA(day ? sun2 : col("#c8d8ff"), 0.35));
+    R.setAdd(false);
+    disc(sx, sy, (day ? 22 : 16) * k, day ? mixc(col("#fff4c0"), sun1, dusk) : col("#eef0f8"));
+    if (!day) {
+      disc(sx - 4 * k, sy - 3 * k, 3.4 * k, col("#c8ccd8"));
+      disc(sx + 5 * k, sy + 4 * k, 2.6 * k, col("#c8ccd8"));
+    }
+  }
+  // clouds
+  for (let i = 0; i < 5; i++) {
+    const cxx = L + ((hash(i * 4.1) * w + t * (6 + i * 2) * k) % (w + 200)) - 100,
+      cyy = T + h * (0.08 + hash(i * 2.3) * 0.2),
+      cc = withA(mixc(col("#ffffff"), col("#4a4e6a"), dark * 0.8 + (cwStorm() ? 0.5 : 0)), 0.75);
+    for (let j = 0; j < 4; j++)
+      disc(
+        cxx + j * 16 * k,
+        cyy + Math.sin(j * 2) * 3 * k,
+        (12 + hash(i + j) * 8) * k,
+        cc,
+        (7 + hash(j) * 4) * k
+      );
+  }
+  // birds far off
+  for (const l of CW.life)
+    if (l.kind === "bird") {
+      const fl = Math.sin(l.t * 8) * 4 * k;
+      polyline([l.x - 6 * k, l.y - fl, l.x, l.y, l.x + 6 * k, l.y - fl], 1.4 * k, withA(col("#2a2a34"), 0.8));
+    }
+  // the sea
+  const sea1 = mixc(mixc(col("#2a8ac8"), col("#0a1838"), dark), col("#c86a5a"), dusk * 0.3),
+    sea2 = mixc(col("#0a4a80"), col("#040a1c"), dark);
+  vgrad(L, hz, w, B - hz, sea1, sea2);
+  rect(L, hz, w, 1.5 * k, withA(C.white, 0.35));
+  // the glitter path under the sun / moon, and the swell
+  for (let i = 0; i < 26; i++) {
+    const yy = hz + 6 * k + (i * (B - hz)) / 26,
+      amp = (cwStorm() ? 9 : 4) * k * (0.4 + i / 26);
+    const pts = [];
+    for (let x = L; x <= Rr + 20; x += 40) pts.push(x, yy + Math.sin(x * 0.02 + t * 1.4 + i) * amp * 0.3);
+    polyline(pts, 1 + i * 0.05, withA(col("#ffffff"), 0.05 + 0.04 * Math.sin(t + i)));
+  }
+  // the ships far out (behind the island)
+  for (const s of CW.ships) cwDrawShip(s, t, dark, b);
+  // the sea life
+  cwDrawLife(t, b, dark);
+  // fireworks over the party yacht at night
+  if (dark > 0.5)
+    for (const s of CW.ships)
+      if (s.kind === "yacht") {
+        const f = (t * 0.6 + s.x * 0.001) % 1,
+          fx = s.x + Math.sin(Math.floor(t * 0.6) * 3) * 30 * s.s,
+          fy = s.y - (60 + f * 40) * s.s;
+        R.setAdd(true);
+        if (f > 0.4)
+          for (let i = 0; i < 12; i++) {
+            const a = (i / 12) * 6.283,
+              rr = (f - 0.4) * 60 * s.s;
+            disc(
+              fx + Math.cos(a) * rr,
+              fy + Math.sin(a) * rr,
+              1.6 * k,
+              withA(col(["#ff5fa8", "#ffd24d", "#5ff5c8"][i % 3]), 1 - f)
+            );
+          }
+        R.setAdd(false);
+      }
+  // THE ISLAND: a hump of sand in the swell, a palm tree, a hammock, Klaas the coconut, the SOS in the sand
+  const rise = Math.sin(t * 0.8) * 1.5 * k;
+  disc(cx, iy + 18 * k + rise, rw * 1.18, withA(col("#7ad0e8"), 0.35), 22 * k); // (the shallows)
+  disc(cx, iy + 10 * k, rw, mixc(col("#f0d898"), col("#3a3424"), dark * 0.8), 26 * k);
+  disc(cx - rw * 0.2, iy + 2 * k, rw * 0.7, mixc(col("#f8e4b0"), col("#4a4230"), dark * 0.8), 16 * k);
+  for (let i = 0; i < 7; i++)
+    disc(
+      cx - rw * 0.8 + i * rw * 0.27,
+      iy + 24 * k + Math.sin(t * 2 + i) * 2 * k,
+      14 * k,
+      withA(C.white, 0.35),
+      3 * k
+    ); // foam
+  // "SOS" scratched in the sand
+  pixText("SOS", cx + rw * 0.35, iy + 14 * k, 1.6 * k, withA(col("#8a6a3a"), 0.8 - dark * 0.4));
+  // the palm tree
+  {
+    const px = cx - rw * 0.55,
+      sway = Math.sin(t * 0.9) * (cwStorm() ? 0.12 : 0.04);
+    const pts = [];
+    for (let i = 0; i <= 8; i++)
+      pts.push(px + Math.sin((i / 8) * 1.4) * 22 * k + sway * i * 6 * k, iy - i * 15 * k);
+    polyline(pts, 7 * k, mixc(col("#8a5a2a"), col("#2a1a10"), dark * 0.7));
+    for (let i = 1; i < 8; i++)
+      line(
+        pts[i * 2] - 3.5 * k,
+        pts[i * 2 + 1],
+        pts[i * 2] + 3.5 * k,
+        pts[i * 2 + 1] + 2 * k,
+        1 * k,
+        withA(col("#5a3a1a"), 0.7)
+      );
+    const tx = pts[16],
+      ty = pts[17];
+    for (let i = 0; i < 7; i++) {
+      const a = -Math.PI + (i / 6) * Math.PI + Math.sin(t * 1.3 + i) * 0.06 + sway,
+        lp = [];
+      for (let j = 0; j <= 5; j++)
+        lp.push(tx + Math.cos(a) * j * 13 * k, ty + Math.sin(a) * j * 9 * k + j * j * 1.8 * k);
+      polyline(lp, 5 * k, mixc(col("#3a9a3a"), col("#0a2a14"), dark * 0.7));
+    }
+    for (let i = 0; i < 3; i++) disc(tx - 4 * k + i * 5 * k, ty + 6 * k, 4 * k, col("#6a4a22")); // coconuts
+    // the hammock, from the palm to a driftwood post
+    const hx2 = cx - rw * 0.15;
+    line(hx2, iy, hx2, iy - 34 * k, 3 * k, col("#8a6a4a"));
+    const hpts = [];
+    for (let i = 0; i <= 10; i++) {
+      const u = i / 10;
+      hpts.push(lerpA(px + 10 * k, hx2, u), iy - 34 * k + Math.sin(u * Math.PI) * 14 * k);
+    }
+    polyline(hpts, 4 * k, col("#e8d0a0"));
+    // Klaas the coconut, with a drawn-on face
+    const kx2 = cx - rw * 0.48,
+      ky2 = iy - 2 * k;
+    disc(kx2, ky2, 6 * k, col("#6a4a22"));
+    disc(kx2 - 2 * k, ky2 - 1.5 * k, 0.9 * k, col("#f4f0e8"));
+    disc(kx2 + 2 * k, ky2 - 1.5 * k, 0.9 * k, col("#f4f0e8"));
+    arc(kx2, ky2 + 1 * k, 2.5 * k, 0.3, Math.PI - 0.3, 0.8 * k, col("#f4f0e8"), 6);
+  }
+  // the island's own story props
+  if (CW.phase === "island") cwDrawProps(t, b, dark);
+  // KOOS
+  cwDrawKoos(t, b, dark);
+  // the threats
+  for (const f of CW.foes) cwDrawFoe(f, t, b);
+  // the coconuts in flight
+  for (const sh of CW.shots) {
+    const u = sh.t / sh.len,
+      x = lerpA(sh.x0, sh.x, u),
+      y = lerpA(sh.y0, sh.y, u) - Math.sin(u * Math.PI) * 30 * k;
+    disc(x, y, 4 * k * (1 - u * 0.5), col("#6a4a22"));
+  }
+  // effects
+  for (const e of CW.fx) cwDrawFx(e, t, b);
+  // the rescue helicopter
+  if (CW.heli >= 0) cwDrawHeli(t, b);
+  // the storm: rain and lightning
+  if (cwStorm()) {
+    for (let i = 0; i < 120; i++) {
+      const x = L + ((hash(i * 2.1) * w + t * 300) % w),
+        y = T + ((hash(i * 3.3) * h + t * 700 + i * 13) % h);
+      line(x, y, x - 4 * k, y + 14 * k, 1, withA(col("#c8d8f0"), 0.35));
+    }
+    if (t % 7 < 0.15) rect(L, T, w, h, withA(C.white, 0.35 * (1 - (t % 7) / 0.15)));
+  }
+  // the aim (in the game)
+  if (CW.phase === "play" && CW.heli < 0) {
+    const ax = CW.aimX,
+      ay = CW.aimY,
+      cc = withA(col("#ffd24d"), 0.9);
+    arc(ax, ay, 12 * k, 0, 6.283, 1.6 * k, cc, 20);
+    line(ax - 18 * k, ay, ax - 6 * k, ay, 1.6 * k, cc);
+    line(ax + 6 * k, ay, ax + 18 * k, ay, 1.6 * k, cc);
+    line(ax, ay - 18 * k, ax, ay - 6 * k, 1.6 * k, cc);
+    line(ax, ay + 6 * k, ax, ay + 18 * k, 1.6 * k, cc);
+  }
+}
+function cwDrawShip(s, t, dark, b) {
+  const q = s.s,
+    x = s.x,
+    y = s.y + (s.kind === "sub" ? Math.max(0, Math.sin(s.t * 0.4)) * -0 : 0),
+    f = s.dir,
+    hit = s.hitT > 0 ? 1 : 0,
+    lit = dark > 0.5,
+    bob = Math.sin(t * 1.2 + x * 0.01) * 1.2 * q;
+  push();
+  translate(x, y + bob);
+  scaleXY(f * q, q);
+  const hull = (c) => (hit ? col("#ffffff") : col(c));
+  if (s.kind === "cruise") {
+    quad4(-90, -8, 90, -8, 78, 8, -84, 8, hull("#f4f4f8"));
+    rect(-84, 2, 164, 6, hull("#2a4a9a"));
+    rect(-70, -26, 140, 18, hull("#ffffff"));
+    rect(-54, -40, 104, 14, hull("#f0f0f4"));
+    rect(-20, -54, 30, 14, hull("#e8e8f0"));
+    rect(20, -64, 14, 22, hull("#c8302a"));
+    for (let r = 0; r < 3; r++)
+      for (let i = 0; i < 12; i++)
+        rect(-64 + i * 11, -22 + r * 7 - (r > 1 ? 21 : 0), 5, 3, lit ? col("#ffe8a0") : col("#3a5a8a"));
+    // tourists taking photos: little flashes
+    if (Math.sin(t * 9 + x) > 0.97) {
+      R.setAdd(true);
+      glow(-30 + ((t * 37) % 80), -30, 8, withA(C.white, 0.9));
+      R.setAdd(false);
+    }
+  } else if (s.kind === "yacht") {
+    quad4(-60, -6, 70, -10, 56, 6, -52, 6, hull("#ffffff"));
+    rect(-40, -20, 70, 12, hull("#e8eef8"));
+    quad4(-30, -20, 30, -20, 22, -30, -24, -30, hull("#f4f8ff"));
+    rect(-38, -16, 66, 4, col("#1a2a4a"));
+    for (let i = 0; i < 6; i++) {
+      R.setAdd(true);
+      glow(
+        -36 + i * 13,
+        -24,
+        5,
+        withA(col(["#ff5fa8", "#5ff5c8", "#ffd24d"][i % 3]), 0.6 + 0.4 * Math.sin(t * 6 + i))
+      );
+      R.setAdd(false);
+    }
+  } else if (s.kind === "cargo") {
+    quad4(-95, -10, 95, -10, 84, 8, -88, 8, hull("#3a3a46"));
+    rect(-95, -2, 190, 3, hull("#c8302a"));
+    for (let i = 0; i < 7; i++)
+      for (let r = 0; r < 2; r++)
+        rect(
+          -80 + i * 20,
+          -22 - r * 10,
+          18,
+          9,
+          col(["#c84a2a", "#2a6ac8", "#e8b830", "#3a9a5a"][(i + r) % 4])
+        );
+    rect(64, -36, 18, 26, hull("#f0f0f0"));
+  } else if (s.kind === "navy" || s.kind === "pirate") {
+    const pir = s.kind === "pirate";
+    quad4(-90, -8, 96, -12, 80, 8, -84, 8, hull(pir ? "#6a4a2a" : "#7a8494"));
+    rect(-40, -24, 60, 16, hull(pir ? "#5a3a1a" : "#8a94a4"));
+    if (pir) {
+      // the robot pirates' rusty ship: black sails with our gear-and-bolt emblem, robot crew, a robot parrot
+      for (const mx of [-30, 30]) {
+        line(mx, -24, mx, -90, 2.4, col("#3a2a1a"));
+        quad4(mx - 22, -84, mx + 22, -84, mx + 20, -40, mx - 20, -40, col("#1a1a22"));
+        disc(mx, -62, 7, col("#c8ccd6"));
+        disc(mx, -62, 3, col("#1a1a22"));
+        for (let i = 0; i < 6; i++)
+          rect(mx - 1.5 + Math.cos(i) * 7, -63.5 + Math.sin(i) * 7, 3, 3, col("#c8ccd6"));
+      }
+      for (let i = 0; i < 3; i++) {
+        rect(-20 + i * 16, -36, 7, 12, col("#a8acb8"));
+        disc(-16.5 + i * 16, -39, 3.4, col("#c8ccd6"));
+        disc(-15.5 + i * 16, -39.5, 1, col("#ff4040"));
+      }
+      disc(60, -20, 4, col("#3ac04a"));
+      tri(63, -21, 68, -20, 63, -18, col("#ffd24d")); // the robot parrot
+      for (let i = 0; i < 4; i++) disc(-60 + i * 30, -2, 2.5, col("#1a1a1a")); // gun ports
+    } else {
+      rect(-10, -44, 16, 20, hull("#8a94a4"));
+      line(-2, -44, -2, -70, 1.6, col("#5a6474"));
+      rect(-12, -66, 20, 3, col("#5a6474"));
+      rect(40, -16, 22, 6, col("#5a6474"));
+      line(60, -13, 84, -16, 2.6, col("#5a6474"));
+      pixText("D-07", -60, -2, 2, col("#ffffff"));
+    }
+  } else if (s.kind === "carrier") {
+    quad4(-120, -10, 120, -10, 104, 8, -110, 8, hull("#6a7484"));
+    rect(-130, -14, 260, 5, hull("#5a6474"));
+    rect(30, -40, 22, 26, hull("#7a8494"));
+    line(40, -40, 40, -58, 1.6, col("#5a6474"));
+    for (let i = 0; i < 4; i++) {
+      tri(-100 + i * 26, -16, -84 + i * 26, -16, -92 + i * 26, -20, col("#a8b0c0"));
+    }
+    for (let i = 0; i < 10; i++) rect(-120 + i * 24, -13, 10, 1.5, col("#f4f4f0"));
+  } else if (s.kind === "sub") {
+    const up = Math.max(0, Math.sin(s.t * 0.5)); // (surfacing, then diving again)
+    if (up > 0.2) {
+      quad4(-70, 8 - up * 10, 70, 8 - up * 10, 60, 10, -60, 10, col("#2a2e38"));
+      rect(-10, -14 - up * 8, 22, 18, col("#3a3e48"));
+    }
+    line(4, 6 - up * 20, 4, -28 - up * 8, 1.6, col("#3a3e48"));
+    rect(4, -30 - up * 8, 8, 3, col("#3a3e48")); // the periscope
+    for (let i = 0; i < 3; i++)
+      arc(4, 6, 6 + i * 5, Math.PI, 2 * Math.PI, 0.8, withA(C.white, 0.4 - i * 0.1), 8);
+  }
+  if (s.signaled) {
+    R.setAdd(true);
+    glow(0, -60, 10, withA(col("#ffd24d"), 0.6 + 0.4 * Math.sin(t * 8)));
+    R.setAdd(false); // (a lamp blinking back: "we see you!")
+  }
+  // its wake
+  for (let i = 0; i < 4; i++)
+    line(-f * 0 + 90 + i * 14, 8 + i, 110 + i * 20, 8 + i, 1.2, withA(C.white, 0.35 - i * 0.07));
+  pop();
+}
+function cwDrawLife(t, b, dark) {
+  const { k, hz, iy, cx, rw } = b;
+  for (const l of CW.life) {
+    if (l.kind === "whale") {
+      const u = l.t / l.len,
+        y = hz + 26 * k;
+      if (l.breach && u > 0.35 && u < 0.6) {
+        // up out of the water in a great arc
+        const a = (u - 0.35) / 0.25,
+          wy = y - Math.sin(a * Math.PI) * 40 * k;
+        push();
+        translate(l.x + a * 40 * k, wy);
+        rotate(-0.8 + a * 1.6);
+        disc(0, 0, 26 * k, col("#3a4a62"), 10 * k);
+        disc(4 * k, 4 * k, 18 * k, col("#e8ecf0"), 5 * k);
+        tri(-24 * k, 0, -36 * k, -8 * k, -34 * k, 8 * k, col("#3a4a62"));
+        pop();
+        if (a > 0.85)
+          for (let i = 0; i < 8; i++)
+            disc(
+              l.x + 40 * k + (i - 4) * 6 * k,
+              y - (1 - a) * 80 * k - (i % 3) * 4 * k,
+              3 * k,
+              withA(C.white, 0.7)
+            );
+      } else {
+        disc(l.x, y + 4 * k, 22 * k, col("#3a4a62"), 6 * k); // the back
+        const sp = (l.t * 0.5) % 1;
+        if (sp < 0.4)
+          for (let i = 0; i < 8; i++) {
+            const a = -Math.PI / 2 + (i - 3.5) * 0.18;
+            disc(
+              l.x + Math.cos(a) * sp * 50 * k,
+              y - Math.sin(-a) * sp * 50 * k * -1 - sp * 30 * k,
+              2.2 * k,
+              withA(C.white, 0.7 * (1 - sp / 0.4))
+            );
+          } // the spout
+      }
+    } else if (l.kind === "dolphins") {
+      for (let i = 0; i < 3; i++) {
+        const u = (l.t * 0.8 + i * 0.25) % 1,
+          x = l.x + (l.t * 60 + i * 30) * k,
+          y = hz + 30 * k - Math.sin(u * Math.PI) * 26 * k;
+        if (u < 0.9) {
+          push();
+          translate(x, y);
+          rotate(-1 + u * 2);
+          disc(0, 0, 10 * k, col("#6a7a96"), 3.6 * k);
+          tri(-2 * k, -3 * k, 2 * k, -3 * k, 0, -8 * k, col("#6a7a96"));
+          pop();
+        }
+      }
+    } else if (l.kind === "shark") {
+      // a fin circling the island
+      const a = t * 0.25,
+        x = cx + Math.cos(a) * rw * 1.4,
+        y = iy + 34 * k + Math.sin(a) * 8 * k;
+      tri(x - 6 * k, y, x + 6 * k, y, x + Math.sign(-Math.sin(a)) * 2 * k, y - 14 * k, col("#4a5468"));
+      line(x - 12 * k, y + 1, x + 12 * k, y + 1, 1, withA(C.white, 0.5));
+    }
+  }
+  void dark;
+}
+// the props for Koos's little stories on the island
+function cwDrawProps(t, b, dark) {
+  const { k, iy, cx, rw } = b,
+    A = CW_ACTS[CW.act % CW_ACTS.length][0],
+    u = CW.actT;
+  if (A === "castle") {
+    const x = cx - rw * 0.32,
+      g = Math.min(1, u / 5),
+      tide = u > 6.5 ? Math.min(1, (u - 6.5) / 1.5) : 0;
+    if (tide < 1) {
+      rect(x - 12 * k, iy - 12 * k * g * (1 - tide), 24 * k, 12 * k * g * (1 - tide), col("#e8c890"));
+      for (let i = 0; i < 3; i++)
+        rect(
+          x - 12 * k + i * 9 * k,
+          iy - 18 * k * g * (1 - tide),
+          6 * k,
+          6 * k * g * (1 - tide),
+          col("#e8c890")
+        );
+    }
+    if (tide > 0) disc(x, iy + 4 * k, 30 * k * tide, withA(col("#7ad0e8"), 0.6 * (1 - tide * 0.5)), 6 * k);
+  } else if (A === "fish") {
+    const x = CW.kx + 18 * k,
+      bite = u > 3 && u < 6,
+      boot = u > 6;
+    const tipX = x + 60 * k,
+      tipY = iy - 50 * k + (bite ? Math.sin(t * 20) * 3 * k : 0);
+    line(x, iy - 30 * k, tipX, tipY, 1.4 * k, col("#8a6a4a"));
+    const lx = boot ? tipX - 4 * k : tipX + 10 * k,
+      ly = boot ? iy - 30 * k + Math.sin(t * 3) * 4 * k : iy + 30 * k;
+    line(tipX, tipY, lx, ly, 0.6, withA(C.white, 0.7));
+    if (boot) {
+      rect(lx - 5 * k, ly, 8 * k, 10 * k, col("#3a2a1a"));
+      rect(lx - 5 * k, ly + 7 * k, 13 * k, 4 * k, col("#3a2a1a")); // an old boot!
+    }
+  } else if (A === "gull") {
+    const f = clamp((u - 2) / 3, 0, 1),
+      gx = lerpA(b.L - 30, CW.kx, f) + (u > 5 ? (u - 5) * 160 * k : 0),
+      gy = lerpA(b.T + b.h * 0.2, iy - 40 * k, Math.sin((f * Math.PI) / 2)) - (u > 5 ? (u - 5) * 60 * k : 0);
+    cwDrawGull(gx, gy, k, t, false);
+    if (u < 5) rect(CW.kx + 10 * k, iy - 38 * k, 10 * k, 5 * k, col("#e8c070"));
+    else rect(gx - 4 * k, gy + 4 * k, 9 * k, 4 * k, col("#e8c070")); // the sandwich, going...
+  } else if (A === "bottle") {
+    const bx = lerpA(cx + rw * 1.4, cx + rw * 0.75, Math.min(1, u / 4)),
+      by = iy + 20 * k + Math.sin(t * 2) * 2 * k;
+    if (u < 4.5) {
+      push();
+      translate(bx, by);
+      rotate(0.5);
+      rect(-3 * k, -8 * k, 6 * k, 14 * k, withA(col("#7ac08a"), 0.85));
+      rect(-1.5 * k, -11 * k, 3 * k, 3 * k, col("#8a5a2a"));
+      pop();
+    } else rect(CW.kx + 8 * k, iy - 44 * k, 12 * k, 9 * k, col("#f4ecd4")); // the note, unrolled
+  } else if (A === "crab") {
+    const x = lerpA(cx + rw * 0.9, CW.kx + 10 * k, Math.min(1, u / 3));
+    cwDrawCrab(x, iy, k, t, false);
+  }
+  void dark;
+}
+function cwDrawGull(x, y, k, t, robo) {
+  const fl = Math.sin(t * 12) * 6 * k;
+  disc(x, y, 6 * k, col(robo ? "#a8acb8" : "#f4f4f4"), 4 * k);
+  polyline([x - 14 * k, y - fl, x - 4 * k, y - 2 * k, x, y], 2 * k, col(robo ? "#8a8e98" : "#e8e8e8"));
+  polyline([x + 14 * k, y - fl, x + 4 * k, y - 2 * k, x, y], 2 * k, col(robo ? "#8a8e98" : "#e8e8e8"));
+  tri(x + 5 * k, y - 1 * k, x + 10 * k, y, x + 5 * k, y + 1.5 * k, col("#ffb020"));
+  disc(x + 3 * k, y - 2 * k, 1 * k, col(robo ? "#ff3030" : "#1a1a1a"));
+}
+function cwDrawCrab(x, y, k, t, robo) {
+  const c = col(robo ? "#9aa0ae" : "#e0503a"),
+    st = Math.sin(t * 14) * 2 * k;
+  for (let i = 0; i < 3; i++) {
+    line(x - 6 * k, y - 3 * k, x - 12 * k - i * 2 * k, y + st * (i % 2 ? 1 : -1), 1.2 * k, c);
+    line(x + 6 * k, y - 3 * k, x + 12 * k + i * 2 * k, y - st * (i % 2 ? 1 : -1), 1.2 * k, c);
+  }
+  disc(x, y - 5 * k, 9 * k, c, 5 * k);
+  disc(x - 9 * k, y - 12 * k, 3.5 * k, c);
+  disc(x + 9 * k, y - 12 * k, 3.5 * k, c); // the claws
+  line(x - 3 * k, y - 9 * k, x - 3 * k, y - 14 * k, 1 * k, c);
+  line(x + 3 * k, y - 9 * k, x + 3 * k, y - 14 * k, 1 * k, c);
+  disc(x - 3 * k, y - 15 * k, 1.4 * k, col(robo ? "#ff3030" : "#1a1a1a"));
+  disc(x + 3 * k, y - 15 * k, 1.4 * k, col(robo ? "#ff3030" : "#1a1a1a"));
+  if (robo) for (let i = 0; i < 3; i++) disc(x - 4 * k + i * 4 * k, y - 6 * k, 0.9 * k, col("#5a5e6a")); // rivets
+}
+function cwDrawFoe(f, t, b) {
+  const k = b.k;
+  if (f.kind === "crab") cwDrawCrab(f.x, f.y, k * 1.2, t, true);
+  else if (f.kind === "gull") cwDrawGull(f.x, f.y, k * 1.3, t, true);
+  else if (f.kind === "meteor" || f.kind === "ball") {
+    const met = f.kind === "meteor";
+    if (met) {
+      R.setAdd(true);
+      line(f.x, f.y, f.x - (f.tx - f.x0) * 0.08, f.y - b.h * 0.08, 6 * k, withA(col("#ffb040"), 0.5));
+      glow(f.x, f.y, 16 * k, withA(col("#ffd080"), 0.8));
+      R.setAdd(false);
+    }
+    disc(f.x, f.y, (met ? 7 : 5) * k, col(met ? "#6a4a3a" : "#1a1a1a"));
+  } else if (f.kind === "ufo") {
+    if (f.beam > 0.05 && !f.demo) {
+      R.setAdd(true);
+      quad4(
+        f.x - 12 * k,
+        f.y + 8 * k,
+        f.x + 12 * k,
+        f.y + 8 * k,
+        f.x + 34 * k,
+        b.iy,
+        f.x - 34 * k,
+        b.iy,
+        withA(col("#9fffd0"), 0.35 * f.beam),
+        withA(col("#9fffd0"), 0.35 * f.beam),
+        withA(col("#9fffd0"), 0.08 * f.beam),
+        withA(col("#9fffd0"), 0.08 * f.beam)
+      );
+      R.setAdd(false);
+    }
+    if (f.demo && f.t > 3 && f.t < 13) {
+      R.setAdd(true);
+      quad4(
+        f.x - 10 * k,
+        f.y + 8 * k,
+        f.x + 10 * k,
+        f.y + 8 * k,
+        f.x + 30 * k,
+        b.iy,
+        f.x - 30 * k,
+        b.iy,
+        withA(col("#9fffd0"), 0.3),
+        withA(col("#9fffd0"), 0.3),
+        withA(col("#9fffd0"), 0.06),
+        withA(col("#9fffd0"), 0.06)
+      );
+      R.setAdd(false);
+    }
+    disc(f.x, f.y + 2 * k, 34 * k, col("#5a6070"), 8 * k);
+    disc(f.x, f.y, 32 * k, col("#a8b0c0"), 7 * k);
+    disc(f.x, f.y - 7 * k, 12 * k, withA(col("#9fe8ff"), 0.8), 9 * k);
+    for (let i = 0; i < 6; i++) {
+      const a = (i / 6) * 6.283 + t * 3;
+      if (Math.sin(a) > -0.2)
+        disc(f.x + Math.cos(a) * 26 * k, f.y + 2 * k, 2.4 * k, col(i % 2 ? "#ffd24d" : "#ff5fa8"));
+    }
+  }
+}
+function cwDrawFx(e, t, b) {
+  const k = b.k,
+    u = e.t / e.len;
+  if (e.kind === "boom") {
+    R.setAdd(true);
+    glow(e.x, e.y, (20 + u * 50) * k, withA(col("#ffb040"), 0.8 * (1 - u)));
+    R.setAdd(false);
+    for (let i = 0; i < 8; i++) {
+      const a = (i / 8) * 6.283;
+      disc(
+        e.x + Math.cos(a) * u * 40 * k,
+        e.y + Math.sin(a) * u * 30 * k,
+        (5 - u * 4) * k,
+        withA(col("#6a5a4a"), 1 - u)
+      );
+    }
+  } else if (e.kind === "pop") {
+    for (let i = 0; i < 6; i++) {
+      const a = (i / 6) * 6.283;
+      disc(
+        e.x + Math.cos(a) * u * 18 * k,
+        e.y + Math.sin(a) * u * 18 * k,
+        2 * k,
+        withA(col("#8a6a3a"), 1 - u)
+      );
+    }
+  } else if (e.kind === "splash") {
+    for (let i = 0; i < 6; i++)
+      disc(
+        e.x + (i - 2.5) * 4 * k,
+        e.y - Math.sin(u * Math.PI) * (10 + i * 2) * k,
+        2 * k,
+        withA(C.white, 0.8 * (1 - u))
+      );
+  } else if (e.kind === "pts") {
+    pixText(
+      (e.n > 0 ? "+" : "") + e.n,
+      e.x,
+      e.y - u * 30 * k,
+      1.8 * k,
+      withA(col(e.n > 0 ? "#ffd24d" : "#ff5f5f"), 1 - u)
+    );
+  } else if (e.kind === "smoke") {
+    disc(e.x, e.y - u * 20 * k, (6 + u * 14) * k, withA(col("#c8c8d0"), 0.6 * (1 - u)));
+  } else if (e.kind === "stars") {
+    for (let i = 0; i < 4; i++) {
+      const a = t * 5 + (i / 4) * 6.283;
+      pixText(
+        "*",
+        e.x + Math.cos(a) * 14 * k,
+        e.y + Math.sin(a) * 5 * k,
+        2 * k,
+        withA(col("#ffd24d"), 1 - u)
+      );
+    }
+  } else if (e.kind === "flare") {
+    const x = lerpA(e.x, e.tx, Math.min(1, u * 1.6)),
+      y = lerpA(e.y, Math.min(e.ty, e.y - 120 * k), Math.min(1, u * 1.6));
+    R.setAdd(true);
+    glow(x, y, (14 + 8 * Math.sin(t * 30)) * k, withA(col("#ff4030"), 1 - u * 0.6));
+    R.setAdd(false);
+    disc(x, y, 3 * k, col("#fff0d0"));
+  }
+}
+function cwDrawHeli(t, b) {
+  const k = b.k,
+    u = CW.heli / 6,
+    x = lerpA(b.Rr + 80 * k, CW.kx, Math.min(1, u * 2)) - (u > 0.75 ? (u - 0.75) * 4 * b.w : 0),
+    y = lerpA(b.T + 40 * k, b.iy - 110 * k, Math.min(1, u * 2)) - (u > 0.75 ? (u - 0.75) * 400 * k : 0);
+  quad4(
+    x - 30 * k,
+    y - 10 * k,
+    x + 20 * k,
+    y - 12 * k,
+    x + 26 * k,
+    y + 8 * k,
+    x - 26 * k,
+    y + 10 * k,
+    col("#e83a2a")
+  );
+  disc(x + 14 * k, y - 2 * k, 9 * k, withA(col("#9fd8ff"), 0.85), 8 * k);
+  line(x - 30 * k, y - 4 * k, x - 64 * k, y - 8 * k, 4 * k, col("#e83a2a"));
+  line(
+    x - 50 * k * Math.cos(t * 30),
+    y - 16 * k,
+    x + 50 * k * Math.cos(t * 30),
+    y - 16 * k,
+    2 * k,
+    col("#2a2a30")
+  );
+  line(x - 26 * k, y + 16 * k, x + 22 * k, y + 16 * k, 1.6 * k, col("#2a2a30"));
+  if (u > 0.4 && u < 0.75) line(x, y + 10 * k, CW.kx, b.iy - 60 * k, 1.2 * k, col("#e8e0c8")); // the rope ladder
+}
+// KOOS VAN SCHOOR: sunburnt, a straw hat, a scruffy beard, a ragged red shirt, blue shorts, bare feet
+function cwDrawKoos(t, b, dark) {
+  const k = b.k * 1.75,
+    A = CW.phase === "island" ? CW_ACTS[CW.act % CW_ACTS.length][0] : "play",
+    u = CW.actT,
+    hurt = CW.hurt > 0 && Math.sin(t * 30) > 0;
+  let x = CW.kx,
+    y = b.iy;
+  const sk = mix(col("#e8986a"), col("#3a2a20"), dark * 0.5),
+    shirt = col("#c8402a"),
+    shorts = col("#3a5ac8"),
+    hat = col("#e8c860");
+  if (hurt) return;
+  // asleep: lying on the sand (or in the hammock)
+  const lying = (A === "wake" && u < 3.5) || A === "hammock";
+  if (lying) {
+    if (A === "hammock") {
+      x = b.cx - b.rw * 0.33;
+      y = b.iy - 26 * b.k;
+    }
+    push();
+    translate(x, y - 6 * k);
+    rect(-22 * k, -5 * k, 26 * k, 10 * k, shirt);
+    rect(4 * k, -4 * k, 12 * k, 8 * k, shorts);
+    rect(16 * k, -3 * k, 12 * k, 5 * k, sk);
+    disc(-28 * k, -1 * k, 7 * k, sk);
+    disc(-31 * k, 3 * k, 6 * k, col("#8a6a4a"), 4 * k); // the beard
+    disc(-26 * k, -8 * k, 10 * k, hat, 3 * k); // the hat over his face
+    pop();
+    if (A === "hammock" || u < 3)
+      pixText("Z", x - 30 * k + Math.sin(t) * 4, y - 30 * k - ((t * 10) % 20), 2 * k, withA(C.white, 0.8));
+    return;
+  }
+  const walking = CW.phase === "play" ? Math.abs(CW.aimX - x) > 30 : false,
+    step = walking ? Math.sin(t * 10) : 0,
+    face = CW.phase === "play" ? (CW.aimX < x ? -1 : 1) : 1,
+    cling = CW.foes.some((f) => f.kind === "ufo" && f.demo && f.t > 3 && f.t < 13);
+  push();
+  translate(x, y);
+  scaleXY(face * k, k);
+  // the legs, bare feet
+  line(-4, 0, -4 + step * 3, -18, 4, sk);
+  line(4, 0, 4 - step * 3, -18, 4, sk);
+  rect(-7 + step * 3, -2, 6, 3, sk);
+  rect(2 - step * 3, -2, 6, 3, sk);
+  // shorts, ragged shirt
+  rect(-8, -26, 16, 10, shorts);
+  quad4(-9, -44, 9, -44, 10, -26, -10, -26, shirt, shirt, shade(shirt, 0.8), shade(shirt, 0.8));
+  for (let i = 0; i < 5; i++) tri(-10 + i * 4, -26, -6 + i * 4, -26, -8 + i * 4, -22, shade(shirt, 0.8)); // the ragged hem
+  rect(-3, -40, 3, 3, withA(col("#f0c070"), 0.6)); // a patch
+  // the arms: what he's doing
+  const arm = (ax, ay, ex, ey) => {
+    line(ax, ay, ex, ey, 3.4, sk);
+    disc(ex, ey, 2.4, sk);
+  };
+  if (CW.phase === "play") {
+    const thr = CW.cool > 0.08;
+    arm(6, -40, thr ? 14 : 10, thr ? -56 : -48);
+    arm(-6, -40, -10, -28);
+    if (!thr) disc(10, -50, 4, col("#6a4a22")); // a coconut ready
+  } else if (cling) {
+    arm(-6, -40, -14, -60);
+    arm(6, -40, -10, -62); // (holding on to the palm for dear life)
+  } else if (A === "klaas") {
+    arm(6, -40, 14, -34);
+    arm(-6, -40, -12, -28 + Math.sin(t * 6) * 3); // (talking with his hands)
+  } else if (A === "wake") {
+    arm(6, -40, 12, -60 + Math.sin(t * 4) * 2);
+    arm(-6, -40, -12, -60); // (a big stretch)
+  } else if (A === "castle") {
+    arm(6, -40, 14, -20 + Math.sin(t * 8) * 3);
+    arm(-6, -40, -6, -22);
+  } else {
+    arm(6, -40, 12, -30);
+    arm(-6, -40, -10, -28);
+  }
+  // the head: sunburnt, a scruffy beard, a straw hat
+  disc(0, -52, 8, sk);
+  disc(-1, -46, 7, col("#8a6a4a"), 5); // the beard
+  disc(3, -54, 1.2, col("#1a1a1a"));
+  if (A === "crab" && u > 3) {
+    disc(2, -47, 2, col("#3a1a1a")); // "OUCH!"
+    pixText("!", 12, -70, 2, col("#ffd24d"));
+  }
+  disc(0, -60, 13, hat, 3);
+  disc(0, -63, 7, hat, 5);
+  rect(-7, -62, 14, 2, col("#c8402a")); // the hat band
+  pop();
+  void dark;
+}
+// ---------------------------------------------------------------- the words (HUD)
+function castawayHud(g, s) {
+  const cx = cssW / 2;
+  g.textAlign = "center";
+  g.textBaseline = "middle";
+  const band = (txt, y, px, c) => {
+    g.font = "800 " + Math.round(px * s) + "px " + FB;
+    const w2 = g.measureText(txt).width + 24 * s;
+    g.fillStyle = "rgba(4,6,18,.6)";
+    g.fillRect(cx - w2 / 2, y - px * s, w2, px * s * 2);
+    g.fillStyle = c;
+    g.fillText(txt, cx, y);
+  };
+  g.font = Math.round(20 * s) + "px " + FD;
+  g.fillStyle = "#ffd24d";
+  g.fillText(T("CASTAWAY ISLAND"), cx, 26 * s);
+  if (CW.phase === "island") {
+    const A = CW_ACTS[CW.act % CW_ACTS.length];
+    band(T(A[2]), cssH * 0.86, 13, "#fff3e2");
+    if (G.time % 1.2 < 0.85)
+      band(T("PRESS FIRE TO DEFEND THE ISLAND  ·  ESC: BACK"), cssH * 0.94, 11, "#5ff5c8");
+  } else {
+    g.textAlign = "left";
+    g.font = Math.round(18 * s) + "px " + FD;
+    g.fillStyle = "#ff5fa8";
+    g.fillText(String(CW.score).padStart(6, "0"), 16 * s, 26 * s);
+    g.font = "700 " + Math.round(12 * s) + "px " + FB;
+    g.fillStyle = "#c8d8ff";
+    g.fillText(T("BEST") + " " + CW.best, 16 * s, 48 * s);
+    g.fillStyle = "#ff6070";
+    g.fillText("♥".repeat(Math.max(0, CW.lives)), 16 * s, 68 * s);
+    g.textAlign = "right";
+    g.fillStyle = "#ffd24d";
+    g.fillText(
+      T("RESCUE SIGNALS") + "  " + "●".repeat(CW.signals) + "○".repeat(Math.max(0, 3 - CW.signals)),
+      cssW - 16 * s,
+      48 * s
+    );
+    g.fillStyle = "#c8d8ff";
+    g.fillText(
+      T("LEVEL") + " " + CW.level + " · " + T(CW_WEATHER[(CW.level - 1) % 4]),
+      cssW - 16 * s,
+      68 * s
+    );
+    g.textAlign = "center";
+    if (CW.phase === "play")
+      band(
+        T("AIM: ARROWS / MOUSE  ·  FIRE: SPACE  ·  FLARE TO A SHIP: E / RIGHT CLICK  ·  ESC: BACK"),
+        cssH * 0.96,
+        10,
+        "#c8d8ff"
+      );
+    if (CW.phase === "over") {
+      band(T("MAROONED! THE COCONUTS RAN OUT"), cssH * 0.4, 18, "#ff9f6a");
+      band(
+        T("SCORE") + " " + CW.score + "  ·  +" + (CW.coins || 0) + " " + T("COINS"),
+        cssH * 0.48,
+        14,
+        "#ffd24d"
+      );
+      if (CW.t > 1.5) band(T("PRESS FIRE"), cssH * 0.56, 12, "#5ff5c8");
+    }
+  }
+  if (CW.msgT > 0) {
+    g.globalAlpha = Math.min(1, CW.msgT * 2);
+    band(T(CW.msg), cssH * 0.16, 14, "#ffe8a0");
+    g.globalAlpha = 1;
+  }
+  g.textBaseline = "top";
+}
+// =====================================================================================
 //  MORE FUN (v2026.10.03f): flavour ORDERS, PETS WITH POWERS, a COIN SHOP, MINI-GAMES between worlds, a TROPHY ROOM,
 //  BARTENDER LEVELS, DECORATE YOUR DINER, ENDLESS MODE, HOLIDAY EVENTS, STORY SCENES with Bocian Bogdan,
 //  ONE-BUTTON MODE for little ones, and a friendly BREAK REMINDER
@@ -45707,7 +47193,13 @@ function funPanelsInit() {
     closeFP("more");
     startPlanetTour();
   }; // (v1.4.1) the Solar System tour, the Sun to Pluto
-  $k("bSolar2").onclick = $k("bSolar").onclick; // (v1.4.6) ...and straight from the main menu too (or the O key)
+  $k("bSolar2").onclick = $k("bSolar").onclick;
+  $k("bCast").onclick = () => {
+    if (G.state !== "menu") return;
+    sfx("click");
+    closeFP("more");
+    startCastaway();
+  }; // (v1.4.10) CASTAWAY ISLAND // (v1.4.6) ...and straight from the main menu too (or the O key)
   $k("bMore").onclick = () => openFP("more");
   $k("bSettings").onclick = () => openFP("settings");
   $k("moreBack").onclick = () => closeFP("more");
@@ -45833,6 +47325,7 @@ function funPanelsInit() {
 }
 // taps and drags on the game picture (from the game's own pointer handling)
 function funPointer(type, x, y) {
+  if (G.state === "castaway") return castawayPointer(type, x, y); // (v1.4.10: CASTAWAY ISLAND)
   if (G.state === "mini" && G.mini) {
     const M = G.mini;
     if (type === "down") {
@@ -54361,7 +55854,7 @@ function drawEggs(g, s) {
 // THE VERSION (from v1.2.0, 5 October 2026): MAJOR.MINOR.PATCH - a new MINOR for a batch of new things, a new PATCH for
 // fixes and small touches - with the day it was made next to it. (Before this the versions were named after the date,
 // like v2026.10.05c.)
-const GAME_VERSION = "v1.4.9",
+const GAME_VERSION = "v1.4.10",
   GAME_DATE = "06.10.2026",
   VERSION_TEXT = GAME_VERSION + "  ·  " + GAME_DATE;
 const FB = '"Chakra Petch", "Segoe UI", sans-serif';
@@ -54471,6 +55964,15 @@ function drawHud(fps) {
     sy = (wy) => (wy + oy) * u;
   g.textBaseline = "top";
   g.textAlign = "center";
+  if (G.state === "castaway") {
+    castawayHud(g, s); // (v1.4.10: CASTAWAY ISLAND - castaway.ts)
+    if (G.fadeT > 0) {
+      g.fillStyle = "rgba(4,2,10," + Math.min(1, G.fadeT / 0.45).toFixed(3) + ")";
+      g.fillRect(0, 0, cssW, cssH);
+    }
+    if (crtOn && !CRT_ACTIVE) drawScanlines(g);
+    return;
+  }
   if (["approach", "story", "mini"].includes(G.state)) {
     g.textBaseline = "top";
     funHud(g, s, t, fD, sx, sy);
@@ -58810,7 +60312,8 @@ function drum(kind, t, bus, accent = 1) {
 const DNG = { v: 0 };
 function dangerUpdate(dt) {
   let want = 0;
-  if (G.state === "play" && !G.demo && !(G.readyT > 0))
+  // (v1.4.10: never in RELAX MODE or with CALM switched on - the band stays easy-going)
+  if (G.state === "play" && !G.demo && !(G.readyT > 0) && !G.free && !COMFORT.calm)
     for (const c of customers)
       if (c.state === "walk" && !c.type.evil) want = Math.max(want, clamp((c.x - (X1 - 190)) / 170, 0, 1));
   DNG.v += (want - DNG.v) * Math.min(1, dt * (want > DNG.v ? 3 : 1.2)); // (in quickly, out gently)
@@ -58836,7 +60339,7 @@ function musxUpdate(dt) {
   const live = G.state === "play" && !G.demo;
   const want = live ? (G.fever > 0 ? 1 : clamp((G.streak || 0) / FEVER_AT, 0, 1)) : 0;
   MUSX.heat += (want - MUSX.heat) * Math.min(1, dt * (want > MUSX.heat ? 1.5 : 0.6));
-  MUSX.boss = live && G.boss === true && !G.bossDone;
+  MUSX.boss = live && G.boss === true && !G.bossDone && !G.free && !COMFORT.calm;
 }
 // a rising whoosh of noise, getting louder - a riser into a big new section
 function riser(dur, vol, bus, t) {
@@ -59232,7 +60735,9 @@ function playStep2(tr, t0) {
     for (const k of [1, 2.4, 3]) ping(mf(72 + pc) * k, 2.2, 0.03 / k, B2, t);
 }
 function advance2(tr) {
-  const hurry = 1 + 0.12 * DNG.v + (MUSX.boss ? 0.04 : 0) + (G.fever > 0 && G.state === "play" ? 0.04 : 0); // (danger, a boss, Shake Fever: a little faster)
+  const hurry =
+    (1 + 0.12 * DNG.v + (MUSX.boss ? 0.04 : 0) + (G.fever > 0 && G.state === "play" ? 0.04 : 0)) *
+    (G.free && G.state === "play" && !G.demo ? 0.92 : 1); // (relax mode: the band plays a little slower and softer) // (danger, a boss, Shake Fever: a little faster)
   if (tr.folk) {
     SEQ2.next += 60 / tr.bpm / 4 / hurry; // (folk tunes step in sixteenths)
     SEQ2.step = (SEQ2.step + 1) % tr.len;
@@ -59269,6 +60774,7 @@ function musicWanted() {
     if (ATTRACT.tour || (cur && cur.item.tour)) return ORRERY_TRACK; // (v1.4.7) the Solar System tour: a clockwork music-box waltz
     return DEEP_TRACK; // the deep-space show: mysterious music
   }
+  if (G.state === "castaway") return 27; // (v1.4.10: Castaway Island - the ocean raft's tune)
   if (G.state === "jump" && G.jump && G.jump.inter) return HYPER_TRACK; // (v1.4.7) the great jump to Andromeda
   if (G.state === "jump" && G.jump && G.jump.core) return CORE_TRACK; // (v1.4.7) the heart of Andromeda
   if (G.state === "over" && G.won) return VICTORY_TRACK;
@@ -60582,6 +62088,17 @@ profWire();
 //  the game, and where the motion capture, the folk songs and the fonts come from. Both from the menu at any time.
 // =====================================================================================
 const NEWS = [
+  {
+    ver: "v1.4.10",
+    title: "CASTAWAY ISLAND & RELAX MODE",
+    items: [
+      "CASTAWAY ISLAND (PLAY MORE): Koos van Schoor's desert island - watch the world go by, or defend it with coconuts and signal a ship home",
+      "RELAX MODE (PLAY MORE): no losing, no hurry - slower customers, no stopwatches, an easy-going band",
+      "The menus are see-through now",
+      "Sliding glasses leave a soft motion blur - smoother to follow",
+      "On the trips you see the real planet you're going to (no more Saturn on the way to Venus)",
+    ],
+  },
   {
     ver: "v1.4.9",
     title: "ASTRO CAFÉ: COSMIC ARCADE",

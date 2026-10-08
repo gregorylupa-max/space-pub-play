@@ -16726,6 +16726,26 @@ function customerBody(c, t, a) {
     mouth = "flat";
     tilt += Math.sin(t * 3 + c.ph) * 0.08;
   }
+  // (v1.4.19) GLANCES: someone waiting at the bar doesn't stare straight ahead - every couple of seconds their eyes
+  // drift somewhere new (over to you at the taps, back at the door, at whoever they're chatting with), and move there
+  // smoothly rather than jumping
+  const sp = c._sp || (c._sp = { y: 0, vy: 0, lift, lean, l: 0, vl: 0, look: 0, lt: G.time }),
+    dt2 = clamp(G.time - sp.lt, 0, 0.05);
+  sp.lt = G.time;
+  if (idle && look === 0 && act !== "look" && !showing) {
+    const nb = customers.find(
+        (o) => o !== c && o.lane === c.lane && o.state === "walk" && Math.abs(o.x - c.x) < 60
+      ),
+      slot = Math.floor((c.age + c.seed * 7) / 2.3),
+      tgt =
+        nb && Math.sin(t * 0.7 + c.ph * 3) > -0.2
+          ? nb.x < c.x
+            ? -2.2
+            : 2.2
+          : [0, 2.4, 1.2, -1.8, 2.4, 0.6][Math.floor(hash(slot + c.seed * 13) * 6)];
+    sp.look += (tgt - sp.look) * Math.min(1, dt2 * 7);
+    look = sp.look;
+  } else sp.look = look;
   // eyes on the shake sliding their way - and hands out when it's close
   let incoming = 1e9;
   if (c.state === "walk" && !showing)
@@ -16752,6 +16772,22 @@ function customerBody(c, t, a) {
   if (kind === "jelly") lift += 7 + Math.sin(t * 3 + c.ph) * 2; // the jellyfish floats
   if (kind === "angel") lift += 6 + Math.sin(t * 2.4 + c.ph) * 2.5; // angels hover
   if (kind === "devil" && mouth === "flat") mouth = "smile"; // devils always have that grin
+  // (v1.4.19) FOLLOW-THROUGH: the head lags a moment behind the body as it rises and drops (a hop, a stride, being
+  // shoved, stopping) and then settles with a little bounce; and when someone starts, stops or gets pushed, the upper
+  // body sways past and swings back - springs, so everyone moves softly instead of stiffly
+  if (dt2 > 0) {
+    const bodyV = (lift - sp.lift) / dt2,
+      leanV = (lean - sp.lean) / dt2;
+    sp.lift = lift;
+    sp.lean = lean;
+    sp.vy += (-240 * sp.y - 13 * sp.vy + clamp(bodyV, -120, 120) * (walking || out ? 2.2 : 5)) * dt2;
+    sp.y = clamp(sp.y + sp.vy * dt2, -3, 3);
+    sp.vl += (-190 * sp.l - 11 * sp.vl - clamp(leanV, -6, 6) * 0.9) * dt2;
+    sp.l = clamp(sp.l + sp.vl * dt2, -0.14, 0.14);
+  }
+  headDY += sp.y;
+  tilt += sp.l * 0.6;
+  lean += sp.l * 0.5;
   // LONG LEGS, the classic arcade way: grown-ups stand tall and slim behind the bar; kids, apes, the little green alien and
   // the stocky golem keep their short legs (that's what makes them look like themselves), tentacles stay tentacles
   // HUMAN PROPORTIONS for grown-ups: a smaller head (drawn at 80%), a longer body, longer arms and legs
@@ -21359,6 +21395,26 @@ function playerBody(t, flying) {
       lift *= 0.35;
       squash = 0.97;
     } // head down, shoulders slumped
+  }
+  // (v1.4.19) FOLLOW-THROUGH for the barman too: his head lags behind his body as he hops, runs and stops, and
+  // settles with a little bounce; stopping a run, he sways forward past it and back
+  {
+    const hs = P.hsp || (P.hsp = { y: 0, vy: 0, lift, lean, l: 0, vl: 0, lt: G.time }),
+      d2 = clamp(G.time - hs.lt, 0, 0.05);
+    hs.lt = G.time;
+    if (d2 > 0) {
+      const bodyV = (lift - hs.lift) / d2,
+        leanV = (lean - hs.lean) / d2;
+      hs.lift = lift;
+      hs.lean = lean;
+      hs.vy += (-260 * hs.y - 14 * hs.vy + clamp(bodyV, -120, 120) * (rk > 0.5 ? 2 : 4.5)) * d2;
+      hs.y = clamp(hs.y + hs.vy * d2, -3, 3);
+      hs.vl += (-200 * hs.l - 12 * hs.vl - clamp(leanV, -6, 6) * 0.8) * d2;
+      hs.l = clamp(hs.l + hs.vl * d2, -0.14, 0.14);
+    }
+    headDY += hs.y;
+    tilt += hs.l * 0.6;
+    lean += hs.l * 0.5;
   }
   const hip = -24 - PLEG - lift; // (PLEG: his longer legs - see drawPlayer)
   // legs
@@ -57910,7 +57966,7 @@ function drawEggs(g, s) {
 // THE VERSION (from v1.2.0, 5 October 2026): MAJOR.MINOR.PATCH - a new MINOR for a batch of new things, a new PATCH for
 // fixes and small touches - with the day it was made next to it. (Before this the versions were named after the date,
 // like v2026.10.05c.)
-const GAME_VERSION = "v1.4.18",
+const GAME_VERSION = "v1.4.19",
   GAME_DATE = "06.10.2026",
   VERSION_TEXT = GAME_VERSION + "  ·  " + GAME_DATE;
 const FB = '"Chakra Petch", "Segoe UI", sans-serif';
@@ -64187,6 +64243,15 @@ profWire();
 //  the game, and where the motion capture, the folk songs and the fonts come from. Both from the menu at any time.
 // =====================================================================================
 const NEWS = [
+  {
+    ver: "v1.4.19",
+    title: "MORE NATURAL MOVEMENT",
+    items: [
+      "HEADS FOLLOW THROUGH AND SETTLE AFTER A HOP OR A STOP",
+      "BODIES SWAY PAST AND BACK WHEN STARTING AND STOPPING",
+      "CUSTOMERS GLANCE AROUND INSTEAD OF STARING",
+    ],
+  },
   {
     ver: "v1.4.18",
     title: "A SMALLER CREW",

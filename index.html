@@ -54927,7 +54927,9 @@ function climbFront(kind, c, t, A, hx, hy, holding, moving) {
 //    - THE HARNESS: a padded horse collar (chomąto), and over it the painted wooden SHAFT BOW (duga) with a little bell,
 //      as the carts of the eastern borderlands had; the shafts, a belly band, the breeching, and the reins.
 //    - THE CART: a ladder-sided hay wagon (wóz drabiniasty) on wooden spoked wheels with iron rims (the front ones
-//      smaller), piled high with hay, a pitchfork stuck in the top, a lantern swinging underneath.
+//      smaller), piled high with hay, a pitchfork stuck in the top, a lantern swinging underneath. (v1.4.15: LONG, like
+//      the real ones - the bed about one and a half times the horse's length on a long wheelbase with the reach pole
+//      underneath, the ladders overhanging both ends, the load bound down under a long pole lashed at both ends.)
 //    - THE PEOPLE: the driver up front in a cap, a white linen shirt embroidered in red, a dark waistcoat and tall
 //      boots, the reins in one hand and a whip in the other (its lash flicking now and then); and a woman in a flowered
 //      headscarf riding on top of the hay, waving.
@@ -54952,12 +54954,19 @@ function drawFurmanka(x, y, k, t, dir = -1) {
   push();
   translate(x, y);
   scaleXY(dir * k, k); // (drawn facing right; dir -1 mirrors it to face left)
-  translate(-8, 0);
+  translate(30, 0); // (the whole team, centred: the long wagon behind, the horse in front)
+  // (v1.4.15) A PROPER VOLHYNIAN WAGON: long and narrow, like the real ones - a bed about one and a half times the length
+  // of the horse, on a long wheelbase (the two axles joined underneath by the long reach pole), its ladder sides
+  // overhanging front and back, and the hay load bound down under a long pole lashed with ropes at both ends
+  const BX0 = -150, // (the back of the bed)
+    BX1 = 4, // (the front of the bed)
+    RW = -128, // (the back wheels)
+    FW = -16; // (the front wheels - smaller, so they can turn under the wagon)
   // ---- hay coming loose, floating away behind into space ----
-  for (let i = 0; i < 12; i++) {
+  for (let i = 0; i < 16; i++) {
     const life = (t * 0.22 + hash(i * 3.7)) % 1,
-      hx = -40 + hash(i * 1.3) * 40 - life * 120,
-      hy = -46 + hash(i * 2.9) * 18 - life * 30 + Math.sin(life * 6 + i) * 6,
+      hx = -120 + hash(i * 1.3) * 100 - life * 130,
+      hy = -56 + hash(i * 2.9) * 18 - life * 30 + Math.sin(life * 6 + i) * 6,
       a = life * 6 + i,
       L = 3 + hash(i) * 3;
     line(
@@ -54977,25 +54986,28 @@ function drawFurmanka(x, y, k, t, dir = -1) {
       ic = far ? shade(iron, 0.8) : iron;
     arc(wx, wy, r, 0, 6.283, 2.4, ic, 24); // the iron tyre
     arc(wx, wy, r - 1.8, 0, 6.283, 1.8, wc, 24); // the wooden felloe
-    for (let i = 0; i < 10; i++) {
-      const a = a0 + (i / 10) * 6.283;
+    for (let i = 0; i < 12; i++) {
+      const a = a0 + (i / 12) * 6.283;
       line(wx, wy, wx + Math.cos(a) * (r - 2), wy + Math.sin(a) * (r - 2), 1, wc); // the spokes
     }
-    disc(wx, wy, 2.6, shade(wc, 0.85));
-    disc(wx, wy, 1.2, ic); // the hub, an iron cap
+    disc(wx, wy, 3, shade(wc, 0.85));
+    disc(wx, wy, 1.4, ic); // the hub, an iron cap
   };
-  wheel(-55, G - 13, 13, true);
-  wheel(-12, G - 10, 10, true);
-  // ---- THE CART: a ladder-sided hay wagon ----
-  quad4(-74, -4, 4, -4, 2, 2, -72, 2, wood, wood, woodD, woodD); // the bed
-  line(-60, 2, -55, G - 13, 2.2, woodD);
-  line(-14, 2, -12, G - 10, 2.2, woodD); // (the axle blocks)
+  wheel(RW + 3, G - 14, 14, true);
+  wheel(FW + 3, G - 11, 11, true);
+  // ---- THE CART: the long chassis, the bed, the ladder-sided body ----
+  line(FW, G - 11, RW, G - 14, 2.4, woodD); // the reach pole, joining the two axles underneath
+  line(RW - 5, 1, RW, G - 14, 2.2, woodD);
+  line(RW + 5, 1, RW, G - 14, 2.2, woodD); // (the rear bolster, on its axle)
+  line(FW - 4, 1, FW, G - 11, 2.2, woodD);
+  line(FW + 4, 1, FW, G - 11, 2.2, woodD); // (the front bolster, which turns)
+  quad4(BX0, -4, BX1, -4, BX1 - 2, 2, BX0 + 2, 2, wood, wood, woodD, woodD); // the bed
   // the lantern swinging under the back
   {
     const sw = Math.sin(t * 2.2) * 0.3,
-      lx = -68 + Math.sin(sw) * 6,
+      lx = BX0 + 6 + Math.sin(sw) * 6,
       ly = 2 + Math.cos(sw) * 6;
-    line(-68, 2, lx, ly, 0.5, iron);
+    line(BX0 + 6, 2, lx, ly, 0.5, iron);
     rect(lx - 1.6, ly, 3.2, 4, col("#3a3a40"));
     rect(lx - 1.1, ly + 0.6, 2.2, 2.6, col("#ffd070"));
     if (!OUT) {
@@ -55004,54 +55016,66 @@ function drawFurmanka(x, y, k, t, dir = -1) {
       R.setAdd(false);
     }
   }
-  // THE HAY: a great golden heap, overflowing the ladders
+  // the far ladder, behind the hay: its top rail overhanging both ends
+  line(BX0 - 8, -23, BX1 + 8, -20, 1.4, woodD);
+  // THE HAY: a long, high load - a loaf of hay from end to end, overflowing the ladders
   {
-    // one great heap, its outline a little lumpy, shaded darker underneath and lit along the top
-    const prof = [];
-    for (let i = 0; i <= 24; i++) {
-      const f = i / 24,
-        hx = -79 + f * 86,
-        hy =
-          -6 -
-          40 * Math.pow(Math.sin(Math.PI * f), 0.75) +
-          Math.sin(i * 2.7) * 1.6 +
-          Math.sin(t * 1.3 + i) * 0.3;
-      prof.push(hx, hy);
+    const prof = [],
+      x0 = BX0 - 7,
+      x1 = BX1 + 5,
+      top = (f) => -8 - 50 * Math.pow(Math.sin(Math.PI * f), 0.32); // (steep at the ends, long and flat along the top)
+    for (let i = 0; i <= 40; i++) {
+      const f = i / 40;
+      prof.push(lerpA(x0, x1, f), top(f) + Math.sin(i * 2.7) * 1.6 + Math.sin(t * 1.3 + i) * 0.3);
     }
-    poly([-36, -2, ...prof, 7, -4], hayD);
-    poly([-36, -6, ...prof.map((v, i) => (i % 2 ? v + 2.2 : v + (v < -36 ? 1.5 : -1.5))), 5, -6], hayC[1]);
-    poly([-38, -26, ...prof.map((v, i) => (i % 2 ? v + 4 : v * 0.86 - 5)).slice(4, -4)], withA(hayC[2], 0.9)); // (the sunlit top)
-    for (let i = 0; i < 14; i++) {
+    const mx = (x0 + x1) / 2;
+    poly([mx, -2, ...prof, x1, -4], hayD);
+    poly([mx, -6, ...prof.map((v, i) => (i % 2 ? v + 2.2 : v + (v < mx ? 1.5 : -1.5))), x1 - 2, -6], hayC[1]);
+    poly(
+      [mx, -28, ...prof.map((v, i) => (i % 2 ? v + 4 : mx + (v - mx) * 0.93)).slice(6, -6)],
+      withA(hayC[2], 0.9)
+    ); // (the sunlit top)
+    for (let i = 0; i < 26; i++) {
       // tufts and clumps in the heap
       const u = hash(i * 4.3),
-        hx = -72 + u * 72,
-        hy = -12 - hash(i * 1.9) * 26 * Math.sin(Math.PI * (0.08 + u * 0.84));
-      disc(hx, hy, 4 + hash(i) * 4, withA(i % 2 ? hayC[3] : hayC[0], 0.55), 2.4);
+        hx = lerpA(x0 + 6, x1 - 6, u),
+        hy = -12 - hash(i * 1.9) * 36 * Math.pow(Math.sin(Math.PI * (0.05 + u * 0.9)), 0.3);
+      disc(hx, hy, 4 + hash(i) * 5, withA(i % 2 ? hayC[3] : hayC[0], 0.55), 2.4);
     }
-    for (let i = 0; i < 46; i++) {
+    for (let i = 0; i < 90; i++) {
       // the straws, sticking out every which way, stirring a little
       const u = hash(i * 1.7),
-        hx = -76 + u * 82,
-        top = -44 + Math.pow(Math.abs(u - 0.45) * 2, 1.6) * 30,
-        hy = top + hash(i * 3.3) * (-6 - top),
+        hx = lerpA(x0 + 2, x1 - 2, u),
+        tp = top(u) + 4,
+        hy = tp + hash(i * 3.3) * (-6 - tp),
         a = -Math.PI / 2 + (hash(i * 5.1) - 0.5) * 2.4 + Math.sin(t * 1.5 + i) * 0.06,
         L = 3 + hash(i * 7.3) * 5;
       line(hx, hy, hx + Math.cos(a) * L, hy + Math.sin(a) * L, 0.6, i % 3 ? hayD : hayC[2]);
     }
-    // the pitchfork, stuck in the top
-    line(-66, -30, -74, -62, 1.2, wood);
-    for (let i = -1; i <= 1; i++) line(-74 + i * 1.4, -62, -75.5 + i * 1.8, -70, 0.6, iron);
-    line(-76, -62, -72, -62, 0.7, iron);
+    // THE BINDING POLE (praska): a long pole laid along the top of the load, pulled down by ropes at both ends
+    const py0 = top(0.06) - 1,
+      py1 = top(0.94) - 1;
+    line(x0 + 4, py0, x1 - 4, py1, 2.2, woodD);
+    line(x0 + 4, py0 - 0.8, x1 - 4, py1 - 0.8, 0.8, mix(wood, C.white, 0.15));
+    line(x0 + 4, py0, BX0 + 2, 2, 0.7, col("#c8b080"));
+    line(x1 - 4, py1, BX1 - 3, 2, 0.7, col("#c8b080")); // (the ropes)
+    // the pitchfork, stuck in the top at the back
+    line(BX0 + 14, -44, BX0 + 4, -76, 1.2, wood);
+    for (let i = -1; i <= 1; i++) line(BX0 + 4 + i * 1.4, -76, BX0 + 2.5 + i * 1.8, -84, 0.6, iron);
+    line(BX0 + 2, -76, BX0 + 6, -76, 0.7, iron);
   }
-  // the ladders: a rail along the side, the rungs - the hay bulging out between them
-  line(-76, -21, 4, -18, 1.6, wood);
-  line(-74, -4, 3, -4, 1.4, woodD);
-  for (let i = 0; i < 12; i++) {
-    const lx = -73 + i * 6.8;
-    line(lx, -4, lx - 0.6, -20.6 + (i / 11) * 2.6, 1, woodD);
+  // the near ladder: a long top rail overhanging front and back, the rungs - the hay bulging out between them
+  line(BX0 - 10, -22, BX1 + 10, -19, 1.7, wood);
+  line(BX0, -4, BX1 - 1, -4, 1.4, woodD);
+  {
+    const n = 22;
+    for (let i = 0; i < n; i++) {
+      const lx = lerpA(BX0 + 2, BX1 - 2, i / (n - 1));
+      line(lx, -4, lx - 0.6, lerpA(-22, -19, i / (n - 1)) + 0.4, 1, woodD);
+    }
   }
-  wheel(-56, G - 13, 13, false);
-  wheel(-10, G - 10, 10, false);
+  wheel(RW, G - 14, 14, false);
+  wheel(FW, G - 11, 11, false);
   // ---- THE SHAFTS: from the front of the cart to the horse's collar (the far one first) ----
   const hb = bounce,
     collarX = 72, // (the collar sits round the bottom of the neck, in front of the withers)
@@ -55338,8 +55362,8 @@ function drawFurmanka(x, y, k, t, dir = -1) {
   }
   // ---- THE WOMAN ON THE HAY: a flowered headscarf, an embroidered blouse, waving ----
   {
-    const wx = -38,
-      wy = -48 + Math.abs(Math.sin(gp * Math.PI * 2)) * 0.6,
+    const wx = -80, // (sitting up on top of the long load)
+      wy = -60 + Math.abs(Math.sin(gp * Math.PI * 2)) * 0.6,
       sk = col("#f0c8a0"),
       wave = Math.sin(t * 5) * 0.5;
     disc(wx, wy + 4, 8, col("#2a3a6a"), 3.4); // her skirt, spread on the hay
@@ -57899,7 +57923,7 @@ function drawEggs(g, s) {
 // THE VERSION (from v1.2.0, 5 October 2026): MAJOR.MINOR.PATCH - a new MINOR for a batch of new things, a new PATCH for
 // fixes and small touches - with the day it was made next to it. (Before this the versions were named after the date,
 // like v2026.10.05c.)
-const GAME_VERSION = "v1.4.15",
+const GAME_VERSION = "v1.4.16",
   GAME_DATE = "06.10.2026",
   VERSION_TEXT = GAME_VERSION + "  ·  " + GAME_DATE;
 const FB = '"Chakra Petch", "Segoe UI", sans-serif';
@@ -64176,6 +64200,15 @@ profWire();
 //  the game, and where the motion capture, the folk songs and the fonts come from. Both from the menu at any time.
 // =====================================================================================
 const NEWS = [
+  {
+    ver: "v1.4.16",
+    title: "A LONGER FURMANKA",
+    items: [
+      "THE HAY WAGON IS LONG, LIKE THE REAL ONES FROM VOLHYNIA",
+      "A LONG WHEELBASE, LONG LADDERS, A TALL LOAD",
+      "THE HAY BOUND DOWN UNDER A POLE AND ROPES",
+    ],
+  },
   {
     ver: "v1.4.15",
     title: "THE SILENT PLANETS",

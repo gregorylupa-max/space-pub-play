@@ -17391,6 +17391,15 @@ function customerBody(c, t, a) {
     near = c.protest.sign ? { a1: -1.45 + pump * 0.4, a2: -0.15 } : { a1: -0.55, a2: -1.3 };
     far = { a1: -1.6 - pump, a2: -0.5 - Math.abs(pump), fist: 1 };
   } // placard up (or megaphone to the mouth), other fist pumping
+  // (v1.4.21) SEE YOU NEXT TIME: served and on their way out, they turn and wave goodbye for a moment
+  if (out) {
+    if (c._outAt === undefined) c._outAt = G.time;
+    const since = G.time - c._outAt;
+    if (since < 1.5 && !drink && !pushed) {
+      near = { a1: -1.8, a2: -0.35 + Math.sin(t * 12 + c.ph) * 0.55 };
+      mouth = "smile";
+    }
+  } else c._outAt = undefined;
   // a FLAG is held high and steady (a gentle sway only), whatever else is going on - cross or marching, it's the other fist that shakes
   if ((kind === "soldier" || kind === "police") && (out || c.happy > 0) && !drink && !pushed)
     near = { tx: 5, ty: -th - 15 }; // a smart salute
@@ -21327,8 +21336,11 @@ function playerBody(t, flying) {
     squash = 1 + hopK * 0.1;
   }
   if (P.pouring) {
-    lift = Math.abs(Math.sin(t * 10)) * 1.2;
-    lean = 0.06;
+    // (v1.4.21) WORKING THE TAP: his whole body pumps the lever - he dips and leans into each pull, in time with his hand
+    const pump = Math.max(0, Math.sin(t * 10));
+    lift = -pump * 1.6 + 0.4;
+    lean = 0.06 + pump * 0.06;
+    squash = 1 - pump * 0.03;
   }
   if (fling >= 0) {
     lean = 0.35 - fling * 0.25;
@@ -22012,6 +22024,29 @@ function drawGlassFill(x, y, k, flavor) {
   const [c1, c2] = FLAVORS[flavor];
   if (k > 0)
     quad4(-6 + x, y - 2 - 26 * k, 6 + x, y - 2 - 26 * k, 5 + x, y - 2, -5 + x, y - 2, c1, c1, c2, c2);
+  // (v1.4.21) A FRESH POUR: bubbles rising through the shake, and a frothy head swelling and wobbling on top
+  if (k > 0.08 && k < 0.98 && !OUT) {
+    const tt = G.time,
+      top = y - 2 - 26 * k;
+    for (let i = 0; i < 6; i++) {
+      const f = (tt * 1.6 + i / 6) % 1,
+        by = y - 3 - f * 26 * k;
+      disc(
+        x - 4 + hash(i * 3.1) * 8 + Math.sin(tt * 6 + i) * 0.6,
+        by,
+        0.6 + hash(i) * 0.6,
+        withA(C.white, 0.55 * (1 - f * 0.5))
+      );
+    }
+    for (let i = 0; i < 5; i++)
+      disc(
+        x - 4.5 + i * 2.25,
+        top - 0.4 + Math.sin(tt * 11 + i * 1.7) * 0.6,
+        1.6 + k * 0.9,
+        withA(mix(C.cream, c1, 0.25), 0.9),
+        1.2 + k * 0.6
+      );
+  }
   if (k >= 0.98) {
     disc(x, y - 32, 6, C.cream, 4);
     disc(x + 1, y - 37, 2.5, C.red);
@@ -43851,6 +43886,9 @@ const CW
                
               
                     
+                     
+              
+                 
   = {
   phase: "island",
   t: 0,
@@ -44010,6 +44048,16 @@ function castawayUpdate(dt) {
   CW.t += dt;
   CW.kv = dt > 0 ? (CW.kx - (CW.kxLast ?? CW.kx)) / dt : 0; // (how fast Koos is walking - for his legs)
   CW.kxLast = CW.kx;
+  // (v1.4.21) FOOTPRINTS: as Koos walks, he leaves a trail of prints in the sand (left, right, left...) that slowly fade
+  if (Math.abs(CW.kv) > 6) {
+    CW.pd = (CW.pd || 0) + Math.abs(CW.kv) * dt;
+    if (CW.pd > 7 * b.ks * CW_KOOS) {
+      CW.pd = 0;
+      CW.pside = -(CW.pside || 1);
+      (CW.prints || (CW.prints = [])).push({ x: CW.kx, t: CW.t, s: CW.pside, d: Math.sign(CW.kv) });
+      if (CW.prints.length > 40) CW.prints.shift();
+    }
+  }
   // his stride: the phase moves on with the ground covered (4.5 units of stride per radian, measured from the
   // motion-capture foot) - so a planted foot never slides; the walk eases in and out
   CW.kph = (CW.kph || 0) + (CW.kv / (b.ks * CW_KOOS * 4.5)) * dt;
@@ -44646,6 +44694,7 @@ function drawCastaway(t) {
     );
   }
   if (dark > 0.3) cwBiolum(t, b, dark, "sea");
+  cwSeaLight(t, b, dark, dusk);
   // ---- far out: the ships and the sea life ----
   for (const s of CW.ships) cwDrawShip(s, t, dark, b);
   cwDrawLife(t, b, dark, false);
@@ -44825,6 +44874,51 @@ function cwBiolum(t, b, dark, where) {
   R.setAdd(false);
 }
 // THE ISLAND: a little hump of sand alone in the sea - the shallows round it, foam, a tall palm, the hammock, Klaas
+// (v1.4.21) where the sun (or the moon) is in the sky - the same path as drawCastaway's
+function cwSun(b) {
+  const tod = CW.tod,
+    day = tod < 0.55 || tod > 0.95,
+    f = day ? ((tod + 0.05) % 1) / 0.6 : (tod - 0.55) / 0.4;
+  return { x: b.L + b.w * (0.1 + 0.8 * f), y: b.hz - Math.sin(f * Math.PI) * (b.hz - b.T) * 0.78, day, f };
+}
+// (v1.4.21) LIGHT ON THE SEA: the sun's glitter - hundreds of glints twinkling on the waves below it (gold at sunset,
+// silver under the moon) - and the shadows of the clouds drifting slowly across the water
+function cwSeaLight(t, b, dark, dusk) {
+  if (OUT || cwStorm()) return;
+  const { L, w, B, hz, k } = b,
+    sun = cwSun(b),
+    gc = sun.day ? mix(col("#fff4d0"), col("#ffb060"), clamp(dusk, 0, 1)) : col("#d8e4ff"),
+    ga = sun.day ? 0.95 : 0.55;
+  R.setAdd(true);
+  for (let i = 0; i < 240; i++) {
+    const v = Math.pow(hash(i * 1.7), 1.6),
+      y = hz + 2 * k + v * (B - hz) * 0.85,
+      spread = 30 * k + (y - hz) * 0.9,
+      x = sun.x + (hash(i * 3.9) - 0.5) * 2 * spread + Math.sin(t * 0.6 + i) * 3 * k,
+      tw = Math.pow(Math.max(0, Math.sin(t * (2.5 + hash(i) * 3) + i * 1.9)), 4);
+    if (tw > 0.05 && x > L && x < L + w)
+      rect(
+        x - (1.5 + v * 4) * k,
+        y,
+        (3 + v * 8) * k,
+        Math.max(1.3, 1 * k),
+        withA(gc, ga * tw * (1 - v * 0.4))
+      );
+  }
+  R.setAdd(false);
+  if (dark < 0.5)
+    for (let i = 0; i < 6; i++) {
+      const cxx = L + ((hash(i * 4.1) * w + t * (5 + i * 2) * k) % (w + 240)) - 120,
+        y = hz + (0.15 + hash(i * 2.3) * 0.55) * (B - hz);
+      disc(
+        cxx + 20 * k,
+        y,
+        (50 + hash(i) * 30) * k,
+        withA(col("#0a2a48"), 0.07 * (1 - dark * 2)),
+        (8 + hash(i * 5) * 6) * k
+      );
+    }
+}
 function cwDrawIsland(t, b, dark) {
   const { k, iy, cx, rw, ks } = b,
     mixc = (a, c2, f) => mix(a, c2, clamp(f, 0, 1));
@@ -44846,6 +44940,67 @@ function cwDrawIsland(t, b, dark) {
       fy = iy + 6 * ks + Math.sin(a) * 15 * ks,
       fr = (5 + 3 * Math.sin(t * 1.8 + i)) * ks;
     if (Math.sin(a) > -0.3) disc(fx, fy, fr, withA(C.white, 0.35 + 0.2 * Math.sin(t * 2 + i)), fr * 0.35);
+  }
+  // (v1.4.21) WAVES LAPPING THE SHORE: every few seconds a foamy wave runs up the beach and slides back
+  for (let j = 0; j < 2; j++) {
+    const u = (t / 3.2 + j * 0.5) % 1,
+      run = u < 0.5,
+      e = run ? ease(u / 0.5) : ease((u - 0.5) / 0.5),
+      r = run ? rw * (1.3 - 0.27 * e) : rw * (1.03 + 0.18 * e),
+      al = (run ? 0.25 + 0.4 * e : 0.65 * (1 - e)) * (1 - dark * 0.4),
+      pts = [];
+    for (let i = 0; i <= 24; i++) {
+      const a = Math.PI * (0.06 + 0.88 * (i / 24));
+      pts.push(
+        cx + Math.cos(a) * r,
+        iy + 6 * ks + Math.sin(a) * r * ((15 * ks) / (rw * 1.03)) + Math.sin(i * 1.3 + t * 2) * 0.6 * ks
+      );
+    }
+    polyline(pts, 2.2 * ks, withA(C.white, al));
+    polyline(
+      pts.map((v, i) => (i % 2 ? v + 2.5 * ks : v)),
+      1 * ks,
+      withA(C.white, al * 0.5)
+    );
+  }
+  // (v1.4.21) FOOTPRINTS in the sand, fading
+  for (const fp of CW.prints || []) {
+    const age = CW.t - fp.t,
+      a = clamp(1 - age / 25, 0, 1) * 0.32 * (1 - dark * 0.5);
+    if (a > 0.01 && Math.abs(fp.x - cx) < rw * 0.9)
+      disc(
+        fp.x + fp.d * 1 * ks,
+        iy + 1.5 * ks + fp.s * 1.6 * ks,
+        1.5 * ks,
+        withA(col("#a88a50"), a),
+        0.7 * ks
+      );
+  }
+  // (v1.4.21) THE PALM'S SHADOW across the sand, swinging round as the sun crosses the sky (long when it's low)
+  {
+    const sun = cwSun(b),
+      px = cx - rw * 0.55;
+    if (sun.day && dark < 0.6) {
+      const dir = sun.x < px ? 1 : -1,
+        low = 1 - Math.sin(clamp(sun.f, 0, 1) * Math.PI),
+        len = Math.min(rw * 1.1, rw * (0.35 + 0.75 * low)),
+        a = 0.16 * (1 - dark) * (cwStorm() ? 0.3 : 1);
+      quad4(
+        px - 3 * ks,
+        iy + 1 * ks,
+        px + 3 * ks,
+        iy + 1 * ks,
+        px + dir * len + 1.5 * ks,
+        iy + 5 * ks,
+        px + dir * len - 1.5 * ks,
+        iy + 5 * ks,
+        withA(col("#5a4020"), a),
+        withA(col("#5a4020"), a),
+        withA(col("#5a4020"), a * 0.6),
+        withA(col("#5a4020"), a * 0.6)
+      );
+      disc(px + dir * len, iy + 5 * ks, 22 * ks, withA(col("#5a4020"), a * 0.8), 3.2 * ks); // (the crown's shadow)
+    }
   }
   // "SOS" in the sand, in pebbles
   pixText("SOS", cx + rw * 0.42, iy + 6 * ks, 1.2 * ks, withA(col("#8a6a3a"), 0.85 - dark * 0.4));
@@ -58013,7 +58168,7 @@ function drawEggs(g, s) {
 // THE VERSION (from v1.2.0, 5 October 2026): MAJOR.MINOR.PATCH - a new MINOR for a batch of new things, a new PATCH for
 // fixes and small touches - with the day it was made next to it. (Before this the versions were named after the date,
 // like v2026.10.05c.)
-const GAME_VERSION = "v1.4.20",
+const GAME_VERSION = "v1.4.21",
   GAME_DATE = "06.10.2026",
   VERSION_TEXT = GAME_VERSION + "  ·  " + GAME_DATE;
 const FB = '"Chakra Petch", "Segoe UI", sans-serif';
@@ -64290,6 +64445,16 @@ profWire();
 //  the game, and where the motion capture, the folk songs and the fonts come from. Both from the menu at any time.
 // =====================================================================================
 const NEWS = [
+  {
+    ver: "v1.4.21",
+    title: "POURING, GOODBYES, CASTAWAY ISLAND",
+    items: [
+      "THE BARMAN PUMPS THE TAP; FROTH AND BUBBLES IN THE GLASS",
+      "SERVED CUSTOMERS WAVE GOODBYE",
+      "CASTAWAY: SUN GLITTER, CLOUD SHADOWS, PALM SHADOW",
+      "CASTAWAY: FOOTPRINTS IN THE SAND, WAVES LAPPING THE SHORE",
+    ],
+  },
   {
     ver: "v1.4.20",
     title: "A LIVELIER BAR",

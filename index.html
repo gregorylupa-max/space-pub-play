@@ -9188,6 +9188,7 @@ function update(dt) {
       SCORER = null;
       sfx("catch", catcher.x);
       sfx("voice", catcher.x, catcher.type.kind);
+      G.nbCatch = { lane: s.lane, x: catcher.x, t: G.time, c: catcher }; // (v1.4.20: the neighbours turn to look - characters.ts)
       if (catcher.type.holy)
         sparkle(catcher.x + 10, LY(s.lane, catcher.x) - 60, [1, 0.92, 0.5, 1], 10, s.lane);
       if (!demo && (s.owner || 0) === 0) buzz("catch");
@@ -16732,7 +16733,31 @@ function customerBody(c, t, a) {
   const sp = c._sp || (c._sp = { y: 0, vy: 0, lift, lean, l: 0, vl: 0, look: 0, lt: G.time }),
     dt2 = clamp(G.time - sp.lt, 0, 0.05);
   sp.lt = G.time;
-  if (idle && look === 0 && act !== "look" && !showing) {
+  // (v1.4.20) THE NEIGHBOURS REACT: when someone near them on the same bar catches a shake, the others turn to look,
+  // smile, and give a happy little bounce
+  const lc = G.nbCatch,
+    near2 =
+      lc &&
+      lc.c !== c &&
+      lc.lane === c.lane &&
+      c.state === "walk" &&
+      !showing &&
+      Math.abs(lc.x - c.x) < 170 &&
+      G.time - lc.t >= 0 &&
+      G.time - lc.t < 1.6;
+  if (near2) {
+    const since = G.time - lc.t,
+      lk = lc.x > c.x ? 2.6 : -2.6;
+    sp.look += (lk - sp.look) * Math.min(1, dt2 * 10);
+    look = sp.look;
+    if (!angry) {
+      mouth = "smile";
+      if (since < 0.7) {
+        lift += Math.abs(Math.sin((since / 0.7) * Math.PI * 2)) * 2.2;
+        eyes = "happy";
+      }
+    }
+  } else if (idle && look === 0 && act !== "look" && !showing) {
     const nb = customers.find(
         (o) => o !== c && o.lane === c.lane && o.state === "walk" && Math.abs(o.x - c.x) < 60
       ),
@@ -21522,8 +21547,11 @@ function playerBody(t, flying) {
     glassFill = [6, top + 22 + PLEG];
   }
   if (fling >= 0) {
-    const e = fling < 0.35 ? fling / 0.35 : 1;
-    near = { a1: -0.5 + e * 0.5 + (fling - 0.35) * 0.4, a2: -0.6 + e * 0.6 };
+    // (v1.4.20) THE THROW, with FOLLOW-THROUGH: the arm whips forward past the release, overshoots a little and
+    // eases back, the wrist flicking straight
+    const e = fling < 0.35 ? fling / 0.35 : 1,
+      over = fling < 0.35 ? 0 : Math.sin(((fling - 0.35) / 0.65) * Math.PI) * 0.35;
+    near = { a1: -0.6 + e * 0.6 + over, a2: -0.7 + e * 0.75 - over * 0.4 };
     far = { a1: Math.PI / 2 + 1.1, a2: -0.6 };
   }
   if (P.grabT < 0.3) near = { a1: -1.2, a2: -0.6 };
@@ -21927,6 +21955,25 @@ function playerBody(t, flying) {
   // near arm
   const [a1, a2] = reach(8, shY, near, -1);
   const [hx, hy2] = limb(8, shY, a1, l1, a2, l2, 5, shirt, skin, skin, 2.9);
+  // (v1.4.20) the throw's SWOOSH: a few quick smear lines trailing the hand as the glass leaves it
+  if (fling >= 0 && fling < 0.45 && !OUT) {
+    const al = (0.45 - fling) / 0.45,
+      rr = Math.hypot(hx - 8, hy2 - shY),
+      ah = Math.atan2(hy2 - shY, hx - 8);
+    R.setAdd(true);
+    for (let k = 0; k < 3; k++)
+      arc(
+        8,
+        shY,
+        rr * (1 - k * 0.12),
+        ah - 0.75,
+        ah - 0.08,
+        1.3 - k * 0.3,
+        withA(C.white, 0.5 * al * (1 - k * 0.3)),
+        8
+      );
+    R.setAdd(false);
+  }
   if (glassFill) drawGlassFill(glassFill[0], glassFill[1], P.pour / POUR_TIME, lane % 3);
   if (towel) {
     const fl = Math.sin(t * 9) * 1.5;
@@ -57966,7 +58013,7 @@ function drawEggs(g, s) {
 // THE VERSION (from v1.2.0, 5 October 2026): MAJOR.MINOR.PATCH - a new MINOR for a batch of new things, a new PATCH for
 // fixes and small touches - with the day it was made next to it. (Before this the versions were named after the date,
 // like v2026.10.05c.)
-const GAME_VERSION = "v1.4.19",
+const GAME_VERSION = "v1.4.20",
   GAME_DATE = "06.10.2026",
   VERSION_TEXT = GAME_VERSION + "  ·  " + GAME_DATE;
 const FB = '"Chakra Petch", "Segoe UI", sans-serif';
@@ -64243,6 +64290,14 @@ profWire();
 //  the game, and where the motion capture, the folk songs and the fonts come from. Both from the menu at any time.
 // =====================================================================================
 const NEWS = [
+  {
+    ver: "v1.4.20",
+    title: "A LIVELIER BAR",
+    items: [
+      "THE BARMAN'S THROW WHIPS THROUGH WITH A SWOOSH",
+      "NEIGHBOURS TURN, SMILE AND BOUNCE WHEN SOMEONE IS SERVED",
+    ],
+  },
   {
     ver: "v1.4.19",
     title: "MORE NATURAL MOVEMENT",

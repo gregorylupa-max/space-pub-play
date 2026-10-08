@@ -57899,7 +57899,7 @@ function drawEggs(g, s) {
 // THE VERSION (from v1.2.0, 5 October 2026): MAJOR.MINOR.PATCH - a new MINOR for a batch of new things, a new PATCH for
 // fixes and small touches - with the day it was made next to it. (Before this the versions were named after the date,
 // like v2026.10.05c.)
-const GAME_VERSION = "v1.4.14",
+const GAME_VERSION = "v1.4.15",
   GAME_DATE = "06.10.2026",
   VERSION_TEXT = GAME_VERSION + "  ·  " + GAME_DATE;
 const FB = '"Chakra Petch", "Segoe UI", sans-serif';
@@ -62112,6 +62112,40 @@ const TRACKS          = [
       { prog: "C C F Fm C G7 C C", m: "a b c d e c b f" },
     ],
   },
+  // (v1.4.14) THE SOLAR SYSTEM TOUR's own music, in place of the music-box waltz: slow, dark and eerie - a low drone, a
+  // ghostly wordless choir, distant bells with strange overtones, and a wavering theremin melody that slides between
+  // long notes; the harmony drifts a semitone sideways now and then (A minor to B flat), and the key sinks each time round
+  {
+    title: "THE SILENT PLANETS",
+    where: "The Solar System tour",
+    mood: "mysterious, eerie",
+    bpm: 56,
+    steps: 16,
+    swing: 0,
+    root: 45,
+    scale: HMIN,
+    keys: [0, -1, -3],
+    lead: { wave: "sine", wave2: "triangle", oct: 0, vol: 0.055, vib: 11, swell: true, echo: 0.8, lp: 1500 }, // (a theremin)
+    bass: "drone",
+    comp: "choir",
+    drums: "none",
+    extra: "bells",
+    motifs: {
+      a: "0 . . . . . 1 .",
+      b: "4 . . . 3 . . .",
+      c: "6 . . . . 5 . .",
+      d: "2 . . . . . . .",
+      e: "7 . . 6 . . 4 .",
+      g: "- . . . 0 . . .",
+      f: "- - - - - - - -",
+    },
+    form: [
+      { prog: "Am Am", m: "f g" },
+      { prog: "Am Bb Am Bb Dm Dm E7 E7", m: "a f b f c f d f" },
+      { prog: "Fmaj7 Fmaj7 Bdim Bdim Am Am E7 E7", m: "e f b f g f d f", up: 12 },
+      { prog: "Dm Bb Am Am Bdim E7 Am Am", m: "c f a f b f d f" },
+    ],
+  },
   {
     title: "HERO OF THE GALAXY",
     where: "The ending",
@@ -62214,7 +62248,7 @@ const trackNamed = (t) => TRACKS.findIndex((x) => x.title === t),
   HYPER_TRACK = trackNamed("HYPERSPACE HIGHWAY"),
   CORE_TRACK = trackNamed("HEART OF ANDROMEDA"),
   ROBOT_TRACK = trackNamed("INVASION OF THE MOON ROBOTS"),
-  ORRERY_TRACK = trackNamed("CLOCKWORK ORRERY");
+  ORRERY_TRACK = trackNamed("THE SILENT PLANETS"); // (v1.4.14: the tour's eerie music - the music-box waltz stays in the music box)
 // the music box names each tune after the stops it plays at now (after the tour was rebuilt)
 TRACKS.forEach((tr, i) => {
   const vs = VENUES.filter((v) => v.trk === i).map((v) =>
@@ -62819,7 +62853,7 @@ function musicWanted() {
     const cur = spaceNow();
     if (cur && cur.item.kind === "descend") return DESCENT_TRACK; // a mysterious arrival as we tilt down to the pub
     if (cur && cur.item.what === "invasion") return ROBOT_TRACK; // (v1.4.7) the B-movie gets its theremin
-    if (ATTRACT.tour || (cur && cur.item.tour)) return ORRERY_TRACK; // (v1.4.7) the Solar System tour: a clockwork music-box waltz
+    if (ATTRACT.tour || (cur && cur.item.tour) || (cur && cur.item.what === "orrery")) return ORRERY_TRACK; // (v1.4.14) the Solar System tour: THE SILENT PLANETS - mysterious and eerie
     return DEEP_TRACK; // the deep-space show: mysterious music
   }
   if (G.state === "castaway") return 27; // (v1.4.10: Castaway Island - the ocean raft's tune)
@@ -62917,7 +62951,8 @@ function schedule() {
   }
   // the music's low-pass: deep space gentle and muffled, like it's coming from far away; (v1.4.7) losing a life drops
   // it under water for a moment - then it opens back up
-  const lpWant = curTrack === DEEP_TRACK ? 1100 : G.state === "lost" ? 650 : 20000;
+  const lpWant =
+    curTrack === DEEP_TRACK ? 1100 : curTrack === ORRERY_TRACK ? 2400 : G.state === "lost" ? 650 : 20000; // (the tour: a little muffled, far away)
   if (musLP && lpWant !== MUSX.lp) {
     musLP.frequency.setTargetAtTime(lpWant, now, lpWant === 650 ? 0.12 : MUSX.lp === 650 ? 0.45 : 0.8);
     MUSX.lp = lpWant;
@@ -64141,6 +64176,11 @@ profWire();
 //  the game, and where the motion capture, the folk songs and the fonts come from. Both from the menu at any time.
 // =====================================================================================
 const NEWS = [
+  {
+    ver: "v1.4.15",
+    title: "THE SILENT PLANETS",
+    items: ["NEW EERIE MUSIC FOR THE SOLAR SYSTEM SHOW", "A THEREMIN, A GHOSTLY CHOIR, DISTANT BELLS"],
+  },
   {
     ver: "v1.4.14",
     title: "TON 618 - THE SCARIEST BLACK HOLE",

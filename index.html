@@ -6715,16 +6715,25 @@ for (const [id, k] of [
 const GEST = new Map();
 function laneAt(wx, wy) {
   if (VERT) return vLaneAt(wx, wy);
+  // (v1.4.17) MORE PRECISE: each bar is measured where it is really DRAWN - in perspective, at the spot along it you
+  // pressed - so a press on a bar, or among the customers standing at it, picks that bar
   let lane = 0;
-  for (let i = 0; i < LANES; i++) if (wy > LY(i, wx) - 70) lane = i;
+  for (let i = 0; i < LANES; i++) {
+    const bx = barXAt(i, wx, wy),
+      py = projL(i, bx, LY(i, bx))[1];
+    if (wy > py - 70 * LS(i)) lane = i;
+  }
   return lane;
 }
 function bindPointer(canvas) {
   const world = (e) => {
     const r = canvas.getBoundingClientRect(),
-      wx0 = (e.clientX - r.left) / u - ox,
+      // (v1.4.17: the camera's gentle follow of the barman is taken off too - it shifts the whole picture a little,
+      //  and a press near the edge of a bar used to land on the next one)
+      cam = miniFit() || VERT ? [0, 0] : [CAM.x, CAM.y],
+      wx0 = (e.clientX - r.left) / u - ox - cam[0],
       wx = MIRW ? PW - wx0 : wx0, // (a mirror bar: the pointer is turned round with it)
-      wy = (e.clientY - r.top) / u - oy,
+      wy = (e.clientY - r.top) / u - oy - cam[1],
       F = miniFit(); // (a mini-game or the bonus round fitted on a tall screen: into its own units)
     return F ? [(wx - F.x) / F.s, (wy - F.y) / F.s] : [wx, wy];
   };
@@ -12251,6 +12260,7 @@ function draw() {
       for (const u of powerups) if (u.lane === lane) drawPowerup(u, t);
       for (const m of empties)
         if (m.lane === lane) {
+          barReflect(m.x, LY(lane, m.x) - 3, null, 0, m.spin, t);
           glassGhosts(m, LY(lane, m.x) - 3, null, 0, m.spin, 0, col("#cfe8ff"));
           drawGlass(m.x, LY(lane, m.x) - 3, null, 0, m.spin);
         }
@@ -12261,6 +12271,7 @@ function draw() {
             drawHoly(s.x, gy, t);
             continue;
           }
+          barReflect(s.x, gy, s.flavor, 1, 0, t);
           glassGhosts(s, gy, s.flavor, 1, 0, glassTilt(s), FLAVORS[s.flavor][0]);
           drawGlass(s.x, gy, s.flavor, 1, 0, glassTilt(s));
           R.setAdd(true);
@@ -14138,6 +14149,40 @@ function jupiter(x, y, r, t, inside) {
   }
   disc(x + r * 0.3 + Math.sin(t * 0.05) * 3, y + r * 0.3, r * 0.16, col("#c05030"), r * 0.09); // the great red storm
   disc(x + r * 0.35, y + r * 0.2, r * 0.85, withA(col("#02030c"), 0.4));
+}
+
+// (v1.4.17) THE POLISHED BAR TOP: a glass sliding along it shows a faint upside-down reflection in the varnish, and a
+// glint of the lamps runs along the wood with it
+function barReflect(x, gy, flavor, full, spin, t) {
+  if (OUT || (R.kind === "CPU" && QUAL < 1)) return;
+  push();
+  translate(x, gy - 1);
+  if (spin) rotate(-Math.sin(spin) * 0.08);
+  scaleXY(1, -0.32); // (squashed: the bar top is seen at a low angle)
+  if (full) {
+    const [c1, c2] = FLAVORS[flavor];
+    quad4(-6, -30, 6, -30, 5, -2, -5, -2, withA(c1, 0), withA(c1, 0), withA(c2, 0.22), withA(c2, 0.22));
+    disc(0, -34, 6, withA(C.cream, 0.1));
+  }
+  quad4(
+    -8,
+    -31,
+    8,
+    -31,
+    6,
+    -2,
+    -6,
+    -2,
+    withA(col("#cfefff"), 0),
+    withA(col("#cfefff"), 0),
+    withA(col("#cfefff"), 0.16),
+    withA(col("#cfefff"), 0.16)
+  );
+  pop();
+  R.setAdd(true);
+  disc(x, gy + 0.5, 15, withA(col("#fff4dc"), 0.09), 1.6);
+  disc(x - 4 + Math.sin(t * 3 + x * 0.05) * 2, gy + 0.2, 5, withA(C.white, 0.16), 0.7);
+  R.setAdd(false);
 }
 // =====================================================================================
 //  SKY TRAFFIC - what goes past the big windows: meteor showers, comets, flying saucers (sometimes
@@ -29423,6 +29468,32 @@ function drawDeepSpace(t) {
   GIANT_OK = false; // (v1.4.14: the big ringed planet in the corner is gone from the show altogether - by request)
   deepSky(L, Rr, T, B, t, at, sn, pan, panX);
   GIANT_OK = false;
+  // (v1.4.17) ARRIVING AT A SIGHT: as each world or great event comes up, the stars streak softly out from the middle
+  // for a moment - as if we'd just dropped out of light speed - and settle
+  if (cur0 && cur0.item.kind === "fly" && cur0.ph < 1.4 && !desc) {
+    const wh = cur0.item.what;
+    if (wh in WORLD_FNS || SPACE_CAPS[wh] || wh === "orrery") {
+      const u = cur0.ph / 1.4,
+        a = Math.sin(u * Math.PI) * 0.5,
+        cxs = L + w * 0.54,
+        cys = T + h * 0.44;
+      R.setAdd(true);
+      for (let i = 0; i < 70; i++) {
+        const ang = hash(i * 3.3) * 6.283,
+          d0 = (0.08 + hash(i * 1.7) * 0.6) * Math.max(w, h),
+          d1 = d0 + (0.05 + hash(i) * 0.12) * Math.max(w, h) * (1 - u);
+        line(
+          cxs + Math.cos(ang) * d0,
+          cys + Math.sin(ang) * d0,
+          cxs + Math.cos(ang) * d1,
+          cys + Math.sin(ang) * d1,
+          1 + hash(i * 5) * 1.2,
+          withA(STAR_TINTS[i % 7], a * (0.4 + hash(i * 9) * 0.6))
+        );
+      }
+      R.setAdd(false);
+    }
+  }
   if (desc) {
     push();
     translate(panX - PX, 0);
@@ -42191,6 +42262,46 @@ function drawWorldFly(what, L, Rr, T, B, f, t) {
   translate(x, y);
   fn(r, t);
   pop();
+  // (v1.4.17) THE SUN'S LENS FLARE: a long streak of light across it, and a line of faint coloured rings and discs
+  // reflected across the screen through its middle - the way a camera lens catches the Sun
+  if (what === "sun" && !OUT) {
+    const fa = Math.min(inF, 1 - outF),
+      dx = w * 0.2, // (the flare's line runs from the Sun down to the lower right, across the screen)
+      dy = h * 0.17;
+    R.setAdd(true);
+    for (const [sx2, a2] of [
+      [0.5, 0.18],
+      [0.25, 0.3],
+    ]                      )
+      quad4(
+        x - w * sx2,
+        y,
+        x,
+        y - r * 0.05,
+        x + w * sx2,
+        y,
+        x,
+        y + r * 0.05,
+        withA(col("#ffd8a0"), 0),
+        withA(col("#fff0d0"), a2 * fa),
+        withA(col("#ffd8a0"), 0),
+        withA(col("#fff0d0"), a2 * fa)
+      );
+    const GH = [
+      [0.6, 0.1, "#ffb060", 0.1],
+      [1.1, 0.05, "#80ff9a", 0.12],
+      [1.5, 0.16, "#6aa8ff", 0.07],
+      [1.8, 0.04, "#ff7ad0", 0.14],
+      [2.2, 0.22, "#a08aff", 0.05],
+    ]         ;
+    for (const [d, rr, c, a2] of GH) {
+      const gx = x + dx * d,
+        gy = y + dy * d;
+      disc(gx, gy, r * rr * 1.4, withA(col(c), a2 * fa * 1.2));
+      arc(gx, gy, r * rr * 1.4, 0, 6.283, Math.max(1, r * 0.012), withA(col(c), a2 * fa * 2.2), 24);
+    }
+    R.setAdd(false);
+  }
 }
 
 // ---- THE SOLAR SYSTEM TOUR (PLAY MORE): the whole show of worlds in order - the Sun, then outwards to Pluto - each with
@@ -57923,7 +58034,7 @@ function drawEggs(g, s) {
 // THE VERSION (from v1.2.0, 5 October 2026): MAJOR.MINOR.PATCH - a new MINOR for a batch of new things, a new PATCH for
 // fixes and small touches - with the day it was made next to it. (Before this the versions were named after the date,
 // like v2026.10.05c.)
-const GAME_VERSION = "v1.4.16",
+const GAME_VERSION = "v1.4.17",
   GAME_DATE = "06.10.2026",
   VERSION_TEXT = GAME_VERSION + "  ·  " + GAME_DATE;
 const FB = '"Chakra Petch", "Segoe UI", sans-serif';
@@ -64200,6 +64311,16 @@ profWire();
 //  the game, and where the motion capture, the folk songs and the fonts come from. Both from the menu at any time.
 // =====================================================================================
 const NEWS = [
+  {
+    ver: "v1.4.17",
+    title: "POLISH FOR THE SHOW AND THE BAR",
+    items: [
+      "STARS STREAK AS WE ARRIVE AT EACH SIGHT",
+      "A LENS FLARE FROM THE SUN",
+      "GLASSES REFLECT IN THE POLISHED BAR TOP",
+      "FIXED: A CLICK BESIDE A BAR NOW ALWAYS PICKS THAT BAR",
+    ],
+  },
   {
     ver: "v1.4.16",
     title: "A LONGER FURMANKA",

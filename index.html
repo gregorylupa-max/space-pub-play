@@ -6634,6 +6634,9 @@ function bindPointer(canvas) {
   canvas.addEventListener("pointerdown", (e) => {
     audio();
     if (e.pointerType === "touch") setDev("touch");
+    // (v1.4.26) only the LEFT mouse button serves, pours and runs - the right button just changes the flavour (see
+    // "contextmenu" above) and the middle one does nothing, so a right-click never pours or throws a shake by accident
+    if (e.pointerType === "mouse" && e.button !== 0) return;
     // the mouse on the HUD: the holy water bottles, the cross, the flavour (screen pixels, like the HUD)
     if (G.state === "play" && !G.demo && e.button === 0) {
       const hr = $("hud").getBoundingClientRect(),
@@ -43899,19 +43902,20 @@ function drawOrrery(L, Rr, Tp, B, f, t) {
 // =====================================================================================
 //  CASTAWAY ISLAND (v1.4.10) - from PLAY MORE. KOOS VAN SCHOOR (our own man: sunburnt, a straw hat, a ragged shirt, a
 //  scruffy beard - he talks to a coconut called Klaas) is stranded on a tiny island in the middle of the ocean.
-//    - THE ISLAND (the screensaver): day turns to sunset, night and dawn; Koos wakes up, fishes (and catches a boot),
-//      builds a sandcastle the tide takes, naps in his hammock, loses his sandwich to a seagull, gets pinched by a crab,
-//      finds a message in a bottle and has a word with Klaas. Out at sea the world goes by without noticing him:
-//      cruise ships full of tourists taking photos, a party yacht (fireworks at night), cargo ships, a navy destroyer,
-//      an aircraft carrier, a submarine's periscope; whales spout and breach, dolphins leap, a shark fin circles.
-//      And at night a UFO tries to beam him up - he hangs on to his palm tree.
-//    - DEFEND THE ISLAND (press FIRE): the arcade game, in the spirit of the old gallery shooters. Aim with the arrows
-//      (or the mouse / a finger), FIRE coconuts; shoot what threatens Koos - robot crabs, robo-gulls, a robot pirate
-//      ship's cannonballs, meteors at night, the UFO and its beam. NEVER hit the ships going by: they're his way home.
-//      SIGNAL them with a flare instead (E, or a right click / a tap on the ship): three ships signalled and a rescue
-//      helicopter comes - then the next level, with new weather: a calm day, a storm, a night of shooting stars, a
-//      full moon. Three lives; the score turns into coins.
-//  (Its own state, "castaway": update, draw, words and pointer all come here.)
+//  (v1.4.26) A LONG, PEACEFUL SCREENSAVER - nothing to shoot any more (the old "defend the island" arcade game is gone).
+//  Just Koos's simple life on his little island, through whole days and nights (a day takes over five minutes now):
+//    - BY DAY: he wakes up, scans the sea with his spyglass, fishes (and lands an old boot), builds a sandcastle,
+//      chats with Klaas, writes S.O.S. in the sand (a plane flies over... and on), loses his sandwich to a seagull,
+//      finds a message in a bottle, gets pinched by a crab, shares a crumb with Muis the mouse and sips a pina colada.
+//      Now and then a tropical shower passes over.
+//    - AT SUNSET: he sits on the sand and watches the sun go down - the best seat in the house.
+//    - AT NIGHT: a little campfire with a fish on a stick; then he lies back on the sand and makes up his own
+//      constellations, joining the stars into a palm tree, a mouse, a fish, his hat, a ship to take him home; he turns
+//      his spyglass to the Moon (we see what he sees); a shooting star, and he makes a wish; then off to his hammock.
+//      Sometimes a UFO comes for a look - he hangs on to his palm tree.
+//    - Out at sea the world goes by without noticing him: cruise ships, a party yacht (fireworks at night), cargo ships,
+//      a navy destroyer, an aircraft carrier, a submarine; whales spout and breach, dolphins leap, a shark fin circles.
+//  FIRE (or a tap) skips to the next scene; ESC goes back. (Its own state, "castaway": update, draw, words, pointer.)
 // =====================================================================================
                                     
 const CW   
@@ -43957,6 +43961,12 @@ const CW
                      
               
                  
+                                                                                     
+                                                                     
+                                                                                              
+                                                                                        
+                     
+                     
   = {
   phase: "island",
   t: 0,
@@ -43989,35 +43999,142 @@ const CW
   best: 0,
   ufoT: 30,
 };
-// Koos's little stories on the island, one after another (with the words that go with them)
-const CW_ACTS                             = [
-  ["wake", 8, "KOOS VAN SCHOOR WAKES UP ON A DESERT ISLAND... AGAIN"],
-  ["spyglass", 9, "THE SPYGLASS: A SHIP? A SAIL? ...JUST A CLOUD"],
-  ["fish", 11, "GONE FISHING. SOMETHING'S BITING!"],
-  ["castle", 9, "A SANDCASTLE - THE FINEST ON THE ISLAND"],
-  ["klaas", 8, "A CHAT WITH KLAAS THE COCONUT. KLAAS SAYS NOTHING, AS USUAL"],
-  ["gull", 8, "LUNCH TIME... HEY! THAT WAS MY SANDWICH!"],
-  ["bottle", 9, 'A MESSAGE IN A BOTTLE! IT SAYS: "WISH YOU WERE HERE"'],
-  ["crab", 7, "OUCH! A CRAB PINCHES HIS TOE"],
-  ["mouse", 10, "MUIS THE ISLAND MOUSE - KOOS SHARES HIS LAST CRUMB"],
-  ["relax", 12, "PINA COLADA TIME - DESERT ISLAND LIFE ISN'T ALL BAD"],
-  ["hammock", 11, "A NAP IN THE HAMMOCK - THE SHIPS GO BY WITHOUT A CLUE"],
+// Koos's little stories on the island, one after another (with the words that go with them) - and WHEN each one
+// happens (v1.4.26): "day", "night", "dusk" (the sunset, once a day), "dawn" (waking when the night is over) or "any" time
+const CW_ACTS                                     = [
+  ["wake", 8, "KOOS VAN SCHOOR WAKES UP ON A DESERT ISLAND... AGAIN", "dawn"],
+  ["spyglass", 9, "THE SPYGLASS: A SHIP? A SAIL? ...JUST A CLOUD", "day"],
+  ["fish", 11, "GONE FISHING. SOMETHING'S BITING!", "day"],
+  ["castle", 9, "A SANDCASTLE - THE FINEST ON THE ISLAND", "day"],
+  ["klaas", 8, "A CHAT WITH KLAAS THE COCONUT. KLAAS SAYS NOTHING, AS USUAL", "any"],
+  ["sos", 13, "S.O.S. IN THE SAND... A PLANE! WAVE! ...IT FLIES ON", "day"],
+  ["gull", 8, "LUNCH TIME... HEY! THAT WAS MY SANDWICH!", "day"],
+  ["bottle", 9, 'A MESSAGE IN A BOTTLE! IT SAYS: "WISH YOU WERE HERE"', "day"],
+  ["crab", 7, "OUCH! A CRAB PINCHES HIS TOE", "day"],
+  ["mouse", 10, "MUIS THE ISLAND MOUSE - KOOS SHARES HIS LAST CRUMB", "any"],
+  ["relax", 12, "PINA COLADA TIME - DESERT ISLAND LIFE ISN'T ALL BAD", "day"],
+  ["sunset", 18, "THE SUN GOES DOWN - THE BEST SEAT IN THE HOUSE", "dusk"],
+  ["campfire", 16, "A LITTLE FIRE ON THE BEACH - FISH ON A STICK FOR SUPPER", "night"],
+  ["stargaze", 24, "LYING BACK ON THE SAND, KOOS MAKES UP HIS OWN CONSTELLATIONS", "night"],
+  ["moongaze", 13, "THE SPYGLASS TURNED TO THE MOON: ITS DARK SEAS AND CRATERS", "night"],
+  ["wish", 11, "A SHOOTING STAR! KOOS MAKES A WISH: A SHIP TO TAKE HIM HOME", "night"],
+  ["hammock", 14, "A NAP IN THE HAMMOCK - THE SHIPS GO BY WITHOUT A CLUE", "night"],
 ];
-const CW_WEATHER = [
-  "A CALM SUMMER DAY",
-  "A STORM IS COMING",
-  "A NIGHT OF SHOOTING STARS",
-  "FULL MOON - THEY'RE HERE!",
+// (v1.4.26) KOOS'S OWN CONSTELLATIONS: stars joined into the things of his island life (points in a 0..1 box)
+const CW_CONST                                                   = [
+  {
+    name: "THE GREAT PALM",
+    p: [
+      [0.5, 1],
+      [0.47, 0.7],
+      [0.44, 0.42],
+      [0.42, 0.22],
+      [0.08, 0.32],
+      [0.2, 0.04],
+      [0.68, 0.06],
+      [0.84, 0.36],
+    ],
+    l: [
+      [0, 1],
+      [1, 2],
+      [2, 3],
+      [3, 4],
+      [3, 5],
+      [3, 6],
+      [3, 7],
+    ],
+  },
+  {
+    name: "MUIS THE MOUSE",
+    p: [
+      [0.18, 0.62],
+      [0.38, 0.46],
+      [0.64, 0.5],
+      [0.8, 0.66],
+      [0.58, 0.78],
+      [0.34, 0.76],
+      [0.3, 0.3],
+      [0.96, 0.52],
+      [1, 0.3],
+    ],
+    l: [
+      [0, 1],
+      [1, 2],
+      [2, 3],
+      [3, 4],
+      [4, 5],
+      [5, 0],
+      [1, 6],
+      [3, 7],
+      [7, 8],
+    ],
+  },
+  {
+    name: "THE FISH THAT GOT AWAY",
+    p: [
+      [0, 0.5],
+      [0.3, 0.3],
+      [0.62, 0.38],
+      [0.82, 0.5],
+      [1, 0.3],
+      [1, 0.72],
+      [0.62, 0.62],
+      [0.3, 0.7],
+    ],
+    l: [
+      [0, 1],
+      [1, 2],
+      [2, 3],
+      [3, 4],
+      [4, 5],
+      [5, 3],
+      [3, 6],
+      [6, 7],
+      [7, 0],
+    ],
+  },
+  {
+    name: "THE STRAW HAT",
+    p: [
+      [0, 0.72],
+      [0.3, 0.78],
+      [0.7, 0.78],
+      [1, 0.72],
+      [0.34, 0.42],
+      [0.66, 0.42],
+    ],
+    l: [
+      [0, 1],
+      [1, 2],
+      [2, 3],
+      [1, 4],
+      [4, 5],
+      [5, 2],
+    ],
+  },
+  {
+    name: "THE SHIP HOME",
+    p: [
+      [0, 0.62],
+      [1, 0.62],
+      [0.84, 0.88],
+      [0.16, 0.88],
+      [0.5, 0.62],
+      [0.5, 0.04],
+      [0.86, 0.5],
+    ],
+    l: [
+      [0, 1],
+      [1, 2],
+      [2, 3],
+      [3, 0],
+      [4, 5],
+      [5, 6],
+      [6, 4],
+    ],
+  },
 ];
 const CW_SHIPS = ["cruise", "yacht", "cargo", "navy", "carrier", "sub"];
-const CW_SHIP_NAMES = {
-  cruise: "A CRUISE SHIP",
-  yacht: "A PARTY YACHT",
-  cargo: "A CARGO SHIP",
-  navy: "A NAVY DESTROYER",
-  carrier: "AN AIRCRAFT CARRIER",
-  sub: "A SUBMARINE",
-};
 const CW_KOOS = 1.72; // (how big Koos is against the island - v1.4.12: a touch bigger, so his face and hands read)
 function cwBox() {
   const L = -ox - 20,
@@ -44064,6 +44181,9 @@ function startCastaway() {
   CW.life = [];
   CW.shipT = 1.5;
   CW.ufoT = 26;
+  CW.day = 0;
+  CW.sunsetDay = -1;
+  CW.wasNight = false;
   CW.best = store.get("cwBest", 0);
   const b = cwBox();
   CW.kx = b.cx;
@@ -44078,39 +44198,13 @@ function exitCastaway() {
   sfx("click");
   toMenu();
 }
-function cwStartPlay() {
-  const b = cwBox();
-  CW.phase = "play";
-  CW.t = 0;
-  CW.score = 0;
-  CW.lives = 3;
-  CW.level = 1;
-  CW.coins = 0;
-  CW.foes = [];
-  CW.shots = [];
-  CW.fx = [];
-  CW.ships = [];
-  CW.aimX = b.cx;
-  CW.aimY = b.hz + b.h * 0.08;
-  cwLevel(1);
-  sfx("start");
-}
-function cwLevel(n) {
-  CW.level = n;
-  CW.signals = 0;
-  CW.heli = -1;
-  CW.foes = [];
-  CW.shipT = 2;
-  CW.foeT = 2.5;
-  CW.tod = [0.18, 0.47, 0.75, 0.82][(n - 1) % 4];
-  cwSay("LEVEL " + n + " · " + CW_WEATHER[(n - 1) % 4], 3);
-}
 function cwSay(m, sec) {
   CW.msg = m;
   CW.msgT = sec;
 }
 const cwNight = () => CW.tod > 0.55 && CW.tod < 0.95;
-const cwStorm = () => CW.phase === "play" && (CW.level - 1) % 4 === 1;
+// (v1.4.26) A PASSING SHOWER: every third day, around mid-morning, a tropical shower blows over for a little while
+const cwStorm = () => (CW.day || 0) % 3 === 1 && CW.tod > 0.27 && CW.tod < 0.32;
 // ---------------------------------------------------------------- update
 function castawayUpdate(dt) {
   const b = cwBox();
@@ -44136,50 +44230,31 @@ function castawayUpdate(dt) {
   // bar's update, where it used to fade, so after the first hit the whole screen kept rattling for good
   G.shake = Math.max(0, (G.shake || 0) - dt * 24);
   G.kick = Math.max(0, (G.kick || 0) - dt * 6);
-  CW.hurt = Math.max(0, CW.hurt - dt);
-  CW.cool = Math.max(0, CW.cool - dt);
-  CW.flareCool = Math.max(0, CW.flareCool - dt);
   if (anyKey("Escape", "Backspace")) {
     keys.delete("Escape");
     keys.delete("Backspace");
     return exitCastaway();
   }
-  // the controls: the arrows aim, FIRE throws, the flare key signals
-  let gp = null;
-  try {
-    gp = navigator.getGamepads ? [...navigator.getGamepads()].find((g) => g) : null;
-  } catch (e) {}
+  // (v1.4.26) no shooting any more: FIRE (or a tap) just moves on to the next scene
   const fire = anyKey("Space", "KeyX", "KeyJ", "KeyK", "ControlLeft", "Enter") || pad.pour || CW.ptr,
-    flare = anyKey("KeyE", "KeyQ", "KeyH", "ShiftLeft") || !!(gp && gp.buttons[2] && gp.buttons[2].pressed),
-    fireEdge = fire && !CW.fireWas,
-    flareEdge = flare && !CW.flareWas;
+    fireEdge = fire && !CW.fireWas;
   CW.fireWas = fire;
-  CW.flareWas = flare;
-  const ax =
-      (anyKey("ArrowRight", "KeyD") || pad.right ? 1 : 0) - (anyKey("ArrowLeft", "KeyA") || pad.left ? 1 : 0),
-    ay = (anyKey("ArrowDown", "KeyS") || pad.down ? 1 : 0) - (anyKey("ArrowUp", "KeyW") || pad.up ? 1 : 0);
-  // ---- sea life and ships go by in both modes ----
+  CW.ptr = false;
+  // ---- sea life and ships go by ----
   cwLifeUpdate(dt, b);
   cwMouseUpdate(dt, b);
   cwNutUpdate(dt, b);
   for (const s of CW.ships) {
     s.x += s.dir * s.spd * dt;
     s.t += dt;
-    if (s.hitT > 0) s.hitT -= dt;
   }
-  CW.ships = CW.ships.filter((s) => s.x > b.L - 260 * b.k && s.x < b.Rr + 260 * b.k && !s.gone);
+  CW.ships = CW.ships.filter((s) => s.x > b.L - 260 * b.k && s.x < b.Rr + 260 * b.k);
   CW.shipT -= dt;
   if (CW.shipT <= 0) {
-    CW.shipT = CW.phase === "play" ? 5 + Math.random() * 3 : 7 + Math.random() * 6;
-    const kind =
-      CW.phase === "play" &&
-      CW.level >= 2 &&
-      Math.random() < 0.28 &&
-      !CW.ships.some((s) => s.kind === "pirate")
-        ? "pirate"
-        : CW_SHIPS[Math.floor(Math.random() * CW_SHIPS.length)];
-    const dir = Math.random() < 0.5 ? 1 : -1,
-      depth = kind === "pirate" ? 0.62 : 0.3 + Math.random() * 0.3; // (far out on the horizon - the island is so alone)
+    CW.shipT = 7 + Math.random() * 6;
+    const kind = CW_SHIPS[Math.floor(Math.random() * CW_SHIPS.length)],
+      dir = Math.random() < 0.5 ? 1 : -1,
+      depth = 0.3 + Math.random() * 0.3; // (far out on the horizon - the island is so alone)
     CW.ships.push({
       kind,
       dir,
@@ -44188,91 +44263,55 @@ function castawayUpdate(dt) {
       s: depth * b.k,
       spd: (kind === "sub" ? 28 : kind === "yacht" ? 60 : 38) * b.k * (0.8 + Math.random() * 0.4),
       t: 0,
-      hp: kind === "pirate" ? 6 : 1,
-      fireT: 2.5,
+      hp: 1,
     });
   }
-  if (CW.phase === "island") return cwIslandUpdate(dt, b, fireEdge);
-  if (CW.phase === "over") {
-    if (CW.t > 1.5 && fireEdge) {
-      CW.phase = "island";
-      CW.t = 0;
-      CW.act = 0;
-      CW.actT = 0;
-    }
+  return cwIslandUpdate(dt, b, fireEdge && CW.t > 0.6);
+}
+// (v1.4.26) THE NEXT SCENE: the next of Koos's stories that suits the time of day - the sunset once each evening, the
+// night ones under the stars, and he always wakes up when the night is over
+function cwNextAct() {
+  const n = CW_ACTS.length,
+    night = CW.tod > 0.5 && CW.tod < 0.93, // (from the end of the sunset until just before dawn)
+    idx = (nm) => CW_ACTS.findIndex((a) => a[0] === nm);
+  CW.actT = 0;
+  if (!night && CW.tod > 0.445 && CW.tod < 0.495 && CW.sunsetDay !== CW.day) {
+    CW.sunsetDay = CW.day;
+    CW.act = idx("sunset");
     return;
   }
-  // ---- DEFEND THE ISLAND ----
-  CW.aimX = clamp(CW.aimX + ax * 520 * b.k * dt, b.L + 30, b.Rr - 30);
-  CW.aimY = clamp(CW.aimY + ay * 420 * b.k * dt, b.T + 40 * b.k, b.iy + 10 * b.k);
-  // Koos walks along the beach towards where you aim (a little behind it), so he can dodge too
-  const tx = clamp(CW.aimX, b.cx - b.rw * 0.7, b.cx + b.rw * 0.7);
-  CW.kx += clamp(tx - CW.kx, -150 * b.k * dt, 150 * b.k * dt);
-  if (CW.heli >= 0) return cwHeliUpdate(dt, b);
-  if (fire && CW.cool <= 0) {
-    CW.cool = 0.17;
-    CW.shots.push({ x0: CW.kx, y0: b.iy - 80 * b.ks, x: CW.aimX, y: CW.aimY, t: 0, len: 0.2 });
-    sfx("throw");
+  if (!cwNight() && CW.wasNight) {
+    CW.wasNight = false;
+    CW.act = idx("wake");
+    return;
   }
-  if (flareEdge && CW.flareCool <= 0) cwFlare(b);
-  for (const sh of CW.shots) {
-    sh.t += dt;
-    if (sh.t >= sh.len && !sh.done) {
-      sh.done = true;
-      cwHitAt(sh.x, sh.y, b);
+  for (let i = 1; i <= n; i++) {
+    const j = (CW.act + i) % n,
+      when = CW_ACTS[j][3];
+    if (when === "any" || (when === "night" && night) || (when === "day" && !cwNight() && CW.tod < 0.47)) {
+      CW.act = j;
+      if (CW_ACTS[j][0] === "stargaze") CW.starN = (CW.starN || 0) + 1;
+      if (CW_ACTS[j][0] === "sos") CW.sosAt = CW.t;
+      return;
     }
   }
-  CW.shots = CW.shots.filter((s) => !s.done);
-  // threats
-  CW.foeT -= dt;
-  if (CW.foeT <= 0) {
-    const lv = CW.level,
-      hard = 1 + (lv - 1) * 0.18;
-    CW.foeT = Math.max(0.55, 2.2 / hard - Math.random() * 0.4);
-    const pool = ["crab", "gull", "crab", "gull"];
-    if ((lv - 1) % 4 === 2 || lv > 4) pool.push("meteor", "meteor", "meteor");
-    if ((lv - 1) % 4 === 3 || lv > 4) pool.push("meteor");
-    const kind = pool[Math.floor(Math.random() * pool.length)];
-    cwSpawnFoe(kind, b, hard);
-    if (((lv - 1) % 4 === 3 || (lv > 4 && Math.random() < 0.3)) && !CW.foes.some((f) => f.kind === "ufo"))
-      cwSpawnFoe("ufo", b, hard);
-  }
-  for (const f of CW.foes) cwFoeUpdate(f, dt, b);
-  for (const s of CW.ships)
-    if (s.kind === "pirate" && !s.sunk) {
-      s.fireT -= dt;
-      if (s.fireT <= 0 && s.x > b.L + 80 && s.x < b.Rr - 80) {
-        s.fireT = 2.6 + Math.random() * 1.5;
-        const tx2 = CW.kx + (Math.random() - 0.5) * 120 * b.k;
-        CW.foes.push({
-          kind: "ball",
-          x: s.x,
-          y: s.y - 10 * s.s,
-          x0: s.x,
-          y0: s.y - 10 * s.s,
-          tx: tx2,
-          t: 0,
-          len: 2.4,
-          hp: 1,
-        });
-        sfx("boom");
-        cwFx("smoke", s.x, s.y - 12 * s.s, 0.8);
-      }
-      if (s.sunk) s.y += dt * 20;
-    }
-  CW.foes = CW.foes.filter((f) => !f.dead);
-  for (const e of CW.fx) e.t += dt;
-  CW.fx = CW.fx.filter((e) => e.t < e.len);
-  if (CW.lives <= 0) cwGameOver();
+  CW.act = (CW.act + 1) % n;
 }
-function cwIslandUpdate(dt, b, fireEdge) {
-  CW.tod = (CW.tod + dt / 140) % 1; // (a whole day in two minutes and a bit)
+function cwIslandUpdate(dt, b, skip) {
+  const was = CW.tod;
+  CW.tod = (CW.tod + dt / 320) % 1; // (v1.4.26: a whole day in over five minutes - a long, slow screensaver)
+  if (CW.tod < was) CW.day = (CW.day || 0) + 1;
+  if (cwNight()) CW.wasNight = true;
+  if (cwStorm() && !CW.rainSaid) {
+    CW.rainSaid = true;
+    cwSay("A TROPICAL SHOWER BLOWS OVER", 4);
+  }
+  if (!cwStorm()) CW.rainSaid = false;
   const A = CW_ACTS[CW.act % CW_ACTS.length];
   CW.actT += dt;
-  if (CW.actT >= A[1]) {
-    CW.act++;
-    CW.actT = 0;
-  }
+  if (CW.actT >= A[1] || skip) cwNextAct();
+  const nm = CW_ACTS[CW.act % CW_ACTS.length][0],
+    u = CW.actT;
   // Koos strolls to where each little story happens
   const spot = {
     wake: 0,
@@ -44286,10 +44325,16 @@ function cwIslandUpdate(dt, b, fireEdge) {
     crab: 0.3,
     mouse: -0.05,
     hammock: -0.62,
-  }[A[0]];
+    sos: -0.45 + 0.85 * clamp((u - 1.5) / 6, 0, 1), // (he walks along, dragging a stick, writing as he goes)
+    sunset: 0.25,
+    campfire: -0.22,
+    stargaze: 0.12,
+    moongaze: 0.35,
+    wish: 0.12,
+  }[nm];
   CW.kx += clamp(b.cx + spot * b.rw - CW.kx, -60 * b.k * dt, 60 * b.k * dt);
   // BIOLUMINESCENCE: the first time the sea glows each night, a word about what it is
-  if (cwNight() && CW.tod > 0.6 && !CW.bioSaid) {
+  if (cwNight() && CW.tod > 0.6 && !CW.bioSaid && nm !== "stargaze") {
     CW.bioSaid = true;
     cwSay(
       "THE GLOW ON THE SEA IS BIOLUMINESCENCE\nTINY LIVING CREATURES MAKING THEIR OWN BLUE-GREEN LIGHT",
@@ -44297,23 +44342,25 @@ function cwIslandUpdate(dt, b, fireEdge) {
     );
   }
   if (!cwNight()) CW.bioSaid = false;
-  // the UFO, at night now and then
+  // the UFO, at night now and then (not while he's lying out under the stars or making a wish)
   CW.ufoT -= dt;
-  if (CW.ufoT <= 0 && cwNight() && !CW.foes.length) {
-    CW.ufoT = 70;
+  if (
+    CW.ufoT <= 0 &&
+    cwNight() &&
+    !CW.foes.length &&
+    (nm === "campfire" || nm === "hammock" || nm === "klaas")
+  ) {
+    CW.ufoT = 90;
     CW.foes.push({ kind: "ufo", x: b.L - 60, y: b.T + b.h * 0.22, t: 0, hp: 99, demo: true });
     sfx("ufo");
   }
   for (const f of CW.foes) {
     f.t += dt;
-    if (f.demo) {
-      f.x += (CW.kx - f.x) * Math.min(1, dt * 0.8);
-      if (f.t > 14) f.x += 400 * b.k * dt * (f.t - 14);
-      if (f.t > 17) f.dead = true;
-    }
+    f.x += (CW.kx - f.x) * Math.min(1, dt * 0.8);
+    if (f.t > 14) f.x += 400 * b.k * dt * (f.t - 14);
+    if (f.t > 17) f.dead = true;
   }
   CW.foes = CW.foes.filter((f) => !f.dead);
-  if (fireEdge && CW.t > 0.6) cwStartPlay();
 }
 function cwLifeUpdate(dt, b) {
   // whales, dolphins, a shark fin, seagulls: now and then
@@ -44380,254 +44427,14 @@ function cwLifeUpdate(dt, b) {
   }
   CW.life = CW.life.filter((l) => l.t < l.len && !(l.kind === "bird" && l.x > b.Rr + 30));
 }
-function cwSpawnFoe(kind, b, hard) {
-  const side = Math.random() < 0.5 ? -1 : 1;
-  if (kind === "crab")
-    CW.foes.push({
-      kind,
-      x: b.cx + side * b.rw * 1.05,
-      y: b.iy,
-      dir: -side,
-      sp: (34 + 10 * hard) * b.k,
-      hp: 1,
-      t: 0,
-    });
-  else if (kind === "gull")
-    CW.foes.push({
-      kind,
-      x: side < 0 ? b.L - 30 : b.Rr + 30,
-      y: b.T + b.h * (0.15 + Math.random() * 0.15),
-      dir: -side,
-      sp: (110 + 20 * hard) * b.k,
-      hp: 1,
-      t: 0,
-      dive: 1.6 + Math.random() * 1.5,
-    });
-  else if (kind === "meteor") {
-    const tx = CW.kx + (Math.random() - 0.5) * b.rw * 1.4;
-    CW.foes.push({
-      kind,
-      x0: tx + side * b.w * 0.35,
-      y0: b.T,
-      tx,
-      x: 0,
-      y: 0,
-      t: 0,
-      len: (3.4 - Math.min(1.4, hard * 0.4)) * (0.9 + Math.random() * 0.3),
-      hp: 1,
-    });
-  } else if (kind === "ufo") {
-    CW.foes.push({
-      kind,
-      x: side < 0 ? b.L - 60 : b.Rr + 60,
-      y: b.T + b.h * 0.2,
-      t: 0,
-      hp: 4,
-      beam: 0,
-      grab: 0,
-    });
-    sfx("ufo");
-  }
-}
-function cwFoeUpdate(f, dt, b) {
-  f.t += dt;
-  if (f.kind === "crab") {
-    f.x += f.dir * f.sp * dt * (0.6 + 0.4 * Math.abs(Math.sin(f.t * 6)));
-    if (Math.abs(f.x - CW.kx) < 16 * b.k) {
-      f.dead = true;
-      cwHurt("OUCH! A ROBOT CRAB PINCHED KOOS!", b);
-    }
-  } else if (f.kind === "gull") {
-    if (f.t < f.dive) f.x += f.dir * f.sp * dt;
-    else {
-      // swooping down at Koos's sandwich
-      const dx = CW.kx - f.x,
-        dy = b.iy - 50 * b.k - f.y,
-        d = Math.hypot(dx, dy) || 1;
-      f.x += (dx / d) * f.sp * 1.3 * dt;
-      f.y += (dy / d) * f.sp * 1.3 * dt;
-      if (d < 14 * b.k) {
-        f.dead = true;
-        cwHurt("A ROBO-GULL GOT KOOS!", b);
-      }
-    }
-    if (f.x < b.L - 60 || f.x > b.Rr + 60) f.dead = true;
-  } else if (f.kind === "meteor" || f.kind === "ball") {
-    const u = f.t / f.len;
-    if (f.kind === "meteor") {
-      f.x = lerpA(f.x0, f.tx, u);
-      f.y = lerpA(f.y0, b.iy, u * u);
-    } else {
-      f.x = lerpA(f.x0, f.tx, u);
-      f.y = lerpA(f.y0, b.iy, u) - Math.sin(u * Math.PI) * b.h * 0.25;
-    }
-    if (u >= 1) {
-      f.dead = true;
-      cwFx("boom", f.x, b.iy - 6 * b.k, 0.8);
-      sfx("boom");
-      G.shake = Math.max(G.shake || 0, 5);
-      if (Math.abs(f.x - CW.kx) < 40 * b.k)
-        cwHurt(f.kind === "meteor" ? "A METEOR! TOO CLOSE!" : "A CANNONBALL! TOO CLOSE!", b);
-    }
-  } else if (f.kind === "ufo") {
-    f.x += (CW.kx + Math.sin(f.t * 0.7) * 120 * b.k - f.x) * Math.min(1, dt * 0.6);
-    f.y = b.T + b.h * 0.2 + Math.sin(f.t * 1.3) * 10 * b.k;
-    f.beam =
-      f.t > 3 && f.t % 7 < 4 ? Math.min(1, (f.beam || 0) + dt * 2) : Math.max(0, (f.beam || 0) - dt * 3);
-    if (f.beam > 0.6 && Math.abs(CW.kx - f.x) < 30 * b.k) {
-      f.grab += dt;
-      if (f.grab > 1.6) {
-        f.grab = 0;
-        f.t = 4.5;
-        cwHurt("BEAMED UP... AND DROPPED BACK IN THE SEA!", b);
-      }
-    } else f.grab = Math.max(0, f.grab - dt);
-  }
-}
-function cwHurt(m, b) {
-  if (CW.hurt > 0) return;
-  CW.lives--;
-  CW.hurt = 1.6;
-  cwSay(m, 2.2);
-  sfx("bonk");
-  G.shake = Math.max(G.shake || 0, 7);
-  cwFx("stars", CW.kx, b.iy - 70 * b.k, 1.2);
-}
-function cwFx(kind, x, y, len, extra = {}) {
-  CW.fx.push({ kind, x, y, t: 0, len, ...extra });
-}
-// a coconut lands: what's there?
-function cwHitAt(x, y, b) {
-  const r = 26 * b.k;
-  for (const f of CW.foes) {
-    if (f.dead) continue;
-    const fy = f.kind === "crab" ? f.y - 8 * b.k : f.y,
-      rr = f.kind === "ufo" ? r * 1.8 : r;
-    if (Math.abs(f.x - x) < rr && Math.abs(fy - y) < rr) {
-      f.hp--;
-      cwFx("pop", x, y, 0.4);
-      if (f.hp <= 0) {
-        f.dead = true;
-        const pts = { crab: 150, gull: 120, meteor: 100, ball: 80, ufo: 500 }[f.kind] || 100;
-        CW.score += pts;
-        cwFx("boom", f.x, fy, 0.7);
-        cwFx("pts", f.x, fy - 20 * b.k, 1, { n: pts });
-        sfx(f.kind === "ufo" ? "fanfare" : "smash");
-        if (f.kind === "ufo") cwSay("THE UFO FLEES - BYE BYE!", 2);
-      } else sfx("bonk");
-      return;
-    }
-  }
-  for (const s of CW.ships) {
-    if (s.sunk) continue;
-    const sw = (s.kind === "carrier" ? 120 : s.kind === "sub" ? 34 : 80) * s.s;
-    if (Math.abs(s.x - x) < sw && y > s.y - 40 * s.s && y < s.y + 8 * s.s) {
-      cwFx("pop", x, y, 0.4);
-      if (s.kind === "pirate") {
-        s.hp--;
-        s.hitT = 0.2;
-        sfx("bonk");
-        if (s.hp <= 0) {
-          s.sunk = true;
-          CW.score += 600;
-          cwFx("boom", s.x, s.y - 10 * s.s, 1);
-          cwFx("pts", s.x, s.y - 40 * s.s, 1, { n: 600 });
-          cwSay("THE ROBOT PIRATES ARE SUNK!", 2);
-          sfx("fanfare");
-        }
-      } else {
-        // never the ships going by - they're the way home!
-        CW.score = Math.max(0, CW.score - 200);
-        s.hitT = 0.4;
-        cwFx("pts", s.x, s.y - 40 * s.s, 1, { n: -200 });
-        cwSay(s.kind === "cruise" ? "OOPS! NOT THE TOURISTS!" : "OOPS! THAT'S YOUR WAY HOME!", 1.8);
-        sfx("aww");
-      }
-      return;
-    }
-  }
-  cwFx("splash", x, y, 0.6);
-}
-// the flare: signal a passing ship
-function cwFlare(b) {
-  CW.flareCool = 1.2;
-  sfx("flare");
-  cwFx("flare", CW.kx, b.iy - 40 * b.k, 1.6, { tx: CW.aimX, ty: CW.aimY });
-  for (const s of CW.ships) {
-    if (s.kind === "pirate" || s.signaled) continue;
-    const sw = (s.kind === "carrier" ? 130 : 90) * s.s;
-    if (Math.abs(s.x - CW.aimX) < sw && Math.abs(s.y - 15 * s.s - CW.aimY) < 60 * s.s + 30 * b.k) {
-      s.signaled = true;
-      CW.signals++;
-      CW.score += 250;
-      cwFx("pts", s.x, s.y - 50 * s.s, 1.2, { n: 250 });
-      sfx("bell");
-      if (CW.signals >= 3) {
-        CW.heli = 0;
-        CW.foes = [];
-        cwSay("THEY'VE SEEN HIM! HERE COMES THE RESCUE HELICOPTER!", 3);
-        sfx("bonus");
-      } else cwSay(CW_SHIP_NAMES[s.kind] + " SAW THE FLARE! " + CW.signals + " OF 3", 2);
-      return;
-    }
-  }
-  cwSay("THE FLARE GOES UP... NOBODY THERE TO SEE IT", 1.5);
-}
-function cwHeliUpdate(dt, b) {
-  CW.heli += dt;
-  if (CW.heli > 6) {
-    const bonus = 1000 * CW.level;
-    CW.score += bonus;
-    cwSay("RESCUED! +" + bonus + " - BUT THE NEXT ISLAND AWAITS...", 3);
-    sfx("fanfare");
-    cwLevel(CW.level + 1);
-  }
-}
-function cwGameOver() {
-  CW.phase = "over";
-  CW.t = 0;
-  CW.coins = Math.max(1, Math.round(CW.score / 150));
-  addCoins(CW.coins);
-  if (CW.score > CW.best) {
-    CW.best = CW.score;
-    store.set("cwBest", CW.best);
-  }
-  sfx("over");
-}
 function castawayPointer(type, x, y) {
-  if (type === "down") {
-    if (CW.phase !== "play") {
-      if (CW.phase === "island" && CW.t > 0.6) cwStartPlay();
-      else if (CW.phase === "over" && CW.t > 1.5) {
-        CW.phase = "island";
-        CW.t = 0;
-      }
-      return true;
-    }
-    CW.aimX = x;
-    CW.aimY = y;
-    // a tap on a passing ship signals it; anywhere else, a coconut
-    const b = cwBox(),
-      onShip = CW.ships.some(
-        (s) =>
-          s.kind !== "pirate" &&
-          !s.signaled &&
-          Math.abs(s.x - x) < 90 * s.s &&
-          Math.abs(s.y - 15 * s.s - y) < 60 * s.s + 20 * b.k
-      );
-    if (onShip && CW.flareCool <= 0) cwFlare(b);
-    else CW.ptr = true;
-  } else if (type === "move" && CW.phase === "play") {
-    CW.aimX = x;
-    CW.aimY = y;
-  } else if (type === "up") CW.ptr = false;
+  if (type === "down") CW.ptr = true; // (v1.4.26: a tap moves on to the next scene)
+  void x;
+  void y;
   return true;
 }
 window.addEventListener("contextmenu", (e) => {
-  if (G.state === "castaway") {
-    e.preventDefault();
-    if (CW.phase === "play" && CW.flareCool <= 0) cwFlare(cwBox()); // (a right click: the flare)
-  }
+  if (G.state === "castaway") e.preventDefault();
 });
 // ---------------------------------------------------------------- drawing
 // (v1.4.11: all of it redone - a deeper, lonelier sea, a starry night with the Milky Way, finer ships, more sea life,
@@ -44876,39 +44683,21 @@ function drawCastaway(t) {
   cwDrawMouse(t, b, dark);
   cwDrawNut(t, b, dark);
   cwDrawLife(t, b, dark, true); // (the divers and the shark, nearer than the island's far side)
-  // the threats, the coconuts in flight, the effects
+  // the UFO (now and then, at night)
   for (const f of CW.foes) cwDrawFoe(f, t, b);
-  for (const sh of CW.shots) {
-    const u = sh.t / sh.len,
-      x = lerpA(sh.x0, sh.x, u),
-      y = lerpA(sh.y0, sh.y, u) - Math.sin(u * Math.PI) * 30 * k;
-    disc(x, y, 4 * k * (1 - u * 0.5), col("#6a4a22"));
-    disc(x - 1 * k, y - 1 * k, 1.4 * k, col("#a8804a"));
-  }
-  for (const e of CW.fx) cwDrawFx(e, t, b);
-  if (CW.heli >= 0) cwDrawHeli(t, b);
-  // the storm: rain and lightning
+  // (v1.4.26) the night scenes' own sights: his constellations, the shooting star, the Moon through the spyglass
+  cwDrawNightScenes(t, b, dark);
+  // a passing tropical shower: soft slanting rain (no lightning - it's a gentle screensaver)
   if (cwStorm()) {
+    const ra = Math.min(1, (CW.tod - 0.27) / 0.006, (0.32 - CW.tod) / 0.006);
     for (let i = 0; i < 140; i++) {
       const x = L + ((hash(i * 2.1) * w + t * 300) % w),
         y = T + ((hash(i * 3.3) * h + t * 700 + i * 13) % h);
-      line(x, y, x - 4 * k, y + 14 * k, 1, withA(col("#c8d8f0"), 0.35));
+      line(x, y, x - 4 * k, y + 14 * k, 1, withA(col("#c8d8f0"), 0.35 * ra));
     }
-    if (t % 7 < 0.15 && !COMFORT.calm) rect(L, T, w, h, withA(C.white, 0.3 * (1 - (t % 7) / 0.15)));
   }
   // a soft vignette - the edges of the world
   vgrad(L, B - h * 0.18, w, h * 0.18, withA(C.black, 0), withA(C.black, 0.35));
-  // the aim (in the game)
-  if (CW.phase === "play" && CW.heli < 0) {
-    const ax = CW.aimX,
-      ay = CW.aimY,
-      cc = withA(col("#ffd24d"), 0.9);
-    arc(ax, ay, 12 * k, 0, 6.283, 1.6 * k, cc, 20);
-    line(ax - 18 * k, ay, ax - 6 * k, ay, 1.6 * k, cc);
-    line(ax + 6 * k, ay, ax + 18 * k, ay, 1.6 * k, cc);
-    line(ax, ay - 18 * k, ax, ay - 6 * k, 1.6 * k, cc);
-    line(ax, ay + 6 * k, ax, ay + 18 * k, 1.6 * k, cc);
-  }
 }
 // (v1.4.25) THE WATER, CLOSER: hundreds of little wave crests, tiny and packed near the horizon, bigger nearer to us -
 // each a bright lit edge over its own dark trough - and a band of haze lying along the horizon where sea meets sky
@@ -45391,11 +45180,7 @@ function cwDrawIsland(t, b, dark) {
   {
     const A = CW.phase === "island" ? CW_ACTS[CW.act % CW_ACTS.length][0] : "play",
       kx2 = cx - rw * 0.4,
-      hop =
-        (A === "klaas" && Math.sin(CW.actT * 3) > 0.6) ||
-        CW.fx.some((e) => e.kind === "pts" && e.n > 0 && e.t < 0.4)
-          ? Math.abs(Math.sin(t * 10)) * 5 * ks
-          : 0,
+      hop = A === "klaas" && Math.sin(CW.actT * 3) > 0.6 ? Math.abs(Math.sin(t * 10)) * 5 * ks : 0,
       ky2 = iy - 5 * ks - hop,
       look = clamp((CW.kx - kx2) / (60 * ks), -1, 1),
       blink = (t + 0.7) % 3.6 < 0.14;
@@ -45983,8 +45768,29 @@ function cwDrawProps(t, b, dark) {
   } else if (A === "crab") {
     const x = lerpA(cx + rw * 0.95, CW.kx + 12 * k, Math.min(1, u / 3)) + (u > 4.5 ? (u - 4.5) * 50 * k : 0);
     cwDrawCrab(x, iy, k, t, false);
+  } else if (A === "campfire") cwDrawFire(t, b, u);
+  // (v1.4.26) S.O.S. written in the sand - it stays a while, then the tide slowly smooths it away
+  if (CW.sosAt !== undefined && CW.t - CW.sosAt < 60) {
+    const fade = clamp((60 - (CW.t - CW.sosAt)) / 20, 0, 1),
+      writing = A === "sos",
+      c = withA(mix(col("#8a6a38"), col("#2a2418"), dark * 0.6), 0.9 * fade),
+      L0 = [
+        [1, 0, 0, 0, 0, 0.5, 1, 0.5, 1, 1, 0, 1],
+        [0, 0, 1, 0, 1, 1, 0, 1, 0, 0],
+        [1, 0, 0, 0, 0, 0.5, 1, 0.5, 1, 1, 0, 1],
+      ];
+    for (let i = 0; i < 3; i++) {
+      const lx = cx + rw * (-0.3 + i * 0.26),
+        rev = writing ? clamp((CW.kx - lx) / (16 * k) + 0.5, 0, 1) : 1,
+        P = L0[i],
+        n = Math.max(2, Math.ceil((P.length / 2) * rev));
+      if (rev <= 0) continue;
+      const pts = [];
+      for (let q = 0; q < n * 2 && q < P.length; q += 2)
+        pts.push(lx + (P[q] - 0.5) * 18 * k, iy + 2 * k + P[q + 1] * 7 * k);
+      polyline(pts, 2 * k, c);
+    }
   }
-  void dark;
 }
 function cwDrawGull(x, y, k, t, robo) {
   const fl = Math.sin(t * 12) * 6 * k;
@@ -46131,20 +45937,8 @@ function cwDrawUfo(x, y, k, t, beam, groundY, alpha = 1) {
   pop();
 }
 function cwDrawFoe(f, t, b) {
-  const k = b.k,
-    ks = b.ks;
-  if (f.kind === "crab") cwDrawCrab(f.x, f.y, ks * 1.3, t, true);
-  else if (f.kind === "gull") cwDrawGull(f.x, f.y, k * 1.3, t, true);
-  else if (f.kind === "meteor" || f.kind === "ball") {
-    const met = f.kind === "meteor";
-    if (met) {
-      R.setAdd(true);
-      line(f.x, f.y, f.x - (f.tx - f.x0) * 0.08, f.y - b.h * 0.08, 6 * k, withA(col("#ffb040"), 0.5));
-      glow(f.x, f.y, 16 * k, withA(col("#ffd080"), 0.8));
-      R.setAdd(false);
-    }
-    disc(f.x, f.y, (met ? 7 : 5) * k, col(met ? "#6a4a3a" : "#1a1a1a"));
-  } else if (f.kind === "ufo") {
+  const k = b.k;
+  if (f.kind === "ufo") {
     // (it comes in from far off, small, and grows; the demo one zooms away at the end with a streak)
     const grow = Math.min(1, f.t / 2.5),
       leave = f.demo && f.t > 14 ? Math.min(1, (f.t - 14) / 2) : 0,
@@ -46165,98 +45959,202 @@ function cwDrawFoe(f, t, b) {
     cwDrawUfo(f.x, f.y, sc, t, beam, b.iy, 1);
   }
 }
-function cwDrawFx(e, t, b) {
-  const k = b.k,
-    u = e.t / e.len;
-  if (e.kind === "boom") {
-    R.setAdd(true);
-    glow(e.x, e.y, (20 + u * 50) * k, withA(col("#ffb040"), 0.8 * (1 - u)));
-    R.setAdd(false);
-    for (let i = 0; i < 8; i++) {
-      const a = (i / 8) * 6.283;
-      disc(
-        e.x + Math.cos(a) * u * 40 * k,
-        e.y + Math.sin(a) * u * 30 * k,
-        (5 - u * 4) * k,
-        withA(col("#6a5a4a"), 1 - u)
-      );
-    }
-  } else if (e.kind === "pop") {
-    for (let i = 0; i < 6; i++) {
-      const a = (i / 6) * 6.283;
-      disc(
-        e.x + Math.cos(a) * u * 18 * k,
-        e.y + Math.sin(a) * u * 18 * k,
-        2 * k,
-        withA(col("#8a6a3a"), 1 - u)
-      );
-    }
-  } else if (e.kind === "splash") {
-    for (let i = 0; i < 6; i++)
-      disc(
-        e.x + (i - 2.5) * 4 * k,
-        e.y - Math.sin(u * Math.PI) * (10 + i * 2) * k,
-        2 * k,
-        withA(C.white, 0.8 * (1 - u))
-      );
-  } else if (e.kind === "pts") {
-    pixText(
-      (e.n > 0 ? "+" : "") + e.n,
-      e.x,
-      e.y - u * 30 * k,
-      1.8 * k,
-      withA(col(e.n > 0 ? "#ffd24d" : "#ff5f5f"), 1 - u)
-    );
-  } else if (e.kind === "smoke") {
-    disc(e.x, e.y - u * 20 * k, (6 + u * 14) * k, withA(col("#c8c8d0"), 0.6 * (1 - u)));
-  } else if (e.kind === "stars") {
-    for (let i = 0; i < 4; i++) {
-      const a = t * 5 + (i / 4) * 6.283;
-      pixText(
-        "*",
-        e.x + Math.cos(a) * 14 * k,
-        e.y + Math.sin(a) * 5 * k,
-        2 * k,
-        withA(col("#ffd24d"), 1 - u)
-      );
-    }
-  } else if (e.kind === "flare") {
-    const x = lerpA(e.x, e.tx, Math.min(1, u * 1.6)),
-      y = lerpA(e.y, Math.min(e.ty, e.y - 120 * k), Math.min(1, u * 1.6));
-    R.setAdd(true);
-    glow(x, y, (14 + 8 * Math.sin(t * 30)) * k, withA(col("#ff4030"), 1 - u * 0.6));
-    R.setAdd(false);
-    disc(x, y, 3 * k, col("#fff0d0"));
-  }
+// (v1.4.26) THE CAMPFIRE: a ring of stones, crossed driftwood, flickering flames, sparks drifting up, warm light on the sand
+function cwFirePos(b) {
+  return { x: b.cx - 0.22 * b.rw + 40 * b.ks * CW_KOOS, y: b.iy };
 }
-function cwDrawHeli(t, b) {
-  const k = b.k,
-    u = CW.heli / 6,
-    x = lerpA(b.Rr + 80 * k, CW.kx, Math.min(1, u * 2)) - (u > 0.75 ? (u - 0.75) * 4 * b.w : 0),
-    y = lerpA(b.T + 40 * k, b.iy - 110 * k, Math.min(1, u * 2)) - (u > 0.75 ? (u - 0.75) * 400 * k : 0);
-  quad4(
-    x - 30 * k,
-    y - 10 * k,
-    x + 20 * k,
-    y - 12 * k,
-    x + 26 * k,
-    y + 8 * k,
-    x - 26 * k,
-    y + 10 * k,
-    col("#e83a2a")
-  );
-  disc(x + 14 * k, y - 2 * k, 9 * k, withA(col("#9fd8ff"), 0.85), 8 * k);
-  line(x - 30 * k, y - 4 * k, x - 64 * k, y - 8 * k, 4 * k, col("#e83a2a"));
-  line(
-    x - 50 * k * Math.cos(t * 30),
-    y - 16 * k,
-    x + 50 * k * Math.cos(t * 30),
-    y - 16 * k,
-    2 * k,
-    col("#2a2a30")
-  );
-  line(x - 26 * k, y + 16 * k, x + 22 * k, y + 16 * k, 1.6 * k, col("#2a2a30"));
-  if (u > 0.4 && u < 0.75) line(x, y + 10 * k, CW.kx, b.iy - 60 * k, 1.2 * k, col("#e8e0c8")); // the rope ladder
+function cwDrawFire(t, b, u) {
+  const { x, y } = cwFirePos(b),
+    k = b.ks * 1.3,
+    on = Math.min(1, u / 1.5), // (it catches)
+    fl = 0.8 + 0.2 * Math.sin(t * 13) * Math.sin(t * 7.3);
+  R.setAdd(true);
+  glowE(x, y, 60 * k, 10 * k, withA(col("#ff9a40"), 0.35 * on * fl)); // (its light on the sand)
+  R.setAdd(false);
+  for (let i = 0; i < 7; i++)
+    disc(x + (i - 3) * 3.4 * k, y - (i % 2) * 0.6 * k, 2 * k, col(i % 2 ? "#6a6a72" : "#8a8a92"), 1.5 * k); // stones
+  line(x - 8 * k, y - 1 * k, x + 7 * k, y - 4 * k, 2.2 * k, col("#5a3a22"));
+  line(x - 7 * k, y - 4 * k, x + 8 * k, y - 1 * k, 2.2 * k, col("#6a4a2a")); // driftwood
+  R.setAdd(true);
+  for (let i = 0; i < 4; i++) {
+    const ph = t * (5 + i) + i * 2,
+      hgt = (12 + 6 * Math.sin(ph) + (i === 1 ? 6 : 0)) * k * on,
+      bw = (5 - i * 0.6) * k,
+      ox = (i - 1.5) * 2.4 * k + Math.sin(ph * 0.7) * 1.2 * k,
+      cc = col(["#ff4a1a", "#ff8a2a", "#ffc04a", "#fff0a0"][i]);
+    tri(
+      x + ox - bw,
+      y - 2 * k,
+      x + ox + bw,
+      y - 2 * k,
+      x + ox + Math.sin(ph) * 2 * k,
+      y - 2 * k - hgt,
+      withA(cc, 0.75)
+    );
+  }
+  glow(x, y - 6 * k, 22 * k * fl, withA(col("#ffa040"), 0.45 * on));
+  for (let i = 0; i < 12; i++) {
+    const f = (t * 0.45 + hash(i * 3.3)) % 1;
+    disc(
+      x + (hash(i * 1.7) - 0.5) * 10 * k + Math.sin(t * 2 + i) * 4 * k * f,
+      y - 6 * k - f * 50 * k,
+      0.9 * k * (1 - f),
+      withA(col("#ffd080"), (1 - f) * on)
+    ); // sparks drifting up
+  }
+  R.setAdd(false);
+  disc(x, y - 18 * k - ((t * 6) % 10) * k, 4 * k, withA(col("#8a8a92"), 0.12 * on)); // (a wisp of smoke)
+}
+// (v1.4.26) THE NIGHT SCENES' SIGHTS (and the plane over the S.O.S.): drawn over the scene, after Koos
+function cwDrawNightScenes(t, b, dark) {
+  const { L, T, w, h, hz, k } = b,
+    sh = hz - T,
+    A = CW_ACTS[CW.act % CW_ACTS.length],
+    u = CW.actT,
+    len = A[1],
+    out = Math.min(1, (len - u) / 1.5);
+  // the campfire's warm light falls on Koos and Muis
+  if (A[0] === "campfire") {
+    const { x, y } = cwFirePos(b);
+    R.setAdd(true);
+    glow(
+      x - 10 * k,
+      y - 20 * k,
+      70 * k,
+      withA(col("#ff8a30"), 0.16 * Math.min(1, u / 1.5) * (0.85 + 0.15 * Math.sin(t * 11)))
+    );
+    R.setAdd(false);
+  }
+  // HIS CONSTELLATIONS: three each night, joined up star by star, line by line, then named
+  if (A[0] === "stargaze") {
+    const S = Math.min(w * 0.24, sh * 0.48),
+      slots = [
+        [0.2, 0.34],
+        [0.5, 0.2],
+        [0.8, 0.38],
+      ];
+    for (let i = 0; i < 3; i++) {
+      const c = CW_CONST[((CW.starN || 1) * 3 + i) % CW_CONST.length],
+        st = 2 + i * 6.5,
+        q = u - st;
+      if (q < 0) continue;
+      const ox = L + w * slots[i][0] - S / 2,
+        oy = T + sh * slots[i][1],
+        P = c.p.map(([px, py]) => [ox + px * S, oy + py * S * 0.8]),
+        aSt = Math.min(1, q) * out,
+        dim = q > 6 ? 0.55 : 1,
+        nl = clamp((q - 1) / 3, 0, 1) * c.l.length;
+      for (let j = 0; j < c.l.length; j++) {
+        const f = clamp(nl - j, 0, 1);
+        if (f <= 0) break;
+        const [p0, p1] = [P[c.l[j][0]], P[c.l[j][1]]];
+        line(
+          p0[0],
+          p0[1],
+          lerpA(p0[0], p1[0], f),
+          lerpA(p0[1], p1[1], f),
+          1 * k,
+          withA(col("#9fc8ff"), 0.5 * out * dim)
+        );
+      }
+      R.setAdd(true);
+      for (const [px, py] of P) {
+        glow(px, py, 7 * k, withA(col("#cfe0ff"), 0.5 * aSt));
+        disc(px, py, 1.5 * k, withA(C.white, aSt));
+      }
+      R.setAdd(false);
+      const an = clamp((q - 3.6) / 1, 0, 1) * out * dim;
+      if (an > 0) pixText(c.name, ox + S / 2, oy + S * 0.8 + 14 * k, 1.7 * k, withA(col("#cfe0ff"), an));
+    }
+  }
+  // THE SHOOTING STAR he wishes on: a long bright streak, sparkling, across the sky
+  if (A[0] === "wish" && u > 1 && u < 2.8) {
+    const q = (u - 1) / 1.8,
+      x0 = L + w * 0.2,
+      y0 = T + sh * 0.1,
+      x1 = L + w * 0.64,
+      y1 = T + sh * 0.4,
+      hx = lerpA(x0, x1, q),
+      hy = lerpA(y0, y1, q),
+      fa = Math.min(1, (1 - q) * 4);
+    R.setAdd(true);
+    for (let i = 0; i < 10; i++) {
+      const f0 = Math.max(0, q - (i + 1) * 0.035),
+        f1 = Math.max(0, q - i * 0.035);
+      line(
+        lerpA(x0, x1, f0),
+        lerpA(y0, y1, f0),
+        lerpA(x0, x1, f1),
+        lerpA(y0, y1, f1),
+        (2.4 - i * 0.2) * k,
+        withA(col("#e8f0ff"), 0.7 * (1 - i / 10) * fa)
+      );
+    }
+    glow(hx, hy, 14 * k, withA(C.white, 0.9 * fa));
+    for (let i = 0; i < 6; i++) {
+      const f = Math.max(0, q - hash(i * 5.1) * 0.3);
+      disc(
+        lerpA(x0, x1, f) + (hash(i) - 0.5) * 6 * k,
+        lerpA(y0, y1, f) + hash(i * 2) * 5 * k,
+        0.9 * k,
+        withA(col("#fff4c0"), 0.8 * fa)
+      );
+    }
+    R.setAdd(false);
+  }
+  // THE MOON THROUGH HIS SPYGLASS: what he sees, in a round view - big, close, its seas and craters
+  if (A[0] === "moongaze" && u > 2) {
+    const a = Math.min(1, (u - 2) * 1.5) * out,
+      m = cwSun(b),
+      R0 = Math.min(w, h) * 0.15,
+      vx = L + w * (m.x < L + w * 0.5 ? 0.76 : 0.24),
+      vy = T + Math.max(sh * 0.42, R0 + 50 * k),
+      mx = vx + Math.sin(t * 0.5) * R0 * 0.06,
+      my = vy + Math.cos(t * 0.37) * R0 * 0.05,
+      mr = R0 * 0.72;
+    disc(vx, vy, R0, withA(col("#02030a"), 0.95 * a));
+    R.setAdd(true);
+    glow(mx, my, mr * 1.5, withA(col("#c8d8ff"), 0.25 * a));
+    R.setAdd(false);
+    disc(mx, my, mr, withA(col("#d8dce6"), a));
+    for (const [dx, dy, rx, ry] of [
+      [-0.3, -0.25, 0.32, 0.26],
+      [0.22, -0.34, 0.24, 0.18],
+      [0.3, 0.12, 0.26, 0.2],
+      [-0.12, 0.3, 0.2, 0.15],
+      [-0.52, 0.04, 0.13, 0.2],
+    ])
+      disc(mx + dx * mr, my + dy * mr, rx * mr, withA(col("#8f97aa"), 0.8 * a), ry * mr); // (the dark seas)
+    for (let i = 0; i < 26; i++) {
+      const an = hash(i * 7.1) * 6.283,
+        rr = Math.sqrt(hash(i * 3.9)) * 0.88 * mr,
+        cr = (0.02 + hash(i * 1.3) * 0.06) * mr,
+        cx2 = mx + Math.cos(an) * rr,
+        cy2 = my + Math.sin(an) * rr;
+      disc(cx2, cy2, cr, withA(col("#aab0c0"), a));
+      disc(cx2 + cr * 0.3, cy2 + cr * 0.3, cr * 0.6, withA(col("#eef0f6"), 0.8 * a)); // (lit far rims)
+    }
+    arc(mx + mr * 0.08, my + mr * 0.08, mr * 0.94, -0.6, 2.6, mr * 0.12, withA(col("#7a8296"), 0.5 * a), 28); // (shading at the edge)
+    arc(vx, vy, R0 * 0.92, 0, 6.283, R0 * 0.16, withA(col("#02030a"), 0.85 * a), 48); // (the dark edge of the eyepiece)
+    arc(vx, vy, R0 + 2 * k, 0, 6.283, 4 * k, withA(col("#c89a3a"), a), 48); // (the brass rim)
+    arc(vx, vy, R0 + 4.5 * k, 0, 6.283, 1.2 * k, withA(col("#8a6a2a"), a), 48);
+  }
+  // THE PLANE over the S.O.S.: high up, a contrail behind it - it flies on
+  if (A[0] === "sos" && u > 6) {
+    const q = (u - 6) / 7,
+      px = lerpA(L - 40 * k, L + w + 40 * k, q),
+      py = T + (hz - T) * 0.42,
+      pk = k * 1.1,
+      pc = col(dark > 0.5 ? "#c8ccd8" : "#4a5468"); // (a dark shape against the bright sky, away from the sun's glare)
+    for (let i = 0; i < 24; i++) {
+      const tx = px - (12 + i * 9) * pk;
+      if (tx > L) disc(tx, py + 1 * pk, (1.6 + i * 0.08) * pk, withA(C.white, 0.45 * (1 - i / 24)));
+    }
+    disc(px, py, 11 * pk, pc, 2 * pk); // the body
+    tri(px - 2 * pk, py, px + 3 * pk, py, px - 4 * pk, py + 7 * pk, shade(pc, 0.85)); // the wing
+    tri(px - 9 * pk, py, px - 6 * pk, py, px - 11 * pk, py - 5 * pk, pc); // the tail
+    if (Math.sin(t * 6) > 0) disc(px + 1 * pk, py + 2 * pk, 0.9 * pk, col("#ff4040")); // (a blinking light)
+  }
 }
 // KOOS VAN SCHOOR: sunburnt, a straw hat, a BIG BUSHY BEARD, a ragged red shirt, patched blue shorts tied with rope,
 // bare feet - and legs that really walk: thighs and shins, knees bending, a heel-and-toe step
@@ -46264,8 +46162,7 @@ function cwDrawKoos(t, b, dark) {
   const ks = b.ks,
     k = ks * CW_KOOS,
     A = CW.phase === "island" ? CW_ACTS[CW.act % CW_ACTS.length][0] : "play",
-    u = CW.actT,
-    hurt = CW.hurt > 0 && Math.sin(t * 30) > 0;
+    u = CW.actT;
   let x = CW.kx,
     y = b.iy;
   const sk = mix(col("#e8986a"), col("#3a2a20"), dark * 0.5),
@@ -46275,7 +46172,6 @@ function cwDrawKoos(t, b, dark) {
     hat = mix(col("#e8c860"), col("#4a4020"), dark * 0.4),
     beard = mix(col("#8a6440"), col("#2a1e14"), dark * 0.4),
     beardD = shade(beard, 0.72);
-  if (hurt) return;
   // ---- RELAXING in his reclining chair, a pina colada in a coconut shell, a paper umbrella in it ----
   if (A === "relax") {
     const cxr = b.cx + b.rw * 0.18,
@@ -46348,10 +46244,10 @@ function cwDrawKoos(t, b, dark) {
   const moveV = CW.kv || 0;
   const gk = CW.kg || 0, // (how much he's walking: 0 standing .. 1 striding - eased in and out)
     face =
-      CW.phase === "play"
-        ? CW.aimX < x
+      (A === "sunset" || A === "moongaze") && Math.abs(moveV) <= 6
+        ? cwSun(b).x < x
           ? -1
-          : 1
+          : 1 // (v1.4.26: facing the setting sun, or the Moon)
         : Math.abs(moveV) > 6
           ? moveV < 0
             ? -1
@@ -46367,14 +46263,30 @@ function cwDrawKoos(t, b, dark) {
                 : 1,
     ph = (face > 0 ? 1 : -1) * (CW.kph || 0), // (walking backwards plays the stride backwards)
     cling = CW.foes.some((f) => f.kind === "ufo" && f.demo && f.t > 3 && f.t < 13),
-    kneel = (A === "castle" && u < 7.5) || (A === "mouse" && u < 6);
+    kneel = (A === "castle" && u < 7.5) || (A === "mouse" && u < 6),
+    // (v1.4.26) SITTING on the sand - watching the sunset, by the campfire, under the stars - once he's got there
+    sit =
+      !cling &&
+      (CW.kg || 0) < 0.5 &&
+      (A === "sunset" || A === "campfire" || A === "stargaze" || A === "wish"),
+    lean = sit && A === "stargaze" ? -0.5 : 0, // (lying back on his elbows, gazing up)
+    lookUp =
+      A === "wish" && u > 1 && u < 6
+        ? 0.45
+        : A === "moongaze"
+          ? 0.35
+          : A === "sos" && u > 7.5
+            ? 0.3
+            : A === "stargaze"
+              ? 0.15
+              : 0;
   push();
   translate(x, y);
   scaleXY(face * k, k);
   disc(0, 0, 9, withA(C.black, 0.22), 2.4); // his shadow
   const sway = Math.sin(t * 1.4) * 0.6 * (1 - gk),
     hipLift = walkGait(ph)[2] * 30 * gk, // (the hips rise over the planted leg and dip between steps)
-    bobY = -hipLift + (kneel ? 7 : 0), // (down on one knee: the whole body lowers)
+    bobY = -hipLift + (kneel ? 7 : 0) + (sit ? 17 : 0), // (down on one knee - or sitting - the whole body lowers)
     skL = mix(sk, C.white, 0.12), // (the lit side of a limb)
     out = shade(sk, 0.62); // (a thin dark edge round him)
   // a tapered, shaded limb segment: w1 at the start, w2 at the end, lit on one side
@@ -46406,7 +46318,15 @@ function cwDrawKoos(t, b, dark) {
     const hx = sd * 2.2,
       hy = -19 + bobY;
     let kx2, ky2, fx, fy, fa;
-    if (kneel) {
+    if (sit) {
+      // sitting: knees drawn up (or, lying back under the stars, one leg stretched out, the other knee up)
+      const out2 = lean && sd < 0;
+      kx2 = hx + (out2 ? 9.2 : 7);
+      ky2 = out2 ? hy + 1 : hy - 9.5;
+      fx = hx + (out2 ? 18 : 11.5);
+      fy = 0;
+      fa = out2 ? -0.6 : 0;
+    } else if (kneel) {
       // down on one knee: the far leg's foot planted in front, its knee up; the near knee in the sand, foot behind
       kx2 = hx + (sd < 0 ? 7.5 : 1.5);
       ky2 = sd < 0 ? hy + 1 : -1.4;
@@ -46451,7 +46371,14 @@ function cwDrawKoos(t, b, dark) {
   rect(-3, -24 + bobY, 3, 3, mix(shorts, col("#e8c860"), 0.5)); // a patch
   rect(-6.5, -26.5 + bobY, 13, 1.6, col("#c8a060")); // the rope belt
   line(4, -25.5 + bobY, 5.5, -22 + bobY, 0.6, col("#c8a060")); // (its knot's loose end)
-  leg(1, 0);
+  const sitFront = sit && !lean; // (sitting with his knees up: the near leg comes in front of his shirt)
+  if (!sitFront) leg(1, 0);
+  if (lean) {
+    push(); // (leaning back from the hips)
+    translate(0, -19 + bobY);
+    rotate(lean);
+    translate(0, 19 - bobY);
+  }
   // the ragged shirt: shoulders, collar points, torn hem and sleeves, a bony chest at the open neck
   const sy0 = -44 + bobY;
   disc(-5, sy0 + 2.6, 3, shade(shirt, 0.85));
@@ -46523,14 +46450,68 @@ function cwDrawKoos(t, b, dark) {
         mix(c, out, 0.25)
       ); // fingers
   };
-  if (CW.phase === "play") {
-    const thr = CW.cool > 0.08;
-    arm(-6, -10, -36 + bobY, -12, -28 + bobY, true);
-    arm(6, thr ? 12 : 10, thr ? -50 : -40 + bobY, thr ? 16 : 11, thr ? -60 : -50 + bobY);
-    if (!thr) disc(11, -53 + bobY, 4, col("#6a4a22")); // a coconut ready
-  } else if (cling) {
+  if (sitFront) leg(1, 0);
+  if (cling) {
     arm(-6, -12, -54, -16, -62, true);
     arm(6, -6, -56, -12, -64); // (holding on to the palm for dear life)
+  } else if (sit && A === "sunset") {
+    // (v1.4.26) arms round his knees, watching the sun go down
+    arm(-6, 4, -18, 9, -13, true);
+    arm(6, 9, -19, 12, -12);
+  } else if (sit && A === "campfire") {
+    // toasting a fish on a long stick over the fire
+    const bob = Math.sin(t * 0.8) * 1.2;
+    arm(-6, 4, -18, 9, -13, true);
+    arm(6, 10, -20, 15, -17 + bob * 0.3);
+    line(15, -17 + bob * 0.3, 40, -21 + bob, 0.9, col("#7a5a3a")); // the stick
+    push();
+    translate(38, -21 + bob);
+    rotate(0.2);
+    disc(0, 0, 4.2, mix(col("#c8a070"), col("#7a4a22"), Math.min(1, u / 14)), 1.9); // the fish, browning
+    tri(-4, 0, -7, -2.4, -7, 2.4, mix(col("#c8a070"), col("#6a3a1a"), Math.min(1, u / 14)));
+    disc(2.6, -0.4, 0.45, col("#1a1a1a"));
+    pop();
+  } else if (sit && A === "stargaze") {
+    // hands behind his head
+    arm(-6, -9, -42 + bobY, -3, -48 + bobY, true);
+    arm(6, 7, -44 + bobY, 1, -49 + bobY);
+  } else if (sit && A === "wish") {
+    if (u > 1 && u < 5.5) {
+      arm(-6, 4, -18, 9, -13, true);
+      arm(6, 11, -29, 16, -39); // (there! a shooting star!)
+    } else if (u >= 5.5) {
+      arm(-6, 1, -19, 5, -25, true);
+      arm(6, 7, -18, 5.5, -25); // (hands together - eyes shut - a wish)
+    } else {
+      arm(-6, 4, -18, 9, -13, true);
+      arm(6, 9, -19, 12, -12);
+    }
+  } else if (A === "moongaze") {
+    // the spyglass raised high, at the Moon
+    const lift = Math.min(1, u * 1.2),
+      sw = Math.sin(u * 0.6) * 0.04;
+    arm(-6, -2, -46, 6, -54 * lift - 30 * (1 - lift), true);
+    arm(6, 10, -47, 15, -60 * lift - 30 * (1 - lift));
+    push();
+    translate(6, -55 * lift - 28 * (1 - lift));
+    rotate(-0.75 * lift - sw);
+    rect(0, -2.2, 10, 4.4, col("#c89a3a"));
+    rect(9, -2.8, 9, 5.6, col("#d8aa4a"));
+    rect(17, -3.2, 3, 6.4, col("#a87a2a"));
+    line(9, -2.8, 9, 2.8, 0.6, col("#8a6a2a"));
+    pop();
+  } else if (A === "sos") {
+    if (u < 7.5) {
+      // dragging a stick through the sand, writing as he walks
+      arm(-6, -8, -36, -10, -28, true);
+      arm(6, 8, -34, 12, -27);
+      line(12, -27, 21, 0, 1, col("#7a5a3a"));
+    } else {
+      // a plane! - both arms waving over his head
+      const wv = Math.sin(t * 9) * 3;
+      arm(-6, -8, -52, -10 + wv, -66, true);
+      arm(6, 9, -52, 12 - wv, -66);
+    }
   } else if (A === "spyglass") {
     // the brass spyglass, raised to his eye, sweeping the horizon
     const lift = Math.min(1, u * 1.5),
@@ -46616,6 +46597,7 @@ function cwDrawKoos(t, b, dark) {
   push();
   translate(0, hy + 4);
   scaleBy(0.66);
+  rotate(-lookUp); // (v1.4.26: looking up - at the stars, the Moon, a plane)
   translate(0, -(hy + 4));
   disc(-2, hy - 1, 7.4, beardD); // the long hair at the back
   for (let i = 0; i < 6; i++)
@@ -46734,7 +46716,41 @@ function cwDrawKoos(t, b, dark) {
   for (let i = 0; i < 4; i++) line(-6 + i * 4, -7, -5 + i * 4, -1, 0.5, shade(hat, 0.75)); // the weave
   pop();
   pop(); // (the smaller head)
+  if (lean) pop();
   pop();
+  // (v1.4.26) his wish: a thought bubble with a ship in it, coming to take him home
+  if (A === "wish" && u > 5.8) {
+    const a = Math.min(1, (u - 5.8) * 2, (CW_ACTS[CW.act][1] - u) * 2),
+      bx = x + face * 30 * k,
+      by = y - 82 * k,
+      wc = withA(col("#f4f4ff"), 0.9 * a);
+    disc(x + face * 9 * k, y - 50 * k, 1.4 * k, wc);
+    disc(x + face * 15 * k, y - 60 * k, 2.4 * k, wc);
+    for (const [dx, dy, r] of [
+      [0, 0, 14],
+      [-11, 3, 9],
+      [11, 3, 9],
+      [-6, -6, 9],
+      [7, -6, 9],
+    ])
+      disc(bx + dx * k, by + dy * k, r * k, wc);
+    // the little ship inside: a hull, a white cabin, a funnel with a puff of smoke, a blue sea line
+    quad4(
+      bx - 11 * k,
+      by + 2 * k,
+      bx + 11 * k,
+      by + 2 * k,
+      bx + 8 * k,
+      by + 6 * k,
+      bx - 8 * k,
+      by + 6 * k,
+      withA(col("#c8402a"), a)
+    );
+    rect(bx - 5 * k, by - 2 * k, 9 * k, 4 * k, withA(col("#ffffff"), a));
+    rect(bx + 1 * k, by - 6 * k, 3 * k, 4 * k, withA(col("#ffd24d"), a));
+    disc(bx + 4 * k + Math.sin(t * 2) * k, by - 9 * k, 2 * k, withA(col("#b8b8c8"), 0.8 * a));
+    line(bx - 13 * k, by + 6.5 * k, bx + 13 * k, by + 6.5 * k, 1 * k, withA(col("#3a7ad0"), a));
+  }
   // the fishing line and what's on it
   if (A === "fish" && CW.phase === "island" && b.rodTip) {
     const [tx, ty] = b.rodTip,
@@ -46829,6 +46845,12 @@ function cwMouseGoal(b, t) {
   if (A === "crab") return u > 2.5 ? hide : near(-14);
   if (A === "mouse") return u < 6 ? near(25, "nibble", -1) : hat("sit", 1);
   if (A === "castle") return near(-16, "sit", 1);
+  // (v1.4.26) the new scenes: Muis watches the sunset beside him, warms by the fire, sits up on the hat for the Moon
+  if (A === "sunset") return near(-11, "sit", x < cwSun(b).x ? 1 : -1);
+  if (A === "campfire") return near(-13, "sit", 1);
+  if (A === "stargaze") return near(-20, "sit", 1);
+  if (A === "wish") return near(-14, "sit", 1);
+  if (A === "moongaze") return hat("look", cwSun(b).x < x ? -1 : 1);
   return near(-16);
 }
 function cwMouseUpdate(dt, b) {
@@ -46995,51 +47017,13 @@ function castawayHud(g, s) {
   g.font = Math.round(20 * s) + "px " + FD;
   g.fillStyle = "#ffd24d";
   g.fillText(T("CASTAWAY ISLAND"), cx, 26 * s);
-  if (CW.phase === "island") {
+  {
     const A = CW_ACTS[CW.act % CW_ACTS.length];
     band(T(A[2]), cssH * 0.86, 13, "#fff3e2");
-    if (G.time % 1.2 < 0.85)
-      band(T("PRESS FIRE TO DEFEND THE ISLAND  ·  ESC: BACK"), cssH * 0.94, 11, "#5ff5c8");
-  } else {
-    g.textAlign = "left";
-    g.font = Math.round(18 * s) + "px " + FD;
-    g.fillStyle = "#ff5fa8";
-    g.fillText(String(CW.score).padStart(6, "0"), 16 * s, 26 * s);
-    g.font = "700 " + Math.round(12 * s) + "px " + FB;
-    g.fillStyle = "#c8d8ff";
-    g.fillText(T("BEST") + " " + CW.best, 16 * s, 48 * s);
-    g.fillStyle = "#ff6070";
-    g.fillText("♥".repeat(Math.max(0, CW.lives)), 16 * s, 68 * s);
-    g.textAlign = "right";
-    g.fillStyle = "#ffd24d";
-    g.fillText(
-      T("RESCUE SIGNALS") + "  " + "●".repeat(CW.signals) + "○".repeat(Math.max(0, 3 - CW.signals)),
-      cssW - 16 * s,
-      48 * s
-    );
-    g.fillStyle = "#c8d8ff";
-    g.fillText(
-      T("LEVEL") + " " + CW.level + " · " + T(CW_WEATHER[(CW.level - 1) % 4]),
-      cssW - 16 * s,
-      68 * s
-    );
-    g.textAlign = "center";
-    if (CW.phase === "play")
-      band(
-        T("AIM: ARROWS / MOUSE  ·  FIRE: SPACE  ·  FLARE TO A SHIP: E / RIGHT CLICK  ·  ESC: BACK"),
-        cssH * 0.96,
-        10,
-        "#c8d8ff"
-      );
-    if (CW.phase === "over") {
-      band(T("MAROONED! THE COCONUTS RAN OUT"), cssH * 0.4, 18, "#ff9f6a");
-      band(
-        T("SCORE") + " " + CW.score + "  ·  +" + (CW.coins || 0) + " " + T("COINS"),
-        cssH * 0.48,
-        14,
-        "#ffd24d"
-      );
-      if (CW.t > 1.5) band(T("PRESS FIRE"), cssH * 0.56, 12, "#5ff5c8");
+    if (CW.actT < 6) {
+      g.globalAlpha = Math.min(1, (6 - CW.actT) / 1.5); // (the hint shows, then fades away - it's a screensaver)
+      band(T("FIRE / TAP: NEXT SCENE  ·  ESC: BACK"), cssH * 0.94, 10, "#5ff5c8");
+      g.globalAlpha = 1;
     }
   }
   if (CW.msgT > 0) {
@@ -58605,7 +58589,7 @@ function drawEggs(g, s) {
 // THE VERSION (from v1.2.0, 5 October 2026): MAJOR.MINOR.PATCH - a new MINOR for a batch of new things, a new PATCH for
 // fixes and small touches - with the day it was made next to it. (Before this the versions were named after the date,
 // like v2026.10.05c.)
-const GAME_VERSION = "v1.4.25",
+const GAME_VERSION = "v1.4.26",
   GAME_DATE = "06.10.2026",
   VERSION_TEXT = GAME_VERSION + "  ·  " + GAME_DATE;
 const FB = '"Chakra Petch", "Segoe UI", sans-serif';
@@ -64917,6 +64901,17 @@ profWire();
 //  the game, and where the motion capture, the folk songs and the fonts come from. Both from the menu at any time.
 // =====================================================================================
 const NEWS = [
+  {
+    ver: "v1.4.26",
+    title: "CASTAWAY SCREENSAVER",
+    items: [
+      "CASTAWAY ISLAND IS NOW A CALM SCREENSAVER - NO SHOOTING",
+      "SUNSET WATCHING, A CAMPFIRE, S.O.S. IN THE SAND",
+      "KOOS MAKES UP HIS OWN CONSTELLATIONS",
+      "THE MOON THROUGH HIS SPYGLASS, A SHOOTING STAR WISH",
+      "MOUSE: LEFT CLICK SERVES, RIGHT CLICK CHANGES FLAVOUR",
+    ],
+  },
   {
     ver: "v1.4.25",
     title: "CASTAWAY SKY AND SEA",

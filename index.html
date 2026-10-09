@@ -710,10 +710,23 @@ void main() {
   vec2 lp = u2 * low;
   vec2 ca = cc * 0.45 * dot(cc, cc);                             // colour fringes, only towards the rim
   vec3 c = vec3(pb(lp + ca).r, pb(lp).g, pb(lp - ca).b);
-  if (qual > 1.5) {                                              // glow: bright pixels bleed into their neighbours
-    vec3 g = pb(lp + vec2(1.5, 0.0)) + pb(lp - vec2(1.5, 0.0)) + pb(lp + vec2(0.0, 1.5)) + pb(lp - vec2(0.0, 1.5));
-    g += pb(lp + vec2(3.0, 0.0)) + pb(lp - vec2(3.0, 0.0));
-    c += max(g / 6.0 - 0.45, 0.0) * 0.55;
+  if (qual > 1.5) {                                              // (v1.4.24) BLOOM: bright things spill a soft halo of light
+    float R1 = max(1.5, low.y / 260.0), R2 = R1 * 2.6;           //  - two rings, sized to the picture, so it looks the same on any screen
+    vec3 g1 = vec3(0.0), g2 = vec3(0.0);
+    for (int i = 0; i < 8; i++) {
+      float a = float(i) * 0.7854 + 0.39;
+      vec2 d = vec2(cos(a), sin(a));
+      g1 += pb(lp + d * R1);
+      g2 += pb(lp + d * R2);
+    }
+    c += max(g1 / 8.0 - 0.48, 0.0) * 0.6 + max(g2 / 8.0 - 0.52, 0.0) * 0.5;
+  }
+  {                                                              // (v1.4.24) COLOUR GRADING, like a film: a touch richer,
+    float lum = dot(c, vec3(0.299, 0.587, 0.114));               //  warm in the highlights, cool in the shadows
+    c = mix(vec3(lum), c, 1.1);
+    c += vec3(0.025, 0.012, -0.012) * smoothstep(0.5, 1.0, lum);
+    c += vec3(-0.01, 0.0, 0.02) * (1.0 - smoothstep(0.0, 0.35, lum));
+    c = max(c, 0.0);
   }
   float f = fract(lp.y), sk = clamp((outRes.y / low.y - 1.2) / 1.3, 0.0, 1.0);   // scanlines need ~2 screen pixels per game pixel
   c *= mix(1.0, (levels > 0.0 && levels < 5.0 ? 0.42 : 0.5) + 0.66 * sin(f * 3.14159), sk);   // scanlines (deeper in 8-BIT)
@@ -44057,6 +44070,7 @@ function startCastaway() {
   CW.aimX = b.cx;
   CW.aimY = b.hz;
   CW.fireWas = CW.flareWas = true; // (the button that opened it must be let go first)
+  G.shake = 0; // (no rattle carried over from the bar)
   showPanels();
 }
 function exitCastaway() {
@@ -44118,6 +44132,10 @@ function castawayUpdate(dt) {
   CW.kph = (CW.kph || 0) + (CW.kv / (b.ks * CW_KOOS * 4.5)) * dt;
   CW.kg = (CW.kg || 0) + ((Math.abs(CW.kv) > 4 ? 1 : 0) - (CW.kg || 0)) * Math.min(1, dt * 9);
   CW.msgT = Math.max(0, CW.msgT - dt);
+  // (v1.4.24) FIXED: the screen shake (a meteor landing, Koos getting hit) now dies away here too - the island skips the
+  // bar's update, where it used to fade, so after the first hit the whole screen kept rattling for good
+  G.shake = Math.max(0, (G.shake || 0) - dt * 24);
+  G.kick = Math.max(0, (G.kick || 0) - dt * 6);
   CW.hurt = Math.max(0, CW.hurt - dt);
   CW.cool = Math.max(0, CW.cool - dt);
   CW.flareCool = Math.max(0, CW.flareCool - dt);
@@ -46372,7 +46390,7 @@ function cwDrawKoos(t, b, dark) {
     arm(-6, -2, -46, 6, -55 * lift - 30 * (1 - lift), true);
     arm(6, 10, -48, 14, -56 * lift - 30 * (1 - lift));
     push();
-    translate(6, -58.5 * lift - 28 * (1 - lift));
+    translate(6, -56.5 * lift - 28 * (1 - lift));
     rotate(-0.08 - sw);
     rect(0, -2.2, 10, 4.4, col("#c89a3a"));
     rect(9, -2.8, 9, 5.6, col("#d8aa4a"));
@@ -46445,6 +46463,12 @@ function cwDrawKoos(t, b, dark) {
   const hy = -56.5 + bobY;
   quad4(-2.4, sy0 + 1, 2.2, sy0 + 1, 2, hy + 4, -2.4, hy + 3, skD, sk, sk, skD); // the neck, sinewy
   line(-1.2, sy0, -0.6, hy + 4, 0.5, withA(out, 0.6)); // (a tendon)
+  // (v1.4.24) BETTER PROPORTIONS: the head is drawn smaller - scaled round the top of the neck - so he stands about
+  // seven and a half heads tall, like a real grown man, instead of a big cartoon head on a thin body
+  push();
+  translate(0, hy + 4);
+  scaleBy(0.78);
+  translate(0, -(hy + 4));
   disc(-2, hy - 1, 7.4, beardD); // the long hair at the back
   for (let i = 0; i < 6; i++)
     line(-6 + i * 0.8, hy + 2, -7 + i * 0.7 + Math.sin(t * 2 + i) * 0.8, hy + 8 + (i % 2) * 2, 1.2, beardD); // (straggly)
@@ -46456,21 +46480,73 @@ function cwDrawKoos(t, b, dark) {
   tri(5.6, hy - 2.6, 8.8, hy + 1.6, 5.4, hy + 2, mix(sk, col("#ff6a5a"), 0.3));
   disc(7.6, hy + 1.2, 1.3, mix(sk, col("#ff6a5a"), 0.45));
   line(6.6, hy + 2.2, 7.6, hy + 2.1, 0.4, out); // (the nostril)
-  // the beard: thick on the jaw and chin, out in front, blowing in the wind - the neck still shows behind it
-  for (let i = 0; i < 14; i++) {
-    const a = -0.1 + (i / 13) * 2.1,
-      r = 4.6 + (i % 3) * 1.4,
-      wv = Math.sin(t * 2 + i) * 0.6;
-    disc(
-      2.4 + Math.cos(a) * r * 0.85 + wv,
-      hy + 3.4 + Math.sin(a) * r,
-      2.4 + (i % 2) * 0.8,
-      i % 3 ? beard : beardD
+  // (v1.4.24) THE BEARD, drawn the way a real one grows: a full, shaped beard that follows the jaw from the sideburn by
+  // the ear down to the chin, a little long and ragged at the bottom, with strands of hair flowing down it (lighter and
+  // darker), the ends lifting in the wind - and a moustache that droops over the mouth
+  {
+    const wv = Math.sin(t * 1.6) * 0.5,
+      beardL = mix(beard, col("#c8a070"), 0.35),
+      pts = [
+        -0.8,
+        hy + 0.4,
+        0.2,
+        hy + 5,
+        1.6,
+        hy + 8.6,
+        3.4 + wv * 0.6,
+        hy + 11.2,
+        4.6 + wv,
+        hy + 12.2,
+        5.8 + wv,
+        hy + 10.6,
+        6.9 + wv * 0.6,
+        hy + 7.6,
+        7.3,
+        hy + 5,
+        6.6,
+        hy + 3.6,
+        4.4,
+        hy + 4.4,
+        2.6,
+        hy + 3,
+        1,
+        hy + 0.6,
+      ];
+    poly([3.2, hy + 6, ...pts, pts[0], pts[1]], beardD);
+    poly(
+      [
+        3.2,
+        hy + 5.6,
+        ...pts.map((v, i) => (i % 2 ? v - 0.5 : v + (v < 3.2 ? 0.4 : -0.4))),
+        pts[0] + 0.4,
+        pts[1] - 0.5,
+      ],
+      beard
     );
+    for (let i = 0; i < 11; i++) {
+      // strands of hair, flowing down to the chin
+      const f = i / 10,
+        sx = lerpA(-0.2, 6.8, f),
+        sy = hy + 2.2 + Math.sin(f * Math.PI) * 1.6;
+      line(
+        sx,
+        sy,
+        lerpA(sx, 4.4, 0.45) + wv * f,
+        sy + 3.5 + Math.sin(f * Math.PI) * 4.5,
+        0.45,
+        i % 3 === 0 ? beardL : beardD
+      );
+    }
+    for (let i = 0; i < 5; i++)
+      line(2.4 + i * 1, hy + 10 + (i % 2), 2.2 + i * 1 + wv * 1.4, hy + 12.6 + (i % 2) * 0.8, 0.6, beardD); // (a ragged end)
+    // the moustache: two drooping curves under the nose, over the mouth
+    polyline(
+      [4.6, hy + 4.6, 5.6, hy + 3.6, 6.8, hy + 3.4, 7.6, hy + 4.2, 7.8, hy + 5.4],
+      1.3,
+      mix(beard, beardL, 0.4)
+    );
+    line(6.1, hy + 5.6, 7.1, hy + 5.7, 0.5, withA(col("#5a2a1a"), 0.8)); // (the mouth, just showing)
   }
-  for (let i = 0; i < 6; i++)
-    line(0.5 + i * 1.6, hy + 9, -0.5 + i * 1.6 + Math.sin(t * 2 + i), hy + 14, 1, beardD); // the straggly ends
-  disc(5.6, hy + 3.4, 1.9, mix(beard, col("#c88a6a"), 0.3), 1.4); // the moustache
   // THE EAR: an outer rim, the inner fold, an earlobe - sunburnt red on top
   disc(-1.2, hy + 0.6, 2.3, sk, 8);
   disc(-1.2, hy - 0.8, 1.2, mix(sk, col("#ff6a5a"), 0.4));
@@ -46509,6 +46585,7 @@ function cwDrawKoos(t, b, dark) {
   rect(-7.5, -2.5, 15, 2, col("#c8402a"));
   for (let i = 0; i < 4; i++) line(-6 + i * 4, -7, -5 + i * 4, -1, 0.5, shade(hat, 0.75)); // the weave
   pop();
+  pop(); // (the smaller head)
   pop();
   // the fishing line and what's on it
   if (A === "fish" && CW.phase === "island" && b.rodTip) {
@@ -46579,7 +46656,7 @@ function cwMouseGoal(b, t) {
       face: face || (dx < 0 ? 1 : -1),
       on: false,
     }),
-    hat = (pose = "sit", face = 1) => ({ x: x + face * 0.6 * k, y: y - 73.5 * k, pose, face, on: true });
+    hat = (pose = "sit", face = 1) => ({ x: x + face * 0.6 * k, y: y - 69.5 * k, pose, face, on: true });
   if (CW.phase !== "island") return hide;
   if (CW.foes.some((f) => f.kind === "ufo" && f.demo && f.t > 2 && f.t < 15)) return hide;
   if (A === "hammock" || (A === "wake" && u < 3.5)) {
@@ -58380,7 +58457,7 @@ function drawEggs(g, s) {
 // THE VERSION (from v1.2.0, 5 October 2026): MAJOR.MINOR.PATCH - a new MINOR for a batch of new things, a new PATCH for
 // fixes and small touches - with the day it was made next to it. (Before this the versions were named after the date,
 // like v2026.10.05c.)
-const GAME_VERSION = "v1.4.23",
+const GAME_VERSION = "v1.4.24",
   GAME_DATE = "06.10.2026",
   VERSION_TEXT = GAME_VERSION + "  ·  " + GAME_DATE;
 const FB = '"Chakra Petch", "Segoe UI", sans-serif';
@@ -62627,6 +62704,40 @@ const TRACKS          = [
       { prog: "Dm Bb Am Am Bdim E7 Am Am", m: "c f a f b f d f" },
     ],
   },
+  // (v1.4.24) CASTAWAY ISLAND's own music: calm and mysterious - slow and dreamy in a floating mode (lydian), a soft
+  // echoing flute-like melody drifting over a gentle hum and a warm pad, the sea washing in and out underneath, and now
+  // and then a far-off bell; no drums - the sound of a lonely island at the edge of the world
+  {
+    title: "ISLAND AT THE EDGE OF THE WORLD",
+    where: "Castaway Island",
+    mood: "calm, mysterious",
+    bpm: 60,
+    steps: 16,
+    swing: 0,
+    root: 50,
+    scale: LYD,
+    keys: [0, -2, 3],
+    lead: { wave: "sine", wave2: "triangle", oct: 12, vol: 0.045, vib: 5, swell: true, echo: 0.85, lp: 1800 }, // (a soft flute)
+    bass: "hush",
+    comp: "softpad",
+    drums: "none",
+    extra: "waves",
+    motifs: {
+      a: "4 . . . 3 . . .",
+      b: "6 . . 4 . . 2 .",
+      c: "1 . . . . . 0 .",
+      d: "4 . . . . . . .",
+      e: "7 . . 6 . . 4 .",
+      g: "- . . . 2 . . .",
+      f: "- - - - - - - -",
+    },
+    form: [
+      { prog: "D D", m: "f g" },
+      { prog: "D E D E Bm7 Bm7 Gmaj7 A", m: "a f b f c f d f" },
+      { prog: "Gmaj7 Gmaj7 D D Em7 Em7 A A", m: "e f c f a f d f", up: 12 },
+      { prog: "D E Bm7 Gmaj7 D E A D", m: "b f a f e f d f" },
+    ],
+  },
   {
     title: "HERO OF THE GALAXY",
     where: "The ending",
@@ -62729,7 +62840,8 @@ const trackNamed = (t) => TRACKS.findIndex((x) => x.title === t),
   HYPER_TRACK = trackNamed("HYPERSPACE HIGHWAY"),
   CORE_TRACK = trackNamed("HEART OF ANDROMEDA"),
   ROBOT_TRACK = trackNamed("INVASION OF THE MOON ROBOTS"),
-  ORRERY_TRACK = trackNamed("THE SILENT PLANETS"); // (v1.4.14: the tour's eerie music - the music-box waltz stays in the music box)
+  ORRERY_TRACK = trackNamed("THE SILENT PLANETS"),
+  ISLAND_TRACK = trackNamed("ISLAND AT THE EDGE OF THE WORLD"); // (v1.4.14: the tour's eerie music - the music-box waltz stays in the music box)
 // the music box names each tune after the stops it plays at now (after the tour was rebuilt)
 TRACKS.forEach((tr, i) => {
   const vs = VENUES.filter((v) => v.trk === i).map((v) =>
@@ -63337,7 +63449,7 @@ function musicWanted() {
     if (ATTRACT.tour || (cur && cur.item.tour) || (cur && cur.item.what === "orrery")) return ORRERY_TRACK; // (v1.4.14) the Solar System tour: THE SILENT PLANETS - mysterious and eerie
     return DEEP_TRACK; // the deep-space show: mysterious music
   }
-  if (G.state === "castaway") return 27; // (v1.4.10: Castaway Island - the ocean raft's tune)
+  if (G.state === "castaway") return ISLAND_TRACK; // (v1.4.24: Castaway Island's own calm, mysterious music)
   if (G.state === "jump" && G.jump && G.jump.inter) return HYPER_TRACK; // (v1.4.7) the great jump to Andromeda
   if (G.state === "jump" && G.jump && G.jump.core) return CORE_TRACK; // (v1.4.7) the heart of Andromeda
   if (G.state === "over" && G.won) return VICTORY_TRACK;
@@ -64657,6 +64769,11 @@ profWire();
 //  the game, and where the motion capture, the folk songs and the fonts come from. Both from the menu at any time.
 // =====================================================================================
 const NEWS = [
+  {
+    ver: "v1.4.24",
+    title: "BLOOM AND COLOUR GRADING",
+    items: ["BRIGHT THINGS GLOW WITH A SOFT HALO OF LIGHT", "RICHER COLOUR: WARM HIGHLIGHTS, COOL SHADOWS"],
+  },
   {
     ver: "v1.4.23",
     title: "COCONUTS AND LEAPING FISH",

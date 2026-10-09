@@ -15959,12 +15959,23 @@ function drawTip(tp, t) {
   R.setAdd(true);
   glow(tp.x, y - 6, 18 + 4 * Math.sin(t * 6), withA(C.amber, 0.6));
   R.setAdd(false);
+  // (v1.4.23) the coin SPINS as it drops and bounces, flashing gold and edge-on, then settles; a glint twinkles on it
+  const spin = drop > 0 ? Math.abs(Math.cos(tp.t * 22)) : 1,
+    wf = 0.25 + 0.75 * spin;
   for (let i = 0; i < n; i++) {
     const cy = y - 5 - i * 3 + dy;
-    disc(tp.x, cy, 7, col("#c88a10"), 5);
-    disc(tp.x, cy - 1, 5.5, col("#ffd24d"), 4);
+    disc(tp.x, cy, 7 * (i === n - 1 ? wf : 1), col("#c88a10"), 5);
+    disc(tp.x, cy - 1, 5.5 * (i === n - 1 ? wf : 1), col(spin > 0.6 ? "#ffd24d" : "#e8b030"), 4);
   }
-  disc(tp.x - 2, y - 8 - (n - 1) * 3 + dy, 1.6, withA(C.white, 0.8));
+  disc(tp.x - 2 * wf, y - 8 - (n - 1) * 3 + dy, 1.6, withA(C.white, 0.8));
+  const gl = (t * 0.7 + tp.x * 0.01) % 1;
+  if (!OUT && drop === 0 && gl < 0.12) {
+    const s2 = Math.sin((gl / 0.12) * Math.PI) * 4;
+    R.setAdd(true);
+    line(tp.x + 2 - s2, y - 9 - (n - 1) * 3, tp.x + 2 + s2, y - 9 - (n - 1) * 3, 0.8, withA(C.white, 0.9));
+    line(tp.x + 2, y - 9 - (n - 1) * 3 - s2, tp.x + 2, y - 9 - (n - 1) * 3 + s2, 0.8, withA(C.white, 0.9));
+    R.setAdd(false);
+  } // (a twinkle)
 }
 // THE INTERNATIONAL SPACE STATION (v1.4.0): seen from below as it sails over - the long truss with its eight big golden
 // solar wings, the white radiators, and the chain of modules down the middle (with the little Russian-segment panels and a
@@ -43925,6 +43936,8 @@ const CW
               
                   
                   
+                
+                
                
               
                     
@@ -44130,6 +44143,7 @@ function castawayUpdate(dt) {
   // ---- sea life and ships go by in both modes ----
   cwLifeUpdate(dt, b);
   cwMouseUpdate(dt, b);
+  cwNutUpdate(dt, b);
   for (const s of CW.ships) {
     s.x += s.dir * s.spd * dt;
     s.t += dt;
@@ -44332,6 +44346,19 @@ function cwLifeUpdate(dt, b) {
   for (const l of CW.life) {
     l.t += dt;
     if (l.kind === "bird") l.x += l.sp * dt;
+  }
+  // (v1.4.23) FISH leaping out of the sea now and then, in little arcs
+  if (Math.random() < dt * 0.14 && CW.life.filter((l) => l.kind === "fish").length < 2) {
+    const fx = b.L + b.w * (0.08 + Math.random() * 0.84);
+    if (Math.abs(fx - b.cx) > b.rw * 1.5)
+      CW.life.push({
+        kind: "fish",
+        x: fx,
+        y: b.hz + (14 + Math.random() * 60) * b.k,
+        t: 0,
+        len: 2.2,
+        dir: Math.random() < 0.5 ? 1 : -1,
+      });
   }
   CW.life = CW.life.filter((l) => l.t < l.len && !(l.kind === "bird" && l.x > b.Rr + 30));
 }
@@ -44713,12 +44740,13 @@ function drawCastaway(t) {
       );
     }
   // ---- the sea: deep, wide and empty, the swell rolling in towards you ----
-  const sea1 = mixc(mixc(col("#3a96d0"), col("#0a1838"), dark), col("#ff9a6a"), dusk * 0.45),
+  // (v1.4.23: warmer at sunset - the whole sea glows orange and rose)
+  const sea1 = mixc(mixc(col("#3a96d0"), col("#0a1838"), dark), col("#ff9a6a"), dusk * 0.62),
     sea2 = mixc(mixc(col("#063a6e"), col("#02060f"), dark), col("#3a1a4a"), dusk * 0.4);
   vgrad(L, hz, w, B - hz, sea1, sea2);
   if (dusk > 0.02) {
     // the sea on fire with the sunset: gold and rose near the horizon, fading into the deep
-    vgrad(L, hz, w, (B - hz) * 0.45, withA(col("#ffa050"), 0.6 * dusk), withA(col("#c84a6a"), 0));
+    vgrad(L, hz, w, (B - hz) * 0.62, withA(col("#ffa050"), 0.75 * dusk), withA(col("#c84a6a"), 0));
   }
   rect(L, hz, w, 1.2 * k, withA(C.white, 0.3));
   for (let i = 0; i < 34; i++) {
@@ -44770,6 +44798,7 @@ function drawCastaway(t) {
   if (CW.phase === "island") cwDrawProps(t, b, dark);
   cwDrawKoos(t, b, dark);
   cwDrawMouse(t, b, dark);
+  cwDrawNut(t, b, dark);
   cwDrawLife(t, b, dark, true); // (the divers and the shark, nearer than the island's far side)
   // the threats, the coconuts in flight, the effects
   for (const f of CW.foes) cwDrawFoe(f, t, b);
@@ -44916,6 +44945,83 @@ function cwBiolum(t, b, dark, where) {
   R.setAdd(false);
 }
 // THE ISLAND: a little hump of sand alone in the sea - the shallows round it, foam, a tall palm, the hammock, Klaas
+// (v1.4.23) A FALLING COCONUT: now and then one drops from the palm, thuds onto the sand, bounces and rolls to a stop -
+// and Muis runs over to sniff it; after a while it's gone (Koos has it for lunch)
+function cwNutUpdate(dt, b) {
+  if (CW.phase !== "island") {
+    CW.nut = undefined;
+    return;
+  }
+  CW.nutT = (CW.nutT ?? 18) - dt;
+  const ks = b.ks;
+  if (CW.nutT <= 0 && !CW.nut) {
+    CW.nutT = 28 + Math.random() * 20;
+    const px = b.cx - b.rw * 0.55 + 40 * ks;
+    CW.nut = {
+      x: px + (Math.random() - 0.4) * 10 * ks,
+      y: b.iy - 290 * ks,
+      vx: (Math.random() < 0.5 ? -1 : 1) * 12 * ks,
+      vy: 0,
+      a: 0,
+      bounces: 0,
+      rest: 0,
+    };
+  }
+  const n = CW.nut;
+  if (!n) return;
+  if (!n.rest) {
+    n.vy += 900 * ks * dt;
+    n.y += n.vy * dt;
+    n.x += n.vx * dt;
+    n.a += (n.vx / (3.6 * ks)) * dt;
+    if (n.y >= b.iy - 3 * ks) {
+      n.y = b.iy - 3 * ks;
+      if (n.bounces < 2 && Math.abs(n.vy) > 60 * ks) {
+        n.vy *= -0.32;
+        n.vx = (n.vx || 1) * 2.4;
+        n.bounces++;
+        if (n.bounces === 1) n.puff = CW.t; // (a puff of sand where it lands)
+      } else {
+        n.vy = 0;
+        n.vx *= Math.pow(0.04, dt);
+        if (Math.abs(n.vx) < 2 * ks) n.rest = CW.t;
+      }
+      n.x = clamp(n.x, b.cx - b.rw * 0.85, b.cx + b.rw * 0.85);
+    }
+  } else if (CW.t - n.rest > 14) CW.nut = undefined;
+}
+function cwDrawNut(t, b, dark) {
+  const n = CW.nut;
+  if (!n) return;
+  const ks = b.ks,
+    fade = n.rest ? clamp(1 - (CW.t - n.rest - 12) / 2, 0, 1) : 1,
+    c = (h) => withA(mix(col(h), col("#1a1208"), dark * 0.6), fade);
+  if (n.y > b.iy - 30 * ks) disc(n.x, b.iy + 1 * ks, 4 * ks, withA(C.black, 0.2 * fade), 1.2 * ks);
+  if (n.puff) {
+    const f = (CW.t - n.puff) / 0.6;
+    if (f >= 0 && f < 1)
+      for (const sd of [-1, 1])
+        disc(
+          n.x + sd * f * 9 * ks,
+          b.iy - f * 4 * ks,
+          (2 + f * 4) * ks,
+          withA(mix(col("#f0dcaa"), col("#3a3426"), dark * 0.8), 0.6 * (1 - f)),
+          (1.2 + f * 2) * ks
+        );
+  }
+  push();
+  translate(n.x, n.y);
+  rotate(n.a);
+  disc(0, 0, 3.8 * ks, c("#6a4a22"));
+  disc(-1 * ks, -1 * ks, 2.2 * ks, c("#8a6232"));
+  for (const [ex, ey] of [
+    [1.2, 0.6],
+    [0.2, 1.6],
+    [1.8, 1.4],
+  ])
+    disc(ex * ks, ey * ks, 0.5 * ks, c("#2a1a0a")); // (the three eyes of a coconut)
+  pop();
+}
 // (v1.4.21) where the sun (or the moon) is in the sky - the same path as drawCastaway's
 function cwSun(b) {
   const tod = CW.tod,
@@ -45408,6 +45514,58 @@ function cwDrawLife(t, b, dark, near) {
   for (const l of CW.life) {
     // (the shark is in front of the island on the near half of its circle, BEHIND it on the far half)
     if (near !== (l.kind === "diver" || (l.kind === "shark" && Math.sin(t * 0.22) > 0))) continue;
+    if (l.kind === "fish") {
+      // a silver fish leaping out and diving back in, a splash and rings of ripples where it goes in and out
+      const d = (l.y - hz) / (60 * k) + 0.4,
+        u = clamp(l.t / 0.8, 0, 1),
+        jx = l.x + l.dir * u * 22 * k * d,
+        jy = l.y - Math.sin(u * Math.PI) * 14 * k * d;
+      if (l.t < 0.8) {
+        push();
+        translate(jx, jy);
+        rotate(l.dir * (u - 0.5) * 2.2);
+        disc(0, 0, 3.4 * k * d, col("#c8d4e0"), 1.3 * k * d);
+        disc(-0.6 * k * d, -0.4 * k * d, 2.2 * k * d, col("#eef4fa"), 0.6 * k * d);
+        tri(
+          -3.2 * k * d * l.dir,
+          0,
+          -5.2 * k * d * l.dir,
+          -1.6 * k * d,
+          -5.2 * k * d * l.dir,
+          1.6 * k * d,
+          col("#a8b4c4")
+        );
+        pop();
+      }
+      for (const [x0, t0] of [
+        [l.x, 0],
+        [l.x + l.dir * 22 * k * d, 0.8],
+      ]                      ) {
+        const f = (l.t - t0) / 1.2;
+        if (f > 0 && f < 1) {
+          for (let r = 0; r < 2; r++)
+            arc(
+              x0,
+              l.y + 1,
+              (2 + f * 10 + r * 3) * k * d,
+              Math.PI * 1.05,
+              Math.PI * 1.95,
+              0.7,
+              withA(C.white, 0.5 * (1 - f)),
+              10
+            );
+          if (f < 0.25)
+            for (let i = 0; i < 4; i++)
+              disc(
+                x0 + (i - 1.5) * 1.5 * k * d,
+                l.y - f * 20 * k * d * (1 + (i % 2)),
+                0.7 * k * d,
+                withA(C.white, 0.8 * (1 - f * 4))
+              );
+        }
+      }
+      continue;
+    }
     if (l.kind === "whale") {
       const u = l.t / l.len,
         y = hz + 24 * k;
@@ -46323,8 +46481,16 @@ function cwDrawKoos(t, b, dark) {
   if (blink) line(2.6, hy - 1.4, 5.4, hy - 1.2, 0.9, col("#1a1a1a"));
   else {
     disc(4, hy - 1.4, 1.5, col("#f4f0e8"));
-    disc(4.6, hy - 1.3, 0.85, col("#3a2a1a"));
-    disc(4.8, hy - 1.6, 0.3, withA(C.white, 0.9));
+    // (v1.4.23) his eyes follow a ship going by - is it a rescue?
+    let ex = 0,
+      ey = 0;
+    if (CW.phase === "island" && CW.ships.length && A !== "spyglass" && A !== "fish") {
+      const sh = CW.ships.reduce((a2, s2) => (Math.abs(s2.x - x) < Math.abs(a2.x - x) ? s2 : a2));
+      ex = Math.sign(sh.x - x) * face > 0 ? 0.45 : -0.75;
+      ey = -0.3;
+    }
+    disc(4.6 + ex, hy - 1.3 + ey, 0.85, col("#3a2a1a"));
+    disc(4.8 + ex, hy - 1.6 + ey, 0.3, withA(C.white, 0.9));
     line(2.4, hy - 0.2, 4.4, hy + 0.1, 0.35, withA(skD, 0.8)); // (a weathered crease)
   }
   line(2, hy - 4.2, 6, hy - 4.8 + (A === "crab" && u > 3 ? -1.5 : 0), 1.3, beardD); // the bushy brow
@@ -46426,6 +46592,10 @@ function cwMouseGoal(b, t) {
     }
     return { x: lx - 8 * k, y: ly - 11 * k - Math.sin(t * 1.6) * 0.5 * k, pose: "sleep", face: 1, on: true };
   }
+  // (v1.4.23) a coconut just fell: Muis scurries over to sniff it
+  const nut = CW.nut;
+  if (nut && nut.rest && CW.t - nut.rest < 5 && A !== "spyglass")
+    return { x: nut.x + (x < nut.x ? -7 : 7) * k, y, pose: "sit", face: x < nut.x ? 1 : -1, on: false };
   if (A === "spyglass") return hat("look", Math.sin(u * 0.7) > 0 ? 1 : -1);
   if (A === "fish") return near(15, u > 7.5 && u < 9 ? "jump" : "sit", 1);
   if (A === "relax") return { x: b.cx + b.rw * 0.18 + 24 * k, y, pose: "sip", face: -1, on: false };
@@ -58210,7 +58380,7 @@ function drawEggs(g, s) {
 // THE VERSION (from v1.2.0, 5 October 2026): MAJOR.MINOR.PATCH - a new MINOR for a batch of new things, a new PATCH for
 // fixes and small touches - with the day it was made next to it. (Before this the versions were named after the date,
 // like v2026.10.05c.)
-const GAME_VERSION = "v1.4.22",
+const GAME_VERSION = "v1.4.23",
   GAME_DATE = "06.10.2026",
   VERSION_TEXT = GAME_VERSION + "  ·  " + GAME_DATE;
 const FB = '"Chakra Petch", "Segoe UI", sans-serif';
@@ -64487,6 +64657,16 @@ profWire();
 //  the game, and where the motion capture, the folk songs and the fonts come from. Both from the menu at any time.
 // =====================================================================================
 const NEWS = [
+  {
+    ver: "v1.4.23",
+    title: "COCONUTS AND LEAPING FISH",
+    items: [
+      "CASTAWAY: A WARMER SUNSET SEA",
+      "CASTAWAY: COCONUTS FALL - MUIS RUNS TO SNIFF THEM",
+      "CASTAWAY: FISH LEAP; KOOS WATCHES THE SHIPS",
+      "SPINNING, TWINKLING TIP COINS",
+    ],
+  },
   {
     ver: "v1.4.22",
     title: "DUST, FLIPS AND FLYING CREAM",

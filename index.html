@@ -44696,33 +44696,68 @@ function drawCastaway(t) {
       }
     }
     R.setAdd(false);
-    disc(
-      sx,
-      sy,
-      (day ? 22 + dusk * 14 : 15) * k,
-      day ? mixc(col("#fff4c0"), col("#ff6a3a"), dusk) : col("#eef0f8"),
-      (day ? 22 + dusk * 14 : 15) * k * (1 - dusk * 0.12)
-    );
-    if (!day)
-      for (const [dx, dy, r] of [
-        [-4, -3, 3.4],
-        [5, 4, 2.6],
-        [2, -6, 1.6],
+    if (day) {
+      // (v1.4.25) THE SUN: a white-hot heart in a soft gold halo; low down it swells, reddens and squashes flat on the sea
+      const sr = (22 + dusk * 16) * k,
+        sq = 1 - dusk * 0.2 * clamp(1 - (hz - sy) / (60 * k), 0, 1) - dusk * 0.06;
+      R.setAdd(true);
+      glow(sx, sy, sr * 2.6, withA(mixc(col("#fff0b0"), col("#ff8a3a"), dusk), 0.45));
+      glowE(sx, hz, sr * (4 + dusk * 6), sr * (0.5 + dusk * 0.6), withA(col("#ffb060"), 0.35 * dusk)); // (the glow spread along the horizon)
+      R.setAdd(false);
+      disc(sx, sy, sr, mixc(col("#fff4c0"), col("#ff6a3a"), dusk), sr * sq);
+      for (let q = 1; q <= 3; q++)
+        disc(
+          sx,
+          sy - sr * 0.05 * q * sq,
+          sr * (1 - q * 0.2),
+          withA(mixc(col("#fff8d8"), col("#ffa050"), dusk), 0.3),
+          sr * (1 - q * 0.2) * sq
+        ); // (brighter towards the middle)
+      if (dusk > 0.05)
+        for (let i = 0; i < 3; i++) {
+          // thin dark streaks of haze across the setting sun
+          const yy = sy + (i - 0.6) * sr * 0.42 * sq;
+          rect(sx - sr * 1.1, yy, sr * 2.2, 1.2 * k, withA(col("#a83a4a"), 0.35 * dusk));
+        }
+    } else {
+      // (v1.4.25) THE MOON: a silvery halo, the dark "seas" on its face, craters, and a soft shadow round its edge
+      const mr = 21 * k;
+      R.setAdd(true);
+      glow(sx, sy, mr * 4.5, withA(col("#c8d8ff"), 0.16));
+      glow(sx, sy, mr * 1.8, withA(col("#eef4ff"), 0.16));
+      arc(sx, sy, mr * 2.6, 0, 6.283, 1.2 * k, withA(col("#d8e4ff"), 0.08), 40); // (the faint ring round it on a misty night)
+      R.setAdd(false);
+      disc(sx, sy, mr, col("#dfe3ec"));
+      for (const [dx, dy, rx, ry] of [
+        [-5.5, -5, 6.5, 5.2],
+        [4.5, -7, 4.8, 3.8],
+        [6, 3, 5.5, 4.2],
+        [-2.5, 6, 3.8, 3],
+        [-10.5, 1, 2.8, 3.8],
       ])
+        disc(sx + dx * k, sy + dy * k, rx * k, withA(col("#8f97aa"), 0.8), ry * k); // (the maria)
+      for (const [dx, dy, r] of [
+        [1.5, 12, 2],
+        [-8, -12, 1.5],
+        [12, -4, 1.4],
+        [-1, -1, 1.1],
+      ]) {
         disc(sx + dx * k, sy + dy * k, r * k, col("#c8ccd8"));
-    // the moon's (or sun's) path on the sea
+        disc(sx + (dx + 0.4) * k, sy + (dy + 0.4) * k, r * 0.6 * k, col("#e8eaf2"));
+      } // (craters, with their sunlit far rims)
+      arc(sx + 1.5 * k, sy + 1.5 * k, mr - 1.2 * k, -0.4, 2.4, 2.4 * k, withA(col("#9aa2b8"), 0.45), 20); // (shadow round the edge)
+    }
+    // the moon's (or sun's) path on the sea - a road of broken, shimmering light
     R.setAdd(true);
-    for (let i = 0; i < 14; i++) {
-      const yy = hz + 4 * k + i * i * 1.2 * k,
-        ww = (6 + i * 3) * k * (0.6 + 0.4 * Math.sin(t * 2 + i));
-      if (yy < B)
-        rect(
-          sx - ww / 2 + Math.sin(t + i) * 4 * k,
-          yy,
-          ww,
-          1.6 * k,
-          withA(day ? col("#fff0c0") : col("#dce8ff"), 0.22 * (1 - i / 14))
-        );
+    const pc = day ? mixc(col("#fff0c0"), col("#ffa050"), dusk) : col("#dce8ff");
+    glowE(sx, hz + 6 * k, 30 * k, 5 * k, withA(pc, day ? 0.3 : 0.25));
+    for (let i = 0; i < 40; i++) {
+      const u = i / 40,
+        yy = hz + 3 * k + u * u * (B - hz) * 0.9,
+        sp = (8 + u * 70) * k,
+        ww = (3 + u * 22) * k * (0.4 + 0.6 * Math.abs(Math.sin(t * 1.7 + i * 2.3))),
+        xx = sx + (hash(i * 5.3) - 0.5) * sp + Math.sin(t * 0.8 + i) * 4 * k;
+      if (yy < B) rect(xx - ww / 2, yy, ww, (1 + u * 1.6) * k, withA(pc, (day ? 0.3 : 0.32) * (1 - u * 0.8)));
     }
     R.setAdd(false);
   }
@@ -44745,6 +44780,28 @@ function drawCastaway(t) {
         cr = (11 + hash(i + j) * 9) * k;
       disc(ccx, ccy, cr, cc, (6 + hash(j + i) * 4) * k);
       if (dusk > 0.05) disc(ccx, ccy + 3 * k, cr * 0.9, lit, 2 * k);
+    }
+  }
+  // (v1.4.25) high wispy cirrus: long thin streaks, faint by day, lit rose and gold underneath at sunset and sunrise
+  if (!cwStorm()) {
+    const ca = 0.12 + dusk * 0.5 - dark * 0.08;
+    for (let i = 0; i < 9; i++) {
+      const y0 = T + h * (0.04 + hash(i * 6.1) * 0.22),
+        x0 = L + ((hash(i * 2.9) * (w + 400) + t * 2.5 * k) % (w + 400)) - 200,
+        ln = (120 + hash(i * 1.3) * 180) * k,
+        cc = mixc(
+          mixc(col("#ffffff"), col("#ff8aa0"), dusk * (1 - (y0 - T) / h)),
+          col("#5a5e7a"),
+          dark * 0.7
+        );
+      for (let j = 0; j < 3; j++)
+        glowE(
+          x0 + j * ln * 0.18,
+          y0 + j * 3 * k,
+          ln * (0.5 - j * 0.1),
+          (2 + j) * k,
+          withA(j === 2 && dusk > 0.05 ? col("#ffc060") : cc, Math.max(0, ca) * (1 - j * 0.25))
+        );
     }
   }
   // birds far off
@@ -44781,6 +44838,7 @@ function drawCastaway(t) {
       withA(col("#ffffff"), (0.03 + 0.06 * f) * (0.6 + 0.4 * Math.sin(t * 0.7 + i)))
     );
   }
+  cwWavelets(t, b, dark, dusk);
   if (dark > 0.3) cwBiolum(t, b, dark, "sea");
   cwSeaLight(t, b, dark, dusk);
   // ---- far out: the ships and the sea life ----
@@ -44852,6 +44910,42 @@ function drawCastaway(t) {
     line(ax, ay + 6 * k, ax, ay + 18 * k, 1.6 * k, cc);
   }
 }
+// (v1.4.25) THE WATER, CLOSER: hundreds of little wave crests, tiny and packed near the horizon, bigger nearer to us -
+// each a bright lit edge over its own dark trough - and a band of haze lying along the horizon where sea meets sky
+function cwWavelets(t, b, dark, dusk) {
+  const { L, w, B, hz, k } = b,
+    hi = mix(mix(col("#e8f6ff"), col("#ffd8a0"), clamp(dusk, 0, 1)), col("#8aa0d0"), dark),
+    lo = mix(col("#04284e"), col("#01030a"), dark);
+  for (let i = 0; i < 220; i++) {
+    const u = Math.pow(hash(i * 2.17), 1.6),
+      yy = hz + 4 * k + u * (B - hz - 4 * k),
+      sz = (3 + u * 26) * k,
+      cyc = (t * (0.18 + hash(i) * 0.12) + hash(i * 7.3)) % 1, // (each crest rises, curls and fades)
+      lf = Math.sin(cyc * Math.PI),
+      xx = L + ((hash(i * 4.9) * w + t * (4 + u * 10) * k) % w);
+    if (lf < 0.1) continue;
+    const ww = sz * (0.7 + 0.5 * lf);
+    disc(xx, yy + sz * 0.12, ww * 0.55, withA(lo, 0.18 * lf), sz * 0.08 + 0.4); // (the trough)
+    polyline(
+      [
+        xx - ww * 0.5,
+        yy + sz * 0.05,
+        xx - ww * 0.15,
+        yy - sz * 0.06,
+        xx + ww * 0.2,
+        yy - sz * 0.07,
+        xx + ww * 0.5,
+        yy + sz * 0.04,
+      ],
+      0.6 + u * 1.4,
+      withA(hi, (0.12 + 0.3 * u) * lf)
+    );
+  }
+  // the horizon haze
+  const hc = mix(mix(col("#d8eeff"), col("#ffb080"), clamp(dusk, 0, 1)), col("#1a2450"), dark);
+  vgrad(L, hz - 14 * k, w, 14 * k, withA(hc, 0), withA(hc, 0.35));
+  vgrad(L, hz, w, 10 * k, withA(hc, 0.35), withA(hc, 0));
+}
 // THE NIGHT SKY: thousands of stars, twinkling, the MILKY WAY arching across as a glowing band with its dark dust lane,
 // and now and then a shooting star
 function cwNightSky(t, b, dark) {
@@ -44877,8 +44971,42 @@ function cwNightSky(t, b, dark) {
       [x, y] = band(u);
     disc(x + 8 * k, y + 4 * k, (14 + 8 * hash(i)) * k, withA(col("#02040f"), 0.22 * dark), 5 * k); // (the dark dust lane)
   }
+  // (v1.4.25) DISTANT GALAXIES: a great spiral smudge seen tilted, its bright core and two faint arms - and little fuzzy ones
+  R.setAdd(true);
+  {
+    const gx = L + w * 0.78,
+      gy = T + sh * 0.2,
+      gs = Math.min(w, sh * 2) * 0.075;
+    push();
+    translate(gx, gy);
+    rotate(-0.5);
+    glowE(0, 0, gs * 2.4, gs * 0.7, withA(col("#b8c0f0"), 0.2 * dark));
+    glowE(0, 0, gs * 1.1, gs * 0.35, withA(col("#ffe8c8"), 0.32 * dark));
+    glow(0, 0, gs * 0.3, withA(col("#fff4e0"), 0.5 * dark));
+    for (let a = 0; a < 2; a++)
+      for (let j = 0; j < 14; j++) {
+        const th = j * 0.32 + a * Math.PI + t * 0.004,
+          rr = gs * (0.25 + j * 0.13);
+        glowE(
+          Math.cos(th) * rr,
+          Math.sin(th) * rr * 0.3,
+          gs * 0.22,
+          gs * 0.08,
+          withA(col(j % 3 ? "#a8c0ff" : "#ffb8d8"), 0.24 * dark * (1 - j / 16))
+        );
+      }
+    pop();
+    for (let i = 0; i < 7; i++) {
+      const x = L + hash(i * 13.7) * w,
+        y = T + hash(i * 8.3) * sh * 0.6,
+        r = (3 + hash(i * 2.2) * 5) * k;
+      glowE(x, y, r * 1.6, r * (0.5 + hash(i) * 0.5), withA(col(i % 2 ? "#c8b8ff" : "#ffe0c8"), 0.18 * dark));
+      glow(x, y, r * 0.4, withA(col("#ffffff"), 0.25 * dark));
+    }
+  }
+  R.setAdd(false);
   // the stars - lots of them, of every brightness, twinkling
-  for (let i = 0; i < 260; i++) {
+  for (let i = 0; i < 380; i++) {
     const x = L + hash(i * 3.7) * w,
       y = T + Math.pow(hash(i * 1.9), 1.3) * sh * 0.97,
       big = hash(i * 9.1) > 0.93,
@@ -44890,6 +45018,16 @@ function cwNightSky(t, b, dark) {
       big ? 2 : 1.2,
       withA(col(i % 7 ? "#ffffff" : i % 2 ? "#ffd8b0" : "#b8d0ff"), dark * (0.25 + 0.65 * tw))
     );
+    if (big) {
+      R.setAdd(true);
+      glow(
+        x + 1,
+        y + 1,
+        5 * k,
+        withA(col(i % 3 ? "#cfe0ff" : i % 2 ? "#ffc890" : "#a8c8ff"), 0.3 * tw * dark)
+      ); // (a coloured halo)
+      R.setAdd(false);
+    }
     if (big && tw > 0.8) {
       R.setAdd(true);
       line(x - 3 * k, y + 1, x + 4 * k, y + 1, 0.6, withA(C.white, 0.4 * dark));
@@ -45914,6 +46052,16 @@ function cwDrawCrab(x, y, k, t, robo) {
 function cwDrawUfo(x, y, k, t, beam, groundY, alpha = 1) {
   const tilt = Math.sin(t * 1.7) * 0.08,
     A = (c) => withA(c, c[3] * alpha);
+  // (v1.4.25) its glow lying on the water below it - a pale pool that pulses with its lights
+  R.setAdd(true);
+  glowE(
+    x,
+    groundY,
+    70 * k,
+    12 * k,
+    withA(col("#9fe8ff"), (0.12 + 0.18 * beam) * alpha * (0.85 + 0.15 * Math.sin(t * 4)))
+  );
+  R.setAdd(false);
   if (beam > 0.05) {
     R.setAdd(true);
     const bw = 12 * k,
@@ -46390,7 +46538,7 @@ function cwDrawKoos(t, b, dark) {
     arm(-6, -2, -46, 6, -55 * lift - 30 * (1 - lift), true);
     arm(6, 10, -48, 14, -56 * lift - 30 * (1 - lift));
     push();
-    translate(6, -56.5 * lift - 28 * (1 - lift));
+    translate(6, -55 * lift - 28 * (1 - lift));
     rotate(-0.08 - sw);
     rect(0, -2.2, 10, 4.4, col("#c89a3a"));
     rect(9, -2.8, 9, 5.6, col("#d8aa4a"));
@@ -46467,7 +46615,7 @@ function cwDrawKoos(t, b, dark) {
   // seven and a half heads tall, like a real grown man, instead of a big cartoon head on a thin body
   push();
   translate(0, hy + 4);
-  scaleBy(0.78);
+  scaleBy(0.66);
   translate(0, -(hy + 4));
   disc(-2, hy - 1, 7.4, beardD); // the long hair at the back
   for (let i = 0; i < 6; i++)
@@ -46656,7 +46804,7 @@ function cwMouseGoal(b, t) {
       face: face || (dx < 0 ? 1 : -1),
       on: false,
     }),
-    hat = (pose = "sit", face = 1) => ({ x: x + face * 0.6 * k, y: y - 69.5 * k, pose, face, on: true });
+    hat = (pose = "sit", face = 1) => ({ x: x + face * 0.6 * k, y: y - 67 * k, pose, face, on: true });
   if (CW.phase !== "island") return hide;
   if (CW.foes.some((f) => f.kind === "ufo" && f.demo && f.t > 2 && f.t < 15)) return hide;
   if (A === "hammock" || (A === "wake" && u < 3.5)) {
@@ -58457,7 +58605,7 @@ function drawEggs(g, s) {
 // THE VERSION (from v1.2.0, 5 October 2026): MAJOR.MINOR.PATCH - a new MINOR for a batch of new things, a new PATCH for
 // fixes and small touches - with the day it was made next to it. (Before this the versions were named after the date,
 // like v2026.10.05c.)
-const GAME_VERSION = "v1.4.24",
+const GAME_VERSION = "v1.4.25",
   GAME_DATE = "06.10.2026",
   VERSION_TEXT = GAME_VERSION + "  ·  " + GAME_DATE;
 const FB = '"Chakra Petch", "Segoe UI", sans-serif';
@@ -64769,6 +64917,17 @@ profWire();
 //  the game, and where the motion capture, the folk songs and the fonts come from. Both from the menu at any time.
 // =====================================================================================
 const NEWS = [
+  {
+    ver: "v1.4.25",
+    title: "CASTAWAY SKY AND SEA",
+    items: [
+      "KOOS HAS A SMALLER, MORE HUMAN HEAD",
+      "WAVE CRESTS AND HORIZON HAZE ON THE SEA",
+      "WISPY CLOUDS GLOW AT SUNSET AND SUNRISE",
+      "NIGHT: DISTANT GALAXIES, MORE STARS, A REAL MOON",
+      "MOONLIGHT AND UFO GLOW ON THE WATER",
+    ],
+  },
   {
     ver: "v1.4.24",
     title: "BLOOM AND COLOUR GRADING",

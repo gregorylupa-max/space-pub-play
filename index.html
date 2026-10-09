@@ -55,6 +55,11 @@ body.padnav button.on:not(.navsel) { box-shadow: none !important; }   /* (with a
 #bye[hidden] { display: none; }
 #bye h1 { font-family: "Bungee", Impact, sans-serif; color: #ff5fa8; font-size: clamp(26px, 6vw, 54px); margin: 0; }
 button.navsel, label.add.navsel { outline: 3px solid #fff !important; outline-offset: 2px; border-color: #fff !important; box-shadow: 0 0 0 5px rgba(255, 95, 168, .85), 0 0 26px rgba(255, 95, 168, .7) !important; transform: scale(1.04); position: relative; z-index: 2; }
+/* (v1.4.27) with a controller or the keyboard, the LIT BACKGROUND moves with you: only the selected button is filled in -
+   the big buttons (RESUME, PLAY...) go plain until you're on them, so there's never any doubt where you are */
+body.padnav button.primary:not(.navsel) { background: rgba(20, 22, 50, .58); color: var(--ink); border-color: var(--line); box-shadow: none; }
+body.padnav button.navsel, body.padnav label.add.navsel { background: #ff5fa8 !important; color: #14040c !important; }
+body.padnav .navsel b, body.padnav .navsel small, body.padnav .navsel span { color: #2a0818 !important; text-shadow: none !important; }
 button.primary { grid-column: 1 / -1; font-family: var(--display); font-weight: 400; font-size: 22px; color: #06140f; background: var(--cyan);
   border-color: var(--cyan); box-shadow: 0 0 22px rgba(95, 245, 200, .55); }
 button.primary:hover, button.primary:focus-visible { background: #a6ffe4; }
@@ -316,7 +321,7 @@ body.retro .table { font-size: 10px; gap: 5px; }
     <div><h3>KEYBOARD</h3><dl class="keys">
       <dt>↑ ↓ or W S</dt><dd>jump to another counter</dd>
       <dt>1 2 3 4</dt><dd>jump straight to that counter</dd>
-      <dt>← → or A D</dt><dd>run along the counter (grab tips) - hold it, or tap twice, for a TURBO run</dd>
+      <dt>← → or A D</dt><dd>run along the counter (grab tips) - tap twice for a TURBO run</dd>
       <dt>MOUSE</dt><dd>press and hold up your bar to run there · hold at the taps to pour · click a bar to jump to it · right-click (or click FLAVOUR) to change flavour · click the HOLY bottles or the ✝ (top left)</dd>
       <dt>Space · Enter · X · Ctrl</dt><dd>pour - HOLD mode: hold, let go to slide · TAP mode: one press (T switches)</dd>
       <dt>H · Q</dt><dd>send holy water · show the cross (devils, demons, vampires flee)</dd>
@@ -413,7 +418,7 @@ body.retro .table { font-size: 10px; gap: 5px; }
     <h3>YOU LOSE A LIFE WHEN</h3>
     <p>&bull; a customer reaches your end of the bar &bull; a shake slides off the far end with nobody to catch it &bull; an empty glass slides back past you and smashes. So: serve them early, never slide a shake down an empty bar, and run to catch the empties!</p>
     <h3>RUNNING, TIPS AND TURBO</h3>
-    <p>Run along the bar (left/right). Customers served quickly often leave a <b>TIP</b> on the counter - run up and grab it for bonus points. Tap a direction twice, or hold it, for a <b>TURBO</b> run. Change bar with up/down, 1-4, or a tap/click on it.</p>
+    <p>Run along the bar (left/right). Customers served quickly often leave a <b>TIP</b> on the counter - run up and grab it for bonus points. Tap a direction twice - or double-click / double-tap ahead of you on your bar - for a <b>TURBO</b> run. Change bar with up/down, 1-4, or a tap/click on it.</p>
     <h3>FLAVOURS</h3>
     <p>Some customers show the flavour they'd like in a bubble over their head - strawberry, chocolate or mint. Switch your flavour (<b>E</b>, a <b>right-click</b>, SELECT on a controller, or the FLAVOUR words / button) and serve the one they asked for: <b>+150</b>. The wrong flavour is still fine - just no bonus. Don't want to bother? Turn <b>FLAVOUR ORDERS</b> off in SETTINGS: then nobody asks, and there's just one flavour to pour.</p>
     <h3>SPECIAL GUESTS</h3>
@@ -2675,9 +2680,9 @@ const DICT_ROWS                             = [
   ["THE DOMOVOI, THE LITTLE HOUSE SPIRIT!", "DIE DOMOWOI, DIE KLEIN HUISGEES!", "DOMOWIK, DUSZEK DOMOWY!"],
   ["THE VODYANOY, GRANDFATHER OF THE WATERS!", "DIE WODJANOI, OUPA VAN DIE WATERS!", "WODNIK, DZIADEK WÓD!"],
   [
-    "run along the counter (grab tips) - hold it, or tap twice, for a TURBO run",
-    "hardloop langs die toonbank (vat fooitjies) - hou dit, of tik twee keer, vir 'n TURBO-lopie",
-    "biegnij wzdłuż baru (zbieraj napiwki) - przytrzymaj albo stuknij dwa razy, by przyspieszyć TURBO",
+    "run along the counter (grab tips) - tap twice for a TURBO run",
+    "hardloop langs die toonbank (vat fooitjies) - tik twee keer vir 'n TURBO-lopie",
+    "biegnij wzdłuż baru (zbieraj napiwki) - stuknij dwa razy, by przyspieszyć TURBO",
   ],
   ["INDIAN", "INDIESE", "INDYJSCY"],
   ["AUSTRIAN", "OOSTENRYKSE", "AUSTRIACCY"],
@@ -4559,15 +4564,15 @@ const VENUES          = [
   },
   {
     place: "PUFFBALL",
-    name: "PUFFBALL CANDYFLOSS PARLOUR",
-    sub: "Puffball - a planet as fluffy as candyfloss",
+    name: "PUFFBALL SKY TOWN",
+    sub: "Puffball - a town floating in the clouds of a candyfloss planet", // (v1.4.27: up among the clouds)
     art: 6,
     region: "THE ANDROMEDA GALAXY  ·  THE PA-99-N2 SYSTEM",
     andsys: true,
     trk: 21,
     tw: 27,
     fact: "The 'super-puff' planets of Kepler-51 are so fluffy that they are about as dense as candyfloss!",
-    mark: "exo",
+    mark: "skytown", // (v1.4.27: a town hanging from giant balloons, floating over a sea of clouds - draw.ts)
     pal: [
       "#5a2a4a",
       "#7a3a6a",
@@ -4581,7 +4586,7 @@ const VENUES          = [
       "#ff7ad0",
       "#9fe0ff",
     ],
-    sky: ["#1a0a1a", "#7a3a6a"],
+    sky: ["#4a3a9a", "#ffb0c4"], // (v1.4.27: a deep blue-violet sky overhead, glowing pink down by the clouds)
     neb: ["#ff9fd8", "#c09fff", "#9fe0ff"],
   },
   {
@@ -6602,6 +6607,7 @@ for (const [id, k] of [
 // On the game picture: tap (or click) a bar to jump to it; press and hold on your own bar to pour;
 // swipe up / down to change bar; drag left / right to run. In the bonus round, tap a dome to pick it.
 const GEST = new Map();
+const TAP2 = { t: 0, x: 0, y: 0 }; // (v1.4.27: the last press on the bar - to spot a double click / double tap for TURBO)
 function laneAt(wx, wy) {
   if (VERT) return vLaneAt(wx, wy);
   // (v1.4.17) MORE PRECISE: each bar is measured where it is really DRAWN - in perspective, at the spot along it you
@@ -6699,11 +6705,18 @@ function bindPointer(canvas) {
     });
     // MOUSE AND TOUCH RUNNING (v1.3.7): press on your own bar somewhere up it from the barman and he RUNS there (a turbo
     // run if it's far) - keep holding and move the pointer to steer him. Press at the taps end to pour.
-    const bx = mine ? barXAt(lane, wx, wy) : 0;
+    // (v1.4.27) TURBO only on a DOUBLE click / DOUBLE tap: a single press just runs him there
+    const bx = mine ? barXAt(lane, wx, wy) : 0,
+      now = performance.now(),
+      dbl =
+        now - (TAP2.t || 0) < 350 && Math.abs(e.clientX - TAP2.x) < 60 && Math.abs(e.clientY - TAP2.y) < 60;
+    TAP2.t = now;
+    TAP2.x = e.clientX;
+    TAP2.y = e.clientY;
     if (mine && bx < P1.x - 60) {
       GEST.get(e.pointerId).run = true;
       touchHeld.runTo = bx;
-      if (P1.x - bx > 220 && !(P1.dashCD > 0) && !(P1.tired > 0) && !G.demo) {
+      if (dbl && !(P1.dashCD > 0) && !(P1.tired > 0) && !G.demo) {
         P1.dashT = 0.4;
         P1.dashCD = 0.8;
         P1.dashDir = -1;
@@ -7168,14 +7181,11 @@ function update(dt) {
       [inp.right, 1],
     ]         ) {
       const was = d < 0 ? P.hL : P.hR;
-      // TURBO, made easy (v1.3.5): a double tap (within 0.45 s), or just HOLD a direction for half a second
-      const hk = d < 0 ? "holdL" : "holdR";
-      P[hk] = held ? (P[hk] || 0) + dt : 0;
-      const holdGo =
-        held && was && P[hk] >= 0.5 && P[hk] - dt < 0.5 && (d < 0 ? P.x > X0 + 80 : P.x < TAPX - 60); // (only where there is room to run)
-      if (((held && !was) || holdGo) && !demo) {
+      // TURBO: a DOUBLE TAP of a direction (within 0.45 s). (v1.4.27: holding a direction no longer turbos - only a
+      // double tap does, so you can run steadily without shooting off)
+      if (held && !was && !demo) {
         const last = d < 0 ? P.tL : P.tR;
-        if ((holdGo || G.time - (last ?? -9) < 0.45) && P.dashCD <= 0 && !(P.tired > 0)) {
+        if (G.time - (last ?? -9) < 0.45 && P.dashCD <= 0 && !(P.tired > 0)) {
           P.dashT = 0.4;
           P.dashCD = 0.8;
           P.dashDir = d;
@@ -8193,7 +8203,7 @@ function update(dt) {
     }
     pr.chant -= dt;
     if (angry.length && pr.chant <= 0) {
-      pr.chant = 1.45 - angry[0].protest.anger * 0.3; // (v1.4.1: a slower chant, in step with the slower march)
+      pr.chant = 1.9 - angry[0].protest.anger * 0.3; // (v1.4.1: a slower chant, in step with the slower march; v1.4.27: slower again)
       sfx("chant", angry[0].x, angry.length);
     }
     if (!angry.length) {
@@ -8308,7 +8318,7 @@ function update(dt) {
           dt *
           (G.mind && c.type.kind === "astro" ? 1.45 : 1) *
           (hasPw("slow") ? 0.5 : 1) *
-          (c.protest && !c.protest.calm ? 0.75 + c.protest.anger * 0.25 : 1) * // (v1.4.1: protesters march slowly - never faster than anyone else)
+          (c.protest && !c.protest.calm ? 0.45 + c.protest.anger * 0.15 : 1) * // (v1.4.1: protesters march slowly - never faster than anyone else; v1.4.27: slower still)
           (c.type.sprints ? 1.7 : 1) *
           (c.wolf ? 1.6 : 1) *
           (c.hyde ? 1.6 : 1) *
@@ -12321,8 +12331,9 @@ function drawRoom(V, t) {
   PAR[0] = -CAM.x * 0.75;
   PAR[1] = -CAM.y * 0.75; // the view outside barely moves: it's far away
   const top = (x) => LYf(-1, x) + 30 * LS(-1); // where the back wall meets the floor
-  const winTop = v === 3 ? T : 6,
-    winBot = (x) => top(x) - (v === 3 ? 0 : 13); // big windows: from just under the ceiling to the low panelling
+  const sky = here().mark === "skytown", // (v1.4.27: Puffball's sky town - an open terrace up in the clouds, no wall at all)
+    winTop = v === 3 || sky ? T : 6,
+    winBot = (x) => top(x) - (v === 3 || sky ? 0 : 13); // big windows: from just under the ceiling to the low panelling
   // ---- the view: deep space first, then whatever is close to the glass ----
   spaceView(L, Rr, winTop, winBot, t, v, 1);
   if (v === 1) {
@@ -12366,12 +12377,33 @@ function drawRoom(V, t) {
       rect(x, y - 16, 3, 16, col("#3a2a6a"));
     } // fence posts
     line(L, top(L) - 12, Rr, top(Rr) - 12, 2, col("#3a2a6a"));
-  } else
+  } else if (sky)
+    camLayer("terrace_" + tourStop(), () => {
+      // THE SKY TERRACE: a white balustrade along the edge, pink handrail, little lanterns - and nothing but sky beyond
+      for (let x = L; x < Rr; x += 14) {
+        const y = top(x);
+        rect(x, y - 18, 5, 18, col("#f4e8f0"));
+        disc(x + 2.5, y - 12, 3.2, col("#fff4fa"), 4);
+        rect(x, y - 18, 5, 1.5, withA(C.white, 0.6));
+      }
+      line(L, top(L) - 20, Rr, top(Rr) - 20, 4, col("#ff9ac8"));
+      line(L, top(L) - 21.5, Rr, top(Rr) - 21.5, 1, withA(C.white, 0.6));
+      for (let x = L + 60; x < Rr; x += 180) {
+        const y = top(x) - 22;
+        line(x, y, x, y - 26, 1.5, col("#c8a0b8"));
+        disc(x, y - 30, 5, col("#ffd890"));
+        R.setAdd(true);
+        glow(x, y - 30, 16, withA(col("#ffd890"), 0.35));
+        R.setAdd(false);
+      }
+    });
+  else
     camLayer("wall" + v + "_" + tourStop(), () => {
       // ---- the wall around the windows: a top strip, pillars between the panes, frames with a glint on the glass ----
       wallPiece(L, T, Rr, winTop, v, V);
-      const panes = [];
-      for (let x = 74; x < Rr; x += 230) panes.push([x, x + 200]);
+      // (v1.4.27) every stop has its own kind of window - plain panes, portholes, arches, octagons, slits, a panorama
+      const KW = stopKit().win,
+        panes = kitPanes(KW, Rr);
       let px = L;
       for (const [a, b] of panes) {
         wallPiece(px, winTop, a, winBot(a) + 2, v, V);
@@ -12381,21 +12413,9 @@ function drawRoom(V, t) {
       wallPiece(px, winTop, Rr, winBot(Rr) + 2, v, V);
       wallGrime(px, winTop, Rr, winBot(Rr) - 20, 999);
       panes.forEach(([a, b], i) => paneDirt(a, b, winTop, winBot, i, v));
-      for (const [a, b] of panes) {
-        const wood = v === 2 || v === 7,
-          fc = wood ? col("#4a3020") : C.chromeDk,
-          fl = wood ? col("#6a4a30") : C.chrome;
-        rect(a - 4, winTop - 4, b - a + 8, 4, fl);
-        line(a - 2, winTop - 2, a - 2, winBot(a), 4, fc);
-        line(b + 2, winTop - 2, b + 2, winBot(b), 4, fc);
-        line(a - 3, winTop, a - 3, winBot(a), 1, fl);
-        line((a + b) / 2, winTop, (a + b) / 2, winBot((a + b) / 2), 2, fc);
-        for (let i = 0; i < 6; i++) disc(a - 2, winTop + 6 + i * 14, 0.9, fl);
-        R.setAdd(true);
-        tri(a + 20, winTop, a + 44, winTop, a + 4, winBot(a + 4) - 4, withA(C.white, 0.035));
-        tri(a + 120, winTop, a + 130, winTop, a + 104, winBot(a + 104), withA(C.white, 0.03));
-        R.setAdd(false);
-      }
+      for (const [a, b] of panes) kitWindowFrame(KW, a, b, winTop, winBot, V, v);
+      // (v1.4.27) and something of its own hung on the wall between two of the windows
+      if (panes.length > 2) kitWallThing(stopKit().wall, (panes[1][1] + panes[2][0]) / 2, winTop + 24, V, 0);
       for (let i = 0; i + 1 < panes.length; i++)
         if (i !== 1) {
           // (v1.4.8) TRAVEL POSTERS from home taped over the pillars (in front of the frames): a famous place of South Africa on one, of Poland on the
@@ -12495,7 +12515,7 @@ function drawRoom(V, t) {
           const dark = (k + r) % 2,
             lit = 0.78 + r * 0.08,
             h1 = hash(k * 3.1 + r * 7.7 + i * 13);
-          floorTile(v, V, dark, h1, lit, ax, ay, bx, by, cx, cy, dx, dy, k, r);
+          floorTile(stopKit().floor, V, dark, h1, lit, ax, ay, bx, by, cx, cy, dx, dy, k, r); // (v1.4.27: every stop its own floor)
           if (!dark && hash(k * 7 + r + i * 31) > 0.86) {
             const [sx, sy] = Pf(x + 8, (F[r] + F[r + 1]) / 2);
             rect(sx, sy, 5, 1.5, withA(C.white, 0.05));
@@ -12530,6 +12550,7 @@ function drawRoom(V, t) {
       R.setAdd(false);
     }
   });
+  kitProps(V, t); // (v1.4.27: this stop's own two big things, standing against the back wall)
   R.setAdd(true); // the stars outside reflected in the polished tiles
   for (let i = -1; i < LANES; i++)
     for (let s = 0; s < 10; s++) {
@@ -13027,34 +13048,70 @@ function landmark(mk, x0, x1, y0, yb, t, inside, fit, w) {
     }
     R.setAdd(true);
   } else if (mk === "blackhole") {
-    // the black hole: a lensed ring of fire around nothing at all
-    const px = x0 + w * 0.6,
-      py = cy,
-      r = 34;
-    G2(px, py, 120, "#c05fff", 0.18);
-    for (let i = 0; i < 40; i++) {
-      const a = (i / 40) * 6.283 + t * 0.8,
-        rx = r * 1.9,
-        ry = r * 0.45;
-      const x = px + Math.cos(a) * rx,
-        y = py + Math.sin(a) * ry;
-      if (inside(x, y, 6)) disc(x, y, 5, withA(col(i % 3 ? "#ff9a3d" : "#ffd24d"), 0.5));
+    // the black hole: a lensed ring of fire around nothing at all - (v1.4.27) now the full show's black hole, its disc
+    // of gas swirling round (drawBlackHole, ending.ts); the wall round the windows hides whatever spills outside them
+    {
+      const px = x0 + w * 0.6;
+      drawBlackHole(px, cy, 24, t, 1);
+      R.setAdd(true);
+      G2(px, cy, 150, "#ff8a3a", 0.1);
     }
-    for (let i = 0; i < 30; i++) {
-      const a = (i / 30) * 6.283,
-        x = px + Math.cos(a) * r * 1.1,
-        y = py + Math.sin(a) * r * 1.1;
-      if (inside(x, y, 4)) disc(x, y, 3.5, withA(col("#ffc070"), 0.45));
-    }
+  } else if (mk === "skytown") {
+    // (v1.4.27) PUFFBALL SKY TOWN: little towns built on platforms that hang from giant striped balloons, floating over a
+    // sea of pink clouds - rope bridges between them, lit windows, airships puttering about, and the clouds rolling by
     R.setAdd(false);
-    if (inside(px, py, r)) disc(px, py, r, col("#000000"));
+    const h2 = ybm - y0,
+      cl = (x, y, r, c, a) => {
+        disc(x, y, r, withA(col(c), a), r * 0.55);
+        disc(x - r * 0.6, y + r * 0.15, r * 0.7, withA(col(c), a), r * 0.42);
+        disc(x + r * 0.65, y + r * 0.1, r * 0.75, withA(col(c), a), r * 0.45);
+      };
+    // far clouds, far away and slow
+    for (let i = 0; i < 9; i++) {
+      const x = x0 + ((((hash(i * 3.1) * w - t * 2 + PAR[0] * 0.2) % w) + w) % w),
+        y = y0 + h2 * (0.55 + hash(i) * 0.15);
+      cl(x, y, 22 + hash(i * 2) * 18, "#f8d0e0", 0.55);
+    }
+    const town = (tx, ty, sc, c1, c2, ph) => skyTown(tx, ty, sc, c1, c2, ph, t);
+    // (on either side of the stage, where you can see them from the bar - and one more far off behind it)
+    const A1 = town(x0 + w * 0.17, y0 + h2 * 0.7, 1.25, "#ff9ac0", "#fff0f6", 0),
+      A2 = town(x0 + w * 0.5, y0 + h2 * 0.5, 0.8, "#9ad0ff", "#f0f8ff", 2),
+      A3 = town(x0 + w * 0.8, y0 + h2 * 0.72, 1.2, "#ffd08a", "#fff6e8", 4);
+    // rope bridges between them, sagging
+    for (const [p, q] of [
+      [A1, A2],
+      [A2, A3],
+    ]) {
+      const pts = [];
+      for (let i = 0; i <= 12; i++) {
+        const f = i / 12;
+        pts.push(p[0] + (q[0] - p[0]) * f, p[1] + (q[1] - p[1]) * f - 4 + Math.sin(f * Math.PI) * 10);
+      }
+      polyline(pts, 1.2, col("#7a5a6a"));
+    }
+    // a little airship puttering past, propeller spinning
+    {
+      const ax = x0 + ((((t * 9) % (w + 120)) + w + 120) % (w + 120)) - 60,
+        ay = y0 + h2 * 0.25 + Math.sin(t * 0.8) * 4;
+      disc(ax, ay, 16, col("#c8a0ff"), 6);
+      disc(ax - 4, ay - 2, 10, withA(C.white, 0.25), 3);
+      rect(ax - 5, ay + 5, 10, 4, col("#6a4a7a"));
+      tri(ax - 16, ay, ax - 22, ay - 6, ax - 22, ay + 6, col("#a080e0"));
+      line(ax + 6, ay + 7, ax + 6 + Math.cos(t * 30) * 3, ay + 7, 1, col("#2a2a3a"));
+    }
+    // the sea of clouds below, rolling slowly by (two layers - the nearer ones faster)
+    for (let lay = 0; lay < 2; lay++)
+      for (let i = 0; i < 12; i++) {
+        const sp = lay ? 6 : 3,
+          x =
+            x0 +
+            ((((hash(i * 5.7 + lay) * (w + 80) - t * sp + PAR[0] * (lay ? 0.5 : 0.3)) % (w + 80)) + w + 80) %
+              (w + 80)) -
+            40,
+          y = y0 + h2 * (lay ? 0.94 : 0.82) + hash(i * 1.3) * 6;
+        cl(x, y, 26 + hash(i * 2.2 + lay) * 16, lay ? "#fff4f8" : "#ffd8e8", lay ? 0.95 : 0.8);
+      }
     R.setAdd(true);
-    for (let i = 0; i < 20; i++) {
-      const a = (i / 20) * 3.14159 + t * 0.8,
-        x = px + Math.cos(a) * r * 1.9,
-        y = py + Math.sin(a) * r * 0.45;
-      if (inside(x, y, 6) && Math.sin(a) > 0) disc(x, y, 5, withA(col("#ffd24d"), 0.55));
-    } // the front of the disc, over the hole
   } else if (mk === "senate") {
     // the capital: a ringworld city glittering with lights
     R.setAdd(false);
@@ -13364,7 +13421,9 @@ function sideWall(edge, inner0, V, dir, t, v) {
   // a huge planet peeking in from the edge of the screen
   const py = PH * 0.42 + PAR[1] * 0.6,
     pr = Math.min(110, wAt(py + 110) * 0.85, wAt(py - 110) * 0.85 + 30);
-  sideScene(SIDE[v][dir > 0 ? 0 : 1], edge, dir, py, pr, wAt, y0, y1, t);
+  if (here().mark === "skytown" && here().art === v)
+    skySide(edge, dir, wAt, y0, y1, py, t); // (v1.4.27: up in the clouds)
+  else sideScene(SIDE[v][dir > 0 ? 0 : 1], edge, dir, py, pr, wAt, y0, y1, t);
   // window bars at each floor level, lined up with the bars of the room
   const fc = shade(V.wall, 0.55),
     fl = shade(V.wall2, 0.8);
@@ -13380,6 +13439,87 @@ function sideWall(edge, inner0, V, dir, t, v) {
   R.setAdd(true);
   polyline([edge + dir * wAt(y0) * 0.25, y0, edge + dir * wAt(y1) * 0.35, y1], 6, withA(C.white, 0.025));
   R.setAdd(false);
+}
+// (v1.4.27) A LITTLE SKY TOWN for Puffball: houses on a platform hanging from a giant striped balloon, bobbing gently
+function skyTown(tx, ty, s, c1, c2, ph, t) {
+  const by = ty + Math.sin(t * 0.6 + ph) * 3 * s;
+  // the balloon: a big striped envelope
+  disc(tx, by - 46 * s, 30 * s, col(c1), 24 * s);
+  for (let g = -2; g <= 2; g++) {
+    const gx = tx + g * 11 * s;
+    disc(gx, by - 46 * s, 4 * s, col(g % 2 ? c2 : c1), 23 * s * Math.sqrt(1 - (g / 2.8) ** 2));
+  }
+  disc(tx - 10 * s, by - 56 * s, 8 * s, withA(C.white, 0.3), 6 * s); // (shine)
+  for (const dx of [-22, -8, 8, 22])
+    line(tx + dx * 0.9 * s, by - 26 * s, tx + dx * s, by - 6 * s, 0.8, col("#6a4a5a"));
+  // the platform and its little houses
+  quad4(
+    tx - 34 * s,
+    by - 6 * s,
+    tx + 34 * s,
+    by - 6 * s,
+    tx + 26 * s,
+    by + 4 * s,
+    tx - 26 * s,
+    by + 4 * s,
+    col("#8a6a7a")
+  );
+  rect(tx - 34 * s, by - 7 * s, 68 * s, 2 * s, col("#c8a0b8"));
+  for (let k2 = 0; k2 < 5; k2++) {
+    const hx2 = tx + (k2 - 2) * 12 * s,
+      hh = (9 + hash(k2 + ph) * 8) * s;
+    rect(hx2 - 5 * s, by - 7 * s - hh, 10 * s, hh, col(["#fff0f4", "#e8f4ff", "#fff4d8"][k2 % 3]));
+    tri(
+      hx2 - 6 * s,
+      by - 7 * s - hh,
+      hx2 + 6 * s,
+      by - 7 * s - hh,
+      hx2,
+      by - 14 * s - hh,
+      col(["#ff7aa8", "#7ab0ff", "#ffb04a"][k2 % 3])
+    );
+    rect(hx2 - 1.5 * s, by - 4 * s - hh * 0.7, 3 * s, 3 * s, col("#ffd890"));
+  }
+  line(tx + 30 * s, by - 6 * s, tx + 30 * s, by - 26 * s, 1, col("#8a6a7a"));
+  quad4(
+    tx + 30 * s,
+    by - 26 * s,
+    tx + 40 * s,
+    by - 24 * s,
+    tx + 30 * s,
+    by - 21 * s,
+    tx + 30 * s,
+    by - 21 * s,
+    col("#ff5fa8")
+  ); // (a flag)
+  return [tx, by];
+}
+// (v1.4.27) Puffball's side windows: banks of cloud drifting past, and another sky town hanging out there
+function skySide(edge, dir, wAt, y0, y1, py, t) {
+  for (let i = 0; i < 14; i++) {
+    const y =
+        y0 +
+        ((((hash(i * 4.3 + dir) * (y1 - y0) + t * (3 + hash(i) * 4)) % (y1 - y0)) + (y1 - y0)) % (y1 - y0)),
+      w = wAt(y),
+      r = Math.min(34, w * 0.42);
+    if (r < 4) continue;
+    const x = edge + dir * w * (0.3 + hash(i * 1.7) * 0.4),
+      c = withA(col(i % 3 ? "#fff0f6" : "#ffc8dc"), 0.85);
+    disc(x, y, r, c, r * 0.5);
+    disc(x - r * 0.5, y + r * 0.12, r * 0.6, c, r * 0.36);
+    disc(x + r * 0.5, y + r * 0.1, r * 0.65, c, r * 0.38);
+  }
+  const w = wAt(py);
+  if (w > 40)
+    skyTown(
+      edge + dir * w * 0.5,
+      py,
+      Math.min(1.4, w / 90),
+      dir > 0 ? "#c8a0ff" : "#8ae0c0",
+      "#f8f4ff",
+      dir > 0 ? 6 : 8,
+      t
+    );
 }
 // the slanted edge where a side wall meets the room, drawn over the floor so the join is clean
 function sideFrame(edge, inner0, V, dir) {
@@ -15465,13 +15605,16 @@ function counterBody(lane, V) {
     withA(C.black, 0)
   );
   quad4(a - 10, ya - 10, b - 10, yb - 10, b, yb, a, ya, V.top2, V.top2, V.top, V.top); // the top, seen from above
-  if (venue() === 5) line(a - 10, ya - 10, b - 10, yb - 10, 1.5, withA(V.neon, 0.8)); // the station counter's lit edge
-  if (venue() === 3)
+  // (v1.4.27) every stop its own bar: the top's material, the front, the things on it (stopkit.ts)
+  const K = stopKit();
+  if (K.top) kitTop(K.top, lane, V, a, b, ya, yb);
+  if (venue() === 5 && K.top === 0) line(a - 10, ya - 10, b - 10, yb - 10, 1.5, withA(V.neon, 0.8)); // the station counter's lit edge
+  if (venue() === 3 && K.top === 0)
     for (let k = 0; k < 14; k++) {
       const x0 = a + ((b - a) * k) / 14;
       ring(x0, LY(lane, x0) - 5, 3 + hash(k + lane) * 2, 0.6, withA(V.face2, 0.4));
     } // tree rings on the log top
-  for (let k = 0; k < 9; k++) {
+  for (let k = 0; k < (K.top === 0 ? 9 : 0); k++) {
     const x0 = a + ((b - a) * (k + hash(k + lane * 9) * 0.6)) / 9,
       len = 30 + hash(k * 5 + lane) * 50,
       dy = -3 - hash(k * 7 + lane) * 5;
@@ -15485,34 +15628,63 @@ function counterBody(lane, V) {
     disc(lx + 4, y, 16, withA(C.white, 0.1), 2);
   }
   R.setAdd(false); // lamp gleam on the polish
-  quad4(a, ya, b, yb, b, yb + 28, a, ya + 28, V.face); // the front
-  quad4(
-    a,
-    ya,
-    b,
-    yb,
-    b,
-    yb + 5,
-    a,
-    ya + 5,
-    withA(C.black, 0.4),
-    withA(C.black, 0.4),
-    withA(C.black, 0),
-    withA(C.black, 0)
-  ); // shadow under the overhang
-  barFront(venue(), lane, V, a, b, ya, yb);
-  quad4(a, ya + 23, b, yb + 23, b, yb + 28, a, ya + 28, shade(V.face, 0.6)); // kick plate
-  line(a, ya + 1, b, yb + 1, 2, withA(C.white, 0.35));
-  barRail(venue(), lane, V, a, b, ya, yb); // the foot rail
+  if (K.front === 11) {
+    // AN OPEN TABLE ON LEGS: a deep apron under the top, sturdy turned legs, a foot bar between them - and the floor
+    // (and the customers' legs) showing through underneath
+    quad4(a, ya, b, yb, b, yb + 12, a, ya + 12, V.face);
+    quad4(a, ya + 10, b, yb + 10, b, yb + 12, a, ya + 12, shade(V.face, 0.7));
+    line(a, ya + 1, b, yb + 1, 2, withA(C.white, 0.35));
+    for (let x = a + 6; x < b; x += 104) {
+      const y = LY(lane, x),
+        lc = shade(V.face2, 0.9);
+      quad4(
+        x - 3,
+        y + 12,
+        x + 3,
+        y + 12,
+        x + 2.4,
+        y + 31,
+        x - 2.4,
+        y + 31,
+        lc,
+        lc,
+        shade(lc, 0.7),
+        shade(lc, 0.7)
+      );
+      disc(x, y + 17, 3.6, lc, 2);
+      disc(x, y + 26, 3, shade(lc, 0.85), 1.6);
+      rect(x - 1.8, y + 13, 1.2, 17, withA(C.white, 0.15));
+    }
+    line(a + 6, ya + 25, b, yb + 25, 2.4, V.trim);
+    line(a + 6, ya + 24, b, yb + 24, 0.8, withA(C.white, 0.4)); // the foot bar
+  } else {
+    quad4(a, ya, b, yb, b, yb + 28, a, ya + 28, V.face); // the front
+    quad4(
+      a,
+      ya,
+      b,
+      yb,
+      b,
+      yb + 5,
+      a,
+      ya + 5,
+      withA(C.black, 0.4),
+      withA(C.black, 0.4),
+      withA(C.black, 0),
+      withA(C.black, 0)
+    ); // shadow under the overhang
+    if (K.front <= 7) barFront(K.front, lane, V, a, b, ya, yb);
+    else kitFront(K.front, lane, V, a, b);
+    quad4(a, ya + 23, b, yb + 23, b, yb + 28, a, ya + 28, shade(V.face, 0.6)); // kick plate
+    line(a, ya + 1, b, yb + 1, 2, withA(C.white, 0.35));
+    barRail(K.front <= 7 ? K.front : venue(), lane, V, a, b, ya, yb); // the foot rail
+  }
   R.setAdd(true);
   for (const lx of LAMPS) disc(lx, LY(lane, lx) + 30, 10, withA(C.white, 0.25), 1.5);
   R.setAdd(false);
   for (const dx of [0.24, 0.6]) {
-    const x = a + (b - a) * dx,
-      y = LY(lane, x);
-    rect(x - 5, y - 13, 10, 10, C.chrome);
-    rect(x - 3, y - 11, 6, 6, C.white);
-    rect(x - 5, y - 4, 10, 2, C.chromeDk);
+    const x = a + (b - a) * dx;
+    kitBarThing(K.item, x, LY(lane, x), lane); // (napkins, a candle, flowers, peanuts, a little lamp, a tiny cactus)
   }
   counterGrime(lane, V, a, b);
   // pub touches: milkshake beer-mats along the bar top, and a striped bar towel thrown over the end by the taps
@@ -15554,12 +15726,14 @@ function counterBody(lane, V) {
       quad4(x - 6.6, y + yy, x + 9.4, y + yy, x + 9.5, y + yy + 2, x - 6.5, y + yy + 2, col("#2a5ac8"));
     quad4(x - 7, y - 2, x + 9, y - 2, x + 8, y - 4, x - 6, y - 4, col("#e8e2d4"));
   }
-  quad4(a - 10, ya - 10, a, ya, a, ya + 28, a - 10, ya + 18, shade(V.face, 0.7)); // the end cap facing the door
+  if (K.front !== 11)
+    quad4(a - 10, ya - 10, a, ya, a, ya + 28, a - 10, ya + 18, shade(V.face, 0.7)); // the end cap facing the door
+  else quad4(a - 10, ya - 10, a, ya, a, ya + 12, a - 10, ya + 2, shade(V.face, 0.7));
 }
 // ---- the shake taps on the right wall ----
 // ---- the doors customers come in through - every planet has its own kind ----
 function drawDoor(lane, t, V) {
-  const v = venue(),
+  const v = stopKit().door, // (v1.4.27: every stop its own door - stopkit.ts)
     x = X0 - 44,
     y = LY(lane, X0),
     open = customers.some((c) => c.lane === lane && c.x < X0 + 10 && c.alpha > 0.3) ? 1 : 0;
@@ -15724,6 +15898,78 @@ function drawDoor(lane, t, V) {
       }
       disc(dir < 0 ? x - 28 + ow : x + 32 - ow, y - 36, 2.5, col("#ffd060"));
     }
+  } else if (v === 8) {
+    // (v1.4.27) A STAR GATE: a ring of stone and light, a shimmering swirl inside that flares when someone steps through
+    const cx = x + 2,
+      cy = y - 40;
+    disc(cx, cy, 40, col("#3a3a4a"), 44);
+    disc(cx, cy, 33, col("#000000"), 37);
+    R.setAdd(true);
+    for (let k = 0; k < 5; k++) {
+      const an = t * (1.2 + k * 0.3) + k;
+      arc(cx, cy, 8 + k * 5, an, an + 3.6, 2.2, withA(V.neon, 0.35 + open * 0.3), 18);
+    }
+    glow(cx, cy, 30, withA(V.neon, 0.25 + open * 0.4));
+    R.setAdd(false);
+    for (let k = 0; k < 9; k++) {
+      const an = (k / 9) * 6.283 + 0.3;
+      disc(
+        cx + Math.cos(an) * 37,
+        cy + Math.sin(an) * 41,
+        3,
+        withA(V.accent, 0.5 + 0.5 * Math.sin(t * 3 + k))
+      );
+    }
+    rect(cx - 30, y - 1, 60, 4, col("#4a4a5a")); // the step
+  } else if (v === 9) {
+    // (v1.4.27) A FARMHOUSE STABLE DOOR: planks, a top half that swings open on its own, a horseshoe for luck
+    rect(x - 32, y - 82, 68, 4, col("#5a3a22"));
+    line(x - 32, y - 80, x - 32, y + 2, 4, col("#5a3a22"));
+    line(x + 34, y - 80, x + 34, y + 2, 4, col("#5a3a22"));
+    const pl = col("#8a5a32"),
+      w2 = 60 * Math.cos(open * 1.2);
+    quad4(x - 30, y - 38, x + 30, y - 38, x + 30, y + 2, x - 30, y + 2, pl); // the bottom half
+    for (let j = 1; j < 6; j++)
+      line(x - 30 + j * 10, y - 38, x - 30 + j * 10, y + 2, 1, withA(C.black, 0.35));
+    line(x - 28, y - 36, x + 28, y, 2.4, shade(pl, 0.75));
+    quad4(
+      x - 30,
+      y - 78,
+      x - 30 + w2,
+      y - 78 + open * 4,
+      x - 30 + w2,
+      y - 40 + open * 4,
+      x - 30,
+      y - 40,
+      shade(pl, 1.08)
+    ); // the top half
+    for (let j = 1; j < 6; j++)
+      line(
+        x - 30 + (w2 * j) / 6,
+        y - 78 + (open * 4 * j) / 6,
+        x - 30 + (w2 * j) / 6,
+        y - 40 + (open * 4 * j) / 6,
+        1,
+        withA(C.black, 0.3)
+      );
+    arc(x + 2, y - 86, 6, 0.3, Math.PI - 0.3, 2.4, col("#a8a8b0"), 10);
+  } else if (v === 10) {
+    // (v1.4.27) A BEAD CURTAIN: strings of coloured beads that swing apart as someone pushes through
+    rect(x - 34, y - 84, 72, 6, col("#6a4a2a"));
+    for (let j = 0; j < 14; j++) {
+      const bx = x - 30 + j * 4.6,
+        push2 = open * (j < 7 ? -1 : 1) * (1 - Math.abs(j - 6.5) / 7) * 16,
+        sw2 = Math.sin(t * 2 + j) * 1.2;
+      for (let q = 0; q < 14; q++) {
+        const f = q / 13;
+        disc(
+          bx + (push2 + sw2) * f * f,
+          y - 76 + q * 5.6,
+          1.5,
+          col(["#ff5fa8", "#ffd24d", "#5ff5c8", "#9f8aff"][(j + q) % 4])
+        );
+      }
+    }
   } else {
     // a round ship's hatch with a wheel
     disc(x + 2, y - 40, 40, C.chromeDk, 44);
@@ -15745,7 +15991,7 @@ function drawDoor(lane, t, V) {
 }
 // ---- the filling points on the right wall - every planet has its own machine ----
 function drawTap(lane, t, V) {
-  const v = venue(),
+  const v = stopKit().tap, // (v1.4.27: every stop its own filling machine - stopkit.ts)
     x = TAPX + 30,
     y = LY(lane, TAPX),
     on = active().some((p) => p.lane === lane),
@@ -16736,9 +16982,9 @@ function customerBody(c, t, a) {
   if (c.happy > 0 && mouth === "flat") mouth = "smile";
   // protesters do the toyi-toyi: a bouncing high-knee march, chanting, a fist (or a placard) pumping in the air
   const toyi = c.protest && !c.protest.calm && c.state === "walk" && !showing,
-    tt = t * Math.min(4.2, 3.4 + (c.protest ? c.protest.anger * 0.8 : 0)) + c.ph; // (a steady, bouncy march - v1.3.3: calmer, it looked like shaking; v1.4.1: slower and gentler still)
+    tt = t * Math.min(2.9, 2.3 + (c.protest ? c.protest.anger * 0.6 : 0)) + c.ph; // (a steady, bouncy march - v1.3.3: calmer, it looked like shaking; v1.4.1: slower and gentler still; v1.4.27: slower again, a proper slow march)
   if (toyi) {
-    lift += Math.abs(Math.sin(tt)) * 2;
+    lift += Math.abs(Math.sin(tt)) * 1.6;
     lean = 0.03;
     tilt = Math.sin(tt) * (c.fan && c.fan.flag ? 0.02 : 0.03);
     mouth = Math.sin(tt * 0.5) > 0 ? "open" : angry ? "frown" : "flat";
@@ -30402,6 +30648,46 @@ function drawBlackHole(cx, cy, Rd, t, fade) {
     }
   };
   discHalf(false); // the far half of the disc, behind
+  // (v1.4.27) THE SWIRL: streaks of glowing gas whirling round in the disc - the inner ones much faster than the outer
+  // ones (like the planets round the Sun), white-hot near the hole, orange and red further out, and brighter on the
+  // side rushing towards us. Drawn in two halves: the far half behind the hole, the near half in front of it.
+  const swirl = (front) => {
+    for (let i = 0; i < 70; i++) {
+      const rr = 1.15 + Math.pow(hash(i * 3.7), 1.4) * 1.9,
+        om = 1.5 * Math.pow(1.15 / rr, 1.5),
+        u0 = hash(i * 9.3) * 6.283 + t * om,
+        len = 0.35 + hash(i * 1.9) * 0.9,
+        wv = Rd * (0.025 + hash(i * 4.4) * 0.04),
+        hot = clamp((2.6 - rr) / 1.4, 0, 1),
+        c = hot > 0.6 ? "#fff4d8" : hot > 0.3 ? "#ffc060" : "#ff7a30";
+      let pts = [];
+      const flush = () => {
+        if (pts.length >= 4)
+          polyline(pts, wv, c2(c, (0.35 + 0.4 * hot) * (0.55 + 0.45 * Math.cos(u0 + len / 2))));
+        pts = [];
+      };
+      for (let j = 0; j <= 10; j++) {
+        const u = u0 + (len * j) / 10,
+          inFront = Math.sin(u) > 0;
+        if (inFront !== front) {
+          flush();
+          continue;
+        }
+        const r2 = rr * (1 - j * 0.004); // (each streak curling slowly inwards)
+        pts.push(cx + Math.cos(u) * r2 * rx, cy + Math.sin(u) * r2 * ry);
+      }
+      flush();
+    }
+  };
+  swirl(false);
+  // the far side of the disc seen bent up over the top of the hole: streaks racing round the arc above
+  for (let i = 0; i < 16; i++) {
+    const rr = Rd * (1.12 + hash(i * 5.1) * 0.5),
+      a0 = Math.PI + ((hash(i * 2.9) * 6.283 + t * 1.3 * ((1.3 * Rd) / rr)) % Math.PI),
+      len = 0.25 + hash(i) * 0.4;
+    if (a0 + len < Math.PI * 2)
+      arc(cx, cy, rr, a0, a0 + len, Rd * 0.03, c2(i % 3 ? "#ffd890" : "#fff4e0", 0.4), 8);
+  }
   for (const [r1, r2, c, a] of [
     [1.06, 1.22, "#fff8e0", 0.75],
     [1.22, 1.45, "#ffd070", 0.5],
@@ -30415,6 +30701,18 @@ function drawBlackHole(cx, cy, Rd, t, fade) {
   R.setAdd(true);
   arc(cx, cy, Rd * 1.02, 0, 6.283, Rd * 0.04, c2("#fff6e0", 0.9), 48); // the photon ring
   discHalf(true); // the near half of the disc, in front
+  swirl(true);
+  // long spiral arms of gas being drawn in from far out
+  for (let arm = 0; arm < 2; arm++) {
+    const pts = [];
+    for (let j = 0; j <= 30; j++) {
+      const v = j / 30,
+        rr = 2.8 + v * 2.2,
+        u = arm * Math.PI + t * 0.35 - v * 2.6;
+      pts.push(cx + Math.cos(u) * rr * rx, cy + Math.sin(u) * rr * ry);
+    }
+    polyline(pts, Rd * 0.05, c2("#ff8a40", 0.1));
+  }
   for (let i = 0; i < 40; i++) {
     const u = (i / 40) * 6.283 + t * 0.8,
       [x, y] = discPt(u, Rd * (1.3 + hash(i) * 1.2));
@@ -41506,7 +41804,7 @@ const STOP_AIR                          = {
   JANUS: { g: "#ffb060", g2: "#4060ff", ga: 0.1, k: "motes", c: "#fff0d0" },
   THALASSA: { g: "#20a0c0", ga: 0.12, k: "bubbles", c: "#c0f0ff" },
   CARBONIA: { g: "#202030", ga: 0.16, k: "sparkle", c: "#ffffff" },
-  PUFFBALL: { g: "#ff90d0", ga: 0.1, k: "hearts", c: "#ffb0e0" },
+  PUFFBALL: { g: "#ff90d0", ga: 0.08, k: "clouds", c: "#fff0f8", n: 14 }, // (v1.4.27: wisps of cloud drifting right through the bar)
   "PA-99-N2 B": { g: "#ffa060", ga: 0.08, k: "haze", c: "#ffc890" },
   GEYSERA: { g: "#a0f0ff", ga: 0.08, k: "steam", c: "#f0ffff" },
   HALO: { g: "#ffe0a0", ga: 0.06, k: "sparkle", c: "#fff0c0" },
@@ -41580,6 +41878,13 @@ function drawStopMood(t) {
           r = 2 + hs * 4;
         arc(x, y, r, 0, 6.283, 0.8, withA(c, 0.5), 12);
         disc(x - r * 0.35, y - r * 0.35, r * 0.25, withA(C.white, 0.6));
+        break;
+      }
+      case "clouds": {
+        // (v1.4.27) up in the clouds: soft wisps drifting slowly through the room
+        const x = L - 120 + fmod(hx * (W0 + 240) + tt * (5 + hs * 7), W0 + 240),
+          y = T + H0 * (0.3 + hy * 0.65) + Math.sin(tt * 0.3 + i) * 6;
+        for (let q = 0; q < 4; q++) glow(x + (q - 1.5) * 26, y + (q % 2) * 6, 34 + hs * 20, withA(c, 0.05));
         break;
       }
       case "dust": {
@@ -41691,6 +41996,730 @@ function drawStopMood(t) {
         R.setAdd(false);
       }
     }
+  }
+}
+// =====================================================================================
+//  EVERY STOP ITS OWN BAR (v1.4.27). The 40 stops of the tour are built from 8 kinds of room (diner, desert saloon,
+//  mine, garden, ice, station, lounge, ship) - so neighbours could look alike. Now each stop also gets its own KIT,
+//  so no two stops in a row look the same:
+//    - its own DOOR (11 kinds: chrome swing doors, saloon doors, a mine tunnel, a vine arch, an ice arch, an airlock,
+//      velvet curtains, a ship's hatch - and new: a glowing STAR GATE ring, a farmhouse STABLE DOOR, a BEAD CURTAIN)
+//    - its own BAR COUNTERS: the front (12 kinds - with new BAMBOO, STONE BLOCKS, lit GLASS BLOCKS and open TABLES
+//      ON LEGS), and the top (wood, MARBLE, lit GLASS, riveted STEEL, MOSAIC tiles, hammered COPPER)
+//    - its own WINDOWS (plain panes, round PORTHOLES, ARCHED, OCTAGONAL, tall LEADED slits, one big PANORAMA)
+//    - its own FLOOR (checkerboard, boards, stone, flagstones, ice, grating, carpet, a ship's deck) and its own
+//      filling machines on the right wall
+//    - its own THINGS IN THE ROOM: two big pieces standing against the back wall (a potted palm, a cactus, a robot
+//      butler, barrels, crates, a brass telescope, a grandfather clock, an orrery, an arcade cabinet, a lava lamp,
+//      glowing crystals, a spacesuit on a stand), something on the wall (a clock, a dartboard, a neon sign, a mirror,
+//      a meteorite on a plaque, a ship's wheel) and something on the bar tops (napkins, candles, flowers, peanuts,
+//      little lamps, tiny cacti)
+//  Each room's list only holds what suits it (no ice arch on the desert saloon), and a stop never repeats the door,
+//  counters, windows or things of the stop before it.
+// =====================================================================================
+// what suits each room (0 diner, 1 desert saloon, 2 mine, 3 garden, 4 ice, 5 station, 6 lounge, 7 ship)
+const KIT_DOOR = [
+  [0, 5, 8, 6],
+  [1, 9, 2, 10],
+  [2, 9, 1, 7],
+  [3, 10, 9, 6],
+  [4, 8, 5, 0],
+  [5, 8, 0, 7],
+  [6, 0, 10, 3],
+  [7, 9, 2, 1],
+];
+const KIT_FRONT = [
+  [0, 10, 11, 5],
+  [1, 9, 11, 8],
+  [2, 9, 7, 11],
+  [3, 8, 11, 9],
+  [4, 10, 9, 11],
+  [5, 10, 0, 11],
+  [6, 11, 0, 9],
+  [7, 2, 11, 8],
+];
+const KIT_TOP = [
+  [3, 1, 4, 2],
+  [0, 5, 3, 4],
+  [0, 5, 3],
+  [0, 4, 1],
+  [2, 1, 3],
+  [2, 3, 1],
+  [1, 0, 5, 2],
+  [0, 5, 4],
+];
+const KIT_WIN = [
+  [0, 1, 5, 3],
+  [2, 0, 4, 5],
+  [1, 4, 2, 0],
+  [0],
+  [3, 1, 5, 2],
+  [1, 3, 5, 0],
+  [2, 4, 0, 5],
+  [1, 2, 4, 3],
+];
+// the floor (0 diner checkerboard, 1 boards, 2 mine stone, 3 flagstones, 4 ice tiles, 5 station grating, 6 carpet,
+// 7 a ship's deck) and the filling machines on the right wall (the same eight kinds)
+const KIT_FLOOR = [
+  [0, 5, 4, 6],
+  [1, 2, 7, 3],
+  [2, 1, 7],
+  [3, 1, 2],
+  [4, 5, 0, 3],
+  [5, 0, 4, 6],
+  [6, 0, 1, 4],
+  [7, 1, 2, 6],
+];
+const KIT_TAP = [
+  [0, 5, 6],
+  [1, 2, 7],
+  [2, 1, 7],
+  [3, 6, 1],
+  [4, 5, 0],
+  [5, 0, 4],
+  [6, 0, 3],
+  [7, 2, 1],
+];
+const KIT_NPROP = 12,
+  KIT_NWALL = 6,
+  KIT_NITEM = 6;
+const STOP_KITS = (() => {
+  const out   
+                 
+                  
+                
+                
+                  
+                
+                    
+                 
+                 
+      = [];
+  let prev = null;
+  const seen = [0, 0, 0, 0, 0, 0, 0, 0]; // (how many stops so far were built from each room - each one gets the next look)
+  VENUES.forEach((st, s) => {
+    const a = st.art,
+      n = seen[a]++,
+      pick = (list, key) => {
+        for (let i = 0; i < list.length; i++) {
+          const c = list[(n + i) % list.length];
+          if (!prev || prev[key] !== c) return c;
+        }
+        return list[0];
+      };
+    let p1 = (s * 5 + Math.floor(s / 12)) % KIT_NPROP,
+      p2 = (s * 5 + 7 + Math.floor(s / 12)) % KIT_NPROP;
+    if (prev && (prev.props.includes(p1) || prev.props.includes(p2))) {
+      p1 = (p1 + 1) % KIT_NPROP;
+      p2 = (p2 + 1) % KIT_NPROP;
+    }
+    const k = {
+      door: pick(KIT_DOOR[a], "door"),
+      front: pick(KIT_FRONT[a], "front"),
+      top: pick(KIT_TOP[a], "top"),
+      win: pick(KIT_WIN[a], "win"),
+      floor: pick(KIT_FLOOR[a], "floor"),
+      tap: pick(KIT_TAP[a], "tap"),
+      props: [p1, p2],
+      wall: (s * 7 + 2) % KIT_NWALL,
+      item: (s * 5 + 1) % KIT_NITEM,
+    };
+    out.push(k);
+    prev = k;
+  });
+  return out;
+})();
+const stopKit = () => STOP_KITS[tourStop()];
+
+// ---------------------------------------------------------------- the windows
+// where the panes go along the back wall, for each kind of window
+function kitPanes(win, Rr) {
+  const panes = [];
+  if (win === 5)
+    panes.push([64, 896]); // ONE BIG PANORAMA
+  else {
+    const [x0, step, w] =
+      win === 1
+        ? [62, 170, 130]
+        : win === 4
+          ? [66, 96, 50]
+          : win === 2 || win === 3
+            ? [70, 210, 156]
+            : [74, 230, 200];
+    for (let x = x0; x < Rr; x += step) panes.push([x, x + w]);
+  }
+  return panes;
+}
+// how wide the glass is (half of it, from the middle) at height y - or -1 where there's no glass at that height
+function kitHalf(win, a, b, yT, yB, y) {
+  const w = b - a,
+    h = yB - yT;
+  if (y < yT || y > yB) return -1;
+  if (win === 1) {
+    // round
+    const r = Math.min(w, h) / 2 - 4,
+      cy = (yT + yB) / 2,
+      dy = y - cy;
+    return Math.abs(dy) < r ? Math.sqrt(r * r - dy * dy) : -1;
+  }
+  if (win === 2) {
+    // a round arch on top
+    const r = w / 2,
+      dy = yT + r - y;
+    return dy > 0 ? Math.sqrt(Math.max(0, r * r - dy * dy)) : w / 2;
+  }
+  if (win === 3) {
+    // octagonal: the corners cut off
+    const c = Math.min(w, h) * 0.3,
+      d = Math.min(y - yT, yB - y);
+    return d < c ? w / 2 - (c - d) : w / 2;
+  }
+  return w / 2;
+}
+// fill the wall in around a shaped pane (round, arched, octagonal), then put a frame round the glass
+function kitWindowFrame(win, a, b, yT, winBot, V, v) {
+  const cx = (a + b) / 2,
+    yB = winBot(cx),
+    yMax = Math.max(winBot(a), winBot(b)) + 2,
+    wood = v === 2 || v === 7 || v === 3,
+    fc = win === 1 && !wood ? col("#a88a3a") : wood ? col("#4a3020") : C.chromeDk,
+    fl = win === 1 && !wood ? col("#e8c870") : wood ? col("#6a4a30") : C.chrome;
+  if (win === 1 || win === 2 || win === 3) {
+    const STEP = 2;
+    for (let y = yT; y < yMax; y += STEP) {
+      const y1 = Math.min(yMax, y + STEP),
+        h0 = kitHalf(win, a, b, yT, yB, y),
+        h1 = kitHalf(win, a, b, yT, yB, y1);
+      if (h0 < 0 && h1 < 0) {
+        rect(a - 1, y, b - a + 2, y1 - y, V.wall);
+        continue;
+      }
+      const l0 = cx - Math.max(0, h0),
+        l1 = cx - Math.max(0, h1),
+        r0 = cx + Math.max(0, h0),
+        r1 = cx + Math.max(0, h1);
+      quad4(a - 1, y, l0, y, l1, y1, a - 1, y1, V.wall);
+      quad4(r0, y, b + 1, y, b + 1, y1, r1, y1, V.wall);
+    }
+    // the frame, all round the glass
+    const left = [],
+      right = [];
+    for (let i = 0; i <= 40; i++) {
+      const y = yT + ((yB - yT) * i) / 40,
+        hh = kitHalf(win, a, b, yT, yB, y);
+      if (hh < 0) continue;
+      left.push(cx - hh, y);
+      right.unshift(cx + hh, y);
+    }
+    const ring2 = [...left, ...right, left[0], left[1]];
+    polyline(ring2, 5, fc);
+    polyline(ring2, 1.4, fl);
+    if (win === 1) {
+      // a porthole: brass bolts round the rim and a cross-bar
+      const r = Math.min(b - a, yB - yT) / 2 - 4,
+        cy = (yT + yB) / 2;
+      for (let i = 0; i < 12; i++) {
+        const an = (i / 12) * 6.283;
+        disc(cx + Math.cos(an) * (r + 3.5), cy + Math.sin(an) * (r + 3.5), 1.2, fl);
+      }
+    } else if (win === 2) {
+      line(cx, yT + 2, cx, yB, 2, fc); // the mullion
+      line(a + 2, yT + (b - a) / 2, b - 2, yT + (b - a) / 2, 2, fc); // the transom where the arch starts
+    } else {
+      line(cx, yT, cx, yB, 2, fc);
+      line(a, (yT + yB) / 2, b, (yT + yB) / 2, 2, fc);
+    }
+    R.setAdd(true);
+    tri(cx - 20, yT + 20, cx - 4, yT + 16, cx - 34, yB - 20, withA(C.white, 0.03));
+    R.setAdd(false);
+    return;
+  }
+  // straight-sided panes: the old frame
+  rect(a - 4, yT - 4, b - a + 8, 4, fl);
+  line(a - 2, yT - 2, a - 2, winBot(a), 4, fc);
+  line(b + 2, yT - 2, b + 2, winBot(b), 4, fc);
+  line(a - 3, yT, a - 3, winBot(a), 1, fl);
+  if (win === 4) {
+    // tall slits with diamond leading
+    for (let k = -6; k < 20; k++) {
+      const y0 = yT + k * 14;
+      line(a, y0, b, y0 + (b - a) * 0.6, 0.7, withA(col("#1a1a1a"), 0.55));
+      line(b, y0, a, y0 + (b - a) * 0.6, 0.7, withA(col("#1a1a1a"), 0.55));
+    }
+    rect(a - 2, yT - 2, b - a + 4, 3, fc);
+  } else if (win === 5) {
+    // the panorama: thin mullions every so often
+    for (let x = a + 166; x < b - 20; x += 166) {
+      line(x, yT, x, winBot(x), 3, fc);
+      line(x - 1, yT, x - 1, winBot(x), 1, fl);
+    }
+  } else line((a + b) / 2, yT, (a + b) / 2, winBot((a + b) / 2), 2, fc);
+  for (let i = 0; i < 6; i++) disc(a - 2, yT + 6 + i * 14, 0.9, fl);
+  R.setAdd(true);
+  tri(a + 20, yT, a + 44, yT, a + 4, winBot(a + 4) - 4, withA(C.white, 0.035));
+  if (b - a > 110) tri(a + 120, yT, a + 130, yT, a + 104, winBot(a + 104), withA(C.white, 0.03));
+  R.setAdd(false);
+}
+
+// ---------------------------------------------------------------- on the wall
+// something hung on a pillar: x = the pillar's middle, y = its top
+function kitWallThing(kind, x, y, V, t) {
+  const y0 = y + 10;
+  if (kind === 0) {
+    // a station clock
+    disc(x, y0 + 16, 15, C.chromeDk);
+    disc(x, y0 + 16, 13, col("#f4f0e6"));
+    for (let i = 0; i < 12; i++) {
+      const an = (i / 12) * 6.283;
+      line(
+        x + Math.cos(an) * 10,
+        y0 + 16 + Math.sin(an) * 10,
+        x + Math.cos(an) * 12,
+        y0 + 16 + Math.sin(an) * 12,
+        1,
+        col("#2a2a30")
+      );
+    }
+    line(x, y0 + 16, x + 5, y0 + 12, 1.6, col("#1a1a1a"));
+    line(x, y0 + 16, x - 2, y0 + 7, 1, col("#1a1a1a"));
+    disc(x, y0 + 16, 1.2, col("#c83a2a"));
+  } else if (kind === 1) {
+    // a dartboard, a dart or two in it
+    disc(x, y0 + 16, 15, col("#2a1a10"));
+    for (let i = 0; i < 16; i++) {
+      const a0 = (i / 16) * 6.283;
+      poly(
+        [
+          x,
+          y0 + 16,
+          x + Math.cos(a0) * 12,
+          y0 + 16 + Math.sin(a0) * 12,
+          x + Math.cos(a0 + 0.39) * 12,
+          y0 + 16 + Math.sin(a0 + 0.39) * 12,
+        ],
+        col(i % 2 ? "#1a1a1a" : "#f0e0b0")
+      );
+    }
+    ring(x, y0 + 16, 8, 1.4, col("#c83a2a"));
+    ring(x, y0 + 16, 12, 1.4, col("#3a9a5a"));
+    disc(x, y0 + 16, 2, col("#c83a2a"));
+    line(x + 3, y0 + 13, x + 10, y0 + 8, 1, col("#d8d8e0"));
+    tri(x + 10, y0 + 8, x + 13, y0 + 4, x + 12, y0 + 9, col("#ff5fa8"));
+  } else if (kind === 2) {
+    // a neon sign: a little rocket
+    const c = V.neon;
+    R.setAdd(true);
+    glow(x, y0 + 18, 26, withA(c, 0.18));
+    R.setAdd(false);
+    const P = [x, y0, x + 6, y0 + 10, x + 6, y0 + 26, x - 6, y0 + 26, x - 6, y0 + 10, x, y0];
+    polyline(P, 2.2, withA(c, 0.95));
+    polyline([x - 6, y0 + 20, x - 11, y0 + 30, x - 6, y0 + 26], 2, withA(c, 0.95));
+    polyline([x + 6, y0 + 20, x + 11, y0 + 30, x + 6, y0 + 26], 2, withA(c, 0.95));
+    ring(x, y0 + 14, 2.4, 1.4, withA(c, 0.95));
+    polyline(
+      [x - 3, y0 + 29, x, y0 + 36 + Math.sin(t * 9) * 2, x + 3, y0 + 29],
+      1.6,
+      withA(col("#ffb040"), 0.9)
+    );
+  } else if (kind === 3) {
+    // an old oval mirror in a gilt frame
+    disc(x, y0 + 18, 14, col("#c8a040"), 19);
+    disc(x, y0 + 18, 11, mix(V.wall, col("#9fb8d0"), 0.7), 16);
+    line(x - 6, y0 + 8, x + 2, y0 + 28, 2, withA(C.white, 0.35));
+    line(x - 2, y0 + 6, x + 5, y0 + 22, 1, withA(C.white, 0.25));
+  } else if (kind === 4) {
+    // a meteorite on a wooden plaque
+    quad4(x - 15, y0 + 4, x + 15, y0 + 4, x + 13, y0 + 34, x - 13, y0 + 34, col("#6a4428"));
+    rect(x - 12, y0 + 7, 24, 24, col("#5a3820"));
+    disc(x, y0 + 16, 8, col("#3a3438"), 6.4);
+    disc(x - 2, y0 + 14, 3, col("#5a5258"));
+    disc(x + 3, y0 + 18, 1.6, col("#1a1618"));
+    rect(x - 8, y0 + 26, 16, 3, col("#c8a040"));
+  } else {
+    // a ship's wheel
+    const cx = x,
+      cy = y0 + 18;
+    ring(cx, cy, 11, 3, col("#7a4a22"));
+    for (let i = 0; i < 8; i++) {
+      const an = (i / 8) * 6.283 + 0.2;
+      line(cx, cy, cx + Math.cos(an) * 16, cy + Math.sin(an) * 16, 2, col("#7a4a22"));
+      disc(cx + Math.cos(an) * 17, cy + Math.sin(an) * 17, 1.8, col("#9a6a32"));
+    }
+    disc(cx, cy, 3.4, col("#c8a040"));
+  }
+}
+
+// ---------------------------------------------------------------- standing in the room
+// the two big things standing against the back wall (on the floor behind the first bar)
+function kitProps(V, t) {
+  const K = stopKit(),
+    top = (x) => LYf(-1, x) + 30 * LS(-1);
+  K.props.forEach((p, i) => {
+    const x = i ? 612 : 352,
+      y = top(x) + 13;
+    push();
+    translate(x, y);
+    scaleBy(0.82);
+    disc(0, 0, 18, withA(C.black, 0.3), 4); // its shadow
+    kitProp(p, V, t, i);
+    pop();
+  });
+}
+function kitProp(p, V, t, i) {
+  const sway = Math.sin(t * 0.8 + i) * 0.04;
+  if (p === 0) {
+    // a potted palm
+    quad4(-12, -22, 12, -22, 9, 0, -9, 0, col("#b8603a"));
+    rect(-13, -24, 26, 4, col("#d07a4a"));
+    for (let j = 0; j < 7; j++) {
+      const an = -Math.PI / 2 + (j - 3) * 0.42 + sway,
+        len = 34 + (j % 2) * 8;
+      const ex = Math.cos(an) * len,
+        ey = -40 + Math.sin(an) * len * 0.7;
+      polyline([0, -24, ex * 0.5, -40 + ey * 0.3, ex, ey + 8], 3, col(j % 2 ? "#2a8a3a" : "#3aa04a"));
+    }
+    line(0, -24, 0, -44, 3, col("#6a4a2a"));
+  } else if (p === 1) {
+    // a big cactus in a pot
+    quad4(-11, -14, 11, -14, 9, 0, -9, 0, col("#c8784a"));
+    const g = col("#3a8a4a"),
+      g2 = col("#4aa05a");
+    rect(-5, -64, 10, 50, g);
+    disc(0, -64, 5, g);
+    rect(-3, -62, 2, 46, g2);
+    polyline([-5, -34, -14, -36, -14, -50], 6, g);
+    polyline([5, -42, 13, -44, 13, -56], 6, g);
+    disc(-14, -50, 3, g);
+    disc(13, -56, 3, g);
+    disc(0, -70, 3, col("#ff5fa8"));
+    for (let j = 0; j < 8; j++) disc(-4 + (j % 3) * 4, -60 + j * 6, 0.5, col("#e8f0d0"));
+  } else if (p === 2) {
+    // a little robot butler holding a tray
+    const bob = Math.sin(t * 2 + i) * 0.8;
+    rect(-9, -30, 18, 22, col("#a8b0c0"));
+    rect(-7, -8, 5, 8, col("#7a8292"));
+    rect(2, -8, 5, 8, col("#7a8292"));
+    rect(-7, -44 + bob, 14, 12, col("#c8d0dc"));
+    disc(-3, -38 + bob, 2, col("#5ff5c8"));
+    disc(3, -38 + bob, 2, col("#5ff5c8"));
+    line(0, -44 + bob, 0, -50 + bob, 1, col("#7a8292"));
+    disc(0, -51 + bob, 1.6, col("#ff4040"));
+    line(9, -26, 18, -30, 2, col("#7a8292"));
+    rect(13, -32, 14, 2, C.chrome);
+    disc(20, -35, 3, col("#ff9ad0"));
+    rect(-4, -26, 8, 6, col("#5a6274"));
+  } else if (p === 3) {
+    // barrels, one on top of two
+    const bc = col("#7a4a2a"),
+      hoop = col("#3a3a40");
+    for (const [bx, by] of [
+      [-11, 0],
+      [11, 0],
+      [0, -22],
+    ]) {
+      rect(bx - 10, by - 21, 20, 21, bc);
+      rect(bx - 10, by - 21, 3, 21, shade(bc, 1.25));
+      for (const dy of [-17, -5]) rect(bx - 10, by + dy, 20, 2, hoop);
+      disc(bx, by - 21, 10, shade(bc, 0.8), 2.4);
+    }
+  } else if (p === 4) {
+    // shipping crates, stencilled
+    for (const [bx, by, w] of [
+      [-12, 0, 24],
+      [12, 0, 20],
+      [-2, -24, 22],
+    ]) {
+      rect(bx - w / 2, by - 22, w, 22, col("#b88a4a"));
+      line(bx - w / 2, by - 22, bx + w / 2, by, 1.4, col("#8a6030"));
+      line(bx + w / 2, by - 22, bx - w / 2, by, 1.4, col("#8a6030"));
+      rect(bx - w / 2, by - 22, w, 2, col("#d8aa6a"));
+    }
+    pixText("SPACE", -2, -13, 1, col("#3a2a1a"));
+  } else if (p === 5) {
+    // a brass telescope on a tripod, pointing at the window
+    line(0, -30, -10, 0, 1.6, col("#5a3a1a"));
+    line(0, -30, 10, 0, 1.6, col("#5a3a1a"));
+    line(0, -30, 2, 0, 1.6, col("#5a3a1a"));
+    push();
+    translate(0, -32);
+    rotate(-0.6 + sway * 0.5);
+    rect(-14, -3, 22, 6, col("#c89a3a"));
+    rect(8, -4, 12, 8, col("#d8aa4a"));
+    rect(-18, -2, 4, 4, col("#a87a2a"));
+    pop();
+  } else if (p === 6) {
+    // a grandfather clock, its pendulum swinging
+    rect(-10, -70, 20, 70, col("#5a3820"));
+    rect(-12, -74, 24, 6, col("#6a4428"));
+    disc(0, -58, 8, col("#f4ecd8"));
+    ring(0, -58, 8, 1, col("#c8a040"));
+    line(0, -58, 3, -62, 1, col("#1a1a1a"));
+    line(0, -58, -1, -64, 1, col("#1a1a1a"));
+    rect(-6, -46, 12, 34, col("#2a1a10"));
+    const sw2 = Math.sin(t * 3.1) * 0.35;
+    line(0, -45, Math.sin(sw2) * 24, -45 + Math.cos(sw2) * 24, 1, col("#c8a040"));
+    disc(Math.sin(sw2) * 24, -45 + Math.cos(sw2) * 24, 3, col("#e8c060"));
+  } else if (p === 7) {
+    // an orrery: little planets going round a brass sun
+    line(0, 0, 0, -36, 2, col("#8a6a2a"));
+    disc(0, 0, 8, col("#6a4a22"), 3);
+    disc(0, -44, 5, col("#ffd24d"));
+    R.setAdd(true);
+    glow(0, -44, 12, withA(col("#ffd24d"), 0.3));
+    R.setAdd(false);
+    for (let j = 0; j < 3; j++) {
+      const r = 10 + j * 7,
+        an = t * (0.8 - j * 0.2) + j * 2;
+      arc(0, -44, r, 0, 6.283, 0.5, withA(col("#c8a040"), 0.5), 20);
+      disc(
+        Math.cos(an) * r,
+        -44 + Math.sin(an) * r * 0.35,
+        2 + j * 0.6,
+        col(["#9fd8ff", "#ff8a5a", "#c8a0ff"][j])
+      );
+    }
+  } else if (p === 8) {
+    // an arcade cabinet, its screen flickering
+    quad4(-12, -62, 12, -62, 13, 0, -13, 0, col("#2a2a6a"));
+    rect(-9, -56, 18, 15, col("#0a0a1a"));
+    for (let j = 0; j < 3; j++)
+      disc(-5 + j * 5, -48 + Math.sin(t * 4 + j) * 3, 1.3, col(["#ff5fa8", "#5ff5c8", "#ffd24d"][j]));
+    R.setAdd(true);
+    glow(0, -48, 14, withA(col("#5fb0ff"), 0.25 + 0.1 * Math.sin(t * 13)));
+    R.setAdd(false);
+    rect(-11, -38, 22, 6, col("#3a3a8a"));
+    disc(-5, -35, 1.6, col("#ff4040"));
+    disc(3, -35, 1.4, col("#ffd24d"));
+    rect(-12, -66, 24, 5, col("#ff5fa8"));
+  } else if (p === 9) {
+    // a tall lava lamp, its blobs rising and falling
+    quad4(-6, -14, 6, -14, 9, 0, -9, 0, col("#c8c8d0"));
+    quad4(-5, -60, 5, -60, 8, -14, -8, -14, withA(V.neon, 0.35));
+    for (let j = 0; j < 3; j++) {
+      const yy = -20 - ((t * 6 + j * 15) % 38);
+      disc(Math.sin(t + j) * 2, yy, 3 + j, withA(col("#ff8a3a"), 0.9));
+    }
+    R.setAdd(true);
+    glow(0, -36, 22, withA(col("#ff8a3a"), 0.18));
+    R.setAdd(false);
+    quad4(-5, -60, 5, -60, 3, -66, -3, -66, col("#c8c8d0"));
+  } else if (p === 10) {
+    // a cluster of glowing crystals
+    const cc = V.accent;
+    R.setAdd(true);
+    glow(0, -20, 30, withA(cc, 0.18 + 0.06 * Math.sin(t * 1.5 + i)));
+    R.setAdd(false);
+    for (const [cx, h, w, a] of [
+      [-10, 30, 6, -0.3],
+      [0, 46, 8, 0],
+      [9, 34, 6, 0.25],
+      [-3, 22, 5, -0.1],
+    ]) {
+      push();
+      translate(cx, 0);
+      rotate(a);
+      poly([0, -h, w, -h * 0.75, w * 0.7, 0, -w * 0.7, 0, -w, -h * 0.75], withA(mix(cc, C.white, 0.3), 0.85));
+      line(0, -h, 0, 0, 1, withA(C.white, 0.5));
+      pop();
+    }
+  } else {
+    // a spacesuit on a stand
+    line(0, 0, 0, -20, 2, C.chromeDk);
+    rect(-10, -48, 20, 28, col("#e8e8ec"));
+    rect(-14, -46, 5, 20, col("#d8d8e0"));
+    rect(9, -46, 5, 20, col("#d8d8e0"));
+    rect(-7, -20, 6, 14, col("#d8d8e0"));
+    rect(1, -20, 6, 14, col("#d8d8e0"));
+    disc(0, -58, 11, col("#f0f0f4"));
+    disc(0, -58, 8, col("#3a5a8a"), 6);
+    line(-4, -61, 0, -63, 1.2, withA(C.white, 0.6));
+    rect(-5, -42, 10, 6, col("#ff8a3a"));
+  }
+}
+
+// ---------------------------------------------------------------- on the bar top
+function kitBarThing(kind, x, y, lane) {
+  if (kind === 0) {
+    // a napkin holder
+    rect(x - 5, y - 13, 10, 10, C.chrome);
+    rect(x - 3, y - 11, 6, 6, C.white);
+    rect(x - 5, y - 4, 10, 2, C.chromeDk);
+  } else if (kind === 1) {
+    // a candle in a glass jar
+    rect(x - 4, y - 12, 8, 10, withA(col("#ffd8a0"), 0.45));
+    rect(x - 2, y - 9, 4, 6, col("#f4ecd8"));
+    disc(x, y - 11, 1.4, col("#ffb040"));
+    R.setAdd(true);
+    glow(x, y - 11, 9, withA(col("#ffb040"), 0.35));
+    R.setAdd(false);
+  } else if (kind === 2) {
+    // a little vase of flowers
+    quad4(x - 3, y - 10, x + 3, y - 10, x + 4, y - 3, x - 4, y - 3, col("#5a8ad0"));
+    for (let j = 0; j < 3; j++) {
+      const fx = x - 4 + j * 4,
+        fy = y - 17 - (j % 2) * 3;
+      line(x, y - 10, fx, fy, 0.8, col("#3a8a3a"));
+      disc(fx, fy, 2, col(["#ff5fa8", "#ffd24d", "#ff8a5a"][(j + lane) % 3]));
+    }
+  } else if (kind === 3) {
+    // a bowl of peanuts
+    disc(x, y - 5, 7, col("#c84a2a"), 3);
+    for (let j = 0; j < 5; j++) disc(x - 4 + j * 2, y - 7 - (j % 2), 1.4, col("#d8a860"));
+  } else if (kind === 4) {
+    // a little brass table lamp with a green shade
+    line(x, y - 3, x, y - 13, 1.2, col("#c8a040"));
+    disc(x, y - 3, 3.6, col("#c8a040"), 1.4);
+    quad4(x - 6, y - 13, x + 6, y - 13, x + 4, y - 17, x - 4, y - 17, col("#2a8a4a"));
+    R.setAdd(true);
+    glow(x, y - 10, 12, withA(col("#fff0b0"), 0.2));
+    R.setAdd(false);
+  } else {
+    // a tiny potted cactus
+    quad4(x - 4, y - 7, x + 4, y - 7, x + 3, y - 2, x - 3, y - 2, col("#c8784a"));
+    rect(x - 1.6, y - 15, 3.2, 8, col("#3a9a4a"));
+    line(x - 1.6, y - 11, x - 4, y - 13, 1.6, col("#3a9a4a"));
+    disc(x, y - 16, 1, col("#ff5fa8"));
+  }
+}
+
+// ---------------------------------------------------------------- the bar tops
+// the counter top's material, over the plain top (wood keeps its grain - drawn by the counter itself)
+function kitTop(kind, lane, V, a, b, ya, yb) {
+  const Y = (x) => LY(lane, x);
+  if (kind === 1) {
+    // marble: pale stone with grey veins
+    quad4(
+      a - 10,
+      ya - 10,
+      b - 10,
+      yb - 10,
+      b,
+      yb,
+      a,
+      ya,
+      mix(V.top, col("#f0ece6"), 0.7),
+      mix(V.top, col("#f0ece6"), 0.7),
+      mix(V.top2, col("#d8d4ce"), 0.7),
+      mix(V.top2, col("#d8d4ce"), 0.7)
+    );
+    for (let k = 0; k < 10; k++) {
+      const x0 = a + ((b - a) * (k + hash(k + lane * 3))) / 10,
+        pts = [];
+      for (let j = 0; j < 5; j++) pts.push(x0 + j * 9, Y(x0 + j * 9) - 2 - ((j * 3 + k) % 7) * 1.1);
+      polyline(pts, 0.7, withA(col("#8a8a96"), 0.45));
+    }
+  } else if (kind === 2) {
+    // lit glass: a dark glassy top with a glowing edge and light coming up through it
+    quad4(a - 10, ya - 10, b - 10, yb - 10, b, yb, a, ya, withA(col("#0a1a2a"), 0.85));
+    R.setAdd(true);
+    line(a, ya, b, yb, 2, withA(V.neon, 0.8));
+    line(a - 10, ya - 10, b - 10, yb - 10, 1, withA(V.neon, 0.5));
+    for (let x = a + 20; x < b; x += 60) glow(x, Y(x) - 5, 16, withA(V.neon, 0.08));
+    R.setAdd(false);
+  } else if (kind === 3) {
+    // riveted steel
+    quad4(
+      a - 10,
+      ya - 10,
+      b - 10,
+      yb - 10,
+      b,
+      yb,
+      a,
+      ya,
+      col("#8a929e"),
+      col("#8a929e"),
+      col("#aab2be"),
+      col("#aab2be")
+    );
+    for (let x = a; x < b; x += 26) {
+      line(x, Y(x), x - 10, Y(x) - 10, 0.8, withA(C.black, 0.35));
+      disc(x + 6, Y(x + 6) - 2, 0.9, C.chrome);
+      disc(x - 3, Y(x - 3) - 8, 0.9, C.chrome);
+    }
+  } else if (kind === 4) {
+    // little mosaic tiles
+    for (let x = a; x < b; x += 8)
+      for (let r = 0; r < 2; r++) {
+        const yy = Y(x) - 9 + r * 5,
+          c2 = col(["#2a8ac8", "#e8e0d0", "#c8a040", "#3aa08a"][(Math.floor(x / 8) + r * 3 + lane) % 4]);
+        quad4(
+          x - r * 5,
+          yy,
+          x + 7 - r * 5,
+          Y(x + 7) - 9 + r * 5,
+          x + 7 - r * 5,
+          Y(x + 7) - 5 + r * 5,
+          x - r * 5,
+          yy + 4,
+          c2
+        );
+      }
+  } else if (kind === 5) {
+    // hammered copper
+    quad4(
+      a - 10,
+      ya - 10,
+      b - 10,
+      yb - 10,
+      b,
+      yb,
+      a,
+      ya,
+      col("#a8582a"),
+      col("#a8582a"),
+      col("#d8844a"),
+      col("#d8844a")
+    );
+    for (let k = 0; k < 60; k++) {
+      const x = a + hash(k * 2.3 + lane) * (b - a);
+      disc(x, Y(x) - 2 - hash(k * 1.7) * 7, 1.6, withA(col("#ffc890"), 0.25), 0.8);
+    }
+  }
+}
+// the new bar fronts: bamboo, stone blocks, lit glass blocks, and an open table on legs (11, drawn by the counter)
+function kitFront(kind, lane, V, a, b) {
+  const Y = (x) => LY(lane, x);
+  if (kind === 8) {
+    // bamboo poles, lashed with twine
+    for (let x = a; x < b; x += 7) {
+      const c = shade(col("#c8b060"), 0.85 + hash(x) * 0.25);
+      quad4(x, Y(x), x + 6, Y(x + 6), x + 6, Y(x + 6) + 28, x, Y(x) + 28, c);
+      line(x + 1.5, Y(x), x + 1.5, Y(x) + 28, 1, withA(C.white, 0.25));
+      for (const dy of [9, 19])
+        line(x, Y(x) + dy + (x % 3), x + 6, Y(x + 6) + dy + (x % 3), 1, withA(C.black, 0.3));
+    }
+    for (const dy of [5, 23]) line(a, Y(a) + dy, b, Y(b) + dy, 1.4, col("#8a6a3a"));
+  } else if (kind === 9) {
+    // stone blocks
+    for (let r = 0; r < 3; r++)
+      for (let x = a + (r % 2) * 14; x < b; x += 28) {
+        const x2 = Math.min(b, x + 27),
+          c = shade(mix(V.face, col("#8a8478"), 0.6), 0.82 + hash(x + r * 7) * 0.3);
+        quad4(x, Y(x) + 1 + r * 9, x2, Y(x2) + 1 + r * 9, x2, Y(x2) + 9 + r * 9, x, Y(x) + 9 + r * 9, c);
+        line(x, Y(x) + 1 + r * 9, x2, Y(x2) + 1 + r * 9, 0.8, withA(C.white, 0.15));
+      }
+  } else if (kind === 10) {
+    // glass blocks lit from inside
+    for (let r = 0; r < 2; r++)
+      for (let x = a + 2; x < b - 10; x += 16) {
+        const yy = Y(x) + 3 + r * 12;
+        quad4(
+          x,
+          yy,
+          x + 14,
+          Y(x + 14) + 3 + r * 12,
+          x + 14,
+          Y(x + 14) + 13 + r * 12,
+          x,
+          yy + 10,
+          withA(mix(V.neon, C.white, 0.5), 0.35)
+        );
+        line(x + 2, yy + 2, x + 6, yy + 2, 1, withA(C.white, 0.5));
+      }
+    R.setAdd(true);
+    for (let x = a + 40; x < b; x += 90) glow(x, Y(x) + 14, 22, withA(V.neon, 0.12));
+    R.setAdd(false);
   }
 }
 // =====================================================================================
@@ -43144,6 +44173,13 @@ function drawInterJump(t) {
   push();
   translate(cx, cy);
   scaleBy(K * (1 - 0.3 * arr) * (1 - 0.45 * dep));
+  // (v1.4.27) IN HYPERSPACE WE RIDE BEHIND IT: the camera swings round (hidden by the flash going in and coming out)
+  // and we see THE BACK OF OUR BAR, flying away from us down the tunnel - see drawDinerRear below
+  if (hyper) {
+    drawDinerRear(t, thrust, hk);
+    pop();
+    return;
+  }
   drawDinerBody(t, thrust);
   if (hk > 0) {
     R.setAdd(true);
@@ -43168,6 +44204,147 @@ function drawInterJump(t) {
   }
   pop();
 }
+// (v1.4.27) THE BACK OF OUR FLYING BAR, as we follow it through hyperspace: the floating rock it's built on (seen from
+// behind, rubble shaken loose and tumbling back past us), the diner's back wall - kitchen windows lit up, the staff
+// door, crates of empty milkshake bottles, the back of the big sign on the roof with its bulbs, a satellite dish -
+// and the two ION ENGINES blazing straight at us, rings of light pulsing out of them, all inside the shield's bubble
+function drawDinerRear(t, thrust, hk) {
+  const bob = Math.sin(t * 3) * 3;
+  // the engines' glare behind everything
+  R.setAdd(true);
+  for (const [ex, ey, r] of [
+    [-150, 96, 34],
+    [150, 96, 34],
+  ]) {
+    glow(ex, ey, r * (5 + thrust * 3), withA(col("#5a8aff"), 0.35));
+    glow(ex, ey, r * 2.2, withA(col("#cfe8ff"), 0.7));
+  }
+  R.setAdd(false);
+  // the floating rock: a rough underside, layered, crystals glowing in it
+  poly([0, 60, -430, 40, 430, 40, 390, 92, 250, 150, 80, 198, -80, 192, -260, 150, -396, 92], col("#2a2228"));
+  poly([0, 50, -430, 40, 430, 40, 400, 80, 250, 126, 70, 160, -80, 156, -260, 124, -404, 78], col("#3e3238"));
+  poly([0, 46, -430, 40, 430, 40, 410, 62, 240, 90, 40, 108, -140, 102, -320, 84, -410, 60], col("#544650"));
+  for (const [x1, y1, x2, y2] of [
+    [-340, 78, -120, 92],
+    [-60, 120, 200, 106],
+    [-240, 128, -20, 148],
+  ])
+    line(x1, y1, x2, y2, 2, withA(col("#1a1418"), 0.6));
+  R.setAdd(true);
+  for (const [x, y] of [
+    [-220, 110],
+    [60, 150],
+    [260, 100],
+  ])
+    glow(x, y, 14, withA(col("#c08aff"), 0.5 + 0.3 * Math.sin(t * 2 + x)));
+  R.setAdd(false);
+  // THE DINER'S BACK WALL
+  const by = -150 + bob * 0;
+  rect(-230, by, 460, 190, col("#d8dce4"));
+  rect(-230, by, 460, 10, col("#9aa0b0"));
+  rect(-230, by + 64, 460, 14, col("#c8302a")); // (the red band runs right round)
+  rect(-230, by + 80, 460, 3, col("#f4f4f8")); // (chrome strip)
+  for (let x = -230; x < 230; x += 46) line(x, by + 10, x, by + 190, 1, withA(col("#8a90a0"), 0.5)); // (panel seams)
+  // the kitchen windows, warm light inside, steam drifting out of a vent
+  for (const wx of [-170, 110]) {
+    rect(wx, by + 22, 60, 36, col("#3a3a48"));
+    rect(wx + 3, by + 25, 54, 30, col("#ffd890"));
+    line(wx + 30, by + 25, wx + 30, by + 55, 2, col("#3a3a48"));
+    R.setAdd(true);
+    glow(wx + 30, by + 40, 40, withA(col("#ffc060"), 0.2));
+    R.setAdd(false);
+    disc(wx + 14, by + 46, 5, col("#5a4a3a")); // (a cook's head going past)
+  }
+  // the staff door, a lamp over it
+  rect(-26, by + 92, 52, 98, col("#7a8292"));
+  rect(-22, by + 96, 44, 90, col("#8a92a2"));
+  disc(14, by + 142, 3, col("#c8a040"));
+  pixText("STAFF ONLY", 0, by + 110, 1.6, col("#2a2a30"));
+  disc(0, by + 86, 5, col("#fff4c0"));
+  R.setAdd(true);
+  glow(0, by + 90, 30, withA(col("#fff0b0"), 0.3));
+  R.setAdd(false);
+  // crates of empty milkshake bottles by the door, and a bin
+  for (const [cx2, cy2] of [
+    [-90, by + 168],
+    [-90, by + 146],
+    [-130, by + 168],
+  ]) {
+    rect(cx2 - 18, cy2, 36, 22, col("#c8783a"));
+    for (let i = 0; i < 4; i++) rect(cx2 - 14 + i * 8, cy2 - 6, 4, 8, withA(col("#cfe8ff"), 0.8));
+  }
+  rect(70, by + 150, 50, 40, col("#3a6a4a"));
+  rect(66, by + 146, 58, 6, col("#2a5a3a"));
+  // the roof: the BACK OF THE BIG SIGN on its scaffold, its bulbs twinkling round the edge - and a satellite dish
+  for (const sx of [-150, -60, 60, 150]) line(sx, by, sx, by - 40, 4, col("#5a6070"));
+  line(-160, by - 20, 160, by - 20, 3, col("#5a6070"));
+  rect(-180, by - 110, 360, 70, col("#4a5060"));
+  for (let i = 0; i < 26; i++) {
+    const f = i / 26,
+      on = Math.sin(t * 6 - i * 0.8) > 0;
+    const bx = f < 0.5 ? -180 + f * 2 * 360 : 180 - (f - 0.5) * 2 * 360,
+      byy = f < 0.5 ? by - 110 : by - 40;
+    disc(bx, byy, 4, col(on ? "#ffe080" : "#8a7040"));
+  }
+  line(200, by, 210, by - 34, 3, col("#8a90a0"));
+  disc(212, by - 44, 18, col("#c8ccd8"), 9);
+  line(212, by - 44, 224, by - 60, 2, col("#8a90a0"));
+  // red tail lights blinking at the corners
+  for (const lx of [-226, 226]) {
+    disc(lx, by + 180, 5, col("#ff3030"));
+    if (Math.sin(t * 4) > 0) {
+      R.setAdd(true);
+      glow(lx, by + 180, 22, withA(col("#ff3030"), 0.6));
+      R.setAdd(false);
+    }
+  }
+  // THE ION ENGINES, seen from behind: big round nozzles blazing at us, rings of light pulsing out of them
+  for (const [ex, ey, r] of [
+    [-150, 96, 34],
+    [150, 96, 34],
+  ]) {
+    disc(ex, ey, r + 8, col("#5a6070"));
+    disc(ex, ey, r + 4, col("#9aa0b0"));
+    disc(ex, ey, r, col("#e8f4ff"));
+    R.setAdd(true);
+    disc(ex, ey, r * 0.7, withA(col("#ffffff"), 0.9));
+    for (let i = 0; i < 4; i++) {
+      const f = (t * (1.4 + thrust * 2) + i / 4) % 1;
+      arc(ex, ey, r * (1 + f * 4), 0, 6.283, 3 + f * 6, withA(col("#9fd0ff"), 0.5 * (1 - f)), 36);
+    } // (shock rings rushing out at us)
+    R.setAdd(false);
+  }
+  // rubble shaken off the rock, tumbling back past us, growing as it comes
+  for (let i = 0; i < 10; i++) {
+    const f = (t * 0.6 + hash(i * 3.3)) % 1,
+      a = hash(i * 7.1) * 6.283,
+      d = 330 + f * f * 900, // (from round the rock's edge, never across the bar itself)
+      rr = (4 + hash(i) * 6) * (1 + f * 4);
+    disc(
+      Math.cos(a) * d,
+      90 + Math.sin(a) * d * 0.7,
+      rr,
+      withA(col("#3a3036"), Math.min(1, f * 4) * (1 - f * 0.3)),
+      rr * 0.8
+    );
+  }
+  // the shield: a shimmering bubble all round it
+  if (hk > 0) {
+    R.setAdd(true);
+    for (let i = 0; i < 3; i++)
+      arc(
+        0,
+        10,
+        500 + i * 16,
+        0,
+        6.283,
+        5 - i * 1.5,
+        withA(col(i ? "#6aa0ff" : "#cfe8ff"), (0.35 - i * 0.1) * hk),
+        64
+      );
+    R.setAdd(false);
+  }
+}
 // ---- the words: the facts as captions, the light-years counter in hyperspace ----
 function interHud(g, s) {
   const j = G.jump.t,
@@ -43180,9 +44357,7 @@ function interHud(g, s) {
     if (j < a || j >= b) continue;
     const al = clamp(Math.min(j - a, b - j - 0.2) * 2.5, 0, 1),
       txt = T(txt0),
-      sz = Math.min(15, (cssW * 0.92) / Math.max(1, txt.length) / 0.6 / s),
-      lines = sz < 11 && txt.includes(" - ") ? txt.split(" - ") : [txt],
-      sz2 = Math.min(15, ...lines.map((l) => (cssW * 0.92) / Math.max(1, l.length) / 0.6 / s));
+      { lines, px: sz2 } = capFit(g, txt, s); // (v1.4.27: measured, so it always fits - core.ts)
     g.globalAlpha = al;
     lines.forEach((ln, li) => {
       const y = cssH * 0.86 + (li - (lines.length - 1)) * sz2 * s * 1.9;
@@ -43412,6 +44587,31 @@ function drawCore(t) {
   R.setAdd(false);
   pop();
 }
+// (v1.4.27) A CAPTION THAT ALWAYS FITS: measured for real in the font it's drawn in (the old guess at letter widths let
+// long lines run off the sides of narrow screens) - it shrinks to fit, and if it would get too small to read it breaks
+// into two or three lines at the spaces instead. Returns the lines and the size (in CSS pixels).
+function capFit(g, txt, s, maxPx = 15, minPx = 11) {
+  const maxW = cssW * 0.9,
+    widthAt = (ln, px) => {
+      g.font = Math.round(px * s) + "px " + FD;
+      return g.measureText(ln).width;
+    },
+    fitPx = (lines) =>
+      Math.min(maxPx, ...lines.map((ln) => (maxPx * maxW) / Math.max(1, widthAt(ln, maxPx))));
+  let lines = [txt];
+  for (let n = 2; n <= 3 && fitPx(lines) < minPx; n++) {
+    const words = txt.split(" "),
+      per = Math.ceil(txt.length / n),
+      out = [""];
+    for (const wd of words) {
+      const cur = out[out.length - 1];
+      if (cur && (cur + " " + wd).length > per && out.length < n) out.push(wd);
+      else out[out.length - 1] = cur ? cur + " " + wd : wd;
+    }
+    lines = out;
+  }
+  return { lines, px: fitPx(lines) };
+}
 function coreHud(g, s) {
   const j = G.jump.t,
     cx = cssW / 2;
@@ -43423,14 +44623,7 @@ function coreHud(g, s) {
     if (j < a || j >= b) continue;
     const al = clamp(Math.min(j - a, b - j - 0.2) * 2.5, 0, 1),
       txt = T(txt0),
-      sz = Math.min(15, (cssW * 0.92) / Math.max(1, txt.length) / 0.6 / s),
-      lines =
-        sz < 11 && txt.includes(" - ")
-          ? txt.split(" - ")
-          : sz < 11 && txt.includes(": ")
-            ? txt.split(": ")
-            : [txt],
-      sz2 = Math.min(15, ...lines.map((l) => (cssW * 0.92) / Math.max(1, l.length) / 0.6 / s));
+      { lines, px: sz2 } = capFit(g, txt, s);
     g.globalAlpha = al;
     lines.forEach((ln, li) => {
       const y = cssH * 0.88 + (li - (lines.length - 1)) * sz2 * s * 1.9;
@@ -44367,13 +45560,22 @@ function cwLifeUpdate(dt, b) {
   if (Math.random() < dt * 0.09 && !CW.life.some((l) => l.kind === "whale"))
     CW.life.push({
       kind: "whale",
-      x: b.L + b.w * (0.1 + Math.random() * 0.8),
+      x: b.L + b.w * (0.12 + Math.random() * 0.76),
       t: 0,
-      len: 9,
-      breach: Math.random() < 0.5,
+      breach: Math.random() < 0.3,
+      len: 16, // (v1.4.27: a slow, whole surfacing - rise, blow, roll, flukes up, dive)
+      dir: Math.random() < 0.5 ? 1 : -1,
     });
-  if (Math.random() < dt * 0.08 && !CW.life.some((l) => l.kind === "dolphins"))
-    CW.life.push({ kind: "dolphins", x: b.L + b.w * (0.1 + Math.random() * 0.6), t: 0, len: 6, dir: 1 });
+  if (Math.random() < dt * 0.08 && !CW.life.some((l) => l.kind === "dolphins")) {
+    const dir = Math.random() < 0.5 ? 1 : -1;
+    CW.life.push({
+      kind: "dolphins",
+      x: b.L + b.w * (dir > 0 ? 0.08 + Math.random() * 0.4 : 0.52 + Math.random() * 0.4),
+      t: 0,
+      len: 7,
+      dir,
+    });
+  }
   if (!CW.life.some((l) => l.kind === "shark")) CW.life.push({ kind: "shark", t: 0, len: 1e9 });
   // (v1.4.11) orcas leaping, an octopus far out waving its arms - and, while Koos sleeps, DIVERS pop up to have a look
   if (Math.random() < dt * 0.06 && !CW.life.some((l) => l.kind === "orca"))
@@ -44870,7 +46072,7 @@ function cwBiolum(t, b, dark, where) {
     }
     // the wakes of the ships: a glowing trail behind each one
     for (const s of CW.ships) {
-      if (s.kind === "sub" || s.sunk) continue;
+      if (s.kind === "sub") continue;
       for (let j = 0; j < 12; j++) {
         const d = j * 9 * s.s * 4,
           pulse = 0.6 + 0.4 * Math.sin(t * 3 + j);
@@ -45223,7 +46425,6 @@ function cwDrawShip(s, t, dark, b) {
   const q = s.s,
     x = s.x,
     f = s.dir,
-    hit = s.hitT > 0 ? 1 : 0,
     lit = dark > 0.5,
     bob = Math.sin(t * 1.2 + x * 0.01) * 1.2 * q,
     roll = Math.sin(t * 0.9 + x * 0.02) * 0.02;
@@ -45238,18 +46439,63 @@ function cwDrawShip(s, t, dark, b) {
   translate(x, y + bob);
   rotate(roll);
   scaleXY(f * q, q);
-  const hull = (c) => (hit ? col("#ffffff") : mix(col(c), col("#0a1020"), lit ? 0.45 : 0)),
-    win = lit ? col("#ffe08a") : col("#2a4a7a");
-  // its wake behind it
-  for (let i = 0; i < 5; i++)
-    line(
-      -95 - i * 18,
-      7 + i * 0.8,
-      -120 - i * 26,
-      7 + i * 1.6,
-      1.4,
-      withA(C.white, (0.4 - i * 0.07) * (s.kind === "sub" && sub < 0.2 ? 0.5 : 1))
-    );
+  const hull = (c) => mix(col(c), col("#0a1020"), lit ? 0.45 : 0),
+    win = lit ? col("#ffe08a") : col("#2a4a7a"),
+    // (v1.4.27) how long each ship is (half), and the colour its reflection throws on the water
+    HL = { cruise: 92, yacht: 70, cargo: 100, navy: 92, carrier: 124, sub: 70 }[s.kind] || 90,
+    refC = hull(
+      {
+        cruise: "#e8eaf0",
+        yacht: "#f4f8ff",
+        cargo: "#2a3a4a",
+        navy: "#6e7888",
+        carrier: "#646e7e",
+        sub: "#2a2e38",
+      }[s.kind] || "#888888"
+    ),
+    under = s.kind === "sub" && sub < 0.2;
+  if (!under) {
+    // ITS REFLECTION: a broken, wavering copy of the hull in the water below it
+    for (let i = 0; i < 7; i++)
+      rect(
+        -HL * (1 - i * 0.08) + Math.sin(t * 2.2 + i * 1.7) * 3,
+        9 + i * 2.6,
+        HL * 2 * (1 - i * 0.1),
+        1.6,
+        withA(refC, 0.2 * (1 - i / 7))
+      );
+    // the stern WAKE: churned white water spreading behind it, and the two arms of the V fanning out
+    for (let i = 0; i < 16; i++) {
+      const f = i / 16;
+      disc(
+        -HL - 4 - i * 13 + Math.sin(t * 3 + i) * 2,
+        7.5 + Math.sin(t * 2 + i * 2) * 0.8,
+        2.2 + f * 3,
+        withA(C.white, 0.42 * (1 - f)),
+        1 + f
+      );
+    }
+    line(-HL, 8, -HL - 230, 5, 1, withA(C.white, 0.22));
+    line(-HL, 8, -HL - 230, 13, 1.2, withA(C.white, 0.22));
+    // the BOW WAVE curling away from the stem, and foam all along the waterline
+    for (let i = 0; i < 3; i++) {
+      const w2 = Math.sin(t * 4 + i * 2) * 2;
+      tri(
+        HL - 6 - i * 10,
+        7,
+        HL + 6 - i * 10,
+        7,
+        HL - 2 - i * 12 + w2,
+        3 + i,
+        withA(C.white, 0.55 - i * 0.15)
+      );
+    }
+    line(-HL, 8, HL, 8, 1.4, withA(C.white, 0.35 + 0.1 * Math.sin(t * 3)));
+  } else {
+    // (a submarine under the surface: just a faint wake)
+    for (let i = 0; i < 5; i++)
+      line(-95 - i * 18, 7 + i * 0.8, -120 - i * 26, 7 + i * 1.6, 1.4, withA(C.white, 0.2 - i * 0.035));
+  }
   if (s.kind === "cruise") {
     quad4(-96, -10, 92, -10, 80, 8, -86, 8, hull("#f4f4f8"));
     rect(-86, 2, 166, 6, hull("#1a3a8a"));
@@ -45267,6 +46513,14 @@ function cwDrawShip(s, t, dark, b) {
     } // lifeboats
     line(-76, -28.5, 74, -28.5, 0.8, hull("#9aa0aa"));
     line(-60, -44.5, 58, -44.5, 0.8, hull("#9aa0aa")); // railings
+    // (v1.4.27) the bridge with its wings out over the sides, a mast with a radar, the pool and a winding water slide
+    rect(52, -54, 26, 10, hull("#ffffff"));
+    rect(54, -51, 22, 3, col(lit ? "#ffe08a" : "#1a2a4a"));
+    rect(74, -52, 10, 3, hull("#f4f4f8"));
+    line(64, -54, 64, -72, 1, hull("#c8ccd6"));
+    line(58 - Math.cos(t * 2) * 5, -68, 70 + Math.cos(t * 2) * 5, -68, 1.2, hull("#9aa0aa"));
+    rect(-24, -60, 30, 2, col("#3ab0e8"));
+    polyline([-48, -58, -44, -66, -36, -62, -32, -70, -24, -66], 1.6, hull("#ff5fa8"));
     quad4(26, -76, 44, -76, 46, -58, 22, -58, hull("#e8e8f0"));
     rect(25, -72, 20, 5, hull("#c8302a"));
     rect(25, -66, 20, 3, hull("#1a3a8a")); // the funnel
@@ -45315,7 +46569,7 @@ function cwDrawShip(s, t, dark, b) {
     for (let i = 0; i < 8; i++)
       for (let r = 0; r < 3; r++) {
         const cc = col(["#c84a2a", "#2a6ac8", "#e8b830", "#3a9a5a", "#e87a2a"][(i * 3 + r) % 5]);
-        rect(-84 + i * 19, -22 - r * 9, 18, 8.5, hit ? col("#fff") : mix(cc, col("#0a1020"), lit ? 0.5 : 0));
+        rect(-84 + i * 19, -22 - r * 9, 18, 8.5, mix(cc, col("#0a1020"), lit ? 0.5 : 0));
         for (let j = 0; j < 4; j++)
           line(
             -82 + i * 19 + j * 4.5,
@@ -45332,10 +46586,13 @@ function cwDrawShip(s, t, dark, b) {
     line(-60, -40, -60, -12, 1.6, hull("#e8b830"));
     line(-60, -40, -36, -30, 1.2, hull("#e8b830")); // a crane
     line(80, -44, 80, -56, 1, hull("#5a6474"));
-  } else if (s.kind === "navy" || s.kind === "pirate") {
-    const pir = s.kind === "pirate";
-    quad4(-90, -8, 100, -12, 84, 8, -84, 8, hull(pir ? "#6a4a2a" : "#6e7888"));
-    if (!pir) {
+    rect(84, -50, 6, 6, hull("#a8302a")); // (v1.4.27) the funnel - and its smoke trailing back
+    for (let i = 0; i < 5; i++)
+      disc(86 - i * 7 - ((t * 6) % 7), -54 - i * 3, 2.6 + i * 1.3, withA(col("#8a8a92"), 0.3 - i * 0.05));
+    quad4(100, -12, 108, -14, 100, 4, 92, 8, hull("#2a3a4a")); // (the raked bow)
+  } else if (s.kind === "navy") {
+    quad4(-90, -8, 100, -12, 84, 8, -84, 8, hull("#6e7888"));
+    {
       rect(-84, 3, 168, 5, hull("#4a5262"));
       quad4(-44, -26, 28, -26, 34, -8, -50, -8, hull("#828c9c"));
       quad4(-26, -42, 14, -42, 18, -26, -30, -26, hull("#8a94a4"));
@@ -45351,39 +46608,8 @@ function cwDrawShip(s, t, dark, b) {
       pixText("D-07", 20, -2, 1.6, col("#ffffff"));
       line(-6, -72, -18, -64, 0.6, hull("#c8ccd6"));
       quad4(-18, -64, -10, -64, -10, -60, -18, -60, col("#4a8ae8")); // a pennant
-    } else {
-      rect(-40, -24, 60, 16, hull("#5a3a1a"));
-      // the robot pirates' rusty ship: black sails with our gear-and-bolt emblem, robot crew, a robot parrot
-      for (const mx of [-30, 30]) {
-        line(mx, -24, mx, -92, 2.4, col("#3a2a1a"));
-        quad4(
-          mx - 22,
-          -86,
-          mx + 22,
-          -86,
-          mx + 20 + Math.sin(t * 2) * 2,
-          -40,
-          mx - 20 + Math.sin(t * 2) * 2,
-          -40,
-          col("#1a1a22")
-        );
-        disc(mx, -64, 7, col("#c8ccd6"));
-        disc(mx, -64, 3, col("#1a1a22"));
-        for (let i = 0; i < 6; i++)
-          rect(mx - 1.5 + Math.cos(i) * 7, -65.5 + Math.sin(i) * 7, 3, 3, col("#c8ccd6"));
-      }
-      quad4(30, -96, 44, -94, 44, -88, 30, -90, col("#1a1a22")); // a flag
-      for (let i = 0; i < 3; i++) {
-        rect(-20 + i * 16, -36, 7, 12, col("#a8acb8"));
-        disc(-16.5 + i * 16, -39, 3.4, col("#c8ccd6"));
-        disc(-15.5 + i * 16, -39.5, 1, col(Math.sin(t * 4 + i) > 0 ? "#ff4040" : "#801010"));
-      }
-      disc(60, -20 + Math.sin(t * 6) * 1, 4, col("#3ac04a"));
-      tri(63, -21, 68, -20, 63, -18, col("#ffd24d")); // the robot parrot
-      for (let i = 0; i < 4; i++) disc(-60 + i * 30, -2, 2.5, col("#1a1a1a")); // gun ports
-      if (s.sunk)
-        for (let i = 0; i < 6; i++)
-          disc(-40 + i * 16, -10 - ((t * 20 + i * 7) % 30), 3, withA(col("#c8c8d0"), 0.5)); // smoke
+      for (let i = 0; i < 3; i++)
+        disc(-4 - i * 6 - ((t * 5) % 6), -46 - i * 3, 2 + i, withA(col("#9a9aa2"), 0.25 - i * 0.06)); // (exhaust)
     }
   } else if (s.kind === "carrier") {
     quad4(-124, -10, 124, -10, 108, 8, -112, 8, hull("#646e7e"));
@@ -45443,12 +46669,115 @@ function cwDrawShip(s, t, dark, b) {
         arc(4, 6, 6 + i * 6 + ((t * 6) % 6), Math.PI, 2 * Math.PI, 0.8, withA(C.white, 0.4 - i * 0.12), 8);
     }
   }
-  if (s.signaled) {
+  // (v1.4.27) AT NIGHT: lit up - a warm glow from the decks and windows, the white masthead light, red and green
+  // running lights, and their light shimmering on the water below
+  if (lit && !under) {
     R.setAdd(true);
-    glow(0, -70, 10, withA(col("#ffd24d"), 0.6 + 0.4 * Math.sin(t * 8)));
-    R.setAdd(false); // (a lamp blinking back: "we see you!")
+    const warm =
+      { cruise: 0.22, yacht: 0.18, cargo: 0.06, navy: 0.05, carrier: 0.06, sub: 0.03 }[s.kind] || 0.05;
+    glowE(0, -24, HL * 0.95, 22, withA(col("#ffd890"), warm));
+    for (let i = 0; i < 6; i++)
+      rect(
+        -HL * 0.6 + Math.sin(t * 2 + i) * 4,
+        10 + i * 3,
+        HL * 1.2 * (1 - i * 0.12),
+        1.2,
+        withA(col("#ffd890"), warm * 0.9 * (1 - i / 6))
+      );
+    if (s.kind !== "sub") glow(0, -76, 3, withA(C.white, 0.6));
+    glow(HL * 0.8, -6, 4, withA(col("#ff3030"), 0.8));
+    glow(-HL * 0.8, -6, 4, withA(col("#30ff60"), 0.8));
+    R.setAdd(false);
   }
   pop();
+}
+// (v1.4.27) only the part of an oval that's ABOVE THE WATER (y < wy): a whale's back breaking the surface, a fin rising
+function cwCap(x, cy, rx, ry, wy, c) {
+  if (cy - ry >= wy) return;
+  const pts = [],
+    N = 18;
+  for (let i = 0; i <= N; i++) {
+    const px = x - rx + (2 * rx * i) / N,
+      h = ry * Math.sqrt(Math.max(0, 1 - ((px - x) / rx) ** 2)),
+      top = cy - h;
+    if (top < wy) pts.push(px, top);
+  }
+  for (let i = N; i >= 0; i--) {
+    const px = x - rx + (2 * rx * i) / N,
+      h = ry * Math.sqrt(Math.max(0, 1 - ((px - x) / rx) ** 2));
+    if (cy - h < wy) pts.push(px, Math.min(wy, cy + h));
+  }
+  if (pts.length >= 6) poly(pts, c);
+}
+// (v1.4.27) A SPLASH: drops thrown up and falling back, white water, and rings spreading out (age in seconds)
+function cwSplash(x, y, age, size, k, a = 1) {
+  if (age < 0 || age > 3) return;
+  for (let i = 0; i < 18; i++) {
+    const vx = (hash(i * 2.7 + size) - 0.5) * size * 2.2,
+      vy = -(0.6 + hash(i * 5.3)) * size * 2.6,
+      px = x + vx * age,
+      py = y + vy * age + size * 3.2 * age * age;
+    if (py < y + 1 && age < 1.4)
+      disc(px, py, (0.7 + hash(i) * 0.9) * k, withA(C.white, 0.85 * a * (1 - age / 1.4)));
+  }
+  if (age < 0.8) glowE(x, y - size * 0.2, size * 0.9, size * 0.35, withA(C.white, 0.4 * a * (1 - age / 0.8)));
+  for (let r = 0; r < 3; r++) {
+    const f = age / 3 - r * 0.12;
+    if (f > 0 && f < 1)
+      arc(
+        x,
+        y + 1,
+        size * (0.5 + f * 2.2),
+        Math.PI * 1.04,
+        Math.PI * 1.96,
+        0.8,
+        withA(C.white, 0.45 * a * (1 - f)),
+        16
+      );
+  }
+}
+// (v1.4.27) SHAPES THAT GO IN AND OUT OF THE WATER: a shape given in its own little drawing space (facing right, x along
+// the body), placed at X = { x, y, a: its angle, d: facing left (-1) or right (1), wy: the water line } - turned, flipped,
+// moved into place, and then CUT OFF AT THE SURFACE, so whatever is under the water really is hidden: a dolphin's
+// tail still in the sea as its head comes out, a whale half out in a breach
+function cwShape(pts, X, c) {
+  const ca = Math.cos(X.a),
+    sa = Math.sin(X.a),
+    w             = [];
+  for (let i = 0; i < pts.length; i += 2) {
+    const rx = pts[i] * ca - pts[i + 1] * sa,
+      ry = pts[i] * sa + pts[i + 1] * ca;
+    w.push([X.x + rx * X.d, X.y + ry]);
+  }
+  // keep only what's above the water (clipping the outline against the surface line)
+  const out           = [];
+  for (let i = 0; i < w.length; i++) {
+    const [ax, ay] = w[i],
+      [bx, by] = w[(i + 1) % w.length],
+      aIn = ay <= X.wy,
+      bIn = by <= X.wy;
+    if (aIn) out.push(ax, ay);
+    if (aIn !== bIn) {
+      const f = (X.wy - ay) / (by - ay);
+      out.push(ax + (bx - ax) * f, X.wy);
+    }
+  }
+  if (out.length >= 6) poly(out, c);
+  return out.length >= 6;
+}
+// (v1.4.27) a sleek streamlined body - beak, forehead, back, tail stock, flukes, a flipper - with a pale belly
+// (dolphins, orcas, the breaching whale), cut off at the water line
+function cwFishBody(X, s2, c, belly, th = 1) {
+  const S = (a) => a.map((v, i) => v * s2 * (i % 2 ? th : 1)); // (th: how thick - a whale is chunkier than a dolphin)
+  cwShape(S([12, 0.6, 8, -2.8, 2, -3.6, -5, -2.8, -11, -1, -11, 1, -5, 2.4, 3, 3, 9, 2]), X, c);
+  cwShape(S([11, 1, 8, 2.2, 2, 2.8, -5, 2, -1, 0.8, 6, 0.9]), X, belly);
+  cwShape(S([-10.5, 0, -16, -3.4, -14, 0, -16, 3.4]), X, c); // the flukes
+  cwShape(S([2, 2, -1, 2.4, -1, 5]), X, c); // a flipper
+  const ex = 8.6 * s2,
+    ey = -0.6 * s2,
+    wx = X.x + (ex * Math.cos(X.a) - ey * Math.sin(X.a)) * X.d,
+    wyy = X.y + ex * Math.sin(X.a) + ey * Math.cos(X.a);
+  if (wyy < X.wy) disc(wx, wyy, 0.5 * s2, col("#0a0a10")); // the eye
 }
 function cwDrawLife(t, b, dark, near) {
   const { k, hz, iy, cx, rw, ks } = b;
@@ -45508,75 +46837,230 @@ function cwDrawLife(t, b, dark, near) {
       continue;
     }
     if (l.kind === "whale") {
-      const u = l.t / l.len,
-        y = hz + 24 * k;
-      if (l.breach && u > 0.35 && u < 0.6) {
-        const a = (u - 0.35) / 0.25,
-          wy = y - Math.sin(a * Math.PI) * 42 * k;
-        push();
-        translate(l.x + a * 40 * k, wy);
-        rotate(-0.8 + a * 1.6);
-        disc(0, 0, 26 * k, col("#3a4a62"), 10 * k);
-        disc(4 * k, 5 * k, 18 * k, col("#e8ecf0"), 4.5 * k);
-        for (let i = 0; i < 5; i++)
-          line(-8 * k + i * 5 * k, 3 * k, -6 * k + i * 5 * k, 8 * k, 0.6 * k, col("#a8b0c0")); // throat grooves
-        tri(-24 * k, 0, -38 * k, -10 * k, -36 * k, 10 * k, col("#3a4a62"));
-        line(4 * k, 6 * k, 14 * k, 14 * k, 3 * k, col("#3a4a62")); // a long flipper
-        disc(18 * k, -2 * k, 1.2 * k, col("#e8ecf0"));
-        pop();
-        if (a > 0.82)
-          for (let i = 0; i < 10; i++)
-            disc(
-              l.x + 40 * k + (i - 5) * 6 * k,
-              y - (1 - a) * 90 * k - (i % 3) * 5 * k,
-              3 * k,
-              withA(C.white, 0.75)
-            );
+      // (v1.4.27) A WHALE, THE WAY WHALES REALLY DO IT - slowly: a dark shape under the water, the long back rising and
+      // breaking the surface, a big misty BLOW from the blowhole, the back rolling forward with the little dorsal fin
+      // coming over, then the tail stock arching and the great FLUKES lifting out, water pouring off them - and
+      // sliding back down. A smooth, glassy "footprint" is left on the water where it went down.
+      // (Or, now and then, a BREACH: the whole whale bursting up out of the sea and crashing down in a huge splash.)
+      const T0 = l.t,
+        d = l.dir || 1,
+        wy = hz + 24 * k,
+        x = l.x + d * T0 * 5 * k,
+        body = col(dark > 0.5 ? "#1e2638" : "#34445c"),
+        bodyL = col(dark > 0.5 ? "#2e3a52" : "#5a6e8a"),
+        ss = (a, b2, v) => clamp((v - a) / (b2 - a), 0, 1),
+        sm = (v) => v * v * (3 - 2 * v);
+      // the shape under the water, before it comes up (and as it goes down)
+      const shadow = l.breach ? ss(0, 1.5, T0) * (1 - ss(2.2, 2.6, T0)) : ss(0, 2, T0) * (1 - ss(3, 4, T0));
+      if (shadow > 0) glowE(x, wy + 5 * k, 34 * k, 6 * k, withA(col("#06101e"), 0.35 * shadow));
+      if (!l.breach) {
+        // the back: rising (1.5-4s), rolling forward and down (6-10s)
+        const rise = sm(ss(1.5, 4, T0)),
+          roll = sm(ss(6, 10, T0)),
+          bx = x + d * roll * 12 * k,
+          by = wy + lerpA(16, 2.5, rise) * k + roll * 13 * k,
+          rx = 27 * k,
+          ry = 10 * k;
+        if (rise > 0 && roll < 1) {
+          cwCap(bx, by, rx, ry, wy, body);
+          cwCap(bx - d * 2 * k, by + 1.5 * k, rx * 0.8, ry * 0.75, wy - 2.2 * k, bodyL); // (the wet shine along the top)
+          for (let i = 0; i < 5; i++) {
+            const px = bx + d * (8 + i * 3.4 - 10) * k,
+              top = by - ry * Math.sqrt(Math.max(0, 1 - ((px - bx) / rx) ** 2));
+            if (top < wy - 1) disc(px, top + 1.4 * k, 0.6 * k, withA(col("#c8ccd4"), 0.55)); // (barnacles)
+          }
+          // the little dorsal fin, coming over as it rolls
+          const fh = ss(6.5, 8.5, T0) * (1 - ss(9.5, 10.5, T0)) * 5 * k,
+            fx = bx - d * 9 * k,
+            ftop = by - ry * Math.sqrt(Math.max(0, 1 - ((fx - bx) / rx) ** 2));
+          if (fh > 0.3 && ftop < wy)
+            tri(fx - d * 4 * k, ftop + 1, fx + d * 1.5 * k, ftop + 1, fx - d * 2.5 * k, ftop - fh, body);
+          // the water parting round it: a line of foam where back meets sea, and slow ripples
+          const vis = Math.max(0, wy - (by - ry));
+          if (vis > 0) {
+            const hw = rx * Math.sqrt(Math.max(0, 1 - ((wy - by) / ry) ** 2));
+            line(bx - hw - 3 * k, wy, bx + hw + 3 * k, wy, 1.2 * k, withA(C.white, 0.45));
+            for (let r = 0; r < 2; r++) {
+              const f = (T0 * 0.4 + r * 0.5) % 1;
+              arc(
+                bx,
+                wy + 1,
+                hw + (4 + f * 16) * k,
+                Math.PI * 1.04,
+                Math.PI * 1.96,
+                0.8,
+                withA(C.white, 0.3 * (1 - f)),
+                14
+              );
+            }
+          }
+        }
+        // THE BLOW - a tall misty column from the blowhole, drifting and fading (twice: a big one, then a smaller one)
+        for (const [t0, big] of [
+          [3.4, 1],
+          [7, 0.6],
+        ]) {
+          const a = T0 - t0;
+          if (a > 0 && a < 3) {
+            const hx = bx + d * 15 * k * (1 - roll),
+              hy2 = by - ry * 0.85;
+            for (let i = 0; i < 16; i++) {
+              const ai = a - i * 0.035;
+              if (ai <= 0) continue;
+              const up = Math.min(1, ai * 2.6) * (0.75 + 0.25 * hash(i * 2.3)),
+                px = hx + (hash(i * 4.1) - 0.5) * ai * 16 * k + ai * 7 * k,
+                py = Math.min(hy2, wy) - up * 46 * k * big + ai * ai * 2 * k;
+              disc(
+                px,
+                py,
+                (1.1 + ai * 2.2) * k,
+                withA(mix(C.white, col("#c8d8e8"), 0.3), 0.34 * big * Math.max(0, 1 - ai / 2.8))
+              );
+            }
+          }
+        }
+        // THE FLUKES: the tail stock arches, the great tail lifts clear, water pouring off it - and slides down
+        const fl = sm(ss(9.5, 11.2, T0)) * (1 - sm(ss(12, 13.8, T0)));
+        if (fl > 0) {
+          const tx = x + d * 4 * k,
+            h = fl * 30 * k,
+            lean = d * (1 - fl) * 0.4;
+          push();
+          translate(tx, wy);
+          rotate(lean);
+          quad4(-3.4 * k, 0, 3.4 * k, 0, 2 * k, -h * 0.8, -2 * k, -h * 0.8, body, body, bodyL, bodyL); // the tail stock
+          poly(
+            [
+              0,
+              -h * 0.75,
+              -6 * k,
+              -h * 0.9,
+              -15 * k,
+              -h * 1.02,
+              -18 * k,
+              -h * 1.12,
+              -10 * k,
+              -h * 1.08,
+              -1 * k,
+              -h * 0.98,
+              0,
+              -h * 0.94,
+              1 * k,
+              -h * 0.98,
+              10 * k,
+              -h * 1.08,
+              18 * k,
+              -h * 1.12,
+              15 * k,
+              -h * 1.02,
+              6 * k,
+              -h * 0.9,
+            ],
+            body
+          ); // the flukes, notched in the middle
+          for (let i = 0; i < 5; i++) disc((i - 2) * 6 * k, -h * 1.04, 0.7 * k, withA(col("#e8ecf0"), 0.6)); // (pale trailing edge)
+          pop();
+          // water pouring off the flukes
+          if (fl > 0.6)
+            for (let i = 0; i < 12; i++) {
+              const f = (T0 * 1.6 + hash(i * 3.3)) % 1;
+              disc(tx + (i - 5.5) * 3 * k, wy - h * 1.05 + f * h, 0.9 * k, withA(C.white, 0.7 * (1 - f)));
+            }
+          line(tx - 8 * k, wy, tx + 8 * k, wy, 1.2 * k, withA(C.white, 0.5 * fl));
+        }
+        // the glassy "footprint" it leaves where it dove
+        const fp = ss(12.5, 13.5, T0) * (1 - ss(14, 16, T0));
+        if (fp > 0) {
+          glowE(x, wy + 2 * k, 30 * k, 4 * k, withA(col("#d8eaf8"), 0.16 * fp));
+          arc(
+            x,
+            wy + 2,
+            (18 + (T0 - 12.5) * 6) * k,
+            Math.PI * 1.05,
+            Math.PI * 1.95,
+            0.8,
+            withA(C.white, 0.35 * fp),
+            16
+          );
+        }
       } else {
-        const sw = Math.sin(l.t * 0.8) * 2 * k;
-        disc(l.x, y + 4 * k + sw, 24 * k, col("#3a4a62"), 6 * k); // the back, rising and sinking
-        tri(
-          l.x - 24 * k,
-          y + 3 * k,
-          l.x - 34 * k,
-          y - 6 * k + (u > 0.8 ? -6 * k : 0),
-          l.x - 30 * k,
-          y + 4 * k,
-          col("#3a4a62")
-        ); // the tail
-        const sp = (l.t * 0.45) % 1;
-        if (sp < 0.4)
-          for (let i = 0; i < 9; i++) {
-            const a2 = -Math.PI / 2 + (i - 4) * 0.16;
-            disc(
-              l.x + 10 * k + Math.cos(a2) * sp * 40 * k,
-              y - sp * 50 * k - Math.sin(-a2) * 0,
-              2.2 * k,
-              withA(C.white, 0.75 * (1 - sp / 0.4))
-            );
-          } // the spout
+        // THE BREACH: up out of the sea (2.4-4.4s), hanging there a moment, crashing down on its back - spray everywhere
+        const a = ss(2.4, 4.6, T0);
+        if (a > 0 && a < 1) {
+          const hgt = Math.sin(a * Math.PI) * 46 * k,
+            bx = x + d * a * 18 * k;
+          const X = { x: bx, y: wy + 8 * k - hgt, a: -1.15 + a * 1.9, d, wy };
+          cwFishBody(X, 2.4 * k, body, col("#e8ecf0"), 1.5);
+          cwShape(
+            [3 * k, 5 * k, 7 * k, 5 * k, 24 * k, 18 * k, 18 * k, 20 * k],
+            X,
+            mix(body, col("#e8ecf0"), 0.45)
+          ); // the long flipper
+          for (let i = 0; i < 5; i++)
+            cwShape(
+              [
+                (4 + i * 4.4) * k,
+                3.6 * k,
+                (5 + i * 4.4) * k,
+                3.6 * k,
+                (5.6 + i * 4.4) * k,
+                6 * k,
+                (4.6 + i * 4.4) * k,
+                6 * k,
+              ],
+              X,
+              col("#a8b0c0")
+            ); // throat grooves
+          // the sea pouring off it as it rises
+          if (a < 0.5)
+            for (let i = 0; i < 14; i++) {
+              const f = (T0 * 2 + hash(i * 1.9)) % 1;
+              disc(bx + (i - 7) * 3 * k, wy - hgt * (1 - f) + 6 * k, 1 * k, withA(C.white, 0.7 * (1 - f)));
+            }
+          // where it burst out: a ring of white water
+          if (a < 0.4) cwSplash(x + d * 6 * k, wy, (T0 - 2.4) * 1.2, 22 * k, k, 0.8);
+        }
+        // the crash: a great white curtain of spray and spreading rings
+        const sp = T0 - 4.5;
+        if (sp > 0 && sp < 4) cwSplash(x + d * 20 * k, wy, sp, 34 * k, k, 1);
+        const fp = ss(5, 6, T0) * (1 - ss(8, 11, T0));
+        if (fp > 0) glowE(x + d * 20 * k, wy + 2 * k, 34 * k, 5 * k, withA(col("#d8eaf8"), 0.16 * fp));
       }
     } else if (l.kind === "orca") {
-      // an orca: a tall black dorsal fin, then a leap - black and white
-      const u = l.t / l.len,
-        x = l.x + l.dir * l.t * 30 * k,
-        y = hz + 32 * k;
-      if (u > 0.4 && u < 0.62) {
-        const a = (u - 0.4) / 0.22;
-        push();
-        translate(x, y - Math.sin(a * Math.PI) * 30 * k);
-        scaleXY(l.dir, 1);
-        rotate(-0.7 + a * 1.4);
-        disc(0, 0, 18 * k, col("#141418"), 7 * k);
-        disc(3 * k, 4 * k, 12 * k, col("#f4f4f4"), 3 * k);
-        disc(12 * k, -2 * k, 3 * k, col("#f4f4f4"), 1.6 * k); // the eye patch
-        tri(-2 * k, -6 * k, 4 * k, -6 * k, 0, -18 * k, col("#141418"));
-        tri(-16 * k, 0, -26 * k, -8 * k, -26 * k, 8 * k, col("#141418"));
-        pop();
-      } else if (u < 0.4 || u > 0.66) {
-        tri(x - 4 * k, y, x + 4 * k, y, x + l.dir * 1 * k, y - 16 * k, col("#141418"));
-        line(x - 10 * k, y + 1, x + 10 * k, y + 1, 1, withA(C.white, 0.5));
+      // (v1.4.27) AN ORCA: the tall black dorsal fin slicing up out of the water and along, a leap in the middle - black
+      // and white, with a splash going in and coming out - then the fin slides back under
+      const T0 = l.t,
+        d = l.dir || 1,
+        x = l.x + d * T0 * 26 * k,
+        wy = hz + 32 * k,
+        fin = clamp(Math.min(T0 / 1, (l.len - T0) / 1), 0, 1),
+        leap = clamp((T0 / l.len - 0.4) / 0.2, 0, 1);
+      if (leap > 0 && leap < 1) {
+        const hgt = Math.sin(leap * Math.PI) * 30 * k,
+          ang = Math.atan2(-Math.cos(leap * Math.PI) * 30 * Math.PI, 0.2 * l.len * 26);
+        const X = { x, y: wy + 4 * k - hgt, a: ang * 0.8, d, wy };
+        cwFishBody(X, 1.6 * k, col("#141418"), col("#f4f4f4"));
+        cwShape([8 * k, -2.4 * k, 10 * k, -3.4 * k, 12.5 * k, -2.6 * k, 11 * k, -1.4 * k], X, col("#f4f4f4")); // the eye patch
+        cwShape([-2 * k, -4.5 * k, 3 * k, -4.6 * k, -1 * k, -16 * k], X, col("#141418")); // the tall fin
+        if (leap < 0.25) cwSplash(x - d * 12 * k, wy, leap * l.len * 0.2, 12 * k, k, 0.6);
+      } else {
+        // the fin (and a glimpse of the back), rising and sinking smoothly
+        cwCap(x, wy + lerpA(9, 3, fin) * k, 16 * k, 5 * k, wy, col("#141418"));
+        if (fin > 0.05)
+          tri(x - d * 5 * k, wy, x + d * 3 * k, wy, x - d * 1 * k, wy - 16 * k * fin, col("#141418"));
+        line(x - d * 14 * k, wy + 1, x + d * 8 * k, wy + 1, 1, withA(C.white, 0.5 * fin));
+        for (let i = 0; i < 3; i++)
+          line(
+            x - d * (12 + i * 9) * k,
+            wy + 1.5 + i,
+            x - d * (5 + i * 9) * k,
+            wy + 1.5 + i,
+            0.8,
+            withA(C.white, (0.35 - i * 0.1) * fin)
+          ); // (its wake)
       }
+      const sp = (T0 / l.len - 0.6) * l.len;
+      if (sp > 0 && sp < 2.5) cwSplash(x, wy, sp, 16 * k, k, 0.8);
     } else if (l.kind === "octopus") {
       // far out: a great octopus's arms rising out of the sea, waving slowly, then sinking back
       const ko = k * 0.55,
@@ -45598,22 +47082,31 @@ function cwDrawLife(t, b, dark, near) {
       }
       if (up > 0.6) disc(l.x, y + 2 * ko, 10 * ko, col(dark > 0.5 ? "#4a2a4a" : "#a04a6a"), 3 * ko);
     } else if (l.kind === "dolphins") {
+      // (v1.4.27) A POD OF DOLPHINS porpoising along: sleek grey bodies with pale bellies, beaks, curved fins - each
+      // arcing up out of the water and back in, a little burst of spray where it leaves and where it goes in
       for (let i = 0; i < 3; i++) {
-        const u = (l.t * 0.8 + i * 0.25) % 1,
-          x = l.x + (l.t * 60 + i * 30) * k,
-          y = hz + 30 * k - Math.sin(u * Math.PI) * 26 * k;
-        if (u < 0.9) {
-          push();
-          translate(x, y);
-          rotate(-1 + u * 2);
-          disc(0, 0, 10 * k, col("#6a7a96"), 3.6 * k);
-          disc(1 * k, 1.4 * k, 7 * k, col("#c8d0dc"), 1.6 * k);
-          tri(-2 * k, -3 * k, 2 * k, -3 * k, 0, -8 * k, col("#6a7a96"));
-          tri(-10 * k, 0, -14 * k, -3 * k, -14 * k, 3 * k, col("#6a7a96"));
-          pop();
-        } else
-          for (let j = 0; j < 4; j++)
-            disc(x + (j - 1.5) * 3 * k, hz + 30 * k - (1 - u) * 40 * k, 1.6 * k, withA(C.white, 0.7));
+        const d = l.dir || 1,
+          P = 1.5,
+          c0 = (l.t + i * 0.45) / P,
+          u = (c0 % 1) / 0.6, // (0..1 in the air, then swimming under for a moment)
+          base = l.x + d * (l.t * 55 + i * 26) * k,
+          wy = hz + 30 * k + i * 3 * k,
+          fade = Math.min(1, l.t, (l.len - l.t) * 2);
+        if (fade <= 0) continue;
+        if (u < 1) {
+          const x = base + d * u * 26 * k,
+            y = wy + 3 * k - Math.sin(u * Math.PI) * 22 * k,
+            ang = Math.atan2(-Math.cos(u * Math.PI) * 22 * Math.PI, 26);
+          const X = { x, y, a: ang * 0.85, d, wy },
+            dc = col(dark > 0.5 ? "#2e3848" : "#4a5a76");
+          cwFishBody(X, 1.3 * k, dc, col(dark > 0.5 ? "#7a8496" : "#d4dae4"));
+          cwShape([-1 * k, -3.2 * k, -6 * k, -3 * k, -5.5 * k, -8 * k], X, dc); // the curved fin
+        }
+        // spray where it leaves the water and where it dives back in
+        const leave = (c0 % 1) * P,
+          enter = leave - 0.6 * P;
+        if (leave < 0.6) cwSplash(base, wy, leave, 6 * k, k, 0.55 * fade);
+        if (enter > 0 && enter < 0.6) cwSplash(base + d * 26 * k, wy, enter, 7 * k, k, 0.6 * fade);
       }
     } else if (l.kind === "shark") {
       // a fin circling the island, with its tail fin flicking behind
@@ -58589,7 +60082,7 @@ function drawEggs(g, s) {
 // THE VERSION (from v1.2.0, 5 October 2026): MAJOR.MINOR.PATCH - a new MINOR for a batch of new things, a new PATCH for
 // fixes and small touches - with the day it was made next to it. (Before this the versions were named after the date,
 // like v2026.10.05c.)
-const GAME_VERSION = "v1.4.26",
+const GAME_VERSION = "v1.4.27",
   GAME_DATE = "06.10.2026",
   VERSION_TEXT = GAME_VERSION + "  ·  " + GAME_DATE;
 const FB = '"Chakra Petch", "Segoe UI", sans-serif';
@@ -64901,6 +66394,25 @@ profWire();
 //  the game, and where the motion capture, the folk songs and the fonts come from. Both from the menu at any time.
 // =====================================================================================
 const NEWS = [
+  {
+    ver: "v1.4.27",
+    title: "EVERY STOP ITS OWN BAR",
+    items: [
+      "EVERY STOP: ITS OWN DOOR, COUNTERS, FLOOR, WINDOWS AND THINGS",
+      "NEW: STAR GATE, STABLE DOOR, BEAD CURTAIN, TABLES ON LEGS",
+      "TURBO ONLY ON A DOUBLE TAP (OR DOUBLE CLICK)",
+      "PUFFBALL SKY TOWN: A BAR UP IN THE CLOUDS",
+      "ANDROMEDA CAPTIONS ALWAYS FIT THE SCREEN",
+      "HYPERSPACE: RIDE BEHIND OUR BAR, ENGINES BLAZING",
+      "BLACK HOLES: GAS SWIRLING ROUND IN THE DISC",
+      "MENUS: ONLY THE SELECTED BUTTON IS LIT",
+      "PROTESTERS MARCH MORE SLOWLY",
+      "THE WHALE RISES, BLOWS, ROLLS AND LIFTS ITS TAIL - SLOWLY",
+      "A HUMPBACK BREACH WITH A HUGE SPLASH",
+      "DOLPHINS AND ORCAS REALLY COME OUT OF THE WATER",
+      "SHIPS: REFLECTIONS, BOW WAVES, WAKES, SMOKE, NIGHT LIGHTS",
+    ],
+  },
   {
     ver: "v1.4.26",
     title: "CASTAWAY SCREENSAVER",

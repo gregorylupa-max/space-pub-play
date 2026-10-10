@@ -12237,6 +12237,7 @@ function draw() {
       //  that depth haze is now baked into each bar's own picture instead - counterBody, sky.ts - which costs nothing)
       laneT(lane); // everything on this bar is drawn at its depth
       drawDoor(lane, t, V);
+      doorLight(lane); // (v1.4.32)
       for (const c of customers.filter((c) => c.lane === lane).sort((a, b) => a.x - b.x)) {
         drawCustomer(c, t);
         if (c.gold) kidDrawVip(c, t);
@@ -15946,6 +15947,31 @@ function counterBody(lane, V) {
 }
 // ---- the shake taps on the right wall ----
 // ---- the doors customers come in through - every planet has its own kind ----
+// (v1.4.32) WHEN THE DOOR OPENS: light from outside pours in through the doorway and lays a shaft across the room
+// (drawn after the door, so it shines out over it)
+function doorLight(lane) {
+  if (OUT || !customers.some((c) => c.lane === lane && c.x < X0 + 10 && c.alpha > 0.3)) return;
+  const x = X0 - 44,
+    y = LY(lane, X0),
+    fl = 0.9 + 0.1 * Math.sin(G.time * 7 + lane);
+  R.setAdd(true);
+  glowE(x + 2, y - 40, 30, 44, withA(col("#ffe0b0"), 0.32 * fl));
+  quad4(
+    x + 30,
+    y - 78,
+    x + 34,
+    y - 78,
+    x + 64,
+    y - 4,
+    x + 34,
+    y - 4,
+    withA(col("#ffe0b0"), 0.13 * fl),
+    withA(col("#ffe0b0"), 0.13 * fl),
+    withA(col("#ffe0b0"), 0),
+    withA(col("#ffe0b0"), 0)
+  );
+  R.setAdd(false);
+}
 function drawDoor(lane, t, V) {
   const v = stopKit().door, // (v1.4.27: every stop its own door - stopkit.ts)
     x = X0 - 44,
@@ -16944,7 +16970,27 @@ const TENTACLED = new Set(["cyclops", "squid", "jelly", "slug"]);
 const IDLE_ACTS = ["tap", "look", "drum", "wave", "scratch", "stretch"];
 
 function drawCustomer(c, t) {
+  if (c.state === "pushed" && !OUT && c.alpha > 0.5) pushedFx(c, t);
   safeDraw(c.type.kind, () => drawCustomerRaw(c, t));
+}
+// (v1.4.32) SHOVED BACK BY A SHAKE: speed lines streak out behind them, and a little puff of air, so the push reads
+function pushedFx(c, t) {
+  const fy = c.fy !== undefined ? c.fy : LY(c.lane, c.x) + 22,
+    x = c.x + 14,
+    k = Math.min(1, (c.left || 0) / 30);
+  if (k <= 0.05) return;
+  R.setAdd(true);
+  for (let i = 0; i < 4; i++) {
+    const yy = fy - 44 - i * 12 + Math.sin(i * 2.1) * 3,
+      l2 = (12 + ((i * 7 + Math.floor(t * 14)) % 3) * 6) * k,
+      x0 = x + 4 + (i % 2) * 5;
+    line(x0, yy, x0 + l2, yy, 1.8, withA(C.white, 0.75 * k));
+  }
+  R.setAdd(false);
+  for (let i = 0; i < 3; i++) {
+    const f = (t * 2.5 + i / 3 + c.ph) % 1;
+    disc(x + 6 + f * 18, fy - 60 + i * 9 - f * 4, (2 + f * 4) * k, withA(C.white, 0.18 * (1 - f) * k));
+  }
 }
 function drawCustomerRaw(c, t) {
   let a = clamp(c.alpha, 0, 1);
@@ -60990,7 +61036,7 @@ function drawEggs(g, s) {
 // THE VERSION (from v1.2.0, 5 October 2026): MAJOR.MINOR.PATCH - a new MINOR for a batch of new things, a new PATCH for
 // fixes and small touches - with the day it was made next to it. (Before this the versions were named after the date,
 // like v2026.10.05c.)
-const GAME_VERSION = "v1.4.31",
+const GAME_VERSION = "v1.4.32",
   GAME_DATE = "10.10.2026",
   VERSION_TEXT = GAME_VERSION + "  ·  " + GAME_DATE;
 const FB = '"Chakra Petch", "Segoe UI", sans-serif';
@@ -67367,6 +67413,11 @@ profWire();
 //  the game, and where the motion capture, the folk songs and the fonts come from. Both from the menu at any time.
 // =====================================================================================
 const NEWS = [
+  {
+    ver: "v1.4.32",
+    title: "THE PUSH AND THE DOOR",
+    items: ["SPEED LINES WHEN A SHAKE SHOVES SOMEONE BACK", "LIGHT POURS IN WHEN THE DOOR OPENS"],
+  },
   {
     ver: "v1.4.31",
     title: "NICER MENU SOUNDS",

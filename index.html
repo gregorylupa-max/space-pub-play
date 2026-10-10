@@ -5091,6 +5091,11 @@ const TYPES = [
   { kind: "orangutan", speed: 0.75, push: 120, w: 1.0, newface: true },
   { kind: "teutonic", speed: 0.8, push: 120, w: 1.0, newface: true },
   { kind: "proppost", speed: 1.1, push: 150, w: 1.0, newface: true, flyer: "prop" },
+  // (v1.4.28) the old gentleman with his cane - in no hurry; and our own steam-powered brass robot
+  { kind: "gent", speed: 0.6, push: 115, w: 1.0, newface: true },
+  { kind: "steambot", speed: 0.75, push: 125, w: 1.05, newface: true },
+  // (v1.4.29) Professor Fizzwick, our own mad scientist
+  { kind: "prof", speed: 1.0, push: 140, w: 1.0, newface: true },
   { kind: "wrestler", speed: 0.85, push: 100, w: 1.35, fighter: true },
   { kind: "boxer", speed: 1.1, push: 150, w: 1.1, fighter: true },
   // PEOPLE IN UNIFORM, off duty for a shake: SOLDIERS and POLICE OFFICERS and FIREFIGHTERS from Poland and South Africa (a
@@ -8318,7 +8323,7 @@ function update(dt) {
           dt *
           (G.mind && c.type.kind === "astro" ? 1.45 : 1) *
           (hasPw("slow") ? 0.5 : 1) *
-          (c.protest && !c.protest.calm ? 0.45 + c.protest.anger * 0.15 : 1) * // (v1.4.1: protesters march slowly - never faster than anyone else; v1.4.27: slower still)
+          (c.protest && !c.protest.calm ? 0.75 + c.protest.anger * 0.25 : 1) * // (v1.4.28: back to their old pace - it was the limbs that needed calming) // (v1.4.1: protesters march slowly - never faster than anyone else; v1.4.27: slower still)
           (c.type.sprints ? 1.7 : 1) *
           (c.wolf ? 1.6 : 1) *
           (c.hyde ? 1.6 : 1) *
@@ -12147,6 +12152,16 @@ function draw() {
     drawRoom(V, t);
     funDecor(V, t, "back");
     for (let lane = 0; lane < LANES; lane++) {
+      // (v1.4.28) A LITTLE AIR BETWEEN THE BARS: before each nearer bar is drawn, a faint veil of the room's own haze
+      // goes over everything behind it - so the far bars sit back and the near ones stand out (depth, like real air)
+      if (lane > 0 && !OUT && QUAL > 0.5)
+        rect(
+          -ox - 60,
+          -oy - 60,
+          PW + ox * 2 + 120,
+          PH + oy * 2 + 120,
+          withA(mix(shade(V.wall, 0.45), col("#0a0614"), 0.5), 0.045)
+        );
       laneT(lane); // everything on this bar is drawn at its depth
       drawDoor(lane, t, V);
       for (const c of customers.filter((c) => c.lane === lane).sort((a, b) => a.x - b.x)) {
@@ -12158,6 +12173,7 @@ function draw() {
       }
       drawCounter(lane, V, t);
       drawDrips(lane);
+      drawWet(lane); // (v1.4.28: the wet trail a sliding shake leaves on the bar)
       for (const cr of CRITS) if (cr.lane === lane) drawCritter(cr, t); // (a caterpillar or a worm on the bar top)
       for (const tp of tips) if (tp.lane === lane) drawTip(tp, t);
       for (const u of powerups) if (u.lane === lane) drawPowerup(u, t);
@@ -12175,6 +12191,11 @@ function draw() {
             continue;
           }
           barReflect(s.x, gy, s.flavor, 1, 0, t);
+          if (!OUT && Math.abs(s.x - (s._wx ?? s.x + 99)) > 13) {
+            s._wx = s.x;
+            WET.push({ lane, x: s.x + 4, t: G.time, f: s.flavor });
+            if (WET.length > 140) WET.shift();
+          }
           // (v1.4.22) speeding along, the shake flicks tiny drops of cream off its top behind it
           if (!OUT)
             for (let j = 0; j < 3; j++) {
@@ -12221,6 +12242,7 @@ function draw() {
       pop();
     }
     funDecor(V, t, "front");
+    safeDraw("beams", () => drawStageBeams(V, t)); // (v1.4.28: the stage lights sweeping out over the bars)
     if (hasPw("freeze")) for (const c of customers) if (c.state === "walk") drawIce(c, t);
     drawPowerFx(t);
     if (G.showT > 0) drawShow(t);
@@ -12551,6 +12573,25 @@ function drawRoom(V, t) {
     }
   });
   kitProps(V, t); // (v1.4.27: this stop's own two big things, standing against the back wall)
+  if (stopKit().floor === 8) {
+    // (v1.4.28) the glass floor: stars far below drifting slowly past, twinkling, and now and then a comet
+    R.setAdd(true);
+    for (let i = 0; i < 70; i++) {
+      const y = top(L) + 10 + hash(i * 3.7) * (PH + oy - top(L)),
+        x = L + ((((hash(i * 1.9) * (Rr - L) - t * (3 + hash(i) * 6)) % (Rr - L)) + (Rr - L)) % (Rr - L));
+      if (x > innerAt(X0 - 82, y) + 4 && x < innerAt(TAPX + 74, y) - 4)
+        rect(x, y, 1.2, 1.2, withA(C.white, 0.25 + 0.35 * (0.5 + 0.5 * Math.sin(t * (1 + hash(i * 2)) + i))));
+    }
+    const cph = (t % 23) / 23;
+    if (cph < 0.12) {
+      const q = cph / 0.12,
+        cx2 = lerpA(260, 700, q),
+        cy2 = 330 + q * 90;
+      line(cx2 - 40, cy2 - 10, cx2, cy2, 1.2, withA(col("#cfe8ff"), 0.5 * Math.sin(q * Math.PI)));
+      glow(cx2, cy2, 6, withA(C.white, 0.6 * Math.sin(q * Math.PI)));
+    }
+    R.setAdd(false);
+  }
   R.setAdd(true); // the stars outside reflected in the polished tiles
   for (let i = -1; i < LANES; i++)
     for (let s = 0; s < 10; s++) {
@@ -13051,8 +13092,8 @@ function landmark(mk, x0, x1, y0, yb, t, inside, fit, w) {
     // the black hole: a lensed ring of fire around nothing at all - (v1.4.27) now the full show's black hole, its disc
     // of gas swirling round (drawBlackHole, ending.ts); the wall round the windows hides whatever spills outside them
     {
-      const px = x0 + w * 0.6;
-      drawBlackHole(px, cy, 24, t, 1);
+      const px = x0 + w * 0.82; // (v1.4.28: in the right-hand window, where the stage doesn't hide it)
+      drawBlackHole(px, cy + 6, 22, t, 1);
       R.setAdd(true);
       G2(px, cy, 150, "#ff8a3a", 0.1);
     }
@@ -14197,8 +14238,65 @@ function jupiter(x, y, r, t, inside) {
 
 // (v1.4.17) THE POLISHED BAR TOP: a glass sliding along it shows a faint upside-down reflection in the varnish, and a
 // glint of the lamps runs along the wood with it
+// (v1.4.28) THE STAGE LIGHTS REACH THE ROOM: three coloured beams from the lighting rig over the band's stage sweep
+// slowly out across the bars and the floor, pooling where they land, flaring a little on every beat of the music
+function drawStageBeams(V, t) {
+  if (OUT || COMFORT.calm || G.state === "bonus" || (R.kind === "CPU" && QUAL < 1)) return;
+  const bp = beatPulse(),
+    cols = [V.neon, V.accent, col(STAGE_ACC || "#ff5fa8")],
+    dk = 1 - 0.6 * (G.dark || 0);
+  R.setAdd(true);
+  for (let i = 0; i < 3; i++) {
+    const sx = STAGE.x0 + 30 + i * 65,
+      sy = STAGE.top + 4,
+      tx = 480 + Math.sin(t * (0.23 + i * 0.05) + i * 2.1) * 360,
+      ty = 300 + Math.sin(t * (0.17 + i * 0.04) + i) * 150,
+      a = (0.045 + 0.04 * bp) * dk,
+      c = cols[i],
+      wid = 34 + 10 * Math.sin(t * 0.5 + i);
+    quad4(
+      sx - 3,
+      sy,
+      sx + 3,
+      sy,
+      tx + wid,
+      ty,
+      tx - wid,
+      ty,
+      withA(c, a * 1.4),
+      withA(c, a * 1.4),
+      withA(c, a * 0.4),
+      withA(c, a * 0.4)
+    );
+    glowE(tx, ty, wid * 1.6, wid * 0.45, withA(c, a * 1.5)); // (the pool of light where it lands)
+  }
+  R.setAdd(false);
+}
+// (v1.4.28) THE WET TRAIL: a sliding shake leaves little drops and smears of condensation (and a dribble of shake) on the
+// polished bar behind it - they catch the light, then dry up over a couple of seconds
+const WET                                                      = [];
+function drawWet(lane) {
+  if (OUT) return;
+  for (const w of WET) {
+    if (w.lane !== lane) continue;
+    const age = G.time - w.t;
+    if (age < 0 || age > 2.6) continue;
+    const a = 1 - age / 2.6,
+      y = LY(lane, w.x) - 3.4,
+      h = hash(w.x * 0.37);
+    disc(w.x, y, 4 + h * 2, withA(C.white, 0.1 * a), 0.9);
+    disc(w.x + 3 - h * 6, y + 0.6, 1, withA(FLAVORS[w.f][0], 0.5 * a), 0.5);
+    if (h > 0.5) {
+      R.setAdd(true);
+      disc(w.x - 2, y - 0.4, 0.8, withA(C.white, 0.55 * a), 0.4); // (a drop catching the light)
+      R.setAdd(false);
+    }
+  }
+}
 function barReflect(x, gy, flavor, full, spin, t) {
-  if (OUT || (R.kind === "CPU" && QUAL < 1)) return;
+  if (OUT) return;
+  disc(x, gy + 0.6, 8.6, withA(C.black, 0.32), 2.2); // (v1.4.28: a soft contact shadow, so the glass sits ON the bar)
+  if (R.kind === "CPU" && QUAL < 1) return;
   push();
   translate(x, gy - 1);
   if (spin) rotate(-Math.sin(spin) * 0.08);
@@ -15358,6 +15456,25 @@ function barRail(v, lane, V, a, b, ya, yb) {
 function floorTile(v, V, dark, h, lit, ax, ay, bx, by, cx, cy, dx, dy, k, r) {
   const Q = (c) => quad4(ax, ay, bx, by, cx, cy, dx, dy, c),
     mid = (f, g) => [ax + (bx - ax) * f + (dx - ax) * g, ay + (by - ay) * f + (dy - ay) * g];
+  if (v === 8) {
+    // (v1.4.28) A GLASS FLOOR: thick panes of glass with the cosmos far below - deep space, a drift of nebula, stars
+    // big and small - thin bright seams where the panes meet, and a faint sheen on the glass
+    const [mx, my] = mid(0.5, 0.5),
+      SP = spaceOf(venue()),
+      neb = col(SP.neb[Math.floor(hash(mx * 0.013) * 3) % 3]);
+    Q(mix(col(SP.sky[0]), col("#02020a"), 0.4));
+    disc(mx, my, 26, withA(neb, 0.06 + 0.06 * hash(k * 1.7 + r)), 10); // (a wisp of nebula below)
+    for (let i = 0; i < 4; i++) {
+      const [sx, sy] = mid(hash(k * 3.1 + r * 7 + i), hash(k * 5.3 + r * 2 + i * 9)),
+        big = hash(k + r * 3 + i * 5) > 0.8;
+      rect(sx, sy, big ? 1.6 : 0.9, big ? 1.6 : 0.9, withA(C.white, 0.35 + 0.5 * hash(i + k * 2.2)));
+    }
+    Q(withA(col("#9fd8ff"), dark ? 0.05 : 0.08)); // (the tint of the glass)
+    line(ax, ay, bx, by, 0.8, withA(col("#bfe8ff"), 0.4));
+    line(ax, ay, dx, dy, 0.8, withA(col("#bfe8ff"), 0.3));
+    quad4(ax, ay, bx, by, bx, by + 1.2, ax, ay + 1.2, withA(C.white, 0.08));
+    return;
+  }
   if (v === 0) {
     Q(shade(dark ? V.floor : V.floor2, lit));
     quad4(ax, ay, bx, by, bx, by + 1, ax, ay + 1, withA(C.white, 0.06));
@@ -15621,11 +15738,27 @@ function counterBody(lane, V) {
     line(x0, LY(lane, x0) + dy, x0 + len, LY(lane, x0 + len) + dy, 1, withA(V.face2, 0.3));
   } // wood grain
   line(a - 10, ya - 10, b - 10, yb - 10, 1, withA(C.black, 0.35)); // back edge
+  // (v1.4.28) A POLISHED TOP: a soft sheen across it (brightest along the far edge), the lamps reflected as long
+  // streaks along the varnish rather than round blobs, and a crisp bright edge where the top turns down to the front
+  quad4(
+    a - 10,
+    ya - 10,
+    b - 10,
+    yb - 10,
+    b,
+    yb,
+    a,
+    ya,
+    withA(C.white, 0.09),
+    withA(C.white, 0.09),
+    withA(C.white, 0),
+    withA(C.white, 0)
+  );
   R.setAdd(true);
   for (const lx of LAMPS) {
     const y = LY(lane, lx) - 5;
-    disc(lx, y, 46, withA(C.white, 0.07), 4);
-    disc(lx + 4, y, 16, withA(C.white, 0.1), 2);
+    glowE(lx, y, 80, 3.2, withA(C.white, 0.16));
+    glowE(lx + 6, y + 1, 26, 1.4, withA(C.white, 0.22));
   }
   R.setAdd(false); // lamp gleam on the polish
   if (K.front === 11) {
@@ -15677,6 +15810,7 @@ function counterBody(lane, V) {
     else kitFront(K.front, lane, V, a, b);
     quad4(a, ya + 23, b, yb + 23, b, yb + 28, a, ya + 28, shade(V.face, 0.6)); // kick plate
     line(a, ya + 1, b, yb + 1, 2, withA(C.white, 0.35));
+    line(a, ya + 2.6, b, yb + 2.6, 1, withA(C.black, 0.3)); // (v1.4.28: the shadowed underside of the rounded edge)
     barRail(K.front <= 7 ? K.front : venue(), lane, V, a, b, ya, yb); // the foot rail
   }
   R.setAdd(true);
@@ -16185,30 +16319,103 @@ function flavorMark(x, y, flavor, k) {
     }
   }
 }
+// (v1.4.28) THE MILKSHAKE, drawn with more care: a soda-fountain glass with a thick base, a rim and a bright highlight
+// down one side, beads of condensation; the shake inside darker at the bottom with little bubbles rising; a swirl of
+// whipped cream piled up in three turns, syrup dripping down it, sprinkles, a shiny cherry on a stem, and a striped
+// straw. (Same size and shape as before, so everything that lines up with a glass still does.)
 function drawGlass(x, y, flavor, full, spin, tilt ) {
   push();
   translate(x, y);
   if (spin) rotate(Math.sin(spin) * 0.08);
   if (tilt) rotate(tilt);
+  const tt = G.time || 0;
+  quad4(-7.4, -30.5, 7.4, -30.5, 5.6, -2.5, -5.6, -2.5, withA(col("#9fc8e0"), 0.12)); // (the far side of the glass)
   if (full) {
     const [c1, c2] = FLAVORS[flavor];
+    // the shake: lighter at the top, deeper at the bottom
     quad4(-7, -30, 7, -30, 5, -2, -5, -2, c1, c1, c2, c2);
-    disc(-3, -32, 4.5, C.cream);
-    disc(3, -33, 4.5, C.cream);
-    disc(0, -37, 4.5, C.cream);
-    disc(1, -42, 3, C.red);
-    line(1, -44, 4, -49, 0.8, col("#3a8a3a"));
-    line(-4, -33, -9, -52, 2, col("#ff5f5f"));
-    line(-4, -33, -9, -52, 0.8, C.white);
+    quad4(-5.6, -9, 5.6, -9, 5, -2, -5, -2, withA(shade(c2, 0.75), 0.6));
+    line(-7, -29.5, 7, -29.5, 1, withA(C.white, 0.35)); // (its surface)
+    if (!OUT)
+      for (let b = 0; b < 3; b++) {
+        const f = (tt * (0.5 + b * 0.17) + b * 0.37 + (flavor || 0) * 0.2) % 1;
+        disc(-3 + b * 3, -4 - f * 24, 0.55, withA(C.white, 0.55 * (1 - f))); // (bubbles rising)
+      }
+    // the whipped cream: three turns of a swirl, each with its own shadow and shine
+    const cr = C.cream,
+      crD = shade(C.cream, 0.82);
+    disc(0, -31, 8.2, crD, 3.2);
+    for (const [cx, cy, r] of [
+      [-3.4, -32.6, 4.6],
+      [3.2, -33.2, 4.6],
+      [-1.4, -36.6, 4],
+      [1.8, -37.2, 3.8],
+      [0.2, -40.6, 3],
+    ]) {
+      disc(cx, cy + 0.6, r, crD);
+      disc(cx, cy, r, cr);
+      disc(cx - r * 0.35, cy - r * 0.35, r * 0.38, withA(C.white, 0.8));
+    }
+    tri(-1, -42.6, 1.6, -42.4, 0.6, -45.4, cr); // (the curl on top)
+    // syrup dripping down the cream
+    const sy = shade(c2, 0.85);
+    for (const [dx, len] of [
+      [-6, 3.4],
+      [-1.5, 4.4],
+      [4.6, 3],
+    ]) {
+      line(dx, -33.5, dx + 0.2, -33.5 + len, 1.3, sy);
+      disc(dx + 0.2, -33.5 + len, 0.9, sy);
+    }
+    // sprinkles
+    for (let k = 0; k < 6; k++)
+      rect(
+        -4.5 + k * 1.7,
+        -36 - (k % 3) * 2.2,
+        1.2,
+        0.6,
+        col(["#ff5f6f", "#5fd0ff", "#ffd24d", "#7dd05f"][k % 4])
+      );
+    // the cherry, shiny, on its stem
+    disc(1, -42.6, 3, shade(C.red, 0.8));
+    disc(0.8, -43, 2.7, C.red);
+    disc(0, -44, 0.9, withA(C.white, 0.9));
+    polyline([1.2, -45.4, 2.6, -48, 4.6, -49.6], 0.8, col("#3a8a3a"));
+    // the straw: red and white stripes
+    line(-4, -33, -9, -52, 2.2, col("#ff5f5f"));
+    for (let k = 0; k < 5; k++) {
+      const f0 = 0.1 + k * 0.18,
+        f1 = f0 + 0.08;
+      line(-4 - 5 * f0, -33 - 19 * f0, -4 - 5 * f1, -33 - 19 * f1, 2.2, C.white);
+    }
     if (COMFORT.shapes) flavorMark(0, -15, flavor, 1.35); // (FLAVOUR SHAPES: a heart, a square or a leaf on the glass)
   }
-  quad4(-8, -31, 8, -31, 6, -2, -6, -2, withA(col("#cfefff"), full ? 0.25 : 0.35));
+  // the glass itself: tinted, a rim round the top, a thick base, a bright highlight down the left
+  quad4(-8, -31, 8, -31, 6, -2, -6, -2, withA(col("#cfefff"), full ? 0.22 : 0.32));
+  disc(0, -31, 8, withA(col("#e8f8ff"), full ? 0.18 : 0.3), 1.6); // (the rim)
+  line(-8, -31, 8, -31, 0.8, withA(C.white, 0.6));
   line(-8, -31, -6, -2, 1, withA(C.white, 0.7));
-  line(8, -31, 6, -2, 1, withA(C.white, 0.5));
-  rect(-7, -3, 14, 3, withA(col("#cfefff"), 0.7));
+  line(8, -31, 6, -2, 1, withA(C.white, 0.45));
+  quad4(-6.6, -29, -4.6, -29, -3.4, -5, -4.8, -5, withA(C.white, 0.28)); // (the broad shine)
+  rect(-7, -3, 14, 3, withA(col("#cfefff"), 0.75));
+  rect(-7, -3, 14, 0.8, withA(C.white, 0.6)); // (the thick base)
+  if (full)
+    for (const [dx, dy] of [
+      [4.2, -24],
+      [5.2, -16],
+      [3.4, -11],
+      [-2.6, -21],
+    ])
+      disc(dx, dy, 0.55, withA(C.white, 0.6)); // (condensation - it's ice cold)
   if (!full) {
     quad4(-6, -10, 6, -10, 5.5, -3, -5.5, -3, withA(col("#ffb3d1"), 0.35));
     line(-5, -20, -3, -8, 1, withA(C.white, 0.5));
+    for (const [dx, dy, l] of [
+      [-4, -27, 6],
+      [2, -25, 5],
+      [4.5, -22, 4],
+    ])
+      line(dx, dy, dx - 0.3, dy + l, 0.8, withA(C.cream, 0.4)); // (streaks of foam left inside)
   }
   pop();
 }
@@ -16938,6 +17145,14 @@ function customerBody(c, t, a) {
     squash = 1 + Math.sin(t * 2.4 + c.ph) * 0.025;
     hipX = Math.sin(t * 0.9 + c.ph) * 1.3;
     tilt = Math.sin(t * 0.9 + c.ph) * 0.04;
+    // (v1.4.28) waiting, they nod along to the band - every one a little differently (some on every beat, some on
+    // every other one, a few not at all)
+    const groove = hash((c.seed ?? c.ph) * 9.1 + 0.3);
+    if (groove > 0.25 && !COMFORT.calm) {
+      const bp = beatPulse(groove > 0.65 ? 2 : 1);
+      lift += bp * (groove > 0.65 ? 1.6 : 1);
+      tilt += bp * 0.035 * (c.ph > 3 ? 1 : -1);
+    }
   }
   if (drink) {
     const dk = 1 - c.drinkT;
@@ -16976,20 +17191,23 @@ function customerBody(c, t, a) {
   }
   if (angry) {
     mouth = "frown";
-    tilt += Math.sin(t * 14) * 0.05;
-    if (idle) lift += Math.max(0, Math.sin(t * 9)) * 1.5;
+    // (v1.4.28: protesters don't get the fast angry shake on top of their march - that made their limbs look erratic)
+    if (!c.protest) {
+      tilt += Math.sin(t * 14) * 0.05;
+      if (idle) lift += Math.max(0, Math.sin(t * 9)) * 1.5;
+    }
   }
   if (c.happy > 0 && mouth === "flat") mouth = "smile";
   // protesters do the toyi-toyi: a bouncing high-knee march, chanting, a fist (or a placard) pumping in the air
   const toyi = c.protest && !c.protest.calm && c.state === "walk" && !showing,
-    tt = t * Math.min(2.9, 2.3 + (c.protest ? c.protest.anger * 0.6 : 0)) + c.ph; // (a steady, bouncy march - v1.3.3: calmer, it looked like shaking; v1.4.1: slower and gentler still; v1.4.27: slower again, a proper slow march)
+    tt = t * Math.min(1.9, 1.5 + (c.protest ? c.protest.anger * 0.4 : 0)) + c.ph; // (v1.4.28: arms and legs slower still) // (a steady, bouncy march - v1.3.3: calmer, it looked like shaking; v1.4.1: slower and gentler still; v1.4.27: slower again, a proper slow march)
   if (toyi) {
     lift += Math.abs(Math.sin(tt)) * 1.6;
     lean = 0.03;
     tilt = Math.sin(tt) * (c.fan && c.fan.flag ? 0.02 : 0.03);
     mouth = Math.sin(tt * 0.5) > 0 ? "open" : angry ? "frown" : "flat";
     legPh = tt;
-    gait = Math.max(gait, 1.2);
+    gait = Math.max(gait, 0.9); // (v1.4.28: smaller, gentler steps)
   }
   if (c.protest && c.protest.calm) {
     mouth = "smile";
@@ -17223,15 +17441,15 @@ function customerBody(c, t, a) {
       a1 = Math.PI / 2 - 0.25;
       kn = 0.2;
     }
-    if (angry && idle && side > 0) {
+    if (angry && idle && side > 0 && !c.protest) {
       const st = Math.max(0, Math.sin(t * 9));
       a1 = Math.PI / 2 - 0.5 * st;
       kn = 1.2 * st;
     }
     if (toyi) {
       const up = Math.max(0, Math.sin(tt + (side < 0 ? Math.PI : 0)));
-      a1 = Math.PI / 2 - up * 1.0;
-      kn = up * 1.9;
+      a1 = Math.PI / 2 - up * 0.75;
+      kn = up * 1.35; // (v1.4.28: a smooth, even knee-lift - not so high and jerky)
     } // knees up high
     if (showing) {
       a1 = Math.PI / 2 + side * 0.12 - Math.max(0, Math.sin(dance + (side < 0 ? Math.PI : 0))) * 0.4;
@@ -17671,7 +17889,7 @@ function customerBody(c, t, a) {
     far = { a1: -2.6 + k * 2.4, a2: -0.3, fist: 1 };
   } // winding up and lobbing a banana
   else if (toyi) {
-    const pump = Math.sin(tt) * 0.22;
+    const pump = Math.sin(tt) * 0.15; // (v1.4.28: a gentler pump)
     near = c.protest.sign ? { a1: -1.45 + pump * 0.4, a2: -0.15 } : { a1: -0.55, a2: -1.3 };
     far = { a1: -1.6 - pump, a2: -0.5 - Math.abs(pump), fist: 1 };
   } // placard up (or megaphone to the mouth), other fist pumping
@@ -17830,6 +18048,13 @@ function customerBody(c, t, a) {
   rotate(tilt);
   translate(0, -8); // (the head scales round the neck, so it stays on)
   drawHead(kind, 0, 0, t, c, A, angry, look, L, mouth, eyes);
+  // (v1.4.28) a GOLDEN VIP wears the crown ON the head now (it used to float high above them)
+  if (c.gold && c.state !== "out" && !c.fly && !OUT && c.alpha > 0.6) {
+    push();
+    translate(1, -12);
+    drawKidHat("crown", t, false);
+    pop();
+  }
   {
     const rim = ALIEN_RIM[kind];
     if (rim && !OUT) {
@@ -22576,7 +22801,7 @@ function drawLights(V, t) {
     // the neon over every door and the light on every tap
     for (let l = 0; l < LANES; l++) {
       const [dx, dy] = projL(l, X0 - 42, LY(l, X0) - 74);
-      g(dx, dy, 95 * LS(l), V.neon, 0.45);
+      g(dx, dy, 95 * LS(l), V.neon, 0.45 * (0.85 + (COMFORT.calm ? 0 : 0.3 * beatPulse()))); // (v1.4.28: the door neon throbs with the music)
       const [tx, ty] = projL(l, TAPX + 52, LY(l, TAPX) + 22),
         on = active().some((p) => p.lane === l);
       g(tx, ty, (on ? 90 : 50) * LS(l), on ? C.mint : C.amber, on ? 0.45 : 0.25);
@@ -29940,6 +30165,9 @@ function drawDeepSpace(t) {
       case "taxi":
         outlined(() => drawTaxiRace(f, L, Rr, cy + 10 * k, k * 0.6, t, true, true), INK); // (smaller - further away, out in space)
         break;
+      case "pushbus": // (v1.4.28) the old bus being push-started across space (pushbus.ts)
+        outlined(() => drawPushBus(f, L, Rr, cy + 6 * k, k * 0.62, t), INK);
+        break;
       case "furmanka": // (v1.4.13) the horse and hay cart trots through space, right to left (furmanka.ts)
         outlined(() => drawFurmanka(x, cy + 6 * k, k * 0.62, t, -1), INK);
         break;
@@ -30617,12 +30845,16 @@ function drawBlackHole(cx, cy, Rd, t, fade) {
     ry = Rd * 0.5;
   R.setAdd(true);
   glow(cx, cy, Rd * 4, c2("#ff8a3a", 0.08));
-  for (let i = 0; i < 40; i++) {
-    const r0 = Rd * (1.5 + hash(i * 3.1) * 1.6),
-      a0 = hash(i * 7.7) * 6.283,
-      ln = 0.3 + hash(i) * 0.5;
-    arc(cx, cy, r0, a0, a0 + ln, Rd * 0.012, c2("#e8eeff", 0.25 + 0.2 * hash(i * 2)), 8);
-  } // starlight bent round
+  // (v1.4.28) the light of the stars behind it, bent round the hole: no more rings of thin lines all over the sky (they
+  // looked like circles drawn round it) - just a soft glowing halo hugging the shadow, and a handful of stars smeared
+  // into short bright smudges right at its edge, where the bending is strongest
+  glow(cx, cy, Rd * 2.2, c2("#c8d8ff", 0.07));
+  for (let i = 0; i < 10; i++) {
+    const a0 = hash(i * 7.7) * 6.283 + t * 0.02,
+      r0 = Rd * (1.25 + hash(i * 3.1) * 0.35),
+      ln = 0.12 + hash(i) * 0.18;
+    arc(cx, cy, r0, a0, a0 + ln, Rd * 0.02, c2("#e8eeff", 0.08 + 0.07 * hash(i * 2)), 6);
+  }
   const discPt = (u, rr) => [cx + (Math.cos(u) * rr * rx) / Rd, cy + (Math.sin(u) * rr * ry) / Rd],
     tl = ry / rx;
   const BANDS = [
@@ -30652,18 +30884,18 @@ function drawBlackHole(cx, cy, Rd, t, fade) {
   // ones (like the planets round the Sun), white-hot near the hole, orange and red further out, and brighter on the
   // side rushing towards us. Drawn in two halves: the far half behind the hole, the near half in front of it.
   const swirl = (front) => {
-    for (let i = 0; i < 70; i++) {
-      const rr = 1.15 + Math.pow(hash(i * 3.7), 1.4) * 1.9,
+    for (let i = 0; i < 46; i++) {
+      const rr = 1.15 + Math.pow(hash(i * 3.7), 1.3) * 1.6, // (v1.4.28: kept inside the glowing disc - no long orbit lines)
         om = 1.5 * Math.pow(1.15 / rr, 1.5),
         u0 = hash(i * 9.3) * 6.283 + t * om,
-        len = 0.35 + hash(i * 1.9) * 0.9,
-        wv = Rd * (0.025 + hash(i * 4.4) * 0.04),
+        len = 0.2 + hash(i * 1.9) * 0.45,
+        wv = Rd * (0.035 + hash(i * 4.4) * 0.05),
         hot = clamp((2.6 - rr) / 1.4, 0, 1),
         c = hot > 0.6 ? "#fff4d8" : hot > 0.3 ? "#ffc060" : "#ff7a30";
       let pts = [];
       const flush = () => {
         if (pts.length >= 4)
-          polyline(pts, wv, c2(c, (0.35 + 0.4 * hot) * (0.55 + 0.45 * Math.cos(u0 + len / 2))));
+          polyline(pts, wv, c2(c, (0.16 + 0.24 * hot) * (0.55 + 0.45 * Math.cos(u0 + len / 2))));
         pts = [];
       };
       for (let j = 0; j <= 10; j++) {
@@ -30674,7 +30906,7 @@ function drawBlackHole(cx, cy, Rd, t, fade) {
           continue;
         }
         const r2 = rr * (1 - j * 0.004); // (each streak curling slowly inwards)
-        pts.push(cx + Math.cos(u) * r2 * rx, cy + Math.sin(u) * r2 * ry);
+        pts.push(cx + Math.cos(u) * r2 * Rd, cy + Math.sin(u) * r2 * Rd * tl); // (in the same place as the glowing bands of the disc)
       }
       flush();
     }
@@ -30699,20 +30931,11 @@ function drawBlackHole(cx, cy, Rd, t, fade) {
   R.setAdd(false);
   disc(cx, cy, Rd, withA(col("#000000"), fade)); // the event horizon: nothing comes back
   R.setAdd(true);
-  arc(cx, cy, Rd * 1.02, 0, 6.283, Rd * 0.04, c2("#fff6e0", 0.9), 48); // the photon ring
+  arc(cx, cy, Rd * 1.02, 0, 6.283, Rd * 0.022, c2("#fff6e0", 0.75), 64); // the photon ring (v1.4.28: thinner, finer)
+  arc(cx, cy, Rd * 1.06, 0, 6.283, Rd * 0.06, c2("#ffd890", 0.18), 64); // (and its soft glow)
   discHalf(true); // the near half of the disc, in front
   swirl(true);
-  // long spiral arms of gas being drawn in from far out
-  for (let arm = 0; arm < 2; arm++) {
-    const pts = [];
-    for (let j = 0; j <= 30; j++) {
-      const v = j / 30,
-        rr = 2.8 + v * 2.2,
-        u = arm * Math.PI + t * 0.35 - v * 2.6;
-      pts.push(cx + Math.cos(u) * rr * rx, cy + Math.sin(u) * rr * ry);
-    }
-    polyline(pts, Rd * 0.05, c2("#ff8a40", 0.1));
-  }
+  glow(cx, cy, Rd * 3.2, c2("#ff9a50", 0.08)); // (v1.4.28: the whole disc's soft glow, instead of long spiral lines)
   for (let i = 0; i < 40; i++) {
     const u = (i / 40) * 6.283 + t * 0.8,
       [x, y] = discPt(u, Rd * (1.3 + hash(i) * 1.2));
@@ -39886,11 +40109,7 @@ function kidDrawVip(c, t) {
     star(cx + Math.cos(a) * 26, fy - 60 + Math.sin(a) * 34, 2.4, withA(col("#fff4c0"), 0.7));
   }
   R.setAdd(false);
-  push();
-  translate(cx, cy);
-  scaleBy(1.1);
-  drawKidHat("crown", t, false);
-  pop();
+  void cy; // (v1.4.28: the crown itself is drawn on their head - characters.ts; here just the glow and the sparkles)
 }
 function drawHeart(x, y, r, c) {
   disc(x - r * 0.5, y - r * 0.2, r * 0.6, c);
@@ -42014,6 +42233,9 @@ function drawStopMood(t) {
 //      glowing crystals, a spacesuit on a stand), something on the wall (a clock, a dartboard, a neon sign, a mirror,
 //      a meteorite on a plaque, a ship's wheel) and something on the bar tops (napkins, candles, flowers, peanuts,
 //      little lamps, tiny cacti)
+//    - (v1.4.28) its own STAGE for the band: velvet in six colours, six backdrops (stars, a mirror ball, a painted planet,
+//      a neon sunset grid, paper lanterns, a wall of lights that dances to the music) and five frames (tied-back drapes,
+//      a gilded arch, neon tubes, a barn-plank frame, icicles)
 //  Each room's list only holds what suits it (no ice arch on the desert saloon), and a stop never repeats the door,
 //  counters, windows or things of the stop before it.
 // =====================================================================================
@@ -42060,14 +42282,15 @@ const KIT_WIN = [
 ];
 // the floor (0 diner checkerboard, 1 boards, 2 mine stone, 3 flagstones, 4 ice tiles, 5 station grating, 6 carpet,
 // 7 a ship's deck) and the filling machines on the right wall (the same eight kinds)
+// (v1.4.28: 8 = a GLASS FLOOR, with the cosmos showing far below)
 const KIT_FLOOR = [
-  [0, 5, 4, 6],
+  [0, 8, 5, 4, 6],
   [1, 2, 7, 3],
   [2, 1, 7],
   [3, 1, 2],
-  [4, 5, 0, 3],
-  [5, 0, 4, 6],
-  [6, 0, 1, 4],
+  [4, 8, 5, 0, 3],
+  [5, 8, 0, 4, 6],
+  [6, 0, 8, 1, 4],
   [7, 1, 2, 6],
 ];
 const KIT_TAP = [
@@ -42092,6 +42315,9 @@ const STOP_KITS = (() => {
                   
                 
                     
+                 
+                 
+                
                  
                  
       = [];
@@ -42123,6 +42349,10 @@ const STOP_KITS = (() => {
       props: [p1, p2],
       wall: (s * 7 + 2) % KIT_NWALL,
       item: (s * 5 + 1) % KIT_NITEM,
+      // (v1.4.28) the band's STAGE: its curtain colour, what's behind the act, and the frame round it (stage.ts)
+      stC: (s * 5 + a) % 6 === (prev ? prev.stC : -1) ? (s * 5 + a + 1) % 6 : (s * 5 + a) % 6,
+      stBg: (s * 7 + 3) % 6,
+      stFr: (s * 3 + a * 2) % 5 === (prev ? prev.stFr : -1) ? (s * 3 + a * 2 + 1) % 5 : (s * 3 + a * 2) % 5,
     };
     out.push(k);
     prev = k;
@@ -44408,7 +44638,8 @@ const CORE_CAPS                     = [
   [16.5, "ANDROMEDA HAS A DOUBLE NUCLEUS: TWO BRIGHT KNOTS OF STARS RIGHT IN THE MIDDLE"],
   [20.5, "ONE OF THEM IS REALLY A RING OF OLD RED STARS CIRCLING THE BLACK HOLE - SEEN FROM THE SIDE"],
   [24.5, "IT'S QUIET NOW - IT ISN'T SWALLOWING MUCH. JUST AS WELL: WE'RE ONLY HERE TO SERVE SHAKES!"],
-  [28.2, "THE WHOLE TOUR SERVED - BOTH GALAXIES!"],
+  [26.6, "THE WHOLE TOUR SERVED - BOTH GALAXIES!"],
+  [28.2, "LET'S GO HOME! THE TOUR STARTS AGAIN - HARDER!"], // (v1.4.28: straight back to Mercury, a notch harder)
 ];
 function startCore() {
   G.state = "jump";
@@ -44436,8 +44667,16 @@ function updateCore(dt) {
   if (J.t > 17 && once("c3")) sfx("chime", undefined, 2);
   if (J.t > 28 && once("c4")) sfx("bonus");
   if (J.t >= CORE_LEN) {
+    // (v1.4.28) LET'S GO HOME: no long party any more - the prize, and straight back to Mercury to tour it all again, harder
     G.jump = null;
-    startEnding("final"); // (and on to the party - BEST BARTENDER IN THE UNIVERSE)
+    funWon();
+    const lives = G.versus ? 0 : Math.max(0, G.lives);
+    for (const p of active()) {
+      SCORER = p;
+      addScore(Math.round((50000 + lives * 10000) / active().length));
+    }
+    SCORER = null;
+    newTour();
   }
 }
 function drawCore(t) {
@@ -53512,6 +53751,16 @@ const showName = () => {
 // ---- timing helpers ----
 const DN = Math.PI / 2; // (straight down, for limb angles)
 const seg = (ph        , a        , b        ) => clamp((ph - a) / (b - a), 0, 1); // how far through the part from a to b (0..1)
+// (v1.4.28) a kick on every beat of the music, fading away before the next one (every = 2: every other beat). In time
+// with the band you hear; with no sound yet, it keeps the planet tune's tempo
+function beatPulse(every = 1) {
+  const now = performance.now() / 1000;
+  let ph;
+  if (MBEAT.len > 0 && now - MBEAT.at < 4) ph = (now - MBEAT.at) / (MBEAT.len * every);
+  else ph = ((G.time || 0) * showBpm()) / 60 / every;
+  ph = ((ph % 1) + 1) % 1;
+  return Math.pow(1 - ph, 3);
+}
 const showBpm = () => {
   const tr = TRACKS[here().trk];
   return (tr && tr.bpm) || 120;
@@ -53931,14 +54180,20 @@ function drawStageSet(t, accent) {
     cx = (x0 + x1) / 2,
     dk = 1 - 0.8 * (G.dark || 0),
     bt = (t * showBpm()) / 60,
-    pulse = Math.pow(1 - (bt % 1), 3);
-  rect(x0, top, x1 - x0, y - top, col("#3a0c18")); // the velvet backdrop
+    pulse = Math.pow(1 - (bt % 1), 3),
+    // (v1.4.28) EVERY STOP ITS OWN STAGE: the velvet's colour, what's behind the act, the frame round it (stopkit.ts)
+    SK = stopKit(),
+    CU = STAGE_CURT[SK.stC],
+    bg = SK.stBg,
+    fr = SK.stFr;
+  rect(x0, top, x1 - x0, y - top, col(CU[0])); // the velvet backdrop
   for (let i = 0; i < 16; i++) {
     const fx = x0 + ((i + 0.5) * (x1 - x0)) / 16;
-    rect(fx - 2, top, 4, y - top, withA(col(i % 2 ? "#5a1424" : "#2a0810"), 0.8));
+    rect(fx - 2, top, 4, y - top, withA(col(i % 2 ? CU[1] : CU[2]), 0.8));
   } // its folds
+  stageBackdrop(bg, x0, x1, top, y, t, accent, pulse, dk);
   R.setAdd(true);
-  for (let i = 0; i < 34; i++) {
+  for (let i = 0; i < (bg === 0 ? 34 : 10); i++) {
     const tw = Math.pow(0.5 + 0.5 * Math.sin(t * (2 + hash(i) * 3) + i * 1.7), 3);
     star(
       x0 + 8 + hash(i * 1.3) * (x1 - x0 - 16),
@@ -54017,10 +54272,10 @@ function drawStageSet(t, accent) {
       y,
       ex - sd * 2,
       y,
-      col("#8a1a2a"),
-      col("#8a1a2a"),
-      col("#5a0c18"),
-      col("#5a0c18")
+      col(CU[3]),
+      col(CU[3]),
+      col(CU[4]),
+      col(CU[4])
     );
   } // the drapes, tied back
   {
@@ -54043,7 +54298,8 @@ function drawStageSet(t, accent) {
     glow(fx, y - 2, 30, withA(col("#fff8e0"), 0.22 * dk));
     R.setAdd(false);
   } // the follow-spot
-  rect(x0 - 6, top - 6, x1 - x0 + 12, 12, col("#8a1a2a"));
+  stageFrame(fr, x0, x1, top, y, t, accent, pulse, dk, CU);
+  rect(x0 - 6, top - 6, x1 - x0 + 12, 12, col(CU[3]));
   for (let i = 0; i < 24; i++)
     line(
       x0 - 4 + (i * (x1 - x0 + 8)) / 23,
@@ -54067,6 +54323,164 @@ function drawStageSet(t, accent) {
   }
 }
 
+// (v1.4.28) the six colours of velvet: backdrop, its folds (light, dark), the drapes (top, bottom)
+const STAGE_CURT = [
+  ["#3a0c18", "#5a1424", "#2a0810", "#8a1a2a", "#5a0c18"], // red
+  ["#0c1a3a", "#14285a", "#08102a", "#1a3a8a", "#0c1a5a"], // royal blue
+  ["#0c2a1a", "#145a34", "#08200f", "#1a7a4a", "#0c4a2a"], // emerald
+  ["#2a0c3a", "#44145a", "#1a0828", "#6a1a8a", "#40105a"], // purple
+  ["#161214", "#2a2226", "#0a0808", "#3a3034", "#1e181a"], // black
+  ["#0c2a2e", "#14484e", "#081e22", "#1a6a72", "#0c3e44"], // teal
+];
+// what hangs behind the act
+function stageBackdrop(bg, x0, x1, top, y, t, accent, pulse, dk) {
+  const cx = (x0 + x1) / 2,
+    w = x1 - x0,
+    h = y - top;
+  if (bg === 1) {
+    // a big MIRROR BALL turning, throwing spots of light all over the backdrop
+    const by = top + 26;
+    line(cx, top, cx, by - 12, 1, col("#8a8a96"));
+    disc(cx, by, 12, col("#a8b0c0"));
+    for (let i = 0; i < 18; i++) {
+      const a = (i / 18) * 6.283 + t * 0.8,
+        r = 4 + (i % 3) * 3;
+      if (Math.cos(a) > -0.2)
+        rect(cx + Math.sin(a) * r - 1, by - 8 + (i % 6) * 3, 2, 2, withA(C.white, 0.5 + 0.5 * Math.cos(a)));
+    }
+    R.setAdd(true);
+    for (let i = 0; i < 26; i++) {
+      const a = hash(i * 3.1) * 6.283 + t * 0.5,
+        rr = 20 + hash(i * 1.7) * w * 0.45;
+      const sx = cx + Math.cos(a) * rr,
+        sy = by + Math.sin(a) * rr * 0.6;
+      if (sx > x0 + 3 && sx < x1 - 3 && sy > top + 2 && sy < y - 2)
+        glow(sx, sy, 3, withA(col(i % 3 ? "#ffffff" : accent), 0.5 * dk));
+    }
+    R.setAdd(false);
+  } else if (bg === 2) {
+    // a PAINTED BACKDROP: a big ringed planet and its moons, the way a theatre would paint it
+    disc(cx + 20, top + h * 0.45, h * 0.32, col("#c86a4a"));
+    disc(cx + 14, top + h * 0.4, h * 0.26, col("#e88a5a"));
+    for (let i = 0; i < 4; i++)
+      rect(cx + 20 - h * 0.3, top + h * (0.34 + i * 0.07), h * 0.6, 2, withA(col("#a04a2a"), 0.5));
+    ringBand(
+      cx + 20,
+      top + h * 0.45,
+      h * 0.42,
+      h * 0.55,
+      0.25,
+      Math.PI * 0.05,
+      Math.PI * 0.95,
+      col("#f0c890"),
+      24
+    );
+    disc(cx - 50, top + h * 0.3, 7, col("#d8d8e0"));
+    disc(cx - 30, top + h * 0.6, 4, col("#a8c8e8"));
+  } else if (bg === 3) {
+    // a NEON SUNSET GRID: a striped sun going down behind lines racing to the horizon
+    const hy = top + h * 0.62;
+    disc(cx, hy, h * 0.3, col("#ff6a8a"));
+    disc(cx, hy - h * 0.06, h * 0.24, col("#ffb04a"));
+    for (let i = 0; i < 4; i++) rect(cx - h * 0.3, hy - h * 0.2 + i * 6, h * 0.6, 2, col(STAGE_CURT[3][0]));
+    rect(x0, hy, w, y - hy, col("#14082a"));
+    R.setAdd(true);
+    for (let i = -6; i <= 6; i++) line(cx + i * 4, hy, cx + i * 28, y, 1, withA(col("#ff5fd0"), 0.6 * dk));
+    for (let i = 0; i < 5; i++) {
+      const f = ((i + t * 0.8) % 5) / 5,
+        yy = hy + (y - hy) * f * f;
+      line(x0, yy, x1, yy, 1, withA(col("#5ff5ff"), 0.5 * f * dk));
+    }
+    R.setAdd(false);
+  } else if (bg === 4) {
+    // strings of glowing PAPER LANTERNS
+    for (let r = 0; r < 2; r++) {
+      const pts = [];
+      for (let i = 0; i <= 12; i++) {
+        const f = i / 12;
+        pts.push(x0 + f * w, top + 16 + r * 26 + Math.sin(f * Math.PI) * 10);
+      }
+      polyline(pts, 0.8, col("#2a2a2a"));
+      for (let i = 1; i < 12; i += 2) {
+        const lx = pts[i * 2],
+          ly = pts[i * 2 + 1] + 5,
+          c = col(["#ff5f6f", "#ffd24d", "#ff9a3d", "#5ff5c8"][(i + r) % 4]);
+        disc(lx, ly, 4.5, c, 5.5);
+        line(lx - 4, ly, lx + 4, ly, 0.6, withA(C.black, 0.3));
+        R.setAdd(true);
+        glow(lx, ly, 12, withA(c, (0.3 + 0.15 * Math.sin(t * 2 + i)) * dk));
+        R.setAdd(false);
+      }
+    }
+  } else if (bg === 5) {
+    // a WALL OF LIGHTS: an equaliser that jumps with the band
+    const n = 14,
+      cw = w / n;
+    for (let i = 0; i < n; i++) {
+      const lv = 0.25 + 0.6 * Math.abs(Math.sin(t * (2 + hash(i) * 3) + i)) * (0.6 + 0.4 * pulse),
+        hh = (h - 26) * lv;
+      for (let j = 0; j < hh / 6; j++) {
+        const c = j > 7 ? "#ff5f6f" : j > 4 ? "#ffd24d" : "#5ff5c8";
+        rect(x0 + i * cw + 2, y - 26 - j * 6, cw - 4, 4, withA(col(c), 0.75 * dk));
+      }
+    }
+  }
+}
+// the frame round the stage
+function stageFrame(fr, x0, x1, top, y, t, accent, pulse, dk, CU) {
+  const cx = (x0 + x1) / 2;
+  if (fr === 1) {
+    // a GILDED ARCH over it, with a little crest
+    for (let i = 0; i < 2; i++)
+      arc(
+        cx,
+        top + 34,
+        (x1 - x0) / 2 + 8 + i * 4,
+        Math.PI,
+        Math.PI * 2,
+        3 - i,
+        col(i ? "#a8802a" : "#e8c060"),
+        30
+      );
+    disc(cx, top - 12, 7, col("#e8c060"));
+    disc(cx, top - 12, 3.5, col(CU[3]));
+    for (const ex of [x0 - 8, x1 + 8]) rect(ex - 3, top + 34, 6, y - top - 34, col("#c8a040"));
+  } else if (fr === 2) {
+    // NEON TUBES all round it, flickering into life on the beat
+    R.setAdd(true);
+    const c = withA(col(accent), (0.6 + 0.4 * pulse) * dk);
+    polyline([x0 - 10, y, x0 - 10, top - 10, x1 + 10, top - 10, x1 + 10, y], 2.4, c);
+    polyline(
+      [x0 - 14, y, x0 - 14, top - 14, x1 + 14, top - 14, x1 + 14, y],
+      1.2,
+      withA(col("#ff5fd0"), 0.6 * dk)
+    );
+    glow(x0 - 10, top - 10, 12, c);
+    glow(x1 + 10, top - 10, 12, c);
+    R.setAdd(false);
+  } else if (fr === 3) {
+    // a BARN-PLANK FRAME, a lantern on each post
+    for (const ex of [x0 - 12, x1 + 4]) {
+      rect(ex, top - 10, 8, y - top + 10, col("#6a4428"));
+      line(ex + 2, top - 10, ex + 2, y, 1, col("#8a5a32"));
+      disc(ex + 4, top + 20, 3, col("#ffd890"));
+      R.setAdd(true);
+      glow(ex + 4, top + 20, 12, withA(col("#ffc060"), 0.4 * dk));
+      R.setAdd(false);
+    }
+    rect(x0 - 14, top - 16, x1 - x0 + 28, 8, col("#7a5030"));
+  } else if (fr === 4) {
+    // ICICLES hanging all along the top
+    for (let i = 0; i < 22; i++) {
+      const ix = x0 - 6 + (i * (x1 - x0 + 12)) / 21,
+        ln = 6 + hash(i * 3.3) * 12;
+      tri(ix - 2.4, top + 6, ix + 2.4, top + 6, ix, top + 6 + ln, withA(col("#d8f4ff"), 0.85));
+    }
+    R.setAdd(true);
+    if ((t * 0.7) % 1 < 0.1) glow(x0 + ((t * 31) % (x1 - x0)), top + 12, 6, withA(C.white, 0.7 * dk));
+    R.setAdd(false);
+  }
+}
 // ---- the shows ----
 const SKINS_H = ["#f0c8a0", "#d8a070", "#8a5232", "#f8d8c0", "#b47a50", "#5c3620"],
   SKINS_A = ["#7ad070", "#7ab0f0", "#c08ae0", "#f08ab0"];
@@ -55255,6 +55669,24 @@ function stageHud(g, s, t, fD, sx, sy) {
 // =====================================================================================
 const NEW_FACES                                     = [
   // [level, kind, the callout, a fact]
+  // (v1.4.28) THE OLD GENTLEMAN: grey whiskers, a bowler hat, a monocle, a bow tie and a fine walking cane
+  [1, "gent", "AN OLD GENTLEMAN!", "THE BOWLER HAT WAS FIRST MADE IN LONDON IN 1849"],
+  // (v1.4.28) TICK-TOCK THE STEAMBOT: our own robot - brass and rivets, a pressure gauge on his chest, a little chimney
+  // on his head puffing steam, round glowing eyes, and he whistles when he's happy
+  [
+    13,
+    "steambot",
+    "TICK-TOCK THE STEAMBOT!",
+    "THE WORD ROBOT COMES FROM A 1920 CZECH PLAY - FROM 'ROBOTA', HARD WORK",
+  ],
+  // (v1.4.29) PROFESSOR FIZZWICK: our own mad scientist - wild frizzy hair, brass goggles up on his forehead, a scorched
+  // lab coat and a flask that bubbles, sparks and now and then goes POP in a puff of smoke
+  [
+    14,
+    "prof",
+    "PROFESSOR FIZZWICK, MAD SCIENTIST!",
+    "LIGHTNING IS ABOUT FIVE TIMES HOTTER THAN THE SURFACE OF THE SUN",
+  ],
   [2, "chimp", "A CHIMPANZEE!", "CHIMPS SHARE ABOUT 98% OF OUR DNA - AND THEY USE TOOLS"],
   [3, "goat", "A TRAVELLING GOAT!", "HE'S WALKED HALF THE GALAXY WITH HIS LITTLE BELL - GIVE HIM A SHAKE"],
   [4, "crusader", "A KNIGHT IN CHAIN MAIL!", "A COAT OF MAIL WAS MADE OF THOUSANDS OF LITTLE IRON RINGS"],
@@ -55289,6 +55721,9 @@ const NF_LINES = {
   teutonic: ["DANKE!", "SEHR GUT!", "JAWOHL!"],
   hussar: ["DZIEKUJE!", "NA ZDROWIE!", "HUSARIA!"],
   proppost: ["SPECIAL DELIVERY!", "FIRST-CLASS SHAKE!"],
+  gent: ["SPLENDID, SPLENDID!", "MOST KIND, YOUNG ONE.", "A JOLLY GOOD SHAKE!"],
+  steambot: ["TOOT-TOOT!", "PRESSURE: PERFECT!", "TICK-TOCK, DELICIOUS!"],
+  prof: ["EUREKA!", "FASCINATING! MORE DATA!", "GREAT GALAXIES - DELICIOUS!"],
   shaka: ["NGIYABONGA!", "BAYETE!", "KUHLE KAKHULU!"],
 };
 // how each one looks: body colour, arm colour, shoulders width
@@ -55304,6 +55739,9 @@ const NF_LOOK = {
   hussar: { skin: "#ecc4a0", pants: "#b01c24", shoes: "#d8a830", body: "#b01c24", arm: "#b01c24", tw: 18 },
   shaka: { skin: "#5c3620", pants: "#5c3620", shoes: "#4a2c1a", body: "#5c3620", arm: "#5c3620", tw: 19 },
   proppost: { skin: "#e8c0a0", pants: "#2a3a6a", shoes: "#1a1a22", body: "#2a4a9a", arm: "#2a4a9a", tw: 18 },
+  gent: { skin: "#f0cfb0", pants: "#4a4a56", shoes: "#0a0a0c", body: "#26263a", arm: "#26263a", tw: 17 },
+  prof: { skin: "#f0c8a0", pants: "#3a3a46", shoes: "#2a1a10", body: "#f2f2ee", arm: "#f2f2ee", tw: 18 },
+  steambot: { skin: "#c8963a", pants: "#a8782a", shoes: "#5a3a1a", body: "#c8963a", arm: "#a8782a", tw: 19 },
 };
 const NF_APES = new Set(["chimp", "gorilla", "orangutan", "spider"]);
 for (const [k, v] of Object.entries(NF_LOOK))
@@ -55321,6 +55759,9 @@ Object.assign(NICE, {
   hussar: "WINGED HUSSAR",
   shaka: "KING SHAKA",
   proppost: "THE PROPELLER POSTMAN",
+  gent: "THE OLD GENTLEMAN",
+  steambot: "TICK-TOCK THE STEAMBOT",
+  prof: "PROFESSOR FIZZWICK",
 });
 
 // ---- who walks in: the new face of this level now and then (and for sure once, early on), and the ones met before ----
@@ -55548,6 +55989,64 @@ function newFaceTorso(kind, c, t, A, tw, th, body, L, angry, step) {
       disc(x, y, 1.2, A(col("#3a2410")), 1);
     }
     rect(-tw / 2, -7, tw, 2.6, A(col("#d8a830"))); // a gold sash
+    return;
+  }
+  if (kind === "prof") {
+    // (v1.4.29) a white lab coat, scorched here and there, over a green jumper; pens and a ruler in the top pocket
+    chest(body);
+    tri(-3, top, 3, top, 0, top + 9, A(col("#3a8a5a"))); // (the jumper at the neck)
+    line(-1, top + 9, -1, -2, 0.8, A(shade(body, 0.75))); // (the coat's opening)
+    for (const [sx, sy, r] of [
+      [-5, top + 16, 2.4],
+      [4, top + 21, 1.8],
+    ])
+      disc(sx, sy, r, A(withA(col("#3a3028"), 0.45)), r * 0.7); // scorch marks
+    rect(tw / 2 - 7, top + 5, 5, 3, A(shade(body, 0.85)));
+    line(tw / 2 - 6, top + 5, tw / 2 - 6, top + 1, 0.8, A(col("#2a5ac8")));
+    line(tw / 2 - 4, top + 5, tw / 2 - 4, top + 2, 0.8, A(col("#c02020")));
+    return;
+  }
+  if (kind === "steambot") {
+    // (v1.4.28) a riveted brass boiler of a chest: a pressure gauge with a twitching needle, copper pipes, a glowing
+    // furnace grille at the belly
+    chest(body);
+    for (let i = 0; i < 4; i++) {
+      disc(-tw / 2 + 2, top + 3 + i * 5, 0.7, A(col("#ffe0a0")));
+      disc(tw / 2 - 2, top + 3 + i * 5, 0.7, A(col("#ffe0a0")));
+    } // (rivets)
+    disc(0, top + 7, 4.4, A(col("#5a3a1a")));
+    disc(0, top + 7, 3.6, A(col("#f4ecd8")));
+    const nd = -0.6 + Math.sin(t * 3 + c.ph) * 0.4 + (c.happy > 0 ? 1.2 : 0);
+    line(
+      0,
+      top + 7,
+      Math.cos(nd - Math.PI / 2) * 3,
+      top + 7 + Math.sin(nd - Math.PI / 2) * 3,
+      0.6,
+      A(col("#c02020"))
+    ); // the gauge
+    polyline([-tw / 2 + 1, top + 13, -2, top + 14, -2, -5], 1.4, A(col("#b8602a")));
+    polyline([tw / 2 - 1, top + 12, 3, top + 13], 1.4, A(col("#b8602a"))); // copper pipes
+    rect(-4, -8, 8, 4, A(col("#3a2410")));
+    for (let i = 0; i < 3; i++)
+      rect(-3 + i * 2.6, -7.4, 1.2, 2.8, A(col(Math.sin(t * 5 + i) > 0 ? "#ffb040" : "#ff7a20"))); // the furnace
+    return;
+  }
+  if (kind === "gent") {
+    // (v1.4.28) a dark tailored jacket with wide lapels, a crisp white shirt, a burgundy bow tie and waistcoat, a gold
+    // watch chain across it and a red silk square in his top pocket
+    chest(body);
+    tri(-3.4, top, 3.4, top, 0, top + 11, A(col("#f6f2ea"))); // the shirt front
+    tri(-tw / 2 + 2, top + 1, -1.6, top + 1, -2.6, top + 13, A(shade(body, 1.35)));
+    tri(tw / 2 - 2, top + 1, 1.6, top + 1, 2.6, top + 13, A(shade(body, 1.25))); // the lapels
+    rect(-2.6, top + 9, 5.2, th - 13, A(col("#6a1a2a"))); // the waistcoat
+    for (let i = 0; i < 3; i++) disc(0, top + 11 + i * 3.4, 0.7, A(col("#e8c060")));
+    polyline([0, top + 14, 3, top + 16.5, 5.6, top + 15], 0.7, A(col("#e8c060"))); // the watch chain
+    tri(-2.4, top + 1, 0, top + 2.4, -2.4, top + 4, A(col("#8a1424")));
+    tri(2.4, top + 1, 0, top + 2.4, 2.4, top + 4, A(col("#8a1424")));
+    disc(0, top + 2.4, 0.9, A(col("#a01a2c"))); // the bow tie
+    tri(tw / 2 - 7, top + 6, tw / 2 - 3, top + 6, tw / 2 - 5, top + 3, A(col("#d02838"))); // the pocket square
+    rect(tw / 2 - 7.4, top + 6, 5, 0.8, A(shade(body, 0.7)));
     return;
   }
   if (kind === "proppost") {
@@ -55793,6 +56292,93 @@ function newFaceHead(kind, x, hy, t, c, A, L, H) {
     polyline([x, hy - 11, x - 4 + sw, hy - 18, x - 9 + sw, hy - 21], 2, A(col("#f4f4f0"))); // a white plume
     return;
   }
+  if (kind === "prof") {
+    // (v1.4.29) a wild cloud of frizzy hair (rust-red going grey), bushy eyebrows, a big grin - and brass goggles up on
+    // his forehead
+    for (let i = 0; i < 9; i++) {
+      const a = Math.PI * (0.9 + i * 0.15),
+        rr = 11 + (i % 3) * 2,
+        wob = Math.sin(t * 3 + i + c.ph) * 0.8;
+      disc(
+        x + Math.cos(a) * rr * 0.9,
+        hy - 2 + Math.sin(a) * rr * 0.8 + wob,
+        4.6,
+        A(col(i % 2 ? "#c8783a" : "#a8a8a0"))
+      );
+    }
+    disc(x - 9, hy + 2, 4.6, A(col("#c8783a")));
+    shadedHead(x, hy, 10, 11, sk);
+    disc(x - 9, hy + 1, 2.4, A(shade(sk, 0.85)), 3.2);
+    eye(x - 1, hy - 0.5, 1.9);
+    eye(x + 5, hy - 0.5, 1.9);
+    line(x - 3.6, hy - 4.2, x + 0.8, hy - 5.4, 1.6, A(col("#a8a8a0")));
+    line(x + 3.4, hy - 5.4, x + 7.8, hy - 4.2, 1.6, A(col("#a8a8a0"))); // (bushy, raised in wonder)
+    mouthAt(x + 3, hy + 6.4, 2.6);
+    // the goggles: brass rims, green lenses catching the light, a leather strap round the hair
+    rect(x - 10, hy - 9, 20, 2.4, A(col("#5a3a1a")));
+    for (const gx of [-1, 6]) {
+      disc(x + gx, hy - 8, 3.4, A(col("#c8963a")));
+      disc(x + gx, hy - 8, 2.4, A(col("#5fd0a0")));
+      disc(x + gx - 0.8, hy - 8.8, 0.8, A(C.white));
+    }
+    return;
+  }
+  if (kind === "steambot") {
+    // (v1.4.28) a brass head like an old diving helmet-meets-clock: a round face plate, two big glowing round eyes, a
+    // grille for a mouth, a little chimney on top puffing steam (a big puff when he's happy), a ticking key at the side
+    disc(x, hy, 11, A(col("#a8782a")));
+    disc(x - 1, hy - 1, 10, A(col("#d8a848")));
+    disc(x + 2, hy + 1, 7.4, A(col("#3a2a1a")), 7);
+    const glowE2 = c.happy > 0 ? "#9fffd0" : "#ffd890";
+    for (const ex of [-1.4, 5]) {
+      disc(x + ex, hy - 0.6, 2.4, A(col(glowE2)));
+      disc(x + ex - 0.6, hy - 1.2, 0.8, A(C.white));
+    }
+    for (let i = 0; i < 4; i++)
+      line(x - 1 + i * 2.2, hy + 4.4, x - 1 + i * 2.2, hy + 6.8, 0.8, A(col("#c8963a"))); // the grille
+    for (let i = 0; i < 6; i++) {
+      const a = (i / 6) * 6.283;
+      disc(x - 1 + Math.cos(a) * 9.2, hy - 1 + Math.sin(a) * 9.2, 0.7, A(col("#ffe0a0")));
+    } // (rivets round the face)
+    rect(x + 1, hy - 17, 4, 7, A(col("#5a3a1a")));
+    rect(x + 0.4, hy - 18, 5.2, 1.6, A(col("#3a2410"))); // the chimney
+    const pf = (t * 0.9 + c.ph) % 1,
+      big = c.happy > 0 ? 1.6 : 1;
+    disc(x + 3 + pf * 4, hy - 20 - pf * 10, (1.6 + pf * 3) * big, A(withA(col("#e8e8f0"), 0.7 * (1 - pf)))); // (steam)
+    line(x - 11, hy, x - 14, hy, 1.2, A(col("#8a6a2a")));
+    const kr = t * 2 + c.ph;
+    line(x - 14, hy - 3 * Math.cos(kr), x - 14, hy + 3 * Math.cos(kr), 1.4, A(col("#c8963a"))); // the wind-up key, turning
+    return;
+  }
+  if (kind === "gent") {
+    // (v1.4.28) a kindly old face: silver hair at the sides, a white handlebar moustache, a monocle on a chain - and
+    // a black bowler hat, raised a touch as he says thank you
+    shadedHead(x, hy, 10, 11, sk);
+    disc(x - 9, hy + 1, 2.4, A(shade(sk, 0.85)), 3.2);
+    disc(x - 7, hy - 1, 4.6, A(col("#d8d8dc")), 6);
+    disc(x - 8.5, hy + 3, 2.6, A(col("#c8c8cc")), 3.4); // silver hair and sideburns
+    eye(x - 1, hy - 0.5, 1.5);
+    eye(x + 5, hy - 0.5, 1.5);
+    line(x - 2.6, hy - 3.6, x + 0.6, hy - 3.2, 1.2, A(col("#e8e8ec")));
+    line(x + 3.6, hy - 3.2, x + 6.8, hy - 3.6, 1.2, A(col("#e8e8ec"))); // white bushy brows
+    line(x - 1.6, hy + 1.6, x - 0.6, hy + 2.4, 0.5, A(shade(sk, 0.75))); // (a few kindly lines)
+    mouthAt(x + 3, hy + 7.2, 1.8);
+    polyline(
+      [x - 1.6, hy + 4.2, x + 0.6, hy + 5.6, x + 3, hy + 4.6, x + 5.4, hy + 5.6, x + 7.6, hy + 4.2],
+      1.8,
+      A(col("#f2f2f4"))
+    ); // the handlebar moustache
+    disc(x - 1.4, hy + 3.8, 0.9, A(col("#f2f2f4")));
+    disc(x + 7.4, hy + 3.8, 0.9, A(col("#f2f2f4")));
+    ring(x + 5, hy - 0.5, 2.7, 0.8, A(col("#e8c060"))); // the monocle...
+    polyline([x + 7.4, hy + 0.4, x + 8.6, hy + 6, x + 6.4, hy + 12], 0.5, A(col("#e8c060"))); // ...on its chain
+    const lift = c.happy > 0 ? 3 : 0;
+    disc(x, hy - 6.4 - lift, 13, A(col("#121216")), 2.2); // the bowler's brim
+    disc(x, hy - 9.6 - lift, 9.4, A(col("#1a1a20")), 7.4); // its dome
+    rect(x - 9, hy - 8.4 - lift, 18, 2, A(col("#3a3a46"))); // the band
+    disc(x - 3, hy - 13 - lift, 2.6, A(withA(C.white, 0.18)), 1.6); // (a sheen on the felt)
+    return;
+  }
   if (kind === "proppost") {
     shadedHead(x, hy, 10, 11, sk);
     disc(x - 9, hy + 1, 2.4, A(shade(sk, 0.85)), 3.2);
@@ -55973,6 +56559,67 @@ function newFaceFront(kind, c, t, A, tw, th, hx, hy, holding, moving) {
   if (GOD_KINDS.has(kind)) return godFront(kind, c, t, A, tw, th, hx, hy, holding, moving);
   if (kind === "bellboy") return bellboyFront(c, t, A, hx, hy, holding);
   if (CLIMB_KINDS.has(kind)) return climbFront(kind, c, t, A, hx, hy, holding, moving);
+  if (kind === "prof") {
+    // (v1.4.29) HIS FLASK: a round-bottomed flask of bubbling green stuff, little sparks crackling over it - and every few
+    // seconds, POP! a puff of purple smoke
+    const fx = hx + 2,
+      fy = hy - 2;
+    line(fx - 1.6, fy - 12, fx + 1.6, fy - 12, 1, A(col("#cfe8ff")));
+    rect(fx - 1.4, fy - 12, 2.8, 6, A(withA(col("#cfe8ff"), 0.6)));
+    disc(fx, fy - 2, 5, A(withA(col("#cfe8ff"), 0.6)));
+    disc(fx, fy - 1, 4, A(col("#7aff9a")));
+    disc(fx - 1.6, fy - 3, 1.2, A(withA(C.white, 0.7)));
+    for (let i = 0; i < 3; i++) {
+      const f2 = (t * 1.4 + i / 3 + c.ph) % 1;
+      disc(
+        fx + Math.sin(i * 2 + t * 3) * 1.4,
+        fy - 4 - f2 * 12,
+        0.9 * (1 - f2) + 0.3,
+        A(withA(col("#b8ffc8"), 0.8 * (1 - f2)))
+      );
+    } // (bubbles)
+    if (!OUT && Math.sin(t * 13 + c.ph) > 0.8) {
+      R.setAdd(true);
+      polyline(
+        [fx - 2, fy - 14, fx + 1, fy - 17, fx - 1, fy - 19, fx + 2, fy - 22],
+        0.8,
+        withA(col("#fff4a0"), 0.9)
+      );
+      glow(fx, fy - 18, 5, withA(col("#fff4a0"), 0.4));
+      R.setAdd(false);
+    } // (a spark)
+    const pop = (t * 0.3 + c.ph * 0.1) % 1;
+    if (pop < 0.12) {
+      const q = pop / 0.12;
+      disc(fx, fy - 16 - q * 8, 4 + q * 8, A(withA(col("#b88ae0"), 0.6 * (1 - q))));
+    } // POP!
+    return;
+  }
+  if (kind === "gent") {
+    // (v1.4.28) HIS CANE: polished dark wood with a silver collar and a curved crook. Walking, he swings it forward
+    // with every step; waiting, he holds it up smartly against his shoulder, crook at the top
+    if (moving) {
+      const sw = Math.sin(t * 5 + c.ph),
+        bx = hx + 1,
+        by = hy - 1,
+        tx = hx + 9 + sw * 8,
+        ty = hy + 31 - Math.max(0, sw) * 4;
+      line(bx, by, tx, ty, 1.8, A(col("#3a2214")));
+      line(bx - 0.4, by, tx - 0.4, ty, 0.6, A(col("#7a5030")));
+      arc(bx - 2.4, by - 1, 2.6, Math.PI, Math.PI * 2, 1.8, A(col("#3a2214")), 8); // the crook
+      disc(bx, by + 2, 1.2, A(col("#d8dce4"))); // the silver collar
+    } else {
+      const bx = hx + 2,
+        by = hy + 8,
+        tx = hx + 7,
+        ty = hy - 24;
+      line(bx, by, tx, ty, 1.8, A(col("#3a2214")));
+      line(bx - 0.4, by, tx - 0.4, ty, 0.6, A(col("#7a5030")));
+      arc(tx + 2.6, ty, 2.6, Math.PI, Math.PI * 2, 1.8, A(col("#3a2214")), 8); // the crook, at the top
+      disc(tx + 0.2, ty + 3, 1.2, A(col("#d8dce4"))); // the silver collar
+    }
+    return;
+  }
   if (!holding) return;
   if (kind === "hussar") {
     const tilt = 0.08,
@@ -57542,6 +58189,148 @@ function drawFurmanka(x, y, k, t, dir = -1) {
   pop();
 }
 // =====================================================================================
+//  PUSH-STARTING THE BUS (v1.4.28) - a sight every South African knows: the old bus won't start, so everybody climbs
+//  out and PUSHES. In the full-screen show a tired old green-and-cream bus drifts across space with a crowd of
+//  passengers behind it, leaning in, shoving, shoes slipping; the driver leans out of his window shouting "PUSH!";
+//  it coughs black smoke... coughs again... and then the engine CATCHES with a big bang and a puff - the bus pulls
+//  away, and the pushers jump and cheer (and then run after it, because it's their bus).
+//  f: how far through the scene (0..1). L, Rr: the screen's edges. y: the middle line. k: the size.
+// =====================================================================================
+const PB_PEOPLE = [
+  // [shirt, trousers, skin, hat: 0 none, 1 cap, 2 doek (head wrap), 3 hat]
+  ["#e8b830", "#2a3a5a", "#5c3620", 1],
+  ["#c8302a", "#3a2a20", "#7a4a2a", 2],
+  ["#3a8a4a", "#2a2a34", "#4a2c1a", 0],
+  ["#f4f4f0", "#3a3a46", "#8a5232", 3],
+  ["#2a6ac8", "#5a4a3a", "#5c3620", 2],
+  ["#ff8a3d", "#2a3a5a", "#6a4028", 0],
+]         ;
+function drawPushBus(f, L, Rr, y, k, t) {
+  const w = Rr - L,
+    caught = f > 0.62, // (the engine catches)
+    go = caught ? (f - 0.62) / 0.38 : 0,
+    // the bus: slowly across while they push, then off it goes
+    bx = Rr + 140 * k - ((w * 0.62 + 280 * k) * Math.min(f, 0.62)) / 0.62 - go * go * (w + 400 * k),
+    shake = caught ? 0 : Math.sin(t * 9) * 0.6 * k,
+    by = y + shake;
+  // ---- the smoke: coughs while they push, a big black puff when it catches, then a trail as it goes
+  for (let i = 0; i < 10; i++) {
+    const cyc = (t * 0.8 + i * 0.1) % 1,
+      cough = !caught ? (Math.sin(t * 2.2 + i) > 0.3 ? 1 : 0.3) : 1;
+    disc(
+      bx + 80 * k + cyc * 60 * k,
+      by + 14 * k - cyc * 30 * k,
+      (4 + cyc * 12) * k,
+      withA(col(caught ? "#5a5a62" : "#3a3a40"), 0.45 * (1 - cyc) * cough)
+    );
+  }
+  if (caught && go < 0.2) {
+    const b = go / 0.2;
+    disc(bx + 84 * k, by + 8 * k, (16 + b * 40) * k, withA(col("#2a2a30"), 0.7 * (1 - b)));
+    R.setAdd(true);
+    glow(bx + 80 * k, by + 12 * k, (10 + b * 20) * k, withA(col("#ffb040"), 0.8 * (1 - b))); // (BANG!)
+    R.setAdd(false);
+  }
+  // ---- THE BUS: an old rounded bus, green below and cream above, a dented bumper, a destination board
+  push();
+  translate(bx, by);
+  scaleBy(k);
+  const green = col("#3a8a4a"),
+    cream = col("#f0e6c8");
+  rect(-80, -34, 160, 30, cream);
+  rect(-80, -6, 160, 30, green);
+  disc(-80, 9, 4, green, 15);
+  disc(80, 9, 4, green, 15); // (rounded ends)
+  rect(-80, -8, 160, 4, col("#c8a040")); // (the trim line)
+  for (let i = 0; i < 7; i++) rect(-66 + i * 19, -30, 15, 18, col("#2a3a4a")); // the windows
+  for (let i = 0; i < 7; i++) line(-64 + i * 19, -28, -58 + i * 19, -14, 1, withA(C.white, 0.25));
+  rect(-82, -40, 164, 7, cream);
+  rect(-48, -46, 54, 10, col("#1a1a1a"));
+  pixText("PLEASE PUSH", -21, -41, 1.2, col("#ffd24d")); // (the destination board, honestly)
+  rect(-88, 18, 176, 5, col("#8a8e98"));
+  rect(-60, 20, 14, 3, withA(C.black, 0.4)); // (a dent)
+  for (const wx of [-52, 50]) {
+    disc(wx, 25, 11, col("#1a1a1a"));
+    disc(wx, 25, 5, col("#8a8e98"));
+    line(
+      wx - 4 * Math.cos(t * (caught ? 20 : 3)),
+      25 - 4 * Math.sin(t * (caught ? 20 : 3)),
+      wx + 4 * Math.cos(t * (caught ? 20 : 3)),
+      25 + 4 * Math.sin(t * (caught ? 20 : 3)),
+      1.4,
+      col("#5a5e68")
+    );
+  }
+  disc(-82, 8, 4, col("#fff4c0")); // a headlight
+  rect(82, 6, 4, 6, col("#c02020")); // a tail light
+  rect(84, 14, 8, 3, col("#5a5e68")); // the exhaust pipe
+  // the driver at his window, leaning out shouting "PUSH!" (and cheering when it starts)
+  disc(-70, -24, 6, col("#5c3620"));
+  rect(-76, -32, 12, 4, col("#2a3a5a")); // (his cap)
+  line(-74, -18, -86, caught ? -36 : -24 + Math.sin(t * 6) * 3, 2.4, col("#5c3620")); // (his arm, waving)
+  pop();
+  if (!caught || go < 0.15)
+    pixText(
+      caught ? "YES!!" : "PUSH!",
+      bx - 96 * k,
+      by - 54 * k + Math.sin(t * 6) * 2 * k,
+      2.2 * k,
+      col("#ffd24d")
+    );
+  // ---- THE PUSHERS: leaning into the back of the bus while it's stuck - then cheering, then running after it
+  const backX = bx + 90 * k;
+  PB_PEOPLE.forEach(([sh, tr, sk, hat], i) => {
+    const row = i % 2,
+      pushX = backX + (8 + Math.floor(i / 2) * 21 + row * 10) * k,
+      cheerX = Rr + 140 * k - (w * 0.62 + 280 * k) + 90 * k + (8 + i * 22) * k,
+      run = caught ? clamp((go - 0.35) / 0.65, 0, 1) : 0,
+      px = caught ? cheerX - run * run * (w * 0.8) : pushX,
+      py = y + (row ? 6 : -2) * k,
+      ph = t * (caught ? 9 : 4.5) + i * 1.3,
+      jump = caught && go < 0.45 ? Math.abs(Math.sin(t * 7 + i)) * 10 * k : 0,
+      pk = k * (row ? 1.02 : 0.95);
+    push();
+    translate(px, py - jump);
+    scaleBy(pk);
+    const lean = caught && run === 0 ? 0 : caught ? -0.25 : -0.6; // (leaning hard into the bus)
+    const sk2 = col(sk);
+    // legs: braced and stepping (slipping a little) while they push, running after it later
+    for (const sd of [-1, 1]) {
+      const a = Math.sin(ph + (sd < 0 ? Math.PI : 0)) * (caught && run === 0 ? 0.15 : 0.55);
+      line(0, 0, Math.sin(a + 0.3) * 14, 22, 3.6, col(tr));
+      disc(Math.sin(a + 0.3) * 14 + 2, 23, 2.4, col("#1a1a1a"), 1.6);
+    }
+    push();
+    rotate(lean);
+    rect(-5, -24, 10, 24, col(sh)); // the body
+    disc(0, -30, 6, sk2); // the head
+    if (hat === 1) rect(-6, -37, 12, 4, col("#2a2a34"));
+    else if (hat === 2) disc(0, -34, 6.5, col(["#ff5fa8", "#ffd24d", "#5fd0ff"][i % 3]), 4.5);
+    else if (hat === 3) {
+      rect(-8, -35, 16, 2, col("#6a4a2a"));
+      rect(-5, -40, 10, 5, col("#6a4a2a"));
+    }
+    // arms: straight out, palms on the bus - or both up in the air, cheering
+    if (caught && run === 0) {
+      line(-3, -20, -8, -40, 2.6, sk2);
+      line(3, -20, 8, -40, 2.6, sk2);
+    } else if (!caught) {
+      line(-2, -20, -16, -18, 2.6, sk2);
+      line(2, -16, -16, -12, 2.6, sk2);
+    } else {
+      line(-3, -18, -12, -12 + Math.sin(ph) * 4, 2.6, sk2);
+      line(3, -18, 10, -12 - Math.sin(ph) * 4, 2.6, sk2);
+    }
+    pop();
+    pop();
+  });
+  if (!caught)
+    for (let i = 0; i < 4; i++) {
+      const sx = backX + (20 + i * 22) * k + Math.sin(t * 5 + i) * 3 * k;
+      disc(sx, y + 24 * k, 2 * k, withA(col("#c8b090"), 0.4)); // (dust kicked up by their shoes)
+    }
+}
+// =====================================================================================
 //  TON 618 (v1.4.14) - THE SCARIEST BLACK HOLE: one of the biggest black holes ever found, in the full-screen show.
 //    1. THE DARK: everything goes black and still... a deep rumble... and far off, one blinding point of light.
 //    2. THE QUASAR: it grows into a monster - a vast blue-white disc of gas whirling round a hole of perfect black, its
@@ -59022,6 +59811,7 @@ const FLY_NAMES                         = {
   "gdansk": "GDAŃSK · ON THE BALTIC SEA, POLAND",
   "taxi": "A SOUTH AFRICAN MINIBUS TAXI - IN SPACE!",
   "furmanka": "A FURMANKA · A HORSE AND HAY CART FROM VOLHYNIA, POLAND, 1930s",
+  "pushbus": "THE BUS WON'T START · EVERYBODY OUT AND PUSH! · SOUTH AFRICA",
   "flags": "SOUTH AFRICA AND POLAND · FRIENDS",
   "zeppelin": "AN AIRSHIP - A ZEPPELIN",
   "dragon": "A DRAGON OF THE STARS",
@@ -59052,6 +59842,8 @@ function demoShowPlan(n)             {
     { kind: "fly", what: "taxi", len: 12 },
     { kind: "space", len: 3 },
     { kind: "fly", what: "furmanka", len: 16 }, // (and from Poland: a horse and hay cart, Volhynia in the 1930s)
+    { kind: "space", len: 3 },
+    { kind: "fly", what: "pushbus", len: 16 }, // (v1.4.28: and from South Africa: everybody out to push-start the bus)
     { kind: "space", len: 3 },
     ...planetTourPlan(),
     // A MOMENT IN HISTORY (back by request): South Africa and Poland taking turns - the peaceful ones only (no battles,
@@ -60082,8 +60874,8 @@ function drawEggs(g, s) {
 // THE VERSION (from v1.2.0, 5 October 2026): MAJOR.MINOR.PATCH - a new MINOR for a batch of new things, a new PATCH for
 // fixes and small touches - with the day it was made next to it. (Before this the versions were named after the date,
 // like v2026.10.05c.)
-const GAME_VERSION = "v1.4.27",
-  GAME_DATE = "06.10.2026",
+const GAME_VERSION = "v1.4.28",
+  GAME_DATE = "10.10.2026",
   VERSION_TEXT = GAME_VERSION + "  ·  " + GAME_DATE;
 const FB = '"Chakra Petch", "Segoe UI", sans-serif';
 let FD = '"Bungee", "Impact", sans-serif';
@@ -60498,9 +61290,22 @@ function drawHud(fps) {
       g.fillStyle = "#b9a8b8";
       g.fillText("HI " + String(Math.max(G.hi, G.score)).padStart(6, "0"), pad, pad + 30 * s);
     }
-    // lives: little shakes, clear of the corner buttons
-    for (let i = 0; i < (G.versus ? 0 : Math.max(0, G.lives)); i++) {
-      const lx = (HUDB.right || cssW - pad - 190) - 14 * s - i * 22 * s,
+    // lives: little shakes, clear of the corner buttons. (v1.4.28) never over the score: if there are more lives than
+    // there's room for (extra lives pile up), it shows as many as fit and then "x7"
+    const rightL = HUDB.right || cssW - pad - 190,
+      leftL = pad + (twoP() ? 150 : 118) * s,
+      fitN = Math.max(1, Math.floor((rightL - 14 * s - leftL) / (22 * s)) + 1),
+      nL = G.versus ? 0 : Math.max(0, G.lives),
+      showN = nL > fitN ? Math.max(1, fitN - 1) : nL;
+    if (nL > showN) {
+      g.textAlign = "right";
+      g.font = fD(14);
+      g.fillStyle = "#ff8fbf";
+      g.fillText("x" + nL, rightL, (HUDB.under ? HUDB.b + 6 * s : pad + 2 * s) + 8 * s);
+      g.textAlign = "left";
+    }
+    for (let i = 0; i < showN; i++) {
+      const lx = rightL - 14 * s - (i + (nL > showN ? 1.6 : 0)) * 22 * s,
         ly = HUDB.under ? HUDB.b + 6 * s : pad + 2 * s;
       g.fillStyle = "#ff8fbf";
       g.beginPath();
@@ -60619,17 +61424,21 @@ function drawHud(fps) {
     g.textAlign = "center";
     if (c.world) {
       g.font = fD(14);
+      // (v1.4.28) kept on the screen: a word popping up near the edge (on a narrow phone) slides in so it all shows
+      const half =
+          Math.max(g.measureText(c.text).width, c.note ? g.measureText(c.note).width * 0.7 : 0) / 2 + 6 * s,
+        cxw = clamp(sx(c.x), half, cssW - half);
       g.strokeStyle = "rgba(10,6,20,.85)";
       g.lineWidth = 4 * s;
-      g.strokeText(c.text, sx(c.x), sy(c.y - (1 - k) * 30));
+      g.strokeText(c.text, cxw, sy(c.y - (1 - k) * 30));
       g.fillStyle = c.c;
-      g.fillText(c.text, sx(c.x), sy(c.y - (1 - k) * 30));
+      g.fillText(c.text, cxw, sy(c.y - (1 - k) * 30));
       if (c.note) {
         g.font = fB(10, 700);
         g.lineWidth = 3 * s;
-        g.strokeText(c.note, sx(c.x), sy(c.y - (1 - k) * 30 + 13));
+        g.strokeText(c.note, cxw, sy(c.y - (1 - k) * 30 + 13));
         g.fillStyle = "#f0ead8";
-        g.fillText(c.note, sx(c.x), sy(c.y - (1 - k) * 30 + 13));
+        g.fillText(c.note, cxw, sy(c.y - (1 - k) * 30 + 13));
       }
     } else if (c.sub) {
       g.font = fB(16, 700);
@@ -61392,6 +62201,13 @@ function setVol(which, v) {
 }
 // a background sound: played like any effect, but through the BACKGROUND SOUNDS knob
 function bgSfx(name, x , kind ) {
+  // (v1.4.28) the background's own little noises (a satellite passing, a UFO, the stage...) stay quiet while the game
+  // is paused or a menu is open - only the music plays on behind a menu
+  if (
+    G.state === "paused" ||
+    (typeof $ === "function" && $("menu") && !$("menu").hidden && G.state !== "menu")
+  )
+    return;
   SFX_BG = true;
   try {
     sfx(name, x, kind);
@@ -62285,11 +63101,7 @@ function sfx(name, x , kind ) {
       );
       break;
     case "sputnik":
-      for (let i = 0; i < 6; i++) {
-        blip(1440, 1440, 0.12, 0.03, out, now + i * 0.5, "sine");
-        blip(1440, 1440, 0.12, 0.03, out, now + i * 0.5 + 0.2, "sine");
-      }
-      break; // beep-beep... beep-beep
+      break; // (v1.4.28: silent now - its "beep-beep... beep-beep" sounded like stray beeps behind the music)
     case "bagpipe": {
       // the pipes: a drone and a chanter tune
       for (const [f, v] of [
@@ -62666,7 +63478,7 @@ function voice(out, now, kind, grumpy) {
       vox(out, w, [[kind === "demon" ? 75 : 130, 0.09, 520, 1200]], grumpy ? 0.09 : 0.06);
       if (kind === "demon" && i === 0) noise(0.3, 0.08, 400, 120, out, w);
     } else if (kind === "green")
-      blip(1200 + Math.random() * 900, 1800 + Math.random() * 600, 0.05, 0.035, out, w, "sine");
+      tone("sine", 500 + Math.random() * 300, 700 + Math.random() * 300, 0.09, 0.02, out, w); // (v1.4.28: a soft, low warble - not a beep)
     else if (kind === "robot")
       blip(grumpy ? 300 : 700 + i * 200, grumpy ? 200 : 700 + i * 200, 0.05, 0.03, out, w);
     else if (kind === "cyclops") {
@@ -64600,13 +65412,18 @@ function drum(kind, t, bus, accent = 1) {
     tone("triangle", 200, 150, 0.06, 0.1, bus, t);
   } else if (kind === "h") noise(0.04, 0.06 * accent, 9500, 7000, bus, t, "highpass");
   else if (kind === "o") noise(0.2, 0.06, 9000, 6000, bus, t, "highpass");
-  else if (kind === "r") tone("square", 1700, 1600, 0.025, 0.05, bus, t);
+  else if (kind === "r")
+    noise(0.03, 0.07 * accent, 2200, 1600, bus, t, "bandpass"); // (v1.4.28: a soft wooden click - it used to be a little square-wave BEEP)
   else if (kind === "t") tone("sine", 200, 140, 0.25, 0.26 * accent, bus, t);
   else if (kind === "c") {
     noise(0.08, 0.2, 2500, 1500, bus, t, "bandpass");
     noise(0.08, 0.15, 2500, 1500, bus, t + 0.012, "bandpass");
   } else if (kind === "z") noise(0.05, 0.03, 7000, 5000, bus, t, "bandpass");
 }
+// (v1.4.28) NO STRAY BEEPS: the little high blips that crept into the music - the chip-tune sparkle, the square-wave
+// "rim click", the zaps and whoops, a random dripping ping, the danger ticking - sounded like odd beeps in the
+// background (even behind the menu). They're all off; the tunes themselves are untouched.
+const NO_BEEPS = true;
 // DANGER MUSIC (v2026.10.04ap): when a customer gets close to your end of the bar, the band brings in a
 // tension layer (never faster) - a ticking hi-hat and a low pulse - and it all relaxes again once the danger is past
 const DNG = { v: 0 };
@@ -64623,7 +65440,7 @@ function tensionStep(t, s, st) {
   const v = DNG.v;
   if (v < 0.25 || !musicBus) return;
   const B2 = musicBus;
-  if (s % 2 === 0 || v > 0.6) drum("h", t, B2, 0.25 + 0.5 * v); // (tick tick tick...)
+  if (!NO_BEEPS && (s % 2 === 0 || v > 0.6)) drum("h", t, B2, 0.25 + 0.5 * v); // (tick tick tick... - v1.4.28: off)
   if (s % 4 === 0) {
     note2("triangle", 33, st * 3, 0.32 * v, B2, t, { att: 0.004 });
     if (v > 0.6) drum("k", t, B2, 0.5 * v);
@@ -64661,7 +65478,17 @@ function riser(dur, vol, bus, t) {
   src.start(t, Math.random() * 1.5);
   src.stop(t + dur + 0.06);
 }
+// (v1.4.28) THE BEAT, for the pictures: when the band plays a beat, note when it falls (in the page's own clock), so
+// the room can move in time with the music it's actually hearing
+const MBEAT = { at: 0, len: 0 };
 function playStep2(tr, t0) {
+  {
+    const dv = tr.folk ? 4 : tr.div || (tr.steps === 12 ? 6 : 4);
+    if (SEQ2.step % dv === 0 && AC) {
+      MBEAT.at = performance.now() / 1000 + (t0 - AC.currentTime);
+      MBEAT.len = 60 / tr.bpm;
+    }
+  }
   tensionStep(t0, SEQ2.step, 60 / tr.bpm / (tr.folk ? 4 : tr.div || (tr.steps === 12 ? 6 : 4)));
   if (tr.folk) {
     folkStep(tr, t0);
@@ -64941,9 +65768,11 @@ function playStep2(tr, t0) {
   //      pulse-wave arpeggio - the old consoles' way of playing a whole chord on one voice ----
   const chippy =
     (L.wave === "square" || L.wave === "triangle") && tr.bpm >= 100 && tr.comp !== "arp" && !tr.folk;
+  // (v1.4.28: switched off - its fast, thin high blips sounded like stray beeps in the background)
   if (
-    (chippy && SEQ2.sec > 0 && SEQ2.sec % 2 === 0 && !sc.drums) ||
-    (heat > 0.85 && tr.bpm >= 90 && tr.comp !== "arp" && !sc.drums)
+    !NO_BEEPS &&
+    ((chippy && SEQ2.sec > 0 && SEQ2.sec % 2 === 0 && !sc.drums) ||
+      (heat > 0.85 && tr.bpm >= 90 && tr.comp !== "arp" && !sc.drums))
   ) {
     const an = 72 + (tones[s % tones.length] % 12) + (s % 6 >= 3 ? 12 : 0);
     note2("square", an, st * 0.85, 0.016, leadBus, t, { duty: 0.125, stacc: true });
@@ -64974,7 +65803,8 @@ function playStep2(tr, t0) {
       if (r === 0) riser(st * 4, 0.09, B2, t);
       if (r === 0 || r === 2) drum("k", t, B2, 0.7);
       if (r === 3) drum("s", t, B2, 1);
-      if (r === 0 && wrapBar) tone("square", mf(72 + pc), mf(91 + pc), st * 3.6, 0.016, leadBus, t); // (whoop!)
+      if (r === 0 && wrapBar && !NO_BEEPS)
+        tone("square", mf(72 + pc), mf(91 + pc), st * 3.6, 0.016, leadBus, t); // (whoop!)
     }
   } else for (const k in pat) if (pat[k][s] === "x") drum(k, t, B2, onBeat ? 1 : 0.8);
   if (bar === 0 && s === 0 && SEQ2.sec > 0) {
@@ -64995,7 +65825,7 @@ function playStep2(tr, t0) {
   // ---- the special sounds that give each planet its flavour ----
   if (tr.extra === "anvil" && s === 12 && bar % 2 === 1)
     for (const k of [1, 2.76, 5.4]) tone("sine", 820 * k, 810 * k, 0.6, 0.05 / k, B2, t);
-  if (tr.extra === "anvil" && s === 6 && Math.random() < 0.25)
+  if (tr.extra === "anvil" && s === 6 && Math.random() < 0.25 && !NO_BEEPS)
     tone("sine", 2400 + Math.random() * 800, 2300, 0.3, 0.025, leadBus, t); // water dripping in the dark
   if (tr.extra === "boing" && bar % 4 === 3 && s === 14) {
     const o = AC.createOscillator(),
@@ -65023,13 +65853,14 @@ function playStep2(tr, t0) {
   } // the surf amp's spring reverb, kicked
   if (tr.extra === "whip" && s === 0 && bar === 0) {
     noise(0.06, 0.3, 6000, 3000, B2, t, "highpass");
-    tone("square", 2200, 800, 0.05, 0.03, B2, t);
+    if (!NO_BEEPS) tone("square", 2200, 800, 0.05, 0.03, B2, t);
   }
   if (tr.extra === "whip" && s === 6 && bar % 4 === 3)
     for (let i = 0; i < 3; i++) ping(mf(84 + [0, 4, 7][i]), 0.6, 0.02, B2, t + i * st); // a little bell
   if (tr.extra === "chimes" && s % 4 === 0 && Math.random() < 0.3)
     ping(mf(84 + (tones[Math.floor(Math.random() * tones.length)] % 12)), 1.6, 0.018, leadBus, t);
-  if (tr.extra === "zap" && s === 12 && bar % 2 === 1) tone("square", 2400, 300, 0.25, 0.02, leadBus, t);
+  if (tr.extra === "zap" && s === 12 && bar % 2 === 1 && !NO_BEEPS)
+    tone("square", 2400, 300, 0.25, 0.02, leadBus, t);
   if (tr.extra === "siren" && s === 0 && bar % 4 === 0) tone("sine", 900, 120, st * 30, 0.03, B2, t); // something falling in, forever
   if (tr.extra === "bells" && s === 0 && bar % 2 === 0)
     for (const k of [1, 2.4, 3]) ping(mf(72 + pc) * k, 2.2, 0.03 / k, B2, t);
@@ -66394,6 +67225,26 @@ profWire();
 //  the game, and where the motion capture, the folk songs and the fonts come from. Both from the menu at any time.
 // =====================================================================================
 const NEWS = [
+  {
+    ver: "v1.4.28",
+    title: "A STAGE FOR EVERY STOP",
+    items: [
+      "EVERY STOP: ITS OWN STAGE - CURTAINS, BACKDROPS, FRAMES",
+      "STAGE LIGHTS SWEEP THE BARS IN TIME WITH THE MUSIC",
+      "CUSTOMERS NOD ALONG TO THE BAND",
+      "NEW MILKSHAKES: CREAM SWIRL, SYRUP, SPRINKLES, STRIPED STRAW",
+      "WET TRAILS, SHADOWS AND POLISHED BAR TOPS",
+      "NEW CUSTOMER: THE OLD GENTLEMAN WITH HIS CANE",
+      "NO MORE STRAY BEEPS IN THE MUSIC",
+      "AFTER ANDROMEDA: LET'S GO HOME - THE TOUR STARTS AGAIN, HARDER",
+      "NEW CUSTOMER: TICK-TOCK THE STEAMBOT",
+      "NEW CUSTOMER: PROFESSOR FIZZWICK, MAD SCIENTIST",
+      "SHOW: SOUTH AFRICANS PUSH-START THE BUS",
+      "GLASS FLOORS WITH THE COSMOS BELOW",
+      "A MORE REAL BLACK HOLE",
+      "VIP CROWNS ON HEADS, SMOOTHER PROTESTERS, LIVES CLEAR OF THE SCORE",
+    ],
+  },
   {
     ver: "v1.4.27",
     title: "EVERY STOP ITS OWN BAR",

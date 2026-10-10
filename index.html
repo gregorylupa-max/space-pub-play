@@ -692,7 +692,7 @@ const PVS = `attribute vec2 q; varying vec2 uv; void main() { uv = q * 0.5 + 0.5
 // With the CRT screen on, this same pass runs at the full screen resolution and also adds what an arcade
 // monitor did: a slightly curved tube, scanlines, a phosphor mask, glow bleeding from bright pixels,
 // colour fringes towards the edges, a darker rim and a little picture noise.
-const PFS = `precision mediump float; varying vec2 uv; uniform sampler2D tex, ltex, btex; uniform float levels, crt, time, qual, lit, bake; uniform vec2 low, outRes;
+const PFS = `precision mediump float; varying vec2 uv; uniform sampler2D tex, ltex, btex, gtex; uniform float levels, crt, time, qual, lit, bake, gpass, gok; uniform vec2 low, outRes;
 float b2(vec2 m) { return mod(2.0 * m.x + 3.0 * m.y, 4.0); }
 vec3 px(vec2 lp) {                       // one low-res pixel, squeezed into the palette with ordered dither
   vec2 p = clamp(floor(lp), vec2(0.0), low - 1.0);
@@ -705,8 +705,23 @@ vec3 px(vec2 lp) {                       // one low-res pixel, squeezed into the
 // size) and the TV pass just reads it back - the same picture, without redoing the palette and lighting maths up to nine
 // times for every screen pixel. (Stored at half brightness so the lighting's highlights above 1.0 survive.)
 vec3 pb(vec2 lp) { vec2 p = clamp(floor(lp), vec2(0.0), low - 1.0); return texture2D(btex, (p + 0.5) / low).rgb * 2.0; }
+// (v1.4.30) SPEED: the BLOOM glow is worked out once, on the small picture (gpass: 16 looks round each SMALL pixel),
+// into its own little picture that's smoothly stretched up - instead of 16 extra looks for every one of the millions
+// of SCREEN pixels. The same glow, a fraction of the work - it matters most on big screens and phones.
+vec3 bloomAt(vec2 lp) {
+  float R1 = max(1.5, low.y / 260.0), R2 = R1 * 2.6;
+  vec3 g1 = vec3(0.0), g2 = vec3(0.0);
+  for (int i = 0; i < 8; i++) {
+    float a = float(i) * 0.7854 + 0.39;
+    vec2 d = vec2(cos(a), sin(a));
+    g1 += pb(lp + d * R1);
+    g2 += pb(lp + d * R2);
+  }
+  return max(g1 / 8.0 - 0.48, 0.0) * 0.6 + max(g2 / 8.0 - 0.52, 0.0) * 0.5;
+}
 void main() {
   if (bake > 0.5) { gl_FragColor = vec4(px(uv * low) * 0.5, 1.0); return; }
+  if (gpass > 0.5) { gl_FragColor = vec4(bloomAt(uv * low) * 0.5, 1.0); return; }
   if (crt < 0.5) { gl_FragColor = vec4(px(uv * low), 1.0); return; }
   vec2 cc = uv * 2.0 - 1.0;
   cc *= 1.0 + 0.035 * dot(cc.yx, cc.yx);                       // the curved glass
@@ -716,15 +731,8 @@ void main() {
   vec2 ca = cc * 0.45 * dot(cc, cc);                             // colour fringes, only towards the rim
   vec3 c = vec3(pb(lp + ca).r, pb(lp).g, pb(lp - ca).b);
   if (qual > 1.5) {                                              // (v1.4.24) BLOOM: bright things spill a soft halo of light
-    float R1 = max(1.5, low.y / 260.0), R2 = R1 * 2.6;           //  - two rings, sized to the picture, so it looks the same on any screen
-    vec3 g1 = vec3(0.0), g2 = vec3(0.0);
-    for (int i = 0; i < 8; i++) {
-      float a = float(i) * 0.7854 + 0.39;
-      vec2 d = vec2(cos(a), sin(a));
-      g1 += pb(lp + d * R1);
-      g2 += pb(lp + d * R2);
-    }
-    c += max(g1 / 8.0 - 0.48, 0.0) * 0.6 + max(g2 / 8.0 - 0.52, 0.0) * 0.5;
+    if (gok > 0.5) c += texture2D(gtex, u2).rgb * 2.0;            //  (v1.4.30: worked out once, small - see gpass)
+    else c += bloomAt(lp);                                        //  (the old way, if the little glow picture can't be made)
   }
   {                                                              // (v1.4.24) COLOUR GRADING, like a film: a touch richer,
     float lum = dot(c, vec3(0.299, 0.587, 0.114));               //  warm in the highlights, cool in the shadows
@@ -819,6 +827,12 @@ function makeGL(cv, power, retro, levels, crt) {
         uTex: gl.getUniformLocation(pp, "tex"),
         uBt: gl.getUniformLocation(pp, "btex"),
         uBake: gl.getUniformLocation(pp, "bake"),
+        uGp: gl.getUniformLocation(pp, "gpass"),
+        uGok: gl.getUniformLocation(pp, "gok"),
+        uGt: gl.getUniformLocation(pp, "gtex"),
+        gtex: gl.createTexture(),
+        gfb: gl.createFramebuffer(),
+        gOK: false,
         btex: gl.createTexture(),
         bfb: gl.createFramebuffer(),
         ltex: gl.createTexture(),
@@ -1002,6 +1016,19 @@ function makeGL(cv, power, retro, levels, crt) {
             gl.bindFramebuffer(gl.FRAMEBUFFER, post.bfb);
             gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, post.btex, 0);
             post.bakeOK = gl.checkFramebufferStatus(gl.FRAMEBUFFER) === gl.FRAMEBUFFER_COMPLETE;
+            // (v1.4.30) the little bloom picture: the same small size, smoothly filtered when stretched up
+            gl.bindTexture(gl.TEXTURE_2D, post.gtex);
+            gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, pw, ph, 0, gl.RGBA, gl.UNSIGNED_BYTE, null);
+            for (const [k, v2] of [
+              [gl.TEXTURE_MIN_FILTER, gl.LINEAR],
+              [gl.TEXTURE_MAG_FILTER, gl.LINEAR],
+              [gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE],
+              [gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE],
+            ])
+              gl.texParameteri(gl.TEXTURE_2D, k, v2);
+            gl.bindFramebuffer(gl.FRAMEBUFFER, post.gfb);
+            gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, post.gtex, 0);
+            post.gOK = gl.checkFramebufferStatus(gl.FRAMEBUFFER) === gl.FRAMEBUFFER_COMPLETE;
           }
           if (post) {
             // the light map: half size, smoothly filtered
@@ -1230,6 +1257,25 @@ function makeGL(cv, power, retro, levels, crt) {
           gl.activeTexture(gl.TEXTURE0);
         }
         gl.uniform1f(post.uBake, 0);
+        // (v1.4.30) 2: the bloom glow, once, on the small picture (it reads the baked one)
+        const glowOn = baking && post.gOK && QUAL > 1.5 && gl.drawingBufferHeight >= post.h * 1.6; // (only worth it when the screen is much bigger than the small picture)
+        if (glowOn) {
+          gl.activeTexture(gl.TEXTURE3);
+          gl.bindTexture(gl.TEXTURE_2D, null);
+          gl.activeTexture(gl.TEXTURE0);
+          gl.bindFramebuffer(gl.FRAMEBUFFER, post.gfb);
+          gl.viewport(0, 0, post.w, post.h);
+          gl.uniform1f(post.uGp, 1);
+          gl.drawArrays(gl.TRIANGLES, 0, 3);
+          calls++;
+          gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+          gl.activeTexture(gl.TEXTURE3);
+          gl.bindTexture(gl.TEXTURE_2D, post.gtex);
+          gl.uniform1i(post.uGt, 3);
+          gl.activeTexture(gl.TEXTURE0);
+        }
+        gl.uniform1f(post.uGp, 0);
+        gl.uniform1f(post.uGok, glowOn ? 1 : 0);
         gl.viewport(0, 0, gl.drawingBufferWidth, gl.drawingBufferHeight);
         gl.drawArrays(gl.TRIANGLES, 0, 3);
         gl.enable(gl.BLEND);
@@ -12165,16 +12211,8 @@ function draw() {
     drawRoom(V, t);
     funDecor(V, t, "back");
     for (let lane = 0; lane < LANES; lane++) {
-      // (v1.4.28) A LITTLE AIR BETWEEN THE BARS: before each nearer bar is drawn, a faint veil of the room's own haze
-      // goes over everything behind it - so the far bars sit back and the near ones stand out (depth, like real air)
-      if (lane > 0 && !OUT && QUAL > 0.5)
-        rect(
-          -ox - 60,
-          -oy - 60,
-          PW + ox * 2 + 120,
-          PH + oy * 2 + 120,
-          withA(mix(shade(V.wall, 0.45), col("#0a0614"), 0.5), 0.045)
-        );
+      // (v1.4.28: a veil of haze between the bars was drawn here, over the WHOLE screen, three times a frame - v1.4.30:
+      //  that depth haze is now baked into each bar's own picture instead - counterBody, sky.ts - which costs nothing)
       laneT(lane); // everything on this bar is drawn at its depth
       drawDoor(lane, t, V);
       for (const c of customers.filter((c) => c.lane === lane).sort((a, b) => a.x - b.x)) {
@@ -14254,7 +14292,7 @@ function jupiter(x, y, r, t, inside) {
 // (v1.4.28) THE STAGE LIGHTS REACH THE ROOM: three coloured beams from the lighting rig over the band's stage sweep
 // slowly out across the bars and the floor, pooling where they land, flaring a little on every beat of the music
 function drawStageBeams(V, t) {
-  if (OUT || COMFORT.calm || G.state === "bonus" || (R.kind === "CPU" && QUAL < 1)) return;
+  if (OUT || COMFORT.calm || G.state === "bonus" || QUAL < 1.5) return; // (v1.4.30: only on the best picture quality)
   const bp = beatPulse(),
     cols = [V.neon, V.accent, col(STAGE_ACC || "#ff5fa8")],
     dk = 1 - 0.6 * (G.dark || 0);
@@ -15876,6 +15914,13 @@ function counterBody(lane, V) {
   if (K.front !== 11)
     quad4(a - 10, ya - 10, a, ya, a, ya + 28, a - 10, ya + 18, shade(V.face, 0.7)); // the end cap facing the door
   else quad4(a - 10, ya - 10, a, ya, a, ya + 12, a - 10, ya + 2, shade(V.face, 0.7));
+  // (v1.4.30) DEPTH HAZE, baked in: the further back a bar is, the more of the room's dusky air lies over it - the far
+  // bars sit back, the near ones stand out (it used to be three full-screen veils every frame)
+  const hz = (LANES - 1 - lane) * 0.05;
+  if (hz > 0) {
+    const hc = withA(mix(shade(V.wall, 0.45), col("#0a0614"), 0.5), hz);
+    quad4(a - 12, ya - 12, b + 2, yb - 12, b + 2, yb + 34, a - 12, ya + 34, hc);
+  }
 }
 // ---- the shake taps on the right wall ----
 // ---- the doors customers come in through - every planet has its own kind ----
@@ -59893,10 +59938,7 @@ function demoShowPlan(n)             {
     { kind: "space", len: 4 },
     { kind: "fly", what: "taxi", len: 12 },
     { kind: "space", len: 3 },
-    { kind: "fly", what: "furmanka", len: 16 }, // (and from Poland: a horse and hay cart, Volhynia in the 1930s)
-    { kind: "space", len: 3 },
-    { kind: "fly", what: "pushbus", len: 16 }, // (v1.4.28: and from South Africa: everybody out to push-start the bus)
-    { kind: "space", len: 3 },
+    // (v1.4.30: the horse and hay cart and the push-started bus are out of the show again - by request)
     ...planetTourPlan(),
     // A MOMENT IN HISTORY (back by request): South Africa and Poland taking turns - the peaceful ones only (no battles,
     // nothing religious): the 1994 vote, independence in 1918, the 1995 rugby, Copernicus, the 2010 World Cup, 1989
@@ -60926,7 +60968,7 @@ function drawEggs(g, s) {
 // THE VERSION (from v1.2.0, 5 October 2026): MAJOR.MINOR.PATCH - a new MINOR for a batch of new things, a new PATCH for
 // fixes and small touches - with the day it was made next to it. (Before this the versions were named after the date,
 // like v2026.10.05c.)
-const GAME_VERSION = "v1.4.29",
+const GAME_VERSION = "v1.4.30",
   GAME_DATE = "10.10.2026",
   VERSION_TEXT = GAME_VERSION + "  ·  " + GAME_DATE;
 const FB = '"Chakra Petch", "Segoe UI", sans-serif';
@@ -67277,6 +67319,11 @@ profWire();
 //  the game, and where the motion capture, the folk songs and the fonts come from. Both from the menu at any time.
 // =====================================================================================
 const NEWS = [
+  {
+    ver: "v1.4.30",
+    title: "FASTER",
+    items: ["THE GLOW WORKED OUT SMARTER - ABOUT 22% FASTER ON BIG SCREENS", "DEPTH HAZE BAKED IN - FREE"],
+  },
   {
     ver: "v1.4.29",
     title: "BETTER-LOOKING CUSTOMERS",

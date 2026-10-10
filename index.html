@@ -5897,6 +5897,7 @@ function resetGame(demo) {
     P1.char = myChar(0);
     P2.char = myChar(1);
   }
+  G.rejoinLeft = 0; // (v1.4.31)
   for (const p of PL) {
     p.score = 0;
     p.lives = 3;
@@ -7056,6 +7057,25 @@ function update(dt) {
   if (G.state === "castaway") return castawayUpdate(dt); // (v1.4.10: CASTAWAY ISLAND - castaway.ts)
   if (G.state === "paused") return;
   updateBell(dt);
+  // (v1.4.31) BACK IN THE GAME: in VERSUS, a player who's out comes back after the other one serves 8 customers - with
+  // one life, so nobody sits on the sofa for the rest of the game
+  if (G.versus && G.state === "play" && G.rejoinLeft > 0) {
+    const sv = G.served - (G.rjSv ?? G.served);
+    if (sv > 0) G.rejoinLeft -= sv;
+    G.rjSv = G.served;
+    if (G.rejoinLeft <= 0) {
+      for (const p of PL)
+        if (!p.alive) {
+          p.alive = true;
+          p.lives = 1;
+          p.lane = (PL[1 - p.id].lane + 2) % LANES;
+          p.x = TAPX - 20;
+          callout("PLAYER " + (p.id + 1) + " IS BACK!", p.id ? "#5fb0ff" : "#ff5fa8", 2.2);
+          sfx("chime", X0, 2);
+        }
+      G.rejoinLeft = 0;
+    }
+  } else G.rjSv = G.served;
   // CHURCH BELLS in the distance: now and then (every couple of minutes of play) a soft peal drifts in from somewhere far away
   if (G.state === "play" && !G.demo) {
     G.churchT = (G.churchT ?? rnd(40, 90)) - dt;
@@ -10773,7 +10793,9 @@ function afterLoss() {
     w.lives--;
     if (w.lives <= 0) {
       w.alive = false;
-      callout("PLAYER " + (w.id + 1) + " IS OUT!", w.id ? "#5fb0ff" : "#ff5fa8", 2.2);
+      callout("PLAYER " + (w.id + 1) + " IS OUT!  BACK AFTER 8 SERVES", w.id ? "#5fb0ff" : "#ff5fa8", 2.4);
+      G.rejoinLeft = 8; // (v1.4.31: they come back - see update.ts)
+      G.rjSv = G.served;
     }
     if (!PL.some((p) => p.alive)) {
       startFired();
@@ -60968,7 +60990,7 @@ function drawEggs(g, s) {
 // THE VERSION (from v1.2.0, 5 October 2026): MAJOR.MINOR.PATCH - a new MINOR for a batch of new things, a new PATCH for
 // fixes and small touches - with the day it was made next to it. (Before this the versions were named after the date,
 // like v2026.10.05c.)
-const GAME_VERSION = "v1.4.30",
+const GAME_VERSION = "v1.4.31",
   GAME_DATE = "10.10.2026",
   VERSION_TEXT = GAME_VERSION + "  ·  " + GAME_DATE;
 const FB = '"Chakra Petch", "Segoe UI", sans-serif';
@@ -62514,7 +62536,12 @@ function glass(out, when, vol = 0.06, base = 2600) {
     );
 }
 function sfx(name, x , kind ) {
-  if (!AC || AC.state !== "running" || (G.state === "menu" && name !== "click" && !SHOW_SFX.on)) return;
+  if (
+    !AC ||
+    AC.state !== "running" ||
+    (G.state === "menu" && name !== "click" && name !== "nav" && !SHOW_SFX.on)
+  )
+    return;
   const now = AC.currentTime + SOON,
     out = fxOut(x),
     R2 = Math.random;
@@ -62857,9 +62884,30 @@ function sfx(name, x , kind ) {
       noise(0.16, 0.18, 7000, 2000, out, now, "highpass");
       tone("sine", 500, 900, 0.1, 0.04, out, now);
       break; // (v1.3.9: no more "crackle of lightning" on top - in the demo, hopping bars all the time, it sounded like a fault)
-    case "click":
-      blip(660, 660, 0.04, 0.08, out, now);
+    case "click": {
+      // (v1.4.31) CHOOSING something in a menu: a bright little two-note chime, like a soft vibraphone - up a fifth
+      const n0 = nf("G5"),
+        n1 = nf("D6");
+      for (const [f, w] of [
+        [n0, 0],
+        [n1, 0.055],
+      ]) {
+        tone("sine", f, f, 0.32, 0.055, out, now + w, 0.003);
+        tone("sine", f * 4, f * 4, 0.06, 0.008, out, now + w, 0.002); // (the mallet's bright tick)
+        tone("triangle", f / 2, f / 2, 0.2, 0.02, out, now + w, 0.004); // (a warm body under it)
+      }
       break;
+    }
+    case "nav": {
+      // (v1.4.31) MOVING round a menu: a soft wooden marimba note instead of a beep - each option has its own note on a
+      // pentatonic scale, so going up and down plays a little tune (it can never sound wrong)
+      const PENT = ["C5", "D5", "E5", "G5", "A5", "C6", "D6", "E6", "G6", "A6"],
+        f = nf(PENT[(((kind | 0) % PENT.length) + PENT.length) % PENT.length]);
+      tone("sine", f, f * 0.998, 0.16, 0.05, out, now, 0.002);
+      tone("sine", f * 3.9, f * 3.9, 0.03, 0.007, out, now, 0.001); // (the mallet hitting the wooden bar)
+      tone("triangle", f / 2, f / 2, 0.09, 0.012, out, now, 0.003);
+      break;
+    }
     // ---- the protest: chanting, stomping, a whistle ----
     case "chant": {
       // "HEY! HO!" from the crowd, stamping feet on the beat
@@ -66907,7 +66955,7 @@ function navMove(d) {
   bs[i].focus();
   navMark(bs[i]);
   bs[i].scrollIntoView({ block: "nearest" });
-  sfx("tick");
+  sfx("nav", undefined, i); // (v1.4.31: a soft marimba note, its own for each option)
 }
 const NAVT = { key: 0, pad: 0, padDir: "", padHeld: 0, a: 0, col: null, colEl: null }; // (menu timing: so a twitchy stick or a held button doesn't race through the options)
 // arrows and the D-pad move the way they point: down goes to the button BELOW, right to the one on the RIGHT (wrapping round at the edges)
@@ -66963,7 +67011,7 @@ function navDir(dx, dy) {
   n.focus();
   navMark(n);
   n.scrollIntoView({ block: "nearest" });
-  sfx("tick");
+  sfx("nav", undefined, Math.max(0, bs.indexOf(n))); // (v1.4.31: a soft marimba note, its own for each option)
 }
 // only ONE highlighted option: the one picked with the keys / controller. Moving the mouse hands the highlight back to the mouse.
 function navMark(b) {
@@ -67319,6 +67367,15 @@ profWire();
 //  the game, and where the motion capture, the folk songs and the fonts come from. Both from the menu at any time.
 // =====================================================================================
 const NEWS = [
+  {
+    ver: "v1.4.31",
+    title: "NICER MENU SOUNDS",
+    items: [
+      "MOVING ROUND A MENU: SOFT MARIMBA NOTES",
+      "CHOOSING: A LITTLE VIBRAPHONE CHIME",
+      "VERSUS: A KNOCKED-OUT PLAYER COMES BACK AFTER 8 SERVES",
+    ],
+  },
   {
     ver: "v1.4.30",
     title: "FASTER",

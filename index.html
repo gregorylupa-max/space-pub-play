@@ -5869,6 +5869,7 @@ function startLevel() {
   G.caught = new Set();
   G.fire = null;
   G.protest = null;
+  G.catchChain = 0; // (v1.4.29: a new bar, a new catch chain)
   G.protestT = rnd(18, 32);
   G.bananas = [];
   G.peels = [];
@@ -9281,7 +9282,18 @@ function update(dt) {
       feverAdd(0.5, demo);
       coachCaught(demo);
       SCORER = by;
-      addScore(100, m.x, LY(m.lane, m.x) - 50);
+      // (v1.4.29) RUNNING CATCH: run up the bar to meet an empty glass well before it reaches the taps - double points;
+      // and a CATCH CHAIN: every empty caught in a row (without one smashing) adds a little more, up to +250
+      const run = by.x < TAPX - 180,
+        chain = (G.catchChain = (G.catchChain || 0) + 1),
+        bonusC = Math.min(250, (chain - 1) * 25);
+      addScore((run ? 200 : 100) + bonusC, m.x, LY(m.lane, m.x) - 50);
+      if (!demo && (run || chain % 5 === 0))
+        worldText(
+          run ? "RUNNING CATCH!" : "CATCH CHAIN x" + chain + "!",
+          { lane: m.lane, x: m.x - 10 },
+          run ? "#7dffc8" : "#9fd8ff"
+        );
       SCORER = null;
       sfx("grab", m.x);
       sparkle(m.x, LY(m.lane, m.x) - 14, [0.6, 1, 0.9, 1], 6, m.lane);
@@ -9289,6 +9301,7 @@ function update(dt) {
     }
     if (m.x > TAPX + 26) {
       m.dead = true;
+      G.catchChain = 0; // (the chain is broken)
       if (demo) continue;
       LOSER = nearestTo(m.lane);
       lose("empty", m.lane, TAPX + 26);
@@ -18048,6 +18061,12 @@ function customerBody(c, t, a) {
   rotate(tilt);
   translate(0, -8); // (the head scales round the neck, so it stays on)
   drawHead(kind, 0, 0, t, c, A, angry, look, L, mouth, eyes);
+  // (v1.4.29) a RIM OF LIGHT round the back of every person's head (the aliens have their own coloured one)
+  if (!OUT && !ALIEN_RIM[kind] && !alienKinds.has(kind) && !NF_APES.has(kind) && !ANIMAL_KINDS.has(kind)) {
+    R.setAdd(true);
+    arc(0, 0, 10.4, Math.PI * 0.62, Math.PI * 1.28, 1.2, A(withA(col("#cfe0ff"), 0.28)), 10);
+    R.setAdd(false);
+  }
   // (v1.4.28) a GOLDEN VIP wears the crown ON the head now (it used to float high above them)
   if (c.gold && c.state !== "out" && !c.fly && !OUT && c.alpha > 0.6) {
     push();
@@ -18352,6 +18371,32 @@ function tentacle(sx, sy, ex, ey, t, c, color) {
 function drawTorso(kind, c, t, A, tw, th, body, L, angry, step) {
   const top = -th;
   drawTorsoBase(kind, c, t, A, tw, th, body, L, angry, step);
+  // (v1.4.29) SOFT SHADING ON THE CLOTHES: the shirt or coat a little darker down towards the waist and on the side
+  // away from the light, a soft fold under the chest - and a thin bright RIM along the back edge where the light from
+  // the windows behind catches it. (People only - the round aliens, apes and animals have their own shapes.)
+  if (!OUT && !alienKinds.has(kind) && !NF_APES.has(kind) && !ANIMAL_KINDS.has(kind)) {
+    const hw = tw / 2 - 1;
+    quad4(
+      -hw,
+      top + 2,
+      hw,
+      top + 2,
+      hw - 1,
+      -2,
+      -hw + 1,
+      -2,
+      A(withA(C.black, 0)),
+      A(withA(C.black, 0)),
+      A(withA(C.black, 0.2)),
+      A(withA(C.black, 0.2))
+    );
+    quad4(hw - 4, top + 2, hw, top + 2, hw - 1, -2, hw - 4.5, -2, A(withA(C.black, 0.16)));
+    line(-hw + 3, top + th * 0.42, hw - 4, top + th * 0.45, 1.6, A(withA(C.black, 0.08)));
+    R.setAdd(true);
+    line(-hw + 0.4, top + 3, -hw + 1.4, -4, 1.1, A(withA(col("#cfe0ff"), 0.22)));
+    disc(-hw + 3, top + 4, 2.6, A(withA(C.white, 0.08)), 1.6); // (a sheen on the shoulder)
+    R.setAdd(false);
+  }
   // wear and tear: stains, a patch, creases that shift as they walk, rust and scuffs on suits and robots
   const sd = c.seed * 97,
     dirty = kind === "robot" ? col("#8a4a20") : kind === "astro" ? col("#8a7a60") : shade(body, 0.55);
@@ -22838,6 +22883,13 @@ function drawLights(V, t) {
       const [x, y] = projL(p.lane, p.x + 8, LY(p.lane, p.x) - 4, VSIDE.p);
       if (hasPw("shield")) g(x, y, 70, C.mint, 0.25);
       if (hasPw("speed")) g(x, y, 60, col("#ffd040"), 0.3);
+    }
+    // (v1.4.29) A SOFT LIGHT ON EVERY CUSTOMER: so their faces and clothes read clearly, even far from the lamps
+    for (const c of customers) {
+      if (c.alpha < 0.3) continue;
+      const s2 = pS(c.lane, c.x, VSIDE.c),
+        [lx2, ly2] = projL(c.lane, c.x + 4, LY(c.lane, c.x) - 52, VSIDE.c);
+      g(lx2, ly2, 62 * s2, warm, 0.12 * clamp(c.alpha, 0, 1));
     }
     // customers who glow: miners' head lamps, robots' eyes, aliens' antennae
     for (const c of customers) {
@@ -60874,7 +60926,7 @@ function drawEggs(g, s) {
 // THE VERSION (from v1.2.0, 5 October 2026): MAJOR.MINOR.PATCH - a new MINOR for a batch of new things, a new PATCH for
 // fixes and small touches - with the day it was made next to it. (Before this the versions were named after the date,
 // like v2026.10.05c.)
-const GAME_VERSION = "v1.4.28",
+const GAME_VERSION = "v1.4.29",
   GAME_DATE = "10.10.2026",
   VERSION_TEXT = GAME_VERSION + "  ·  " + GAME_DATE;
 const FB = '"Chakra Petch", "Segoe UI", sans-serif';
@@ -67225,6 +67277,17 @@ profWire();
 //  the game, and where the motion capture, the folk songs and the fonts come from. Both from the menu at any time.
 // =====================================================================================
 const NEWS = [
+  {
+    ver: "v1.4.29",
+    title: "BETTER-LOOKING CUSTOMERS",
+    items: [
+      "SOFT SHADING ON CLOTHES",
+      "A RIM OF LIGHT ROUND EVERYONE",
+      "FACES LIT SO THEY READ CLEARLY",
+      "RUNNING CATCH: MEET AN EMPTY EARLY FOR DOUBLE POINTS",
+      "CATCH CHAIN: EMPTIES CAUGHT IN A ROW SCORE MORE",
+    ],
+  },
   {
     ver: "v1.4.28",
     title: "A STAGE FOR EVERY STOP",

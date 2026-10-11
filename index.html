@@ -554,6 +554,7 @@ const PROFILE_KEYS = new Set([
   "pet",
   "taBest",
   "rushBest",
+  "rushBest10",
   "mice",
   "petGrow",
   "petGrowInit",
@@ -3459,9 +3460,9 @@ const DICT_ROWS                             = [
     "NIE MASZ OCHOTY?  NACIŚNIJ ESC (LUB K), BY POMINĄĆ TĘ MINIGRĘ",
   ],
   [
-    "BOSS RUSH!  ALL SIX BOSSES, ONE AFTER ANOTHER",
-    "BAAS-STORMLOOP!  AL SES BASE, EEN NA DIE ANDER",
-    "SZTURM NA BOSSÓW!  WSZYSTKICH SZEŚCIU, JEDEN PO DRUGIM",
+    "BOSS RUSH!  ALL TEN BOSSES, ONE AFTER ANOTHER",
+    "BAAS-STORMLOOP!  AL TIEN BASE, EEN NA DIE ANDER",
+    "SZTURM NA BOSSÓW!  WSZYSTKICH DZIESIĘCIU, JEDEN PO DRUGIM",
   ],
 ];
 // the texts that carry numbers or names: patterns
@@ -3525,22 +3526,22 @@ const DICT_PAT                             = [
     "PIĘĆDZIESIĘCIU OBSŁUŻONYCH W $1!  REKORD $2",
   ],
   [
-    /^ALL SIX BOSSES BEATEN IN ([\d:.]+)!  A NEW BEST TIME!$/,
-    "AL SES BASE VERSLAAN IN $1!  'N NUWE BESTE TYD!",
-    "WSZYSCY SZEŚCIU BOSSOWIE POKONANI W $1!  NOWY REKORD!",
+    /^ALL TEN BOSSES BEATEN IN ([\d:.]+)!  A NEW BEST TIME!$/,
+    "AL TIEN BASE VERSLAAN IN $1!  'N NUWE BESTE TYD!",
+    "WSZYSTKICH DZIESIĘCIU BOSSÓW POKONANO W $1!  NOWY REKORD!",
   ],
   [
-    /^ALL SIX BOSSES BEATEN IN ([\d:.]+)!$/,
-    "AL SES BASE VERSLAAN IN $1!",
-    "WSZYSCY SZEŚCIU BOSSOWIE POKONANI W $1!",
+    /^ALL TEN BOSSES BEATEN IN ([\d:.]+)!$/,
+    "AL TIEN BASE VERSLAAN IN $1!",
+    "WSZYSTKICH DZIESIĘCIU BOSSÓW POKONANO W $1!",
   ],
   [/^BOSS (\d+) \/ (\d+)$/, "BAAS $1 / $2", "BOSS $1 / $2"],
   [/^TIME ATTACK: 50 SERVED IN ([\d:.]+)$/, "TYDJAG: 50 BEDIEN IN $1", "NA CZAS: 50 OBSŁUŻONYCH W $1"],
   [/^TIME ATTACK: (\d+) \/ (\d+) SERVED$/, "TYDJAG: $1 / $2 BEDIEN", "NA CZAS: OBSŁUŻONO $1 / $2"],
   [
-    /^BOSS RUSH: ALL SIX BOSSES IN ([\d:.]+)$/,
-    "BAAS-STORMLOOP: AL SES BASE IN $1",
-    "SZTURM NA BOSSÓW: WSZYSCY SZEŚCIU W $1",
+    /^BOSS RUSH: ALL TEN BOSSES IN ([\d:.]+)$/,
+    "BAAS-STORMLOOP: AL TIEN BASE IN $1",
+    "SZTURM NA BOSSÓW: WSZYSTKICH DZIESIĘCIU W $1",
   ],
   [
     /^BOSS RUSH: (\d+) OF (\d+) BOSSES BEATEN$/,
@@ -5088,6 +5089,11 @@ const TYPES = [
   { kind: "gulper", speed: 0.45, push: 36, w: 1.0, glutton: true, boss: true, need: 7 },
   { kind: "rogueking", speed: 0.42, push: 34, w: 1.0, glutton: true, boss: true, need: 7 },
   { kind: "hydra", speed: 0.48, push: 34, w: 1.0, glutton: true, boss: true, need: 9 },
+  // (v1.4.33) four alien bosses: the Jelly Queen floats, the Watcher oozes, the Colossus stomps, the Spore Maw creeps
+  { kind: "jellyqueen", speed: 0.5, push: 38, w: 1.0, glutton: true, boss: true, need: 6 },
+  { kind: "watcher", speed: 0.42, push: 36, w: 1.0, glutton: true, boss: true, need: 7 },
+  { kind: "crystal", speed: 0.44, push: 34, w: 1.0, glutton: true, boss: true, need: 8 },
+  { kind: "sporemaw", speed: 0.46, push: 34, w: 1.0, glutton: true, boss: true, need: 8 },
   // VISITORS FROM LONG AGO (v2026.10.03k), stepping out of a shimmer of time at the door: SOCRATES and ARISTOTLE from ancient
   //   Athens, and Roman EMPERORS. Each says thanks in their own language (Greek / Latin) - and something wise, or grand.
   { kind: "socrates", speed: 0.75, push: 125, w: 1.05, ancient: "gr" },
@@ -39575,6 +39581,10 @@ const NICE = {
   gulper: "THE GAS GIANT GULPER",
   rogueking: "THE ROGUE KING",
   hydra: "THE STAR HYDRA",
+  jellyqueen: "THE JELLY QUEEN",
+  watcher: "THE THOUSAND-EYED WATCHER",
+  crystal: "THE CRYSTAL COLOSSUS",
+  sporemaw: "THE SPORE MAW",
   socrates: "SOCRATES",
   aristotle: "ARISTOTLE",
   emperor: "ROMAN EMPEROR",
@@ -39611,7 +39621,19 @@ const PLACE_NAMES = {
   tatras: "THE TATRAS",
   gdansk: "GDANSK",
 };
-const BOSS_KINDS = ["babyblob", "moongiant", "robogob", "gulper", "rogueking", "hydra", "glutton"];
+const BOSS_KINDS = [
+  "babyblob",
+  "jellyqueen",
+  "moongiant",
+  "watcher",
+  "robogob",
+  "crystal",
+  "gulper",
+  "rogueking",
+  "sporemaw",
+  "hydra",
+  "glutton",
+];
 function stickerCats()                                       {
   return [
     {
@@ -39753,7 +39775,19 @@ function dailyAdd(id, v, set ) {
   }
 }
 // ---- BOSSES at the end of each world ----
-const BOSS_AT = { 5: "babyblob", 12: "moongiant", 20: "robogob", 28: "gulper", 32: "rogueking", 38: "hydra" };
+// (v1.4.33: four alien bosses added - 9 the Jelly Queen, 16 the Watcher, 24 the Crystal Colossus, 35 the Spore Maw)
+const BOSS_AT = {
+  5: "babyblob",
+  9: "jellyqueen",
+  12: "moongiant",
+  16: "watcher",
+  20: "robogob",
+  24: "crystal",
+  28: "gulper",
+  32: "rogueking",
+  35: "sporemaw",
+  38: "hydra",
+};
 //   (the Milky Way: the end of the asteroid belt, of the solar system, of the galaxy;
 //    Andromeda: the giant planet PA-99-N2 b, the end of its system at the rogue planet, and the supernova shack)
 // ---- hooks called from the game ----
@@ -40706,6 +40740,8 @@ function kidPanelsInit() {
 //    the Milky Way:  BIG BABY BLOB (the asteroid belt), THE MOON GIANT (the solar system), ROBO-GOBBLER 3000 (the galaxy)
 //    Andromeda:      THE GAS GIANT GULPER (the giant planet), THE ROGUE KING (the planet with no sun),
 //                    THE STAR HYDRA (three heads, three thirsts)
+//    and four aliens in between (v1.4.33): THE JELLY QUEEN (Uranus), THE THOUSAND-EYED WATCHER (TRAPPIST-1),
+//                    THE CRYSTAL COLOSSUS (Janus) and THE SPORE MAW (NGC 206)
 //  (and at the very heart of each galaxy, THE GALACTIC GLUTTON - drawGlutton, at the end of this file)
 //
 //  Every boss: drops in with a THUD, blinks, watches the shake sliding at him and opens wide, gulps, burps, gets
@@ -40883,6 +40919,17 @@ function bossBlob(c, t, M          , H       , a) {
   disc(0, 0, 20 + k * 2, H("#ff8ac0"));
   disc(-6, -6, 6, withA(C.white, 0.22 * a), 4);
   polyline([0, -20, -5, -27, 1, -31, 4, -26], 2.4, H("#c84a8a")); // a single curl
+  // (v1.4.33) and two wobbly alien feelers, with glowing tips that bounce when a shake comes
+  for (const s2 of [-1, 1]) {
+    const wv2 = Math.sin(t * (M.hungry ? 10 : 3) + s2) * 3;
+    polyline([s2 * 10, -16, s2 * 15 + wv2 * 0.4, -28, s2 * 18 + wv2, -36], 2, H("#e86aa8"));
+    disc(s2 * 18 + wv2, -37, 3.4, H("#9affd8"));
+    if (!OUT) {
+      R.setAdd(true);
+      glow(s2 * 18 + wv2, -37, 9, withA(col("#5fffc0"), (0.5 + M.near * 0.4) * a));
+      R.setAdd(false);
+    }
+  }
   bossEye(-8, -3, 6, M, H, "#3a6ad0");
   bossEye(8, -3, 6, M, H, "#3a6ad0");
   const blush = 0.3 + k * 0.3;
@@ -41355,6 +41402,404 @@ function bossHydra(c, t, M          , H       , a) {
   return -150;
 }
 
+// =====================================================================================
+//  FOUR MORE BOSSES (v1.4.33) - stranger, deep-space ALIENS, at stops that had no boss of their own:
+//    level 9  (Uranus)      THE JELLY QUEEN - a glowing space jellyfish who swims in on a crown of light
+//    level 16 (TRAPPIST-1)  THE THOUSAND-EYED WATCHER - a purple slime mound with eyes on stalks, all blinking out of turn
+//    level 24 (Janus)       THE CRYSTAL COLOSSUS - a walking giant of crystal with a heart of light that fills up pink
+//    level 35 (NGC 206)     THE SPORE MAW - a hungry alien flower-beast with petal jaws, puffing glowing spores
+//  Same rules as the others: (0,0) is between his feet (behind the bar), he faces right (towards the shakes), and the
+//  function returns the top of his head (the shake pips go above it).
+// =====================================================================================
+
+// ---- THE JELLY QUEEN: a see-through bell that squeezes and opens as she swims, trailing tentacles ----
+function bossJelly(c, t, M          , H       , a) {
+  const k = M.k,
+    pulse = Math.sin(t * (M.walking ? 4.2 : 2.4)), // (the bell squeezes and opens - that's how a jellyfish swims)
+    bw = 34 + k * 6 + pulse * 3,
+    bh = 26 + k * 3 - pulse * 2,
+    by = -92 - pulse * 3 + Math.sin(t * 1.3) * 3,
+    pink = "#ff7ad8",
+    cyan = "#7af0ff";
+  // the long trailing tentacles, drifting (they stream back behind her as she moves)
+  for (let i = 0; i < 9; i++) {
+    const x0 = -bw * 0.8 + (i * bw * 1.6) / 8,
+      pts           = [];
+    for (let j = 0; j <= 6; j++) {
+      const f = j / 6;
+      pts.push(
+        x0 + Math.sin(t * 2.2 + i * 0.9 + f * 4) * 6 * f - (M.walking ? f * 12 : 0),
+        by + bh * 0.5 + f * (64 + (i % 3) * 10)
+      );
+    }
+    polyline(pts, 2.2 - (i % 2) * 0.6, withA(col(i % 2 ? cyan : pink), 0.55 * a));
+  }
+  // two frilly arms under the bell - they reach out for a coming shake
+  for (const s of [-1, 1]) {
+    const reach = M.hungry ? 24 + M.near * 26 + (s > 0 ? 8 : 0) : 0,
+      pts           = [];
+    for (let j = 0; j <= 7; j++) {
+      const f = j / 7;
+      pts.push(
+        s * 7 + f * reach + Math.sin(t * 3 + f * 5 + s) * 5 * f,
+        by + bh * 0.4 + f * (50 - reach * 0.7)
+      );
+    }
+    polyline(pts, 4.4, withA(col("#e85ac0"), 0.8 * a));
+    for (let j = 2; j < 8; j += 2) disc(pts[j * 2], pts[j * 2 + 1], 3, withA(col(pink), 0.7 * a));
+  }
+  // her glow
+  if (!OUT) {
+    R.setAdd(true);
+    glow(0, by, bw * 2.2, withA(col(pink), (0.12 + k * 0.1 + 0.04 * pulse) * a));
+    R.setAdd(false);
+  }
+  // the bell: see-through, with a scalloped rim
+  disc(0, by, bw, withA(col("#b03aa8"), 0.78 * a), bh);
+  disc(0, by - bh * 0.22, bw * 0.86, withA(col(pink), 0.55 * a), bh * 0.72);
+  for (let i = 0; i < 9; i++) {
+    const x = -bw * 0.9 + (i * bw * 1.8) / 8;
+    disc(
+      x,
+      by + bh * 0.62 + Math.abs(Math.sin(t * 2 + i)) * 2,
+      5,
+      withA(col(i % 2 ? pink : "#c84ab8"), 0.8 * a),
+      3.4
+    );
+  }
+  // inside: four glowing rings (a real moon jelly has four, like a clover) - they light up as she fills up
+  for (let i = 0; i < 4; i++) {
+    const an = (i / 4) * Math.PI * 2 + t * 0.4,
+      lit = k * 4 > i;
+    arc(
+      Math.cos(an) * bw * 0.42,
+      by - bh * 0.42 + Math.sin(an) * bh * 0.16,
+      4.2,
+      0,
+      Math.PI * 1.6,
+      1.8,
+      withA(col(lit ? "#ffe8ff" : "#e08ad8"), (lit ? 0.95 : 0.5) * a),
+      8
+    );
+  }
+  disc(-bw * 0.4, by - bh * 0.55, bw * 0.28, withA(C.white, 0.3 * a), bh * 0.18); // (the shine)
+  // the face
+  bossEye(-10, by + 2, 6, M, H, "#7a2a9a");
+  bossEye(10, by + 2, 6, M, H, "#7a2a9a");
+  disc(-17, by + 9, 3.6, withA(col("#ff4a9a"), (0.3 + k * 0.3) * a), 2.4);
+  disc(17, by + 9, 3.6, withA(col("#ff4a9a"), (0.3 + k * 0.3) * a), 2.4);
+  bossMouth(2, by + 11, 5, M, H, "#5a0a4a");
+  bossDrool(4, by + 16, M, t, a);
+  bossBurpPuff(8, by + 12, M, a, "#ffd0f4");
+  // her crown of light: little glowing pearls on stalks around the top of the bell
+  for (let i = 0; i < 5; i++) {
+    const an = -Math.PI * (0.18 + (0.64 * i) / 4),
+      x0 = Math.cos(an) * bw * 0.8,
+      y0 = by + Math.sin(an) * bh * 0.9,
+      x1 = Math.cos(an) * (bw * 0.8 + 10),
+      y1 = by + Math.sin(an) * (bh * 0.9 + 12) + Math.sin(t * 3 + i) * 1.5;
+    line(x0, y0, x1, y1, 1.4, withA(col("#ffc8f0"), 0.8 * a));
+    disc(x1, y1, 2.8, H(i % 2 ? cyan : "#fff4b0"));
+    if (!OUT) {
+      R.setAdd(true);
+      glow(x1, y1, 9, withA(col(i % 2 ? cyan : "#fff4b0"), (0.5 + 0.3 * Math.sin(t * 4 + i)) * a));
+      R.setAdd(false);
+    }
+  }
+  return by - bh - 20;
+}
+
+// ---- THE THOUSAND-EYED WATCHER: a wobbling slime mound covered in eyes on stalks ----
+function bossWatcher(c, t, M          , H       , a) {
+  const k = M.k,
+    body = "#6a2ab0",
+    lite = "#9a5ae0",
+    ooze = M.walking ? M.step * 0.06 : Math.sin(t * 1.8) * 0.025;
+  bossDust([-22, 22], M, a);
+  push();
+  scaleXY(1 + ooze, 1 - ooze); // (he oozes along, squashing and stretching)
+  // the eyes on stalks, growing out of the top - drawn first, so the stalks come out of the slime
+  const ST = [
+    [-30, -66, -44, -104, 6],
+    [-16, -78, -24, -122, 7],
+    [0, -84, 2, -132, 8],
+    [16, -80, 26, -120, 7],
+    [30, -68, 46, -100, 6],
+    [-38, -50, -60, -78, 5],
+    [38, -52, 60, -82, 5],
+  ];
+  ST.forEach(([bx, by2, ex, ey, r], i) => {
+    const sw = Math.sin(t * 1.6 + i * 1.7) * 4,
+      tx = ex + sw + M.near * 8,
+      ty = ey + Math.cos(t * 1.3 + i) * 2;
+    polyline([bx, by2, (bx + tx) / 2 + sw * 0.5, (by2 + ty) / 2, tx, ty + r * 0.6], 3.6, H(lite));
+    // each eye blinks on its own, and they all look wherever they like - until a shake comes; then they ALL stare at it
+    const Mi           = {
+      ...M,
+      blink: (t * 1.1 + i * 0.37) % 2.9 < 0.14,
+      lx: M.near > 0 || M.drink ? 1 : Math.sin(t * 0.7 + i * 2.1),
+      ly: M.near > 0 || M.drink ? 0.3 : Math.cos(t * 0.5 + i * 1.3) * 0.6,
+    };
+    bossEye(tx, ty, r, Mi, H, ["#ffb000", "#40e080", "#ff4a6a"][i % 3]);
+  });
+  // the mound of slime
+  disc(0, -44, 50 + k * 4, H(body), 44); // (its bottom sits on the floor, behind the bar)
+  disc(-6, -50, 40, H(lite), 32);
+  disc(-18, -68, 12, withA(C.white, 0.22 * a), 7); // (the shine)
+  // glowing freckles
+  for (const [fx, fy] of [
+    [-34, -36],
+    [-24, -58],
+    [30, -60],
+    [36, -30],
+    [-8, -76],
+  ]) {
+    disc(fx, fy, 2.4, H("#e0b0ff"));
+    if (!OUT) {
+      R.setAdd(true);
+      glow(fx, fy, 7, withA(col("#c070ff"), (0.4 + 0.3 * Math.sin(t * 3 + fx)) * a));
+      R.setAdd(false);
+    }
+  }
+  // drips of slime running down his sides
+  for (let i = 0; i < 3; i++) {
+    const f = (t * 0.45 + i * 0.33) % 1,
+      dx = [-42, -30, 40][i],
+      dy = [-44, -62, -48][i];
+    line(dx, dy, dx, dy + f * 16, 3, H(lite));
+    disc(dx, dy + f * 16, 2.6 + f, H(lite));
+  }
+  // the big middle eye
+  bossEye(0, -60, 11, M, H, "#ff4ad0");
+  // the mouth: a wobbly grin - and a toothy cave when a shake is coming
+  const mx = 10,
+    my = -32,
+    open =
+      M.burp > 0
+        ? 0
+        : M.hungry
+          ? 0.5 + M.near * 0.5 + (M.drink ? Math.abs(Math.sin(G.time * 9)) * 0.3 : 0)
+          : M.gulp * 0.4;
+  if (M.burp > 0) disc(mx, my, 8, H("#2a0a3a"), 6 + M.burp * 4);
+  else if (open > 0.05) {
+    disc(mx, my, 17, H("#2a0a3a"), 14 * open);
+    disc(mx + 3, my + 8 * open, 8, H("#ff6f8f"), 5 * open); // (the tongue)
+    for (let i = 0; i < 5; i++) {
+      const tx2 = mx - 12 + i * 6,
+        ty2 = my - 14 * open;
+      tri(tx2 - 2.6, ty2 + 1, tx2 + 2.6, ty2 + 1, tx2, ty2 + 6, H("#f4f0ff"));
+    }
+  } else
+    polyline(
+      [mx - 15, my - 2, mx - 7, my + 3, mx, my + 1, mx + 7, my + 4, mx + 15, my - 1],
+      2.6,
+      H("#2a0a3a")
+    );
+  bossDrool(mx + 4, my + 6, M, t, a);
+  bossBurpPuff(mx + 8, my, M, a, "#d8b0ff");
+  pop();
+  return -140;
+}
+
+// ---- THE CRYSTAL COLOSSUS: a walking giant of crystal; the heart of light in his chest fills up pink ----
+function bossCrystal(c, t, M          , H       , a) {
+  const k = M.k,
+    lt = "#a8d0ff",
+    md = "#5a8ae8",
+    dk = "#2a4a9a";
+  for (const [lx, s] of [
+    [-14, 1],
+    [14, -1],
+  ]) {
+    // heavy crystal legs, one lifted at a time
+    const lift = M.walking ? Math.max(0, M.step * s) * 8 : 0;
+    quad4(lx - 8, -32 - lift, lx + 8, -32 - lift, lx + 10, -lift, lx - 10, -lift, H(md));
+    quad4(lx - 8, -32 - lift, lx, -32 - lift, lx - 2, -lift, lx - 10, -lift, H(lt));
+  }
+  bossDust([-14, 14], M, a);
+  push();
+  translate(0, -30);
+  rotate(M.walking ? M.step * 0.05 : Math.sin(t * 1.1) * 0.015);
+  translate(0, 30);
+  // the arms: crystal blocks; the front one reaches for a coming shake, the back one swings
+  const reach = M.hungry ? 0.5 + M.near * 0.6 : 0,
+    swing = M.walking ? M.step * 0.4 : Math.sin(t * 1.4) * 0.1;
+  const arm = (sx, ang) => {
+    push();
+    translate(sx, -88);
+    rotate(ang);
+    quad4(-7, 0, 7, 0, 6, 34, -6, 34, H(md));
+    quad4(-7, 0, 0, 0, 0, 34, -6, 34, H(lt));
+    tri(-8, 34, 8, 34, 0, 48, H(lt)); // (the hand: a crystal point...)
+    tri(-2, 36, 9, 34, 6, 46, H(dk)); // (...with a thumb)
+    pop();
+  };
+  arm(-40, 0.2 - swing);
+  // the body: a big cut gem
+  poly([-34, -30, 34, -30, 44, -62, 28, -98, -28, -98, -44, -62], H(md));
+  poly([-34, -30, 0, -30, 0, -98, -28, -98, -44, -62], H(lt));
+  tri(0, -30, 34, -30, 44, -62, H(dk));
+  tri(0, -98, 28, -98, 44, -62, H("#7aa8f8"));
+  // the heart of light: blue when he's hungry, filling up pink with every shake
+  const hb = 1 + Math.sin(t * (3 + k * 3)) * 0.08 + M.gulp * 0.3;
+  if (!OUT) {
+    R.setAdd(true);
+    glow(0, -62, 34 * hb, withA(col(k > 0.5 ? "#ff7ad8" : "#7af0ff"), (0.35 + k * 0.3) * a));
+    R.setAdd(false);
+  }
+  poly([0, -76, 12 * hb, -62, 0, -48, -12 * hb, -62], H("#7af0ff"));
+  if (k > 0) poly([0, -62 - 13 * k, 11 * k * hb, -62, 0, -62 + 13 * k, -11 * k * hb, -62], H("#ff7ad8"));
+  // crystals growing from his shoulders
+  for (const s of [-1, 1]) {
+    tri(s * 26, -96, s * 40, -96, s * 38, -122, H(lt));
+    tri(s * 36, -94, s * 48, -92, s * 50, -112, H(md));
+  }
+  arm(40, -0.2 - reach * 1.3 + swing);
+  // the head: a smaller gem with a dark visor and glowing eyes
+  const hy = -114 + (M.walking ? Math.abs(M.step) * 2 : 0);
+  push();
+  translate(2, hy);
+  rotate(M.near * 0.1 - M.gulp * 0.08);
+  poly([-16, 12, 16, 12, 20, -6, 8, -20, -8, -20, -20, -6], H(md));
+  poly([-16, 12, 0, 12, 0, -20, -8, -20, -20, -6], H(lt));
+  for (const [x, h] of [
+    [-8, 12],
+    [2, 18],
+    [11, 10],
+  ])
+    tri(x - 4, -18, x + 4, -18, x, -18 - h, H(x === 2 ? "#ff9ae8" : lt)); // (his crown of crystal)
+  rect(-15, -9, 31, 12, H("#1a2050"));
+  bossEye(-6, -3, 4.4, M, H, "#ff5fd8");
+  bossEye(8, -3, 4.4, M, H, "#ff5fd8");
+  bossMouth(2, 8, 5, M, H, "#1a2a5a");
+  bossDrool(4, 12, M, t, a);
+  bossBurpPuff(8, 8, M, a, "#d8f0ff");
+  pop();
+  pop();
+  // sparkles glinting on his facets
+  if (!OUT) {
+    R.setAdd(true);
+    for (let i = 0; i < 4; i++) {
+      const f = (t * 0.7 + i * 0.25) % 1,
+        tw = Math.sin(f * Math.PI);
+      star([-30, 24, -10, 36][i], [-80, -56, -40, -88][i], 4 * tw, withA(col("#ffffff"), tw * a));
+    }
+    R.setAdd(false);
+  }
+  return hy - 40;
+}
+
+// ---- THE SPORE MAW: an alien flower-beast on creeping roots, with a pod of petal jaws and glowing spores ----
+function bossSpore(c, t, M          , H       , a) {
+  const k = M.k,
+    stem = "#3a8a3a",
+    stemL = "#5ab84a",
+    petal = "#c83a8a",
+    lining = "#ff8ac0";
+  // creeping roots for feet - they wriggle along
+  for (let i = 0; i < 4; i++) {
+    const s = i - 1.5,
+      w = M.walking ? Math.sin(t * 6 + i * 1.6) * 6 : Math.sin(t * 1.5 + i) * 2;
+    polyline([s * 6, -20, s * 14 + w * 0.5, -10, s * 20 + w, 0], 5, H("#2a6a2a"));
+  }
+  bossDust([-20, 20], M, a);
+  // the stem, swaying, and two big leaves
+  const sway = Math.sin(t * 1.2) * 4 + (M.hungry ? M.near * 6 : 0);
+  quad4(-16, -18, 16, -18, 12 + sway, -84, -12 + sway, -84, H(stem));
+  quad4(-16, -18, -4, -18, -2 + sway, -84, -12 + sway, -84, H(stemL));
+  for (const s of [-1, 1]) {
+    push();
+    translate(s * 10 + sway * 0.4, -46);
+    rotate(s * (0.9 + Math.sin(t * 2 + s) * 0.12) + (M.hungry && s > 0 ? -0.4 : 0));
+    disc(0, -22, 9 + k * 2, H(stemL), 24);
+    line(0, -4, 0, -40, 1.4, H("#2a6a2a"));
+    pop();
+  }
+  // the spores, drifting up and glowing
+  if (!OUT) {
+    R.setAdd(true);
+    for (let i = 0; i < 9; i++) {
+      const f = (t * 0.22 + i * 0.111) % 1,
+        x = Math.sin(i * 7.3 + t * 0.8) * (30 + f * 30),
+        y = -60 - f * 110;
+      glow(x, y, 5, withA(col(i % 2 ? "#d8ff9a" : "#9affe0"), 0.8 * Math.sin(f * Math.PI) * a));
+    }
+    R.setAdd(false);
+  }
+  // the head: a pod with two petal jaws, hinged at the back, that open wide towards a coming shake
+  const hy = -104,
+    open =
+      M.burp > 0
+        ? 0.3 * M.burp
+        : M.hungry
+          ? 0.35 + M.near * 0.4 + (M.drink ? Math.abs(Math.sin(G.time * 9)) * 0.25 : 0)
+          : M.gulp * 0.15 + 0.06 + Math.sin(t * 1.6) * 0.03;
+  const jaw = (up         ) => {
+    const pts           = [];
+    for (let i = 0; i <= 10; i++) {
+      const an = Math.PI * (i / 10);
+      pts.push(26 - Math.cos(an) * 27, (up ? -1 : 1) * Math.sin(an) * (up ? 22 : 16));
+    }
+    poly(pts, H(petal));
+    // the inside lining and a row of teeth along the edge
+    quad4(2, 0, 50, 0, 46, (up ? -1 : 1) * 4, 6, (up ? -1 : 1) * 4, H(lining));
+    for (let i = 0; i < 6; i++) {
+      const x = 8 + i * 7.4;
+      tri(x - 2.4, 0, x + 2.4, 0, x, (up ? 1 : -1) * 6, H("#fff8e8"));
+    }
+    // bristles round the rim, like a flytrap
+    for (let i = 1; i < 10; i += 2) {
+      const an = Math.PI * (i / 10),
+        px = 26 - Math.cos(an) * 27,
+        py = (up ? -1 : 1) * Math.sin(an) * (up ? 22 : 16);
+      line(px, py, px - Math.cos(an) * 7, py + (up ? -1 : 1) * Math.sin(an) * 7, 1.4, H("#ffd0e8"));
+    }
+    // glowing spots
+    for (const [sx, sy] of [
+      [16, 10],
+      [30, 13],
+      [42, 8],
+    ])
+      disc(sx, (up ? -1 : 1) * sy * (up ? 1 : 0.6), 2.2, H("#fff4a0"));
+  };
+  push();
+  translate(-22 + sway, hy);
+  rotate(M.near * 0.08);
+  // inside the mouth (only seen when it's open)
+  if (open > 0.04) {
+    tri(
+      0,
+      0,
+      Math.cos(-open) * 50,
+      Math.sin(-open) * 50,
+      Math.cos(open * 0.6) * 50,
+      Math.sin(open * 0.6) * 50,
+      H("#3a0a2a")
+    );
+    disc(30, 2, 10, H("#ff6f8f"), 4 * Math.min(1, open * 2)); // (the tongue)
+  }
+  push();
+  rotate(open * 0.6);
+  jaw(false);
+  pop();
+  push();
+  rotate(-open);
+  jaw(true);
+  // eyes on short stalks, riding on the top jaw
+  for (const [ex, ey, r] of [
+    [14, -26, 5],
+    [30, -27, 6],
+  ]) {
+    line(ex, -16, ex, ey, 2.6, H(stemL));
+    bossEye(ex, ey, r, M, H, "#2a8a2a");
+  }
+  pop();
+  bossDrool(48, 4, M, t, a);
+  bossBurpPuff(48, -2, M, a, "#d8ff9a");
+  pop();
+  return hy - 44;
+}
+
 const BOSS_DRAW = {
   babyblob: bossBlob,
   moongiant: bossMoon,
@@ -41362,6 +41807,10 @@ const BOSS_DRAW = {
   gulper: bossGulper,
   rogueking: bossRogue,
   hydra: bossHydra,
+  jellyqueen: bossJelly,
+  watcher: bossWatcher,
+  crystal: bossCrystal,
+  sporemaw: bossSpore,
 };
 function drawWorldBoss(c, t, a) {
   const A = (cc) => (a < 1 ? withA(cc, cc[3] * a) : cc),
@@ -41957,6 +42406,14 @@ const STICKER_FACTS = {
   "c:rogueking":
     "Rogue planets wander through space with no star at all. Some were found by the way they bend starlight.",
   "c:hydra": "For a few weeks, one exploding star - a supernova - can outshine a whole galaxy of stars.",
+  "c:jellyqueen":
+    "Uranus spins on its side, so each pole gets about 42 years of sunlight, then 42 years of darkness.",
+  "c:watcher":
+    "The small star TRAPPIST-1 has seven rocky, Earth-sized planets - all closer to it than Mercury is to our Sun.",
+  "c:crystal":
+    "Deep inside Uranus and Neptune, scientists think carbon may be squeezed into diamonds that rain down.",
+  "c:sporemaw":
+    "NGC 206 is the brightest star cloud in the Andromeda galaxy - a crowd of young, hot blue stars.",
   "c:glutton": "The black hole at the centre of our galaxy is about 4 million times heavier than the Sun.",
   "p:tablemountain":
     "Table Mountain's rock is hundreds of millions of years old - far older than the Himalayas.",
@@ -59755,8 +60212,10 @@ function drawCupPanel() {
 //  CHALLENGE MODES (v2026.10.04ar)
 //    TIME ATTACK - serve 50 customers as fast as you can. The clock runs while you play (not while paused); lose all
 //                  your lives and it's over. Your best time is kept (each player profile has its own).
-//    BOSS RUSH   - the six bosses back to back: the Baby Blob, the Moon Giant, Robo-Gob, the Gulper, the Rogue King and
-//                  the Hydra - straight from one boss level to the next (no bonus rounds in between). Your best time too.
+//    BOSS RUSH   - the ten bosses back to back: the Baby Blob, the Jelly Queen, the Moon Giant, the Thousand-Eyed Watcher,
+//                  Robo-Gob, the Crystal Colossus, the Gulper, the Rogue King, the Spore Maw and the Hydra - straight from
+//                  one boss level to the next (no bonus rounds in between). Your best time too (v1.4.33: a new record
+//                  book, "rushBest10", since ten bosses take longer than six).
 // =====================================================================================
 const TA_GOAL = 50,
   RUSH_LEVELS = Object.keys(BOSS_AT)
@@ -59779,7 +60238,7 @@ function modeStart(which               ) {
   callout(
     which === "ta"
       ? "TIME ATTACK!  SERVE " + TA_GOAL + " AS FAST AS YOU CAN"
-      : "BOSS RUSH!  ALL SIX BOSSES, ONE AFTER ANOTHER",
+      : "BOSS RUSH!  ALL TEN BOSSES, ONE AFTER ANOTHER",
     "#ff5fa8",
     2.8
   );
@@ -59827,11 +60286,11 @@ function rushNext() {
   const R0 = G.brush;
   R0.i++;
   if (R0.i >= RUSH_LEVELS.length) {
-    const best = store.get("rushBest", 0),
+    const best = store.get("rushBest10", 0),
       nb = !best || R0.t < best;
-    if (nb) store.set("rushBest", +R0.t.toFixed(1));
+    if (nb) store.set("rushBest10", +R0.t.toFixed(1));
     R0.done = true;
-    callout("ALL SIX BOSSES BEATEN IN " + fmtTime(R0.t) + (nb ? "!  A NEW BEST TIME!" : "!"), "#ffd24d", 3);
+    callout("ALL TEN BOSSES BEATEN IN " + fmtTime(R0.t) + (nb ? "!  A NEW BEST TIME!" : "!"), "#ffd24d", 3);
     gameOver();
     return;
   }
@@ -59871,13 +60330,13 @@ function modesGameOver() {
   if (G.brush)
     add(
       G.brush.done
-        ? "BOSS RUSH: ALL SIX BOSSES IN " + fmtTime(G.brush.t)
+        ? "BOSS RUSH: ALL TEN BOSSES IN " + fmtTime(G.brush.t)
         : "BOSS RUSH: " + G.brush.i + " OF " + RUSH_LEVELS.length + " BOSSES BEATEN"
     );
 }
 function modesMenuText() {
   const ta = store.get("taBest", 0),
-    ru = store.get("rushBest", 0),
+    ru = store.get("rushBest10", 0),
     a = document.getElementById("vTa"),
     b = document.getElementById("vRush");
   if (a) a.textContent = ta ? "BEST " + fmtTime(ta) : "";
@@ -61036,8 +61495,8 @@ function drawEggs(g, s) {
 // THE VERSION (from v1.2.0, 5 October 2026): MAJOR.MINOR.PATCH - a new MINOR for a batch of new things, a new PATCH for
 // fixes and small touches - with the day it was made next to it. (Before this the versions were named after the date,
 // like v2026.10.05c.)
-const GAME_VERSION = "v1.4.32",
-  GAME_DATE = "10.10.2026",
+const GAME_VERSION = "v1.4.33",
+  GAME_DATE = "11.10.2026",
   VERSION_TEXT = GAME_VERSION + "  ·  " + GAME_DATE;
 const FB = '"Chakra Petch", "Segoe UI", sans-serif';
 let FD = '"Bungee", "Impact", sans-serif';
@@ -67413,6 +67872,14 @@ profWire();
 //  the game, and where the motion capture, the folk songs and the fonts come from. Both from the menu at any time.
 // =====================================================================================
 const NEWS = [
+  {
+    ver: "v1.4.33",
+    title: "FOUR ALIEN BOSSES",
+    items: [
+      "THE JELLY QUEEN, THE THOUSAND-EYED WATCHER, THE CRYSTAL COLOSSUS AND THE SPORE MAW",
+      "TEN BOSSES NOW - BOSS RUSH HAS ALL TEN",
+    ],
+  },
   {
     ver: "v1.4.32",
     title: "THE PUSH AND THE DOOR",

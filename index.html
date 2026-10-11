@@ -12653,9 +12653,85 @@ function drawRoom(V, t) {
     }
   });
   kitProps(V, t); // (v1.4.27: this stop's own two big things, standing against the back wall)
-  if (stopKit().floor === 8) {
+  if (stopKit().floor === 8 || stopKit().floor === 9) {
     // (v1.4.28) the glass floor: stars far below drifting slowly past, twinkling, and now and then a comet
+    // (v1.4.34) and more going on down there: clouds of nebula drifting slowly by, a nearer layer of brighter stars
+    //   that slides past faster (so it feels deep), a spiral galaxy turning far below, and glints on the glass
+    const KF = stopKit().floor,
+      inside = (x, y, m) => x > innerAt(X0 - 82, y) + m && x < innerAt(TAPX + 74, y) - m,
+      fy0 = top(L) + 30,
+      fy1 = PH + oy - 10;
     R.setAdd(true);
+    for (let i = 0; i < 6; i++) {
+      const y = fy0 + 20 + hash(i * 5.3 + 1) * (fy1 - fy0 - 40),
+        x = L + ((((hash(i * 2.7) * (Rr - L) - t * (2 + hash(i * 4) * 3)) % (Rr - L)) + (Rr - L)) % (Rr - L)),
+        rr = 26 + hash(i * 7) * 22;
+      if (inside(x, y, rr * 0.6))
+        glow(
+          x,
+          y,
+          rr,
+          withA(col(SP.neb[i % 3]), (0.07 + 0.04 * Math.sin(t * 0.5 + i)) * (KF === 9 ? 0.7 : 1))
+        );
+    }
+    // the spiral galaxy, under the middle of the room
+    const gx = (L + Rr) / 2 + Math.sin(t * 0.05) * 30,
+      gy = fy0 + (fy1 - fy0) * 0.55;
+    glow(gx, gy, 22, withA(col("#fff0d0"), 0.18));
+    for (let arm = 0; arm < 2; arm++)
+      for (let j = 0; j < 14; j++) {
+        const an = t * 0.12 + arm * Math.PI + j * 0.38,
+          rd = 3 + j * 2.6;
+        disc(
+          gx + Math.cos(an) * rd,
+          gy + Math.sin(an) * rd * 0.42,
+          2.6 - j * 0.12,
+          withA(col(SP.neb[arm]), 0.16 - j * 0.008),
+          1.6
+        );
+      }
+    // the near stars: fewer, brighter, faster
+    for (let i = 0; i < 26; i++) {
+      const y = fy0 + hash(i * 6.1 + 3) * (fy1 - fy0),
+        x =
+          L +
+          ((((hash(i * 3.3 + 1) * (Rr - L) - t * (12 + hash(i * 5) * 10)) % (Rr - L)) + (Rr - L)) % (Rr - L));
+      if (inside(x, y, 6)) {
+        const tw = 0.5 + 0.5 * Math.sin(t * (1.5 + hash(i)) + i * 2);
+        rect(x, y, 1.8, 1.8, withA(col(i % 4 ? "#ffffff" : SP.neb[i % 3]), 0.35 + 0.4 * tw));
+        if (i % 5 === 0) glow(x + 0.9, y + 0.9, 5, withA(C.white, 0.15 * tw));
+      }
+    }
+    // each bar's lights reflected in the glass just in front of it - a soft warm band that shimmers
+    for (let i = 0; i < LANES; i++) {
+      const ya = (x) => LYf(i, x) + 30 * LS(i) + 2,
+        xa = innerAt(X0 - 82, ya(L)) + 4,
+        xb = innerAt(TAPX + 74, ya(Rr)) - 4,
+        sh = 0.07 + 0.03 * Math.sin(t * 1.7 + i * 1.3);
+      quad4(
+        xa,
+        ya(xa),
+        xb,
+        ya(xb),
+        xb,
+        ya(xb) + 14,
+        xa,
+        ya(xa) + 14,
+        withA(C.cream, sh),
+        withA(C.cream, sh),
+        withA(C.cream, 0),
+        withA(C.cream, 0)
+      );
+    }
+    // glints: now and then the lamp light catches the glass
+    for (let i = 0; i < 3; i++) {
+      const ph = (t * 0.3 + i * 0.37) % 1;
+      if (ph < 0.15) {
+        const x = L + hash(i * 9.1 + Math.floor(t * 0.3 + i * 0.37)) * (Rr - L),
+          y = fy0 + hash(i * 4.7 + Math.floor(t * 0.3 + i * 0.37)) * (fy1 - fy0);
+        if (inside(x, y, 8)) star(x, y, 5 * Math.sin((ph / 0.15) * Math.PI), withA(C.white, 0.6));
+      }
+    }
     for (let i = 0; i < 70; i++) {
       const y = top(L) + 10 + hash(i * 3.7) * (PH + oy - top(L)),
         x = L + ((((hash(i * 1.9) * (Rr - L) - t * (3 + hash(i) * 6)) % (Rr - L)) + (Rr - L)) % (Rr - L));
@@ -15531,28 +15607,67 @@ function barRail(v, lane, V, a, b, ya, yb) {
   }
 }
 
+// (v1.4.34) the deep space seen through a glass floor: this stop's sky colour with big soft clouds of nebula in its
+// own colours. It's worked out from where the point is on the screen, so neighbouring panes match up.
+function glassDeep(x, y, SP) {
+  const n1 = Math.max(0, Math.sin(x * 0.011 + y * 0.019 + 1.3) * Math.sin(x * 0.006 - y * 0.014 + 0.4)),
+    n2 = Math.max(0, Math.sin(x * 0.008 - y * 0.023 + 2.1) * Math.cos(x * 0.0045 + y * 0.012)),
+    n3 = Math.max(0, Math.sin(x * 0.017 + y * 0.009 + 4.2));
+  let c = mix(col(SP.sky[0]), col("#000004"), 0.25);
+  c = mix(c, col(SP.sky[1] || SP.sky[0]), 0.35 * n3);
+  c = mix(c, col(SP.neb[0]), 0.42 * n1);
+  c = mix(c, col(SP.neb[1]), 0.3 * n2);
+  return c;
+}
 // ---- each planet's floor: diner checkerboard, truck-stop boards, mine stone, garden flagstones with moss,
 //      ice tiles, station grating, lounge carpet, a ship's wet deck ----
 function floorTile(v, V, dark, h, lit, ax, ay, bx, by, cx, cy, dx, dy, k, r) {
   const Q = (c) => quad4(ax, ay, bx, by, cx, cy, dx, dy, c),
     mid = (f, g) => [ax + (bx - ax) * f + (dx - ax) * g, ay + (by - ay) * f + (dy - ay) * g];
-  if (v === 8) {
-    // (v1.4.28) A GLASS FLOOR: thick panes of glass with the cosmos far below - deep space, a drift of nebula, stars
-    // big and small - thin bright seams where the panes meet, and a faint sheen on the glass
+  if (v === 8 || v === 9) {
+    // (v1.4.28) A GLASS FLOOR: thick panes of glass with the cosmos far below.
+    // (v1.4.34) Now much clearer: the panes are barely tinted, and what's below is one big painting of deep space that
+    //   runs on from pane to pane - clouds of nebula in this stop's own colours (each corner of each pane takes its
+    //   colour from the same big pattern, so the tiles join up into one sky), stars big and small, thin bright seams.
+    // 9 = A GLASS WALKWAY: the same glass, framed by riveted steel beams, with little blue lights at the joins
     const [mx, my] = mid(0.5, 0.5),
-      SP = spaceOf(venue()),
-      neb = col(SP.neb[Math.floor(hash(mx * 0.013) * 3) % 3]);
-    Q(mix(col(SP.sky[0]), col("#02020a"), 0.4));
-    disc(mx, my, 26, withA(neb, 0.06 + 0.06 * hash(k * 1.7 + r)), 10); // (a wisp of nebula below)
-    for (let i = 0; i < 4; i++) {
+      SP = spaceOf(venue());
+    quad4(
+      ax,
+      ay,
+      bx,
+      by,
+      cx,
+      cy,
+      dx,
+      dy,
+      glassDeep(ax, ay, SP),
+      glassDeep(bx, by, SP),
+      glassDeep(cx, cy, SP),
+      glassDeep(dx, dy, SP)
+    );
+    for (let i = 0; i < 5; i++) {
       const [sx, sy] = mid(hash(k * 3.1 + r * 7 + i), hash(k * 5.3 + r * 2 + i * 9)),
-        big = hash(k + r * 3 + i * 5) > 0.8;
-      rect(sx, sy, big ? 1.6 : 0.9, big ? 1.6 : 0.9, withA(C.white, 0.35 + 0.5 * hash(i + k * 2.2)));
+        big = hash(k + r * 3 + i * 5) > 0.82;
+      rect(sx, sy, big ? 1.6 : 0.9, big ? 1.6 : 0.9, withA(C.white, 0.35 + 0.55 * hash(i + k * 2.2)));
+      if (big) disc(sx + 0.8, sy + 0.8, 3, withA(col("#cfe0ff"), 0.12)); // (a bright one, with a little halo)
     }
-    Q(withA(col("#9fd8ff"), dark ? 0.05 : 0.08)); // (the tint of the glass)
-    line(ax, ay, bx, by, 0.8, withA(col("#bfe8ff"), 0.4));
-    line(ax, ay, dx, dy, 0.8, withA(col("#bfe8ff"), 0.3));
-    quad4(ax, ay, bx, by, bx, by + 1.2, ax, ay + 1.2, withA(C.white, 0.08));
+    Q(withA(col("#9fd8ff"), dark ? 0.02 : 0.04)); // (the faint tint of the glass)
+    if (v === 9) {
+      // the steel beams along two edges of every pane (so together they make a grid), with rivets and a lit edge
+      line(ax, ay, bx, by, 3.2, col("#3a4252"));
+      line(ax, ay - 1.2, bx, by - 1.2, 0.8, withA(col("#c8d4e8"), 0.5));
+      line(ax, ay, dx, dy, 2.6, col("#323a48"));
+      line(ax + 1, ay, dx + 1, dy, 0.7, withA(col("#c8d4e8"), 0.35));
+      const [rx2, ry2] = mid(0.5, 0);
+      disc(rx2, ry2, 0.9, col("#8a94a8"));
+      disc(ax, ay, 2.4, col((k + r) % 3 === 0 ? "#5fd0ff" : "#4a5466"), 1.4); // (a blue light at some of the joins)
+    } else {
+      line(ax, ay, bx, by, 0.8, withA(col("#bfe8ff"), 0.4));
+      line(ax, ay, dx, dy, 0.8, withA(col("#bfe8ff"), 0.3));
+      quad4(ax, ay, bx, by, bx, by + 1.2, ax, ay + 1.2, withA(C.white, 0.08));
+    }
+    if (hash(mx * 0.07 + my * 0.13) > 0.93) line(mx - 5, my - 1, mx + 4, my + 1.5, 0.7, withA(C.white, 0.18)); // (a scratch)
     return;
   }
   if (v === 0) {
@@ -42865,7 +42980,7 @@ function drawStopMood(t) {
 const KIT_DOOR = [
   [0, 5, 8, 6],
   [1, 9, 2, 10],
-  [2, 9, 1, 7],
+  [2, 9, 1, 8, 7],
   [3, 10, 9, 6],
   [4, 8, 5, 0],
   [5, 8, 0, 7],
@@ -42905,15 +43020,16 @@ const KIT_WIN = [
 // the floor (0 diner checkerboard, 1 boards, 2 mine stone, 3 flagstones, 4 ice tiles, 5 station grating, 6 carpet,
 // 7 a ship's deck) and the filling machines on the right wall (the same eight kinds)
 // (v1.4.28: 8 = a GLASS FLOOR, with the cosmos showing far below)
+// (v1.4.34: 9 = a GLASS WALKWAY - glass panes in a grid of steel beams - and more stops with see-through floors)
 const KIT_FLOOR = [
-  [0, 8, 5, 4, 6],
-  [1, 2, 7, 3],
-  [2, 1, 7],
-  [3, 1, 2],
+  [0, 8, 5, 9, 4, 6],
+  [1, 8, 2, 9, 7, 3],
+  [2, 9, 1, 7],
+  [3, 8, 1, 9, 2],
   [4, 8, 5, 0, 3],
-  [5, 8, 0, 4, 6],
-  [6, 0, 8, 1, 4],
-  [7, 1, 2, 6],
+  [5, 8, 0, 9, 4, 6],
+  [6, 9, 0, 8, 1, 4],
+  [7, 8, 1, 9, 2, 6],
 ];
 const KIT_TAP = [
   [0, 5, 6],
@@ -61495,7 +61611,7 @@ function drawEggs(g, s) {
 // THE VERSION (from v1.2.0, 5 October 2026): MAJOR.MINOR.PATCH - a new MINOR for a batch of new things, a new PATCH for
 // fixes and small touches - with the day it was made next to it. (Before this the versions were named after the date,
 // like v2026.10.05c.)
-const GAME_VERSION = "v1.4.33",
+const GAME_VERSION = "v1.4.34",
   GAME_DATE = "11.10.2026",
   VERSION_TEXT = GAME_VERSION + "  ·  " + GAME_DATE;
 const FB = '"Chakra Petch", "Segoe UI", sans-serif';
@@ -67872,6 +67988,14 @@ profWire();
 //  the game, and where the motion capture, the folk songs and the fonts come from. Both from the menu at any time.
 // =====================================================================================
 const NEWS = [
+  {
+    ver: "v1.4.34",
+    title: "SEE-THROUGH FLOORS",
+    items: [
+      "CLEARER GLASS FLOORS WITH NEBULAS, STARS AND A GALAXY BELOW",
+      "NEW GLASS WALKWAY FLOOR - TEN STOPS NOW HAVE SEE-THROUGH FLOORS",
+    ],
+  },
   {
     ver: "v1.4.33",
     title: "FOUR ALIEN BOSSES",

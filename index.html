@@ -7034,8 +7034,21 @@ function updatePowers(dt, demo) {
 const FLY_IGN = 0.5; // (v1.4.8) the jetpack and the propeller fire up for half a second before they lift off
 const flyHeight = (F) => {
   const u = Math.max(0, F.t - (F.kind === "jet" || F.kind === "prop" ? FLY_IGN : 0));
+  // (v1.4.36) each takes off in its own way: the JETPACK punches straight up and keeps speeding up; the PROPELLER
+  //   POSTMAN rises gently, bobbing as the rotor bites the air; the others as before
+  if (F.kind === "jet") return Math.min(620, u * 70 + u * u * 95);
+  if (F.kind === "prop")
+    return Math.min(560, u * 34 + u * u * 34 + Math.sin(u * 4.2) * 5 * Math.min(1, u * 2));
   return Math.min(560, u * 42 + u * u * 62);
 }; // (how high a flyer has climbed - the same as characters.ts draws it)
+// (v1.4.36) and how fast they head off towards the door: the jet goes straight up first, then swoops away fast; the
+// postman drifts off slowly
+const flySide = (F) => {
+  const u = Math.max(0, F.t - (F.kind === "jet" || F.kind === "prop" ? FLY_IGN : 0));
+  if (F.kind === "jet") return 230 * clamp((u - 0.3) * 1.4, 0, 1);
+  if (F.kind === "prop") return 95 * Math.min(1, u * 1.2);
+  return 150 * Math.min(1, u * 2);
+};
 const FLY_SAY = {
   jet: ["rocket", "3... 2... 1... LIFT-OFF!", "#ffb030"],
   broom: ["cackle", "HEH-HEH-HEH! OFF I GO!", "#c8a0ff"],
@@ -8464,7 +8477,109 @@ function update(dt) {
       if (c.fly) {
         c.fly.t += dt;
         const ign = c.fly.kind === "jet" || c.fly.kind === "prop" ? FLY_IGN : 0; // (v1.4.8) a moment to fire up first
-        if (c.fly.t > ign) c.x -= 150 * Math.min(1, (c.fly.t - ign) * 2) * dt;
+        if (c.fly.t > ign) c.x -= flySide(c.fly) * dt;
+        // (v1.4.36) THE MOMENT OF LIFT-OFF: the jetpack goes off with a BOOM - a ring of smoke blasting out across the
+        //   bar and a flash; the postman's rotor kicks up a gust, and a few letters flutter out of his satchel
+        if (ign && c.fly.t > ign && !c.fly.boom) {
+          c.fly.boom = true;
+          const [bx, by] = projL(c.lane, c.x, LY(c.lane, c.x) - 4);
+          if (c.fly.kind === "jet") {
+            for (let i = 0; i < 18; i++) {
+              const an = (i / 18) * Math.PI * 2;
+              emit({
+                kind: "puff",
+                x: bx,
+                y: by,
+                vx: Math.cos(an) * rnd(110, 170),
+                vy: Math.sin(an) * rnd(25, 45),
+                life: 0.8,
+                max: 0.8,
+                size: 6,
+                grow: 22,
+                drag: 3,
+                c: [0.9, 0.86, 0.8, 0.6],
+              });
+            }
+            lightFx(bx, by - 20, 160, [1, 0.7, 0.3, 1], 0.35);
+            G.shake = Math.max(G.shake || 0, 3);
+          } else
+            for (let i = 0; i < 3; i++) {
+              const [lx, ly] = projL(c.lane, c.x + 4, LY(c.lane, c.x) - 60);
+              emit({
+                kind: "confetti",
+                x: lx,
+                y: ly,
+                vx: rnd(-50, 50),
+                vy: rnd(-60, -20),
+                life: 2.2,
+                max: 2.2,
+                size: 7,
+                rot: rnd(0, 6),
+                spin: rnd(-6, 6),
+                grav: 70,
+                drag: 1.5,
+                seed: Math.random() * 9,
+                c: [0.98, 0.97, 0.92, 1],
+              });
+            }
+        }
+        // (v1.4.36) the jet's exhaust: a roaring column of fire and a thick trail of smoke; the rotor's downwash
+        //   blowing dust off the bar while the postman is still low
+        if (c.fly.kind === "jet" && c.fly.t > ign) {
+          const [ex, ey] = projL(c.lane, c.x - 6, LY(c.lane, c.x) - 22 - flyHeight(c.fly));
+          lightFx(ex, ey + 14, 110, [1, 0.6, 0.25, 0.5], 0.05); // (the flame lights up the room as he goes)
+          if (Math.random() < dt * 60)
+            emit({
+              kind: "flame",
+              x: ex + rnd(-2, 2),
+              y: ey,
+              vx: rnd(-15, 15),
+              vy: rnd(160, 260),
+              life: rnd(0.15, 0.3),
+              max: 0.3,
+              size: rnd(4, 7),
+              grow: 20,
+              drag: 2,
+              turb: 300,
+              fc: [1, 0.55, 0.15],
+            });
+          if (Math.random() < dt * 22)
+            emit({
+              kind: "puff",
+              x: ex + rnd(-3, 3),
+              y: ey + 14,
+              vx: rnd(-20, 20),
+              vy: rnd(30, 70),
+              life: 1.1,
+              max: 1.1,
+              size: 5,
+              grow: 16,
+              drag: 1.5,
+              c: [0.75, 0.74, 0.72, 0.45],
+            });
+        }
+        if (
+          c.fly.kind === "prop" &&
+          c.fly.t > ign * 0.5 &&
+          flyHeight(c.fly) < 110 &&
+          Math.random() < dt * 26
+        ) {
+          const sd = Math.random() < 0.5 ? -1 : 1,
+            [wx, wy] = projL(c.lane, c.x + sd * rnd(6, 20), LY(c.lane, c.x) - 3);
+          emit({
+            kind: "puff",
+            x: wx,
+            y: wy,
+            vx: sd * rnd(70, 130),
+            vy: rnd(-10, 5),
+            life: 0.5,
+            max: 0.5,
+            size: 3,
+            grow: 10,
+            drag: 2,
+            c: [0.92, 0.95, 1, 0.35],
+          });
+        }
         if (ign && c.fly.t < ign && Math.random() < dt * 40) {
           // firing up: smoke (or wind) bursting out across the counter
           const [fx, fy] = projL(c.lane, c.x + rnd(-14, 14), LY(c.lane, c.x) - 2);
@@ -17156,10 +17271,28 @@ function drawCustomerRaw(c, t) {
     (G.lowg && c.state !== "out" ? G.lowg * (12 + Math.sin(t * 2 + c.ph * 3) * 7) : 0); // (low gravity: everyone floats)
   const fu = c.fly ? Math.max(0, c.fly.t - (c.fly.kind === "jet" || c.fly.kind === "prop" ? FLY_IGN : 0)) : 0,
     fh = c.fly
-      ? Math.min(560, fu * 42 + fu * fu * 62) +
+      ? flyHeight(c.fly) + // (v1.4.36: each kind of flyer climbs its own way - see update.ts)
         (fu === 0 && c.fly.kind !== "bat" ? Math.abs(Math.sin(c.fly.t * 30)) * 1.5 : 0) // (rattling as it fires up)
       : 0,
-    ftilt = c.fly && c.fly.kind !== "bat" ? -0.18 + Math.sin(t * 6 + c.ph) * 0.04 : 0; // (flying away: up and off towards the door)
+    ftilt =
+      !c.fly || c.fly.kind === "bat"
+        ? 0
+        : c.fly.kind === "jet"
+          ? // (v1.4.36) the jet: bolt upright as he blasts off, then leaning harder and harder into the swoop to the door
+            -Math.min(0.6, Math.max(0, fu - 0.25) * 0.7) + Math.sin(t * 9 + c.ph) * 0.025
+          : c.fly.kind === "prop"
+            ? // the postman swings gently under his rotor like a pendulum
+              -0.1 + Math.sin(fu * 2.8) * 0.14 * Math.min(1, fu * 2)
+            : -0.18 + Math.sin(t * 6 + c.ph) * 0.04, // (flying away: up and off towards the door)
+    // (v1.4.36) squash and stretch: the jetpack flyer crouches as it fires up, then shoots up stretched tall
+    fsq =
+      c.fly && c.fly.kind === "jet"
+        ? fu === 0
+          ? 0.07 * Math.min(1, c.fly.t / FLY_IGN)
+          : fu < 0.3
+            ? -0.1 * (1 - fu / 0.3)
+            : 0
+        : 0;
   // lit by the pub's lamps from above: a thin edge of the room's light colour along the top of every customer
   const rimC = mix(LOOK().neon, C.white, 0.5);
   rimC[3] = 0.7 * a * (1 - 0.85 * (G.dark || 0));
@@ -17168,6 +17301,7 @@ function drawCustomerRaw(c, t) {
       push();
       translate(c.x, floorY - lift - fh);
       rotate(ftilt);
+      if (fsq) scaleXY(1 + fsq, 1 - fsq);
       scaleBy(1.12);
       scaleXY(bd.w, bd.h);
       if (c.state === "out" && !c.fly) flipX();
@@ -19420,7 +19554,7 @@ function drawTorsoBase(kind, c, t, A, tw, th, body, L, angry, step) {
     if (c.fly && !OUT) {
       R.setAdd(true);
       for (const dx of [-tw / 2 - 6.5, -tw / 2 - 1.5]) {
-        const fl = (c.fly.t < FLY_IGN ? 8 + c.fly.t * 30 : 22) + Math.sin(t * 40 + dx) * 5; // (v1.4.8) sputtering, then roaring
+        const fl = (c.fly.t < FLY_IGN ? 8 + c.fly.t * 30 : 30) + Math.sin(t * 40 + dx) * 6; // (v1.4.8) sputtering, then roaring
         tri(
           dx - 2.6,
           top + 25,
@@ -19439,6 +19573,25 @@ function drawTorsoBase(kind, c, t, A, tw, th, body, L, angry, step) {
           top + 25 + fl * 0.6,
           withA(col("#fff4b0"), clamp(c.alpha, 0, 1))
         );
+        // (v1.4.36) a blue-white hot core at the nozzle, and bright "shock diamonds" down the flame once it roars
+        tri(
+          dx - 0.8,
+          top + 25,
+          dx + 0.8,
+          top + 25,
+          dx,
+          top + 30,
+          withA(col("#9fd8ff"), clamp(c.alpha, 0, 1))
+        );
+        if (c.fly.t >= FLY_IGN)
+          for (let j = 1; j <= 3; j++)
+            disc(
+              dx,
+              top + 25 + fl * j * 0.22,
+              1.5 - j * 0.3,
+              withA(col("#ffffff"), 0.8 * clamp(c.alpha, 0, 1)),
+              1.1
+            );
         glow(dx, top + 30, 16, withA(col("#ff8a20"), 0.7 * clamp(c.alpha, 0, 1)));
         glow(dx, top + 25 + fl, 9, withA(col("#ffe0a0"), 0.35 * clamp(c.alpha, 0, 1)));
       }
@@ -61884,7 +62037,7 @@ function drawEggs(g, s) {
 // THE VERSION (from v1.2.0, 5 October 2026): MAJOR.MINOR.PATCH - a new MINOR for a batch of new things, a new PATCH for
 // fixes and small touches - with the day it was made next to it. (Before this the versions were named after the date,
 // like v2026.10.05c.)
-const GAME_VERSION = "v1.4.35",
+const GAME_VERSION = "v1.4.36",
   GAME_DATE = "11.10.2026",
   VERSION_TEXT = GAME_VERSION + "  ·  " + GAME_DATE;
 const FB = '"Chakra Petch", "Segoe UI", sans-serif';
@@ -68261,6 +68414,14 @@ profWire();
 //  the game, and where the motion capture, the folk songs and the fonts come from. Both from the menu at any time.
 // =====================================================================================
 const NEWS = [
+  {
+    ver: "v1.4.36",
+    title: "TAKE-OFF!",
+    items: [
+      "THE JETPACK FLYER BLASTS OFF WITH A BOOM, FIRE AND SMOKE",
+      "THE PROPELLER POSTMAN BOBS UP GENTLY - AND DROPS A FEW LETTERS",
+    ],
+  },
   {
     ver: "v1.4.35",
     title: "CASTAWAY: SAILS, SKY AND SWELL",

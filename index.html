@@ -5760,6 +5760,7 @@ const DIFFS = {
     score: 0.75,
     cross: 6,
     catchW: 1.5,
+    easy: true, // (v1.4.42: its own gentler climb through the levels - see paramsRaw)
   },
   normal: {
     name: "NORMAL",
@@ -5862,7 +5863,7 @@ const paramsRaw = () => {
   const L0 = G.endless ? Math.min(20, G.endLvl || 1) : G.level,
     k2 = G.players === 2 ? 1.35 : 1,
     D = DF(); // two bartenders get a busier bar
-  const L = D.kid ? 1 + (L0 - 1) * 0.4 : L0; // KID MODE: the stages get harder much more slowly
+  const L = D.kid ? 1 + (L0 - 1) * 0.4 : D.easy ? 1 + (L0 - 1) * 0.6 : L0; // KID MODE: the stages get harder much more slowly (v1.4.42: EASY a good deal more slowly too)
   // a curve for the 20-stop tour: it climbs quickly through the solar system, then keeps tightening gently out in the galaxy
   const e = 1 - Math.exp(-(L - 1) / 7); // 0 at level 1, 0.73 at 10, 0.93 at 20
   // FRANTIC BUT FAIR: later levels pack the bar fuller and send people in faster and in bigger groups (and RUSH HOURS),
@@ -5881,6 +5882,22 @@ const paramsRaw = () => {
       run: 1.1 + 0.3 * e,
       slide: 1 + 0.15 * e,
     }); // (fewer customers, fewer at once, slow walkers, small groups)
+  // (v1.4.42) EASY, BALANCED: in the later levels Easy got almost as frantic as Normal - and a shake hardly pushed
+  // anyone back any more. Now on Easy the bar fills up less (fewer people at once, smaller groups, longer pauses
+  // between their steps), and a shake still sends a customer a good long way back down the bar, all the way through
+  if (D.easy)
+    return tourLoop({
+      total: Math.round(Math.min(44, 9 + L * 2.6) * k2),
+      maxOn: Math.round(Math.min(11, 3 + L * 0.7) * k2) + rush * 2,
+      spawn: ((1.9 - 1.2 * e) / k2) * D.spawn * (rush ? 0.5 : 1),
+      speed: (1 + 0.9 * e) * D.speed,
+      empty: (200 + 130 * e) * D.empty,
+      pause: 0.9 - 0.4 * e,
+      push: 1.05 - 0.1 * e,
+      group: 0.08 + 0.22 * e,
+      run: 1.05 + 0.3 * e,
+      slide: 1 + 0.15 * e,
+    });
   return tourLoop({
     total: Math.round(Math.min(56, 9 + L * 3) * k2),
     maxOn: Math.round(Math.min(19, 3 + L) * k2) + rush * 4,
@@ -7209,6 +7226,15 @@ function update(dt) {
   }
   if (G.state === "clear") {
     G.clearT -= dt;
+    // (v1.4.42) a jetpack flyer or the propeller postman who was just taking off keeps flying away while the level-
+    // cleared screen shows (instead of hanging frozen in mid-air)
+    for (const c of customers)
+      if (c.fly) {
+        c.fly.t += dt;
+        c.x -= flySide(c.fly) * dt;
+        if (c.fly.t > 2.4 + FLY_IGN) c.alpha -= dt * 0.6;
+      }
+    customers = customers.filter((c) => !c.fly || c.alpha > 0);
     if (Math.random() < dt * 30) confetti(rnd(0, PW), -10, 1);
     if (G.clearT <= 0) {
       if (CUP.match && G.level >= CUP_LEVELS) {
@@ -8455,7 +8481,8 @@ function update(dt) {
           (c.type.sprints ? 1.7 : 1) *
           (c.wolf ? 1.6 : 1) *
           (c.hyde ? 1.6 : 1) *
-          (G.twC || 1);
+          (G.twC || 1) *
+          (DF().easy && c.x > X1 - 170 ? 0.6 : 1); // (v1.4.42: on EASY, near your end they slow right down - time to serve them)
         c.x += v;
         const w0 = c.walk || 0;
         c.walk = w0 + v;
@@ -63267,7 +63294,7 @@ function drawEggs(g, s) {
 // THE VERSION (from v1.2.0, 5 October 2026): MAJOR.MINOR.PATCH - a new MINOR for a batch of new things, a new PATCH for
 // fixes and small touches - with the day it was made next to it. (Before this the versions were named after the date,
 // like v2026.10.05c.)
-const GAME_VERSION = "v1.4.41",
+const GAME_VERSION = "v1.4.42",
   GAME_DATE = "12.10.2026",
   VERSION_TEXT = GAME_VERSION + "  ·  " + GAME_DATE;
 const FB = '"Chakra Petch", "Segoe UI", sans-serif';
@@ -68375,14 +68402,28 @@ function musRamp(from, to, start, dur) {
       e = 0.5 - 0.5 * Math.cos(Math.PI * x); // (an S-curve: eases out of the old level and into the new one)
     curve[i] = Math.max(0.0001, from + (to - from) * e);
   }
-  g.cancelScheduledValues(start);
-  g.setValueAtTime(Math.max(0.0001, g.value), start);
+  // (v1.4.42) NO MORE STUCK SILENCE: a new ramp used to clash with one still running (going to the menu and straight
+  //   back, say) - the browser refused it, and the music could be left turned right down for good. Now whatever is
+  //   still running is cut off cleanly first (holding the level it had reached), and if anything is still refused
+  //   it falls back to a plain ramp; and a watchdog in schedule() turns the music back up if it's ever left too quiet.
+  const cur = Math.max(0.0001, g.value);
   try {
+    if (g.cancelAndHoldAtTime) g.cancelAndHoldAtTime(start);
+    else g.cancelScheduledValues(0);
+    g.setValueAtTime(cur, start);
     g.setValueCurveAtTime(curve, start + 0.01, Math.max(0.05, dur));
   } catch (e) {
-    g.linearRampToValueAtTime(Math.max(0.0001, to), start + dur);
+    try {
+      g.cancelScheduledValues(0);
+      g.setValueAtTime(cur, AC.currentTime);
+      g.linearRampToValueAtTime(Math.max(0.0001, to), AC.currentTime + Math.max(0.05, dur));
+    } catch (e2) {
+      g.value = Math.max(0.0001, to);
+    }
   }
+  MRAMP.end = start + dur + 0.1;
 }
+const MRAMP = { end: 0 }; // (when the last volume ramp finishes - for the watchdog)
 // each tune gets its own echo: timed to its beat, as wet as its style wants
 function setEchoFor(want, now) {
   if (!leadEcho || want < 0) return;
@@ -68433,9 +68474,7 @@ function schedule() {
     SEQ2.loop = 0;
     mus.next = SEQ2.next = now + 0.12;
     if (musicBus && want >= 0) {
-      musicBus.gain.cancelScheduledValues(now);
-      musicBus.gain.setValueAtTime(0.0001, now);
-      musRamp(0.0001, musTarget(want), now + 0.1, JB.open ? 0.6 : want === DEEP_TRACK ? 3.2 : 2);
+      musRamp(0.0001, musTarget(want), now + 0.1, JB.open ? 0.6 : want === DEEP_TRACK ? 3.2 : 2); // (v1.4.42: musRamp clears what came before itself, safely)
     }
     MUSX.lp = -1; // (the filter follows below)
     setEchoFor(want, now);
@@ -68448,6 +68487,16 @@ function schedule() {
     musLP.frequency.setTargetAtTime(lpWant, now, lpWant === 650 ? 0.12 : MUSX.lp === 650 ? 0.45 : 0.8);
     MUSX.lp = lpWant;
   }
+  // (v1.4.42) THE WATCHDOG: a tune that's meant to be playing, no change under way, no ramp running - but the volume
+  //   left far below where it should be? Bring it back up.
+  if (
+    curTrack >= 0 &&
+    MFADE.to === null &&
+    musicBus &&
+    now > MRAMP.end &&
+    musicBus.gain.value < musTarget(curTrack) * 0.5
+  )
+    musRamp(musicBus.gain.value, musTarget(curTrack), now, 1.2);
   const play = curTrack; // (while a change is fading, the old tune plays on)
   if (play < 0) return;
   // (v1.4.14) NO CRACKLE WHEN THE SCREEN IS BUSY: the band is booked further ahead (0.3 s), so a slow frame can't make
@@ -69286,9 +69335,12 @@ function navDir(dx, dy) {
       vy = by - cy,
       along = dx ? vx * dx : vy * dy,
       side = dx ? Math.abs(vy) : Math.abs(vx),
-      lane = dx ? (bh + ch) / 2 : (bw + cw) / 2;
+      lane = dx ? (bh + ch) / 2 : (bw + cw) / 2,
+      // (v1.4.42) going up or down, a button that lies right under the remembered column always wins over one off
+      // to the side - so you stay on the left (or on the right, once you've moved there) all the way down the menu
+      under = !dx && cx >= bx - bw / 2 - 2 && cx <= bx + bw / 2 + 2;
     if (along > 4) {
-      const sc = along + side * (side < lane ? 0.3 : 3);
+      const sc = (dx || under ? 0 : 5000) + along + side * (side < lane ? 0.3 : 3);
       if (sc < bestS) {
         bestS = sc;
         best = b;
@@ -69667,6 +69719,14 @@ profWire();
 //  the game, and where the motion capture, the folk songs and the fonts come from. Both from the menu at any time.
 // =====================================================================================
 const NEWS = [
+  {
+    ver: "v1.4.42",
+    title: "FAIRER EASY, STEADY MUSIC",
+    items: [
+      "EASY STAYS FAIR IN THE LATER LEVELS",
+      "MUSIC NO LONGER STOPS AFTER THE MENU; MENU KEEPS ITS COLUMN; FLYERS FLY ON",
+    ],
+  },
   {
     ver: "v1.4.41",
     title: "THE WAY HOME",

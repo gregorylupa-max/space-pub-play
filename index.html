@@ -12363,6 +12363,7 @@ function draw() {
         drawCustomer(c, t);
         if (c.gold) kidDrawVip(c, t);
         if (c.hurry) drawHurry(c, t);
+        drawNoServe(c, t); // (v1.4.37: a "don't serve me" sign over the devils, demons and vampires)
         if (c.want !== undefined) funOrderBubble(c, t);
         if (c.thief) funThiefFx(c, t);
       }
@@ -23924,6 +23925,7 @@ function drawVert(V, t) {
           drawCustomer(c, t);
           if (c.gold) kidDrawVip(c, t);
           if (c.hurry) drawHurry(c, t);
+          drawNoServe(c, t); // (v1.4.37: a "don't serve me" sign over the devils, demons and vampires)
           if (c.want !== undefined) funOrderBubble(c, t);
           if (c.thief) funThiefFx(c, t);
           funRobWarn(c, t);
@@ -42854,6 +42856,31 @@ function hurryServed(c, s, demo) {
   sfx("chime", c.x, 1);
 }
 // the stopwatch over a hurrying customer's head: a ring running down, green to amber to red, ticking faster at the end
+// (v1.4.37) DON'T SERVE ME! Over the head of every customer you must NOT serve (the devils, demons and vampires): a
+// red "no" sign - a milkshake crossed out - bobbing and pulsing, and a red ring at their feet, so you can tell at a
+// glance. (Refuse them, splash them with holy water or show them the cross instead.)
+function drawNoServe(c, t) {
+  if (!c.type.evil || c.refused || c.state !== "walk" || c.alpha < 0.6 || OUT) return;
+  const fy = c.fy !== undefined ? c.fy : LY(c.lane, c.x) + 22,
+    cx = c.x + 12,
+    cy = fy - 136 + Math.sin(t * 3 + (c.seed || 0) * 9) * 2,
+    pl = 1 + Math.max(0, Math.sin(t * 6)) * 0.08,
+    r = 13 * pl,
+    red = col("#ff2a3a");
+  R.setAdd(true);
+  disc(c.x + 4, fy + 2, 30 + Math.sin(t * 6) * 3, withA(red, 0.2), 7);
+  glow(cx, cy, 28, withA(red, 0.3 + 0.15 * Math.sin(t * 6)));
+  R.setAdd(false);
+  disc(cx, cy, r + 2.4, col("#141020"));
+  disc(cx, cy, r, col("#fff4f0"));
+  // the little milkshake inside
+  quad4(cx - 4, cy - 5, cx + 4, cy - 5, cx + 3, cy + 7, cx - 3, cy + 7, col("#ff8ac0"));
+  disc(cx, cy - 5.5, 4.4, col("#fff8f0"), 2.4);
+  line(cx + 1.5, cy - 7, cx + 4, cy - 12, 1.2, col("#c8302a")); // (its straw)
+  // the red ring and the slash through it
+  arc(cx, cy, r - 1.4, 0, 6.283, 3.2, red, 24);
+  line(cx - r * 0.68, cy - r * 0.68, cx + r * 0.68, cy + r * 0.68, 3.2, red);
+}
 function drawHurry(c, t) {
   const H = c.hurry;
   if (!H || c.state === "out" || c.alpha < 0.6) return;
@@ -62037,8 +62064,8 @@ function drawEggs(g, s) {
 // THE VERSION (from v1.2.0, 5 October 2026): MAJOR.MINOR.PATCH - a new MINOR for a batch of new things, a new PATCH for
 // fixes and small touches - with the day it was made next to it. (Before this the versions were named after the date,
 // like v2026.10.05c.)
-const GAME_VERSION = "v1.4.36",
-  GAME_DATE = "11.10.2026",
+const GAME_VERSION = "v1.4.37",
+  GAME_DATE = "12.10.2026",
   VERSION_TEXT = GAME_VERSION + "  ·  " + GAME_DATE;
 const FB = '"Chakra Petch", "Segoe UI", sans-serif';
 let FD = '"Bungee", "Impact", sans-serif';
@@ -66613,6 +66640,11 @@ function drum(kind, t, bus, accent = 1) {
 // "rim click", the zaps and whoops, a random dripping ping, the danger ticking - sounded like odd beeps in the
 // background (even behind the menu). They're all off; the tunes themselves are untouched.
 const NO_BEEPS = true;
+// (v1.4.37) NO RUSHING: the tempo never changed, but the extra beats the band added during play - the shaker and open
+// hi-hats as your streak built up, the kick on every beat with a boss in the pub, the low pulse when someone got close
+// to your end - made the music SOUND as if it was speeding up. They're all off: each level's tune plays at its own easy
+// pace from start to finish. (The gentler extras - the harmony voice, the counter-melody - stay.)
+const NO_RUSH = true;
 // DANGER MUSIC (v2026.10.04ap): when a customer gets close to your end of the bar, the band brings in a
 // tension layer (never faster) - a ticking hi-hat and a low pulse - and it all relaxes again once the danger is past
 const DNG = { v: 0 };
@@ -66627,7 +66659,7 @@ function dangerUpdate(dt) {
 }
 function tensionStep(t, s, st) {
   const v = DNG.v;
-  if (v < 0.25 || !musicBus) return;
+  if (NO_RUSH || v < 0.25 || !musicBus) return;
   const B2 = musicBus;
   if (!NO_BEEPS && (s % 2 === 0 || v > 0.6)) drum("h", t, B2, 0.25 + 0.5 * v); // (tick tick tick... - v1.4.28: off)
   if (s % 4 === 0) {
@@ -67001,7 +67033,7 @@ function playStep2(tr, t0) {
     if (hasDrums) drum("k", t, B2, 1); // (and a kick under it)
   }
   // (v1.4.7) THE BAND PLAYS ALONG (see MUSX): more of it as the Fever meter fills; heavier with a boss in the pub
-  if (hasDrums && !(lastBar && r >= 0)) {
+  if (hasDrums && !(lastBar && r >= 0) && !NO_RUSH) {
     if (heat > 0.35 && s % 2 === 0) drum("z", t, B2, 0.5 + heat * 0.5);
     if (heat > 0.85 && s % 4 === 2) drum("o", t, B2, 0.7);
     if (MUSX.boss) {
@@ -68414,6 +68446,14 @@ profWire();
 //  the game, and where the motion capture, the folk songs and the fonts come from. Both from the menu at any time.
 // =====================================================================================
 const NEWS = [
+  {
+    ver: "v1.4.37",
+    title: "DON'T SERVE ME!",
+    items: [
+      "A RED NO-SHAKES SIGN OVER THE DEVILS, DEMONS AND VAMPIRES",
+      "THE MUSIC NO LONGER SOUNDS AS IF IT SPEEDS UP DURING A LEVEL",
+    ],
+  },
   {
     ver: "v1.4.36",
     title: "TAKE-OFF!",

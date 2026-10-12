@@ -16011,6 +16011,38 @@ function sideScene(type, edge, dir, py, pr, wAt, y0, y1, t) {
 // ---- a bar: a sloping wooden top, a panelled front and a brass foot rail ----
 function drawCounter(lane, V, t) {
   camLayer("bar" + lane + "," + tourStop(), () => counterBody(lane, V));
+  // (v1.4.38) living light on the bar: a soft strip of the stop's neon glowing on the floor under the front of each bar
+  //   (slowly breathing), and now and then a glint of light running along the polished edge of the top
+  if (OUT || QUAL < 1) return;
+  const a = X0 - 14,
+    b = X1 + 18,
+    ya = LY(lane, a),
+    yb = LY(lane, b),
+    br = 0.11 + 0.04 * Math.sin(t * 1.2 + lane * 1.7);
+  R.setAdd(true);
+  quad4(
+    a + 4,
+    ya + 31,
+    b,
+    yb + 31,
+    b + 10,
+    yb + 42,
+    a + 12,
+    ya + 42,
+    withA(V.neon, br),
+    withA(V.neon, br),
+    withA(V.neon, 0),
+    withA(V.neon, 0)
+  );
+  const ph = (t * 0.13 + lane * 0.27) % 1;
+  if (ph < 0.25) {
+    const f = ph / 0.25,
+      gx = a + (b - a) * f,
+      gy = LY(lane, gx);
+    glowE(gx, gy, 26, 2.5, withA(C.white, 0.35 * Math.sin(f * Math.PI)));
+    glow(gx, gy, 6, withA(C.white, 0.3 * Math.sin(f * Math.PI)));
+  }
+  R.setAdd(false);
 }
 function counterBody(lane, V) {
   const a = X0 - 14,
@@ -16467,6 +16499,40 @@ function drawDoor(lane, t, V) {
   }
 }
 // ---- the filling points on the right wall - every planet has its own machine ----
+// (v1.4.38) a box of metal that looks solid: lit on the left, shading into shadow on the right, a bright edge along
+// its top and a dark one down its right side
+function metalBox(x0, y0, w, h, c) {
+  const lt = mix(c, C.white, 0.28),
+    dk = shade(c, 0.55);
+  quad4(x0, y0, x0 + w * 0.45, y0, x0 + w * 0.45, y0 + h, x0, y0 + h, lt, c, c, lt);
+  quad4(x0 + w * 0.45, y0, x0 + w, y0, x0 + w, y0 + h, x0 + w * 0.45, y0 + h, c, dk, dk, c);
+  rect(x0 + w * 0.18, y0 + 2, 2, h - 4, withA(C.white, 0.35)); // (a long reflection)
+  rect(x0, y0, w, 1.4, withA(C.white, 0.5));
+  rect(x0 + w - 1.4, y0, 1.4, h, withA(C.black, 0.35));
+}
+// (v1.4.38) a glass window into the machine: the shake inside swirling round, bubbles rising (quicker while it pours),
+// its level dipping as it pours, and a shine on the glass
+function shakeJar(x0, y0, w, h, fc, t, lane, pouring) {
+  rect(x0 - 1.5, y0 - 1.5, w + 3, h + 3, col("#1a1a22"));
+  rect(x0, y0, w, h, col("#0c0c14"));
+  const lvl = h * (0.72 + 0.06 * Math.sin(t * 0.7 + lane) - (pouring ? 0.12 + 0.05 * Math.sin(t * 9) : 0)),
+    top = y0 + h - lvl;
+  rect(x0, top, w, lvl, fc);
+  rect(x0, top, w, 1.6, mix(fc, C.white, 0.45)); // (the surface)
+  for (let j = 0; j < 3; j++) {
+    const a = t * (pouring ? 3 : 1.2) + j * 2.1 + lane;
+    polyline(
+      [x0 + 3, top + 4 + j * 5, x0 + w / 2 + Math.sin(a) * 5, top + 6 + j * 5, x0 + w - 3, top + 4 + j * 5],
+      1,
+      withA(mix(fc, C.white, 0.35), 0.6)
+    ); // (the swirl)
+  }
+  for (let j = 0; j < 4; j++) {
+    const f = (t * (pouring ? 1.6 : 0.6) + j * 0.25 + lane * 0.13) % 1;
+    disc(x0 + 4 + ((j * 7) % (w - 6)), top + lvl * (1 - f), 1 + f * 0.6, withA(C.white, 0.5 * (1 - f)));
+  }
+  quad4(x0 + 2, y0, x0 + 6, y0, x0 + 3, y0 + h, x0 + 0.5, y0 + h, withA(C.white, 0.22)); // (the glass shine)
+}
 function drawTap(lane, t, V) {
   const v = stopKit().tap, // (v1.4.27: every stop its own filling machine - stopkit.ts)
     x = TAPX + 30,
@@ -16483,17 +16549,26 @@ function drawTap(lane, t, V) {
     rect(x + 14, y - 30, 8, 22, c1);
     rect(x + 12, y - 36, 12, 8, hand);
   };
+  // (v1.4.38) a soft shadow where the machine stands
+  disc(x + 22, y + 40, 30, withA(C.black, 0.3), 6);
   if (v === 0) {
-    // a chrome soda fountain
-    rect(x, y - 78, 44, 118, col("#2a2a34"));
-    rect(x + 3, y - 75, 38, 112, V.face);
-    rect(x + 8, y - 70, 28, 22, col("#101018"));
-    rect(x + 11, y - 67, 22, 16, fc);
+    // a chrome soda fountain - (v1.4.38) now rounded and shaded like real chrome, with a glass jar on top where you can
+    // see the shake swirling, bubbles rising (faster while it pours), a flavour badge and a drip tray
+    metalBox(x, y - 74, 44, 114, col("#c8ccd8"));
+    disc(x + 22, y - 74, 22, col("#d8dce6"), 8);
+    disc(x + 18, y - 77, 12, withA(C.white, 0.5), 3);
+    shakeJar(x + 8, y - 70, 28, 26, fc, t, lane, pouring);
+    disc(x + 22, y - 30, 7, col("#2a2a34"));
+    disc(x + 22, y - 30, 5.4, fc);
+    disc(x + 20.6, y - 31.4, 1.8, withA(C.white, 0.7)); // (the flavour badge)
+    for (let j = 0; j < 3; j++) rect(x + 6, y - 16 + j * 14, 32, 1.2, withA(C.black, 0.25)); // (panel seams)
+    rect(x - 22, y - 6, 30, 4, C.chromeDk);
+    for (let j = 0; j < 6; j++) rect(x - 20 + j * 5, y - 5.5, 2.4, 1.4, col("#1a1a22")); // (the drip tray's grate)
     spout(C.chrome, C.chromeDk);
     handle(C.chrome);
   } else if (v === 1) {
     // a fuel pump with a rolling counter and a hose
-    rect(x + 2, y - 84, 40, 124, col("#c83a2a"));
+    metalBox(x + 2, y - 84, 40, 124, col("#c83a2a")); // (v1.4.38: shaded, not flat)
     disc(x + 22, y - 84, 20, col("#c83a2a"), 8);
     disc(x + 22, y - 86, 13, col("#f0f0e0"), 6);
     rect(x + 15, y - 88, 14, 4, fc);
@@ -16554,10 +16629,17 @@ function drawTap(lane, t, V) {
     spout(withA(col("#c8f4ff"), 0.9), withA(col("#9fe8ff"), 0.9));
     handle(withA(col("#c8f4ff"), 0.9));
   } else if (v === 5) {
-    // a sleek dispenser with a holo screen
-    rect(x, y - 80, 44, 120, col("#3a3a50"));
-    rect(x + 3, y - 77, 38, 114, col("#5a5a70"));
+    // a sleek dispenser with a holo screen - (v1.4.38) a bevelled, shaded body, glowing neon strips down both edges,
+    // scanlines on the screen and a window showing the shake inside
+    metalBox(x, y - 80, 44, 120, col("#5a5a74"));
     rect(x + 3, y - 77, 38, 3, V.neon);
+    R.setAdd(true);
+    for (const ex of [x + 1, x + 41]) {
+      rect(ex, y - 74, 2, 108, withA(V.neon, 0.55 + 0.2 * Math.sin(t * 2 + lane)));
+      glow(ex + 1, y - 20, 22, withA(V.neon, 0.12));
+    }
+    R.setAdd(false);
+    shakeJar(x + 9, y - 36, 26, 24, fc, t, lane, pouring);
     rect(x + 7, y - 70, 30, 24, col("#05101a"));
     R.setAdd(true);
     for (let j = 0; j < 5; j++)
@@ -16570,12 +16652,15 @@ function drawTap(lane, t, V) {
       );
     glow(x + 22, y - 58, 16, withA(V.neon, 0.25));
     R.setAdd(false);
+    for (let j = 0; j < 8; j++) rect(x + 7, y - 70 + j * 3, 30, 1, withA(C.black, 0.25)); // (scanlines)
+    disc(x + 36, y + 30, 1.8, on ? C.mint : col("#ff5a3a")); // (a status LED)
     spout(C.chrome, C.chromeDk);
     handle(C.chromeDk);
   } else if (v === 6) {
     // a brass lounge machine with a pressure gauge and steam
-    rect(x + 2, y - 60, 40, 100, col("#a07020"));
+    metalBox(x + 2, y - 60, 40, 100, col("#a07020")); // (v1.4.38: shaded brass)
     disc(x + 22, y - 60, 20, col("#c8901a"), 14);
+    disc(x + 17, y - 64, 9, withA(col("#ffe8a0"), 0.4), 4);
     disc(x + 22, y - 78, 4, col("#ffd060"));
     rect(x + 2, y - 60, 40, 3, col("#ffd060"));
     disc(x + 22, y - 40, 8, col("#f0e8d0"));
@@ -16615,9 +16700,18 @@ function drawTap(lane, t, V) {
     }
   }
   if (pouring) {
-    rect(x - 17, y - 26, 4, 18, fc);
+    // (v1.4.38) the pour: a wobbling stream of shake with a glossy highlight, drops splashing off it, and a little
+    // swirl of foam where it lands in the glass
+    const wob = Math.sin(t * 30) * 0.6;
+    quad4(x - 17, y - 26, x - 13, y - 26, x - 13.6 + wob, y - 8, x - 16.4 + wob, y - 8, fc);
+    rect(x - 15.6, y - 26, 1, 17, withA(C.white, 0.45));
+    for (let j = 0; j < 3; j++) {
+      const f = (t * 3 + j / 3) % 1;
+      disc(x - 15 + (j - 1) * 4 * f, y - 10 + f * 3 - Math.sin(f * Math.PI) * 5, 1.1, withA(fc, 1 - f));
+    }
+    disc(x - 15, y - 8, 4 + Math.sin(t * 20) * 0.6, withA(mix(fc, C.white, 0.5), 0.8), 1.6);
     R.setAdd(true);
-    glow(x - 15, y - 12, 10, withA(fc, 0.5));
+    glow(x - 15, y - 12, 12, withA(fc, 0.5));
     R.setAdd(false);
   }
   // the holy water rack: the bottles you have left, on the tap you're standing at
@@ -62064,7 +62158,7 @@ function drawEggs(g, s) {
 // THE VERSION (from v1.2.0, 5 October 2026): MAJOR.MINOR.PATCH - a new MINOR for a batch of new things, a new PATCH for
 // fixes and small touches - with the day it was made next to it. (Before this the versions were named after the date,
 // like v2026.10.05c.)
-const GAME_VERSION = "v1.4.37",
+const GAME_VERSION = "v1.4.38",
   GAME_DATE = "12.10.2026",
   VERSION_TEXT = GAME_VERSION + "  ·  " + GAME_DATE;
 const FB = '"Chakra Petch", "Segoe UI", sans-serif';
@@ -68446,6 +68540,14 @@ profWire();
 //  the game, and where the motion capture, the folk songs and the fonts come from. Both from the menu at any time.
 // =====================================================================================
 const NEWS = [
+  {
+    ver: "v1.4.38",
+    title: "SHINIER MACHINES, LIVING BARS",
+    items: [
+      "SHADED METAL MACHINES WITH THE SHAKE SWIRLING BEHIND GLASS",
+      "A GLOSSY POUR, NEON UNDER THE BARS AND GLINTS ALONG THE TOPS",
+    ],
+  },
   {
     ver: "v1.4.37",
     title: "DON'T SERVE ME!",

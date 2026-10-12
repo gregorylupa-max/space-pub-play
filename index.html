@@ -16523,6 +16523,13 @@ function drawDoor(lane, t, V) {
   }
 }
 // ---- the filling points on the right wall - every planet has its own machine ----
+// (v1.4.40) a rounded thing (a barrel, a cask, a pod) given a shape: a soft highlight down its lit side and shadow down
+// the other (both kept inside the outline)
+function barrelShade(cx, cy, rx, ry) {
+  disc(cx + rx * 0.38, cy, rx * 0.58, withA(C.black, 0.2), ry * 0.94);
+  disc(cx - rx * 0.42, cy - ry * 0.05, rx * 0.32, withA(C.white, 0.16), ry * 0.82);
+  disc(cx - rx * 0.5, cy - ry * 0.2, rx * 0.12, withA(C.white, 0.22), ry * 0.5);
+}
 // (v1.4.38) a box of metal that looks solid: lit on the left, shading into shadow on the right, a bright edge along
 // its top and a dark one down its right side
 function metalBox(x0, y0, w, h, c) {
@@ -16607,7 +16614,11 @@ function drawTap(lane, t, V) {
     rect(x + 4, y + 2, 4, 36, col("#4a3020"));
     rect(x + 36, y + 2, 4, 36, col("#4a3020"));
     disc(x + 22, y - 30, 22, shade(V.face, 1.1), 34);
-    for (const dy of [-52, -30, -8]) line(x + 2, y + dy, x + 42, y + dy, 3, C.chromeDk);
+    barrelShade(x + 22, y - 30, 22, 34); // (v1.4.40: round, lit on one side)
+    for (const dy of [-52, -30, -8]) {
+      line(x + 2, y + dy, x + 42, y + dy, 3, C.chromeDk);
+      line(x + 4, y + dy - 1, x + 22, y + dy - 1, 0.8, withA(C.white, 0.35)); // (the light on each hoop)
+    }
     for (let j = -2; j <= 2; j++)
       line(x + 22 + j * 8, y - 62, x + 22 + j * 8.5, y + 2, 1, withA(C.black, 0.35));
     disc(x + 22, y - 72, 10, fc, 3);
@@ -16627,8 +16638,18 @@ function drawTap(lane, t, V) {
         col(j % 2 ? "#3a8a40" : "#2a6a30")
       );
     }
-    disc(x + 22, y - 36, 22, col("#7a3aa0"), 32);
+    const pp = 1 + Math.sin(t * 2.2 + lane) * 0.04 + (pouring ? Math.sin(t * 14) * 0.03 : 0); // (v1.4.40: the pod breathes - and squeezes as it pours)
+    disc(x + 22, y - 36, 22 * pp, col("#7a3aa0"), 32 * pp);
+    barrelShade(x + 22, y - 36, 22 * pp, 32 * pp);
     disc(x + 18, y - 44, 8, col("#9a5ac0"), 12);
+    R.setAdd(true);
+    for (let j = 0; j < 4; j++)
+      polyline(
+        [x + 22, y - 62 * pp, x + 12 + j * 6, y - 40 + Math.sin(t * 2 + j) * 2, x + 14 + j * 5, y - 10],
+        1,
+        withA(fc, 0.25 + 0.2 * Math.sin(t * 3 + j))
+      ); // (glowing veins)
+    R.setAdd(false);
     R.setAdd(true);
     glow(x + 22, y - 36, 18 + Math.sin(t * 3) * 3, withA(fc, 0.5));
     R.setAdd(false);
@@ -16650,6 +16671,21 @@ function drawTap(lane, t, V) {
     glow(x + 22, y - 40, 20 + Math.sin(t * 2 + lane) * 3, withA(fc, 0.7));
     R.setAdd(false);
     disc(x + 22, y - 40, 6, fc, 10);
+    // (v1.4.40) facets, bubbles rising in the core, twinkles on the edges, a cold mist at its foot
+    line(x + 22, y - 96, x + 22, y + 30, 0.6, withA(C.white, 0.35));
+    line(x + 4, y - 70, x + 22, y - 50, 0.6, withA(C.white, 0.3));
+    line(x + 40, y - 70, x + 22, y - 50, 0.6, withA(C.white, 0.2));
+    for (let j = 0; j < 4; j++) {
+      const f = (t * (pouring ? 1.2 : 0.4) + j * 0.25 + lane * 0.1) % 1;
+      disc(x + 19 + (j % 2) * 6, y - 30 - f * 22, 1 + f * 0.5, withA(C.white, 0.6 * (1 - f)));
+    }
+    R.setAdd(true);
+    for (let j = 0; j < 3; j++) {
+      const tw = Math.max(0, Math.sin(t * 2.5 + j * 2.1 + lane));
+      star([x + 6, x + 38, x + 22][j], [y - 64, y - 20, y - 92][j], 3 * tw, withA(C.white, 0.8 * tw));
+    }
+    glowE(x + 22, y + 32, 30, 5, withA(col("#c8f4ff"), 0.25));
+    R.setAdd(false);
     spout(withA(col("#c8f4ff"), 0.9), withA(col("#9fe8ff"), 0.9));
     handle(withA(col("#c8f4ff"), 0.9));
   } else if (v === 5) {
@@ -16711,7 +16747,11 @@ function drawTap(lane, t, V) {
   } else {
     // a ship's cask with a little wheel for a handle
     disc(x + 22, y - 32, 20, shade(V.face, 1.15), 30);
-    for (const dy of [-54, -32, -10]) line(x + 3, y + dy, x + 41, y + dy, 3, col("#4a4a4a"));
+    barrelShade(x + 22, y - 32, 20, 30); // (v1.4.40)
+    for (const dy of [-54, -32, -10]) {
+      line(x + 3, y + dy, x + 41, y + dy, 3, col("#4a4a4a"));
+      line(x + 5, y + dy - 1, x + 22, y + dy - 1, 0.8, withA(C.white, 0.3));
+    }
     rect(x + 4, y - 4, 36, 44, col("#3a2c1e"));
     disc(x + 22, y - 70, 9, fc, 3);
     spout(col("#8a7a5a"), col("#5a4a2a"));
@@ -17442,6 +17482,39 @@ function drawCustomerRaw(c, t) {
     -1.4
   );
   CAST_SHADOW = null;
+  // (v1.4.40) FEELINGS YOU CAN SEE: steam puffing out of the head of someone about to reach your end of the bar, and
+  //   a burst of little stars and sparkles round someone who's just been served
+  if (!OUT && a > 0.6 && c.state === "walk" && !c.calm && !c.type.boss && !c.type.glutton && c.x > X1 - 150) {
+    const hy2 = floorY - 74 * bd.h, // (from the sides of the head - clear of the "!" warning above it)
+      k2 = clamp((c.x - (X1 - 150)) / 100, 0, 1);
+    for (const sd of [-1, 1])
+      for (let i = 0; i < 3; i++) {
+        const f = (t * 1.6 + i / 3 + (sd > 0 ? 0.17 : 0) + c.ph) % 1;
+        disc(
+          c.x + 2 + sd * (24 + f * 14),
+          hy2 - f * 18,
+          (3 + f * 5) * k2,
+          withA(C.white, 0.8 * (1 - f) * k2),
+          (2.4 + f * 4) * k2
+        );
+      }
+  }
+  if (!OUT && c.joy > 0 && a > 0.5) {
+    const hy2 = floorY - 100 * bd.h,
+      jk = Math.min(1, c.joy * 1.5);
+    R.setAdd(true);
+    for (let i = 0; i < 5; i++) {
+      const an = -Math.PI * (0.1 + (0.8 * i) / 4),
+        rr = 18 + (1 - jk) * 14;
+      star(
+        c.x + 2 + Math.cos(an) * rr,
+        hy2 + Math.sin(an) * rr * 0.8,
+        5.5 * jk,
+        withA(col(["#ffd24d", "#ff8ac0", "#9fffd0"][i % 3]), Math.min(1, jk * 1.5))
+      );
+    }
+    R.setAdd(false);
+  }
   if (c.type.kid && c.state !== "out" && !OUT) {
     const bx = c.x - 8 + Math.sin(t * 1.5 + c.ph) * 4,
       by = floorY - 120 * bd.h - 30 + Math.sin(t * 2 + c.ph) * 3,
@@ -63157,7 +63230,7 @@ function drawEggs(g, s) {
 // THE VERSION (from v1.2.0, 5 October 2026): MAJOR.MINOR.PATCH - a new MINOR for a batch of new things, a new PATCH for
 // fixes and small touches - with the day it was made next to it. (Before this the versions were named after the date,
 // like v2026.10.05c.)
-const GAME_VERSION = "v1.4.39",
+const GAME_VERSION = "v1.4.40",
   GAME_DATE = "12.10.2026",
   VERSION_TEXT = GAME_VERSION + "  ·  " + GAME_DATE;
 const FB = '"Chakra Petch", "Segoe UI", sans-serif';
@@ -69520,6 +69593,14 @@ profWire();
 //  the game, and where the motion capture, the folk songs and the fonts come from. Both from the menu at any time.
 // =====================================================================================
 const NEWS = [
+  {
+    ver: "v1.4.40",
+    title: "FEELINGS YOU CAN SEE",
+    items: [
+      "STEAM FROM FUMING CUSTOMERS, A BURST OF STARS WHEN YOU SERVE",
+      "THE BARREL, CASK, ALIEN POD AND ICE CRYSTAL MACHINES BROUGHT TO LIFE",
+    ],
+  },
   {
     ver: "v1.4.39",
     title: "A BUSY ISLAND, WILD WEATHER",

@@ -64,6 +64,7 @@ button.primary { grid-column: 1 / -1; font-family: var(--display); font-weight: 
   border-color: var(--cyan); box-shadow: 0 0 22px rgba(95, 245, 200, .55); }
 button.primary:hover, button.primary:focus-visible { background: #a6ffe4; }
 button.wide { grid-column: 1 / -1; }
+button.na:not(.navsel) { opacity: .45; border-style: dashed; filter: grayscale(.8); }   /* (v1.4.47) a setting that does nothing in the current look */
 #jbList { grid-template-columns: 1fr 1fr; max-height: 52vh; overflow-y: auto; }
 .panel.side { left: 16px; transform: translateY(-50%); width: min(420px, 46vw); }
 #sbList, #wdHats, #wdPets, #shItems, #shDecor, #trList { grid-template-columns: 1fr 1fr; }
@@ -2063,6 +2064,8 @@ const DICT_ROWS                             = [
   ["SCREEN:", "SKERM:", "EKRAN:"],
   ["CRT TV", "OU TV", "TELEWIZOR CRT"],
   ["FLAT", "PLAT", "PŁASKI"],
+  ["OFF (PIXEL LOOKS ONLY)", "AF (NET PIXEL-VOORKOMS)", "WYŁ. (TYLKO WYGLĄD PIKSELOWY)"],
+  ["SCANLINES", "SKANDERLYNE", "LINIE SKANOWANIA"],
   ["GRAPHICS:", "GRAFIKA:", "GRAFIKA:"],
   ["GPU · HIGH PERFORMANCE", "GPU · HOË WERKVERRIGTING", "GPU · WYSOKA WYDAJNOŚĆ"],
   ["GPU · POWER SAVING", "GPU · KRAGBESPARING", "GPU · OSZCZĘDZANIE ENERGII"],
@@ -4004,6 +4007,19 @@ let lookMode = clamp(store.get("look2", 0) | 0, 0, 2),
   retroLook = lookMode !== 2;
 let crtOn = store.get("crt", true);
 function toggleCrt() {
+  // (v1.4.47) in SMOOTH HD the TV screen does nothing - so pressing it there switches to ARCADE PIXELS with the CRT on,
+  // instead of silently flipping a setting you cannot see
+  if (!retroLook) {
+    lookMode = 0;
+    retroLook = true;
+    store.set("look2", lookMode);
+    crtOn = true;
+    store.set("crt", crtOn);
+    createRenderer(gfx);
+    updateLookText();
+    sfx("click");
+    return;
+  }
   crtOn = !crtOn;
   store.set("crt", crtOn);
   createRenderer(gfx);
@@ -4023,13 +4039,14 @@ function updateLookText() {
   $("vLook").textContent = t;
   $("vLook2").textContent = t;
   $("vCrt").textContent = $("vCrt2").textContent = !retroLook
-    ? "(RETRO LOOKS ONLY)"
+    ? "OFF (PIXEL LOOKS ONLY)"
     : !crtOn
       ? "FLAT"
       : gfx === "cpu"
         ? "SCANLINES"
         : "CRT TV";
   document.body.classList.toggle("retro", retroLook);
+  for (const id of ["bCrt", "pCrt"]) if ($(id)) $(id).classList.toggle("na", !retroLook); // (greyed out in SMOOTH HD)
 }
 
 // =====================================================================================
@@ -54370,24 +54387,10 @@ function drawApproach(t) {
     R.setAdd(false);
   }
   if (Wd.blackhole) {
-    const rr = 70 * k;
-    R.setAdd(true);
-    glow(px, py, rr * 4, withA(col("#c05fff"), 0.15));
-    for (let i = 0; i < 60; i++) {
-      const a = (i / 60) * 6.283 + t * 0.6;
-      disc(
-        px + Math.cos(a) * rr * 2.2,
-        py + Math.sin(a) * rr * 0.5,
-        9 * k,
-        withA(col(i % 3 ? "#ff9a3d" : "#ffd24d"), 0.5)
-      );
-    }
-    for (let i = 0; i < 40; i++) {
-      const a = (i / 40) * 6.283;
-      disc(px + Math.cos(a) * rr * 1.12, py + Math.sin(a) * rr * 1.12, 6 * k, withA(col("#ffc070"), 0.5));
-    }
-    R.setAdd(false);
-    disc(px, py, rr, col("#000000"));
+    // (v1.4.47) SAGITTARIUS A* on the way in: no more rings of dots round a flat black circle - the full, realistic black
+    // hole (drawBlackHole, ending.ts): the black shadow, the thin blazing photon ring, the tilted disc of hot gas
+    // whirling round it with its far side bent up over the top by the gravity, and gas spiralling in
+    drawBlackHole(px, py, 62 * k, t, 1);
   }
   if (Wd.sirius) {
     R.setAdd(true);
@@ -63401,7 +63404,7 @@ function drawEggs(g, s) {
 // THE VERSION (from v1.2.0, 5 October 2026): MAJOR.MINOR.PATCH - a new MINOR for a batch of new things, a new PATCH for
 // fixes and small touches - with the day it was made next to it. (Before this the versions were named after the date,
 // like v2026.10.05c.)
-const GAME_VERSION = "v1.4.46",
+const GAME_VERSION = "v1.4.47",
   GAME_DATE = "13.10.2026",
   VERSION_TEXT = GAME_VERSION + "  ·  " + GAME_DATE;
 const FB = '"Chakra Petch", "Segoe UI", sans-serif';
@@ -68000,6 +68003,10 @@ const NO_BEEPS = true;
 // to your end - made the music SOUND as if it was speeding up. They're all off: each level's tune plays at its own easy
 // pace from start to finish. (The gentler extras - the harmony voice, the counter-melody - stay.)
 const NO_RUSH = true;
+// (v1.4.46) NO ODD NOISES: the planets' non-musical "flavour" effects (anvil clangs, the cartoon boing, the spring-amp
+// twang, the whip crack, the falling siren, the zaps and the randomly-timed chime pings) sounded like stray, unwanted
+// sounds over the tune - all switched off; only the musical ones (timpani, bells, the little bell arpeggio, waves) stay
+const NO_ODD = true;
 // DANGER MUSIC (v2026.10.04ap): when a customer gets close to your end of the bar, the band brings in a
 // tension layer (never faster) - a ticking hi-hat and a low pulse - and it all relaxes again once the danger is past
 const DNG = { v: 0 };
@@ -68399,11 +68406,11 @@ function playStep2(tr, t0) {
     }
   }
   // ---- the special sounds that give each planet its flavour ----
-  if (tr.extra === "anvil" && s === 12 && bar % 2 === 1)
+  if (tr.extra === "anvil" && s === 12 && bar % 2 === 1 && !NO_ODD)
     for (const k of [1, 2.76, 5.4]) tone("sine", 820 * k, 810 * k, 0.6, 0.05 / k, B2, t);
   if (tr.extra === "anvil" && s === 6 && Math.random() < 0.25 && !NO_BEEPS)
     tone("sine", 2400 + Math.random() * 800, 2300, 0.3, 0.025, leadBus, t); // water dripping in the dark
-  if (tr.extra === "boing" && bar % 4 === 3 && s === 14) {
+  if (tr.extra === "boing" && bar % 4 === 3 && s === 14 && !NO_ODD) {
     const o = AC.createOscillator(),
       g = AC.createGain();
     o.type = "sine";
@@ -68423,21 +68430,22 @@ function playStep2(tr, t0) {
         tone("sine", mf(root - 5) * 2, mf(root - 5) * 2, 0.15, 0.12 + i * 0.03, B2, t + st * (8 + i));
   }
   if (tr.extra === "waves" && s === 0 && bar % 4 === 0) noise(st * 40, 0.05, 600, 300, B2, t);
-  if (tr.extra === "spring" && s === 14 && bar % 4 === 3) {
+  if (tr.extra === "spring" && s === 14 && bar % 4 === 3 && !NO_ODD) {
     noise(0.5, 0.05, 4000, 600, B2, t, "bandpass");
     tone("sawtooth", 300, 90, 0.4, 0.03, B2, t);
   } // the surf amp's spring reverb, kicked
-  if (tr.extra === "whip" && s === 0 && bar === 0) {
+  if (tr.extra === "whip" && s === 0 && bar === 0 && !NO_ODD) {
     noise(0.06, 0.3, 6000, 3000, B2, t, "highpass");
     if (!NO_BEEPS) tone("square", 2200, 800, 0.05, 0.03, B2, t);
   }
   if (tr.extra === "whip" && s === 6 && bar % 4 === 3)
     for (let i = 0; i < 3; i++) ping(mf(84 + [0, 4, 7][i]), 0.6, 0.02, B2, t + i * st); // a little bell
-  if (tr.extra === "chimes" && s % 4 === 0 && Math.random() < 0.3)
+  if (tr.extra === "chimes" && s % 4 === 0 && Math.random() < 0.3 && !NO_ODD)
     ping(mf(84 + (tones[Math.floor(Math.random() * tones.length)] % 12)), 1.6, 0.018, leadBus, t);
   if (tr.extra === "zap" && s === 12 && bar % 2 === 1 && !NO_BEEPS)
     tone("square", 2400, 300, 0.25, 0.02, leadBus, t);
-  if (tr.extra === "siren" && s === 0 && bar % 4 === 0) tone("sine", 900, 120, st * 30, 0.03, B2, t); // something falling in, forever
+  if (tr.extra === "siren" && s === 0 && bar % 4 === 0 && !NO_ODD)
+    tone("sine", 900, 120, st * 30, 0.03, B2, t); // something falling in, forever
   if (tr.extra === "bells" && s === 0 && bar % 2 === 0)
     for (const k of [1, 2.4, 3]) ping(mf(72 + pc) * k, 2.2, 0.03 / k, B2, t);
 }
@@ -69855,6 +69863,15 @@ profWire();
 //  the game, and where the motion capture, the folk songs and the fonts come from. Both from the menu at any time.
 // =====================================================================================
 const NEWS = [
+  {
+    ver: "v1.4.47",
+    title: "CLEAN MUSIC, A REAL SAGITTARIUS A*",
+    items: [
+      "NO MORE STRAY CLANGS, BOINGS AND PINGS OVER THE MUSIC",
+      "SAGITTARIUS A* LOOKS LIKE A REAL BLACK HOLE",
+      "THE SCREEN OPTION IS GREYED OUT IN SMOOTH HD",
+    ],
+  },
   {
     ver: "v1.4.46",
     title: "STEADY NEON, A PROPER GENERATOR MAN",

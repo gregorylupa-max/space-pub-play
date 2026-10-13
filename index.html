@@ -62445,7 +62445,8 @@ function attractTick(dt) {
       !CS.open &&
       !SB.open &&
       !WD.open &&
-      !fpAny()
+      !fpAny() &&
+      $("bye").hidden // (v1.4.43: not behind the goodbye screen)
     )
       startAttract();
     return;
@@ -63294,8 +63295,8 @@ function drawEggs(g, s) {
 // THE VERSION (from v1.2.0, 5 October 2026): MAJOR.MINOR.PATCH - a new MINOR for a batch of new things, a new PATCH for
 // fixes and small touches - with the day it was made next to it. (Before this the versions were named after the date,
 // like v2026.10.05c.)
-const GAME_VERSION = "v1.4.42",
-  GAME_DATE = "12.10.2026",
+const GAME_VERSION = "v1.4.43",
+  GAME_DATE = "13.10.2026",
   VERSION_TEXT = GAME_VERSION + "  ·  " + GAME_DATE;
 const FB = '"Chakra Petch", "Segoe UI", sans-serif';
 let FD = '"Bungee", "Impact", sans-serif';
@@ -68967,6 +68968,25 @@ function exitGame() {
   setTimeout(() => $("byeBack").focus(), 50);
 }
 $("bExit").onclick = exitGame;
+// (v1.4.43) EXIT GAME only where it can really close the game: in the Windows app, or the game installed as an app (its
+// own window). In an ordinary browser tab a page isn't allowed to close itself - you just close the tab - so there the
+// button is left out, rather than leading to a "thanks for playing" screen you then have to leave again.
+{
+  let canExit = false;
+  try {
+    canExit =
+      !!(window.chrome && window.chrome.webview) ||
+      window.matchMedia("(display-mode: standalone)").matches ||
+      window.matchMedia("(display-mode: fullscreen)").matches ||
+      !!(navigator       ).standalone;
+  } catch (e) {
+    canExit = false;
+  }
+  if (!canExit) {
+    $("bExit").hidden = true;
+    $("bFull").classList.add("wide"); // (so FULL SCREEN fills the row it used to share)
+  }
+}
 $("byeBack").onclick = () => {
   $("bye").hidden = true;
   const b = $("bExit");
@@ -69268,6 +69288,10 @@ funPanelsInit();
 // =====================================================================================
 function visiblePanel() {
   return [
+    // (v1.4.43) the goodbye screen after EXIT GAME ("THANKS FOR PLAYING!") and the "game got stuck" box sit on top of
+    // everything: the gamepad and the keys work their buttons first
+    "bye",
+    "crash",
     "breakp",
     "chars",
     "jukebox",
@@ -69403,6 +69427,10 @@ function navPress() {
   return false;
 }
 function navBack() {
+  if (!$("bye").hidden) {
+    $("byeBack").click(); // (v1.4.43: B on the goodbye screen - back to the game)
+    return;
+  }
   if (CS.open) closeChars();
   else if (JB.open) closeJukebox();
   else if (SB.open) closeStickers();
@@ -69411,16 +69439,18 @@ function navBack() {
   else if (G.state === "paused") pause(false);
 }
 const panelNav = () =>
-  !ATTRACT.on &&
-  (CS.open ||
-    JB.open ||
-    SB.open ||
-    WD.open ||
-    fpAny() ||
-    BRK.open ||
-    G.state === "menu" ||
-    G.state === "paused" ||
-    (G.state === "over" && $("nameForm").hidden));
+  !$("bye").hidden || // (v1.4.43: the goodbye screen and the "stuck" box always take the controller and the keys)
+  !$("crash").hidden ||
+  (!ATTRACT.on &&
+    (CS.open ||
+      JB.open ||
+      SB.open ||
+      WD.open ||
+      fpAny() ||
+      BRK.open ||
+      G.state === "menu" ||
+      G.state === "paused" ||
+      (G.state === "over" && $("nameForm").hidden)));
 window.addEventListener(
   "keydown",
   (e) => {
@@ -69719,6 +69749,11 @@ profWire();
 //  the game, and where the motion capture, the folk songs and the fonts come from. Both from the menu at any time.
 // =====================================================================================
 const NEWS = [
+  {
+    ver: "v1.4.43",
+    title: "NO DEAD END",
+    items: ["EXIT GAME ONLY WHERE IT CAN REALLY CLOSE THE GAME", "THE GOODBYE SCREEN WORKS WITH THE GAMEPAD"],
+  },
   {
     ver: "v1.4.42",
     title: "FAIRER EASY, STEADY MUSIC",

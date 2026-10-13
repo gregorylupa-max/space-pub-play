@@ -8749,6 +8749,7 @@ function update(dt) {
       else if (c.left <= 0) {
         c.state = "drink";
         c.drinkT = 1.0;
+        c.stopT = G.time; // (v1.4.44: the skid as they come to a stop - characters.ts)
       }
     } else if (c.state === "drink") {
       c.drinkT -= dt;
@@ -8756,6 +8757,7 @@ function update(dt) {
         c.state = "walk";
         c.moving = false;
         c.timer = 0.5;
+        c.slideT = G.time; // (v1.4.44: the hand that slides the empty back - characters.ts)
         empties.push({ lane: c.lane, x: c.x + 26, spin: 0 });
         sfx("clink");
         if ((c.type.tipper || Math.random() < 0.18) && !tips.some((t) => t.lane === c.lane))
@@ -17816,6 +17818,16 @@ function customerBody(c, t, a) {
       eyes = "happy";
     }
   }
+  // (v1.4.44) THE SKID: shoved back by a shake, they don't just stop dead - momentum carries them on, they rock back,
+  // wobble and settle, arms out for balance
+  const skid = c.stopT !== undefined ? G.time - c.stopT : 9;
+  if (skid < 0.55) {
+    const w = Math.exp(-skid * 6.5) * Math.cos(skid * 17);
+    lean += -0.26 * w;
+    tilt += -0.1 * w;
+    squash *= 1 - 0.06 * Math.max(0, w);
+    eyes = "wide";
+  }
   if (showing) {
     lift = Math.abs(Math.sin(dance)) * 3.5;
     hipX = Math.sin(dance * 0.5) * 2.5;
@@ -18467,6 +18479,11 @@ function customerBody(c, t, a) {
   if (hop) {
     far = { a1: -1.9 - hop * 0.3, a2: -0.4 };
   }
+  // (v1.4.44) arms flung out for balance in the skid
+  if (skid < 0.45 && !pushed) {
+    const fl = Math.sin(skid * 22) * 0.4;
+    far = { a1: -2.3 + fl, a2: -0.3 };
+  }
   if (drink) {
     const dk = 1 - c.drinkT;
     glass = { full: dk < 0.85 ? 1 - dk * 0.9 : 0.15 };
@@ -18478,6 +18495,12 @@ function customerBody(c, t, a) {
       near = { tx: tw / 2 + 10, ty: shY + 12 };
       far = { tx: 6, ty: -th - 7 };
     } // wipe the mouth
+  }
+  // (v1.4.44) SLIDING THE EMPTY BACK: a flick of the wrist - the hand pushes the glass off down the bar
+  const slid = c.slideT !== undefined ? G.time - c.slideT : 9;
+  if (slid < 0.4 && c.state === "walk") {
+    const f = slid / 0.4;
+    near = { tx: tw / 2 + 6 + Math.sin(f * Math.PI) * 12, ty: shY + 10 - Math.sin(f * Math.PI) * 2 };
   }
   if (idle && !angry) {
     if (act === "drum") {
@@ -63295,7 +63318,7 @@ function drawEggs(g, s) {
 // THE VERSION (from v1.2.0, 5 October 2026): MAJOR.MINOR.PATCH - a new MINOR for a batch of new things, a new PATCH for
 // fixes and small touches - with the day it was made next to it. (Before this the versions were named after the date,
 // like v2026.10.05c.)
-const GAME_VERSION = "v1.4.43",
+const GAME_VERSION = "v1.4.44",
   GAME_DATE = "13.10.2026",
   VERSION_TEXT = GAME_VERSION + "  ·  " + GAME_DATE;
 const FB = '"Chakra Petch", "Segoe UI", sans-serif';
@@ -69749,6 +69772,14 @@ profWire();
 //  the game, and where the motion capture, the folk songs and the fonts come from. Both from the menu at any time.
 // =====================================================================================
 const NEWS = [
+  {
+    ver: "v1.4.44",
+    title: "THE SKID AND THE FLICK",
+    items: [
+      "SHOVED-BACK CUSTOMERS SKID, WOBBLE AND SETTLE",
+      "A FLICK OF THE HAND SENDS THE EMPTY GLASS BACK",
+    ],
+  },
   {
     ver: "v1.4.43",
     title: "NO DEAD END",

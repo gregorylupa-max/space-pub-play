@@ -56317,11 +56317,17 @@ function perfBody(x        , y        , s        , o      , p      , t        ) 
     o.behind(t);
     pop();
   }
-  const hip = -24 + bob;
+  const hip = -23 + bob; // (v1.4.45: a touch lower than the legs' full reach, so standing, the knees are soft - never locked straight)
   // LEGS: angles if given (a kick, a leap); otherwise the feet stay planted and the knees bend as the body crouches
   for (const sd of [-1, 1]) {
-    const lg = sd < 0 ? p.ll : p.rl,
-      hx = sway * 0.6 + sd * 3 * tA,
+    let lg = sd < 0 ? p.ll : p.rl;
+    // (v1.4.45) NATURAL KNEES: a leg given as a dead-straight line gets a little bend at the knee, the shin hanging
+    // towards the ground
+    if (lg && Math.abs(lg[1]) < 0.2) {
+      const d = Math.atan2(Math.sin(DN - lg[0]), Math.cos(DN - lg[0]));
+      lg = [lg[0], (Math.abs(d) > 0.05 ? Math.sign(d) : sd) * 0.2];
+    }
+    const hx = sway * 0.6 + sd * 3 * tA,
       lc = o.legs ? A(o.legs) : sk;
     let [a1, a2] = lg || ik(hx, hip, sd * st * tA + sway * 0.2, -1, 12, 12, sd * tA < 0 ? -1 : 1);
     let l1 = 12,
@@ -56346,8 +56352,16 @@ function perfBody(x        , y        , s        , o      , p      , t        ) 
     tw = 7 * depth;
   // ARMS: the far one is drawn behind the body when she's side-on
   const arm = (sd        ) => {
-    const [r1, r2] = (sd < 0 ? p.la : p.ra) || [DN - sd * 0.2, 0],
-      ac = o.sleeves ? A(o.top) : sk;
+    let [r1, r2] = (sd < 0 ? p.la : p.ra) || [DN - sd * 0.2, sd * 0.35];
+    // (v1.4.45) NATURAL ELBOWS: an arm that would be dead straight gets a soft bend at the elbow, the forearm
+    // turning in towards the body - like a real arm at rest, or mid-gesture
+    if (Math.abs(r2) < 0.3) {
+      const ex = sd * 7 + Math.cos(r1) * 10,
+        ey = sh + 2 + Math.sin(r1) * 10,
+        cross = Math.cos(r1) * (sh + 8 - ey) - Math.sin(r1) * (0 - ex); // (which way is in towards the body)
+      r2 = (cross >= 0 ? 1 : -1) * 0.3;
+    }
+    const ac = o.sleeves ? A(o.top) : sk;
     const b1 = swingTo(r1),
       b2 = swingTo(r1 + r2),
       sx0 = sd * 7 * tA;
@@ -63318,7 +63332,7 @@ function drawEggs(g, s) {
 // THE VERSION (from v1.2.0, 5 October 2026): MAJOR.MINOR.PATCH - a new MINOR for a batch of new things, a new PATCH for
 // fixes and small touches - with the day it was made next to it. (Before this the versions were named after the date,
 // like v2026.10.05c.)
-const GAME_VERSION = "v1.4.44",
+const GAME_VERSION = "v1.4.45",
   GAME_DATE = "13.10.2026",
   VERSION_TEXT = GAME_VERSION + "  ·  " + GAME_DATE;
 const FB = '"Chakra Petch", "Segoe UI", sans-serif';
@@ -69772,6 +69786,11 @@ profWire();
 //  the game, and where the motion capture, the folk songs and the fonts come from. Both from the menu at any time.
 // =====================================================================================
 const NEWS = [
+  {
+    ver: "v1.4.45",
+    title: "REAL ELBOWS, SOFT KNEES",
+    items: ["THE STAGE PERFORMERS BEND AT THE ELBOWS AND KNEES LIKE REAL PEOPLE"],
+  },
   {
     ver: "v1.4.44",
     title: "THE SKID AND THE FLICK",

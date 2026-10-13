@@ -18496,6 +18496,25 @@ function customerBody(c, t, a) {
       far = { tx: 6, ty: -th - 7 };
     } // wipe the mouth
   }
+  // (v1.4.46) THE GENERATOR GUY: both hands on the trolley's handle while he wheels it; yanking the pull-cord (hard!)
+  //   while it's being started; a big thumbs-up when it catches; otherwise hands on his hips, keeping an eye on it
+  if (c.genGuy) {
+    const g = c.genPose;
+    if (g === "push") {
+      near = { tx: tw / 2 + 13, ty: shY + 7 };
+      far = { tx: tw / 2 + 11, ty: shY + 9 };
+    } else if (g === "crank") {
+      const yank = Math.max(0, Math.sin(t * 9));
+      near = { tx: tw / 2 + 14 - yank * 16, ty: shY + 14 - yank * 6 };
+      far = { a1: Math.PI / 2 + 0.6, a2: -1.9 };
+    } else if (g === "thumb") {
+      near = { a1: -1.25, a2: -1.5, fist: 1 };
+      far = { a1: Math.PI / 2 + 0.6, a2: -1.9 };
+    } else {
+      near = { a1: Math.PI / 2 - 0.6, a2: 1.9 };
+      far = { a1: Math.PI / 2 + 0.6, a2: -1.9 };
+    }
+  }
   // (v1.4.44) SLIDING THE EMPTY BACK: a flick of the wrist - the hand pushes the glass off down the bar
   const slid = c.slideT !== undefined ? G.time - c.slideT : 9;
   if (slid < 0.4 && c.state === "walk") {
@@ -20189,6 +20208,15 @@ function drawTorsoBase(kind, c, t, A, tw, th, body, L, angry, step) {
       for (let i = 0; i < 4; i++) disc(0.5, top + 3 + i * 5, 0.7, A(col("#6a5a3a")));
       rect(-tw / 2 + 2, -4, tw - 4, 3, A(col("#4a3a20")));
       rect(3, top + 4, 1.4, 6, A(col("#202020")));
+      if (c.genGuy) {
+        // (v1.4.46) and a hi-vis safety vest over it: bright orange, two reflective stripes that catch the light
+        quad4(-tw / 2, top + 1, -1, top + 1, -1, -3, -tw / 2 + 0.5, -3, A(col("#ff7a1a")));
+        quad4(1.5, top + 1, tw / 2, top + 1, tw / 2 - 0.5, -3, 1.5, -3, A(col("#ff7a1a")));
+        for (const sy of [top + 9, top + 15]) {
+          rect(-tw / 2 + 0.5, sy, tw / 2 - 1.5, 2, A(col("#e8eef4")));
+          rect(1.5, sy, tw / 2 - 2, 2, A(col("#e8eef4")));
+        }
+      }
     } // khaki shirt, a comb in the pocket
     if (kind === "dine") {
       // a velvet blouse with silver buttons, a squash-blossom necklace of silver and turquoise, a silver concho belt
@@ -21290,9 +21318,38 @@ function drawHead(kind, x, hy, t, c, A, angry, look, L, mouth = "flat", eyes = "
       mouthAt(x + 2, hy + 6.5, 2.4);
       rect(x - 1, hy + 3.4, 10, 2.6, A(col(c.seed > 0.5 ? "#d8d8d8" : "#8a6a40")));
       disc(x + 6, hy + 3.5, 2, A(withA(col("#ff8f7f"), 0.4)), 1.3);
-      disc(x, hy - 8, 15, A(col("#a89060")), 3.4);
-      disc(x - 1, hy - 11.5, 9.5, A(col("#b8a070")), 5);
-      rect(x - 9.5, hy - 10, 19, 1.8, A(col("#6a5a3a")));
+      if (c.genGuy) {
+        // (v1.4.46) ON GENERATOR DUTY: a yellow hard hat with a brim and a ridge, and a headlamp shining out in front
+        disc(x, hy - 7, 13.5, A(col("#e8b820")), 2.6); // (the brim)
+        disc(x - 1, hy - 10.5, 10, A(col("#ffd040")), 7); // (the dome)
+        rect(x - 1.6, hy - 17, 3.2, 9, A(col("#f8e070"))); // (the ridge)
+        disc(x - 4, hy - 13, 3, A(withA(C.white, 0.35)), 1.6); // (shine)
+        rect(x + 6, hy - 11, 4, 3.4, A(col("#3a3a42")));
+        disc(x + 10, hy - 9.3, 1.8, A(col("#fff8d0"))); // the headlamp
+        if (!OUT && c.lampOn) {
+          R.setAdd(true);
+          glow(x + 11, hy - 9.3, 9, withA(col("#fff4c0"), 0.8 * c.alpha));
+          quad4(
+            x + 11,
+            hy - 11,
+            x + 11,
+            hy - 7.6,
+            x + 70,
+            hy + 22,
+            x + 70,
+            hy - 24,
+            withA(col("#fff4c0"), 0.22),
+            withA(col("#fff4c0"), 0.22),
+            withA(col("#fff4c0"), 0),
+            withA(col("#fff4c0"), 0)
+          ); // (its beam)
+          R.setAdd(false);
+        }
+      } else {
+        disc(x, hy - 8, 15, A(col("#a89060")), 3.4);
+        disc(x - 1, hy - 11.5, 9.5, A(col("#b8a070")), 5);
+        rect(x - 9.5, hy - 10, 19, 1.8, A(col("#6a5a3a")));
+      }
     } else {
       // an Apache tracker: long dark hair, a red cloth headband
       mouthAt(x + 2, hy + 6, 2.4);
@@ -30099,6 +30156,7 @@ function drawTwistFx(t) {
       lights.push([lx, ly, 55]);
     }
     if (GENPOS && G.ls && (G.ls.gen || G.ls.t > 4.2)) lights.push([GENPOS[0] + 30, GENPOS[1] + 40, 150]); // (the generator's work lamp)
+    if (GUYPOS) lights.push([GUYPOS[0], GUYPOS[1], 110]); // (v1.4.46: the generator guy's headlamp - so you can see him)
     const cs = 48,
       nx = Math.ceil(w / cs) + 1,
       ny = Math.ceil(h / cs) + 1,
@@ -52029,11 +52087,15 @@ function funMiniUpdate(dt) {
       it.rot += it.spin * dt;
       if (it.vx) it.x += it.vx * dt;
       if (it.inG) {
+        // (v1.4.46) while it sinks it drifts into the exact spot it will rest on in the pile - no jump when it lands
+        const ni = M.pile.length,
+          slot = clamp(it.gx0 * 0.6 + ((ni % 3) - 1) * 9, -6 * MINI_S + 6, 6 * MINI_S - 6);
+        it.gx += (slot - it.gx) * Math.min(1, dt * 7);
         it.x = M.x + it.gx;
         const floorY = MINI_GY - 2 * MINI_S - 6 - pileTop(M);
         if (it.y >= floorY) {
           it.dead = true;
-          M.pile.push({ kind: it.kind, gx: it.gx, rot: it.rot });
+          M.pile.push({ kind: it.kind, gx: it.gx0, rot: it.rot });
         }
         continue;
       } // (it rides along with the glass)
@@ -52061,6 +52123,7 @@ function funMiniUpdate(dt) {
         }
         it.inG = true;
         it.gx = clamp(dx, -MINI_HW + 7, MINI_HW - 7);
+        it.gx0 = it.gx;
         it.vy = 190;
         M.pop = { x: it.x, t: 0.4, c: ING[it.kind] };
         M.splash = { t: 0.35, x: dx };
@@ -52144,7 +52207,7 @@ function drawMiniGlassBig(M, t, inside) {
   ); // the shake inside
   for (let i = Math.max(0, n - 21); i < n; i++) {
     const p = M.pile[i],
-      row = Math.floor(i / 3) % 7,
+      row = Math.min(Math.floor(i / 3), 6),
       ly = gy - 2 * s - 6 - Math.min(row, 6) * 11,
       lx = gx + clamp(p.gx * 0.6 + ((i % 3) - 1) * 9, -6 * s + 6, 6 * s - 6);
     drawIngredient(p.kind, lx, ly, 0.85, p.rot);
@@ -52316,11 +52379,12 @@ function drawMini(t) {
       [150, "cherry"],
       [810, "shake"],
     ]         ) {
-      const on = Math.sin(t * 17 + nx) < 0.96,
+      // (v1.4.46) the signs burn STEADY now - no more fast strobe-blink; just a slow, soft breathing of the glow
+      const br = 0.5 + 0.5 * Math.sin(t * 1.3 + nx * 0.01),
         nc = col(kind === "cherry" ? "#ff3a5a" : "#5ff5c8"),
-        w = (c0) => withA(c0, on ? 0.95 : 0.3);
+        w = (c0) => withA(c0, 0.92);
       R.setAdd(true);
-      glow(nx, 200, 70, withA(nc, on ? 0.14 : 0.04));
+      glow(nx, 200, 70, withA(nc, 0.11 + 0.04 * br));
       R.setAdd(false);
       if (kind === "cherry") {
         arc(nx - 12, 220, 14, 0, 6.283, 3, w(nc), 20);
@@ -52358,7 +52422,7 @@ function drawMini(t) {
     M.pile = M.pile || [];
     for (const it of M.items) if (!it.inG) drawIngredient(it.kind, it.x, it.y, 1.3, it.rot);
     drawMiniGlassBig(M, t, () => {
-      for (const it of M.items) if (it.inG) drawIngredient(it.kind, it.x, it.y, 0.95, it.rot);
+      for (const it of M.items) if (it.inG) drawIngredient(it.kind, it.x, it.y, 0.85, it.rot);
     });
     if (M.hurt > 0) {
       R.setAdd(true);
@@ -55944,9 +56008,11 @@ function drawChandeliers(t) {
 // dropping, a cable snaking off to the bars - until the power's back, when it splutters to a stop and is wheeled away.
 // GENPOS: where its lamp is (in the room), so the dark lets its light through.
 let GENPOS                  = null;
+let GUYPOS                  = null; // (v1.4.46: where the generator guy is - his headlamp lights him up in the dark)
 function drawBigGen(t) {
   const L0 = G.ls;
   GENPOS = null;
+  GUYPOS = null;
   if (!L0 || L0.t < 2.6) return;
   const T0 = L0.t,
     inF = clamp((T0 - 2.6) / 1.5, 0, 1),
@@ -56002,15 +56068,18 @@ function drawBigGen(t) {
     c.walk = Math.abs(slide) / 3;
     c.still = moving ? 0 : 1;
     c.happy = run && T0 < 9 ? 1 : 0; // (lekker - it caught!)
+    // (v1.4.46) dressed for the job - hard hat, headlamp, hi-vis vest - and doing it: pushing, cranking, thumbs up
+    c.genGuy = true;
+    c.lampOn = true;
+    c.genPose = moving ? "push" : crank ? "crank" : run && T0 < 8.5 ? "thumb" : "hips";
     disc(px, y + 4, 26, withA(C.black, 0.4), 6);
-    outlined(() => {
-      push();
-      translate(px, y + 4);
-      scaleBy(1.1);
-      translate(-px, -(y + 4));
-      drawCustomer(c, t);
-      pop();
-    }, INK);
+    GUYPOS = [px, y - 60];
+    push();
+    translate(px, y + 4);
+    scaleBy(1.1);
+    translate(-px, -(y + 4));
+    drawCustomer(c, t); // (it draws its own outline - v1.4.46: no second one round it, which made him look blotchy)
+    pop();
   }
   push();
   translate(x + jig, y);
@@ -63332,7 +63401,7 @@ function drawEggs(g, s) {
 // THE VERSION (from v1.2.0, 5 October 2026): MAJOR.MINOR.PATCH - a new MINOR for a batch of new things, a new PATCH for
 // fixes and small touches - with the day it was made next to it. (Before this the versions were named after the date,
 // like v2026.10.05c.)
-const GAME_VERSION = "v1.4.45",
+const GAME_VERSION = "v1.4.46",
   GAME_DATE = "13.10.2026",
   VERSION_TEXT = GAME_VERSION + "  ·  " + GAME_DATE;
 const FB = '"Chakra Petch", "Segoe UI", sans-serif';
@@ -69786,6 +69855,14 @@ profWire();
 //  the game, and where the motion capture, the folk songs and the fonts come from. Both from the menu at any time.
 // =====================================================================================
 const NEWS = [
+  {
+    ver: "v1.4.46",
+    title: "STEADY NEON, A PROPER GENERATOR MAN",
+    items: [
+      "THE CHERRY MINI-GAME SIGNS AND GLASS NO LONGER FLICKER",
+      "THE GENERATOR GUY WEARS A HARD HAT, HEADLAMP AND HI-VIS VEST",
+    ],
+  },
   {
     ver: "v1.4.45",
     title: "REAL ELBOWS, SOFT KNEES",

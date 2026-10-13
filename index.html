@@ -16207,8 +16207,9 @@ function counterBody(lane, V) {
   R.setAdd(true);
   for (const lx of LAMPS) {
     const y = LY(lane, lx) - 5;
-    glowE(lx, y, 80, 3.2, withA(C.white, 0.16));
-    glowE(lx + 6, y + 1, 26, 1.4, withA(C.white, 0.22));
+    // (v1.4.48: softer - with the bloom on top they used to blow out into lumpy white blobs all along every bar)
+    glowE(lx, y, 80, 3.2, withA(C.white, 0.09));
+    glowE(lx + 6, y + 1, 26, 1.4, withA(C.white, 0.12));
   }
   R.setAdd(false); // lamp gleam on the polish
   if (K.front === 11) {
@@ -16264,7 +16265,7 @@ function counterBody(lane, V) {
     barRail(K.front <= 7 ? K.front : venue(), lane, V, a, b, ya, yb); // the foot rail
   }
   R.setAdd(true);
-  for (const lx of LAMPS) disc(lx, LY(lane, lx) + 30, 10, withA(C.white, 0.25), 1.5);
+  for (const lx of LAMPS) glowE(lx, LY(lane, lx) + 30, 14, 5, withA(C.white, 0.12)); // (v1.4.48: a soft pool, not a white blob)
   R.setAdd(false);
   for (const dx of [0.24, 0.6]) {
     const x = a + (b - a) * dx;
@@ -52538,15 +52539,31 @@ function funOrderBubble(c, t) {
   const fy = LY(c.lane, c.x) + 22,
     x = c.x + 34 + (c.gold ? 18 : 0),
     y = fy - 104 + Math.sin(t * 2.5 + c.seed * 7) * 2;
-  // (v1.2.0: a little bigger, a ring in the colour of the flavour they want, and a clear dark edge)
-  const fc = FLAVORS[c.want] ? FLAVORS[c.want][1] : col("#ffffff");
-  disc(x, y, 16.5, col("#ffffff"), 14.3);
-  tri(x - 8, y + 10, x - 2, y + 12, x - 14, y + 19, col("#ffffff"));
-  arcE(x, y, 16.5, 14.3, 0, 6.283, 1.6, withA(col("#140a1e"), 0.75), 24);
-  arcE(x, y, 13.6, 11.6, 0, 6.283, 2.2, withA(fc, 0.85), 24);
+  // (v1.4.48) A CLEARER ORDER BUBBLE: the old one was a bright white disc that the bar's glow smeared into a shapeless
+  // white blob. Now it's a dark, rounded speech bubble with a frame in the colour of the flavour they want, a little
+  // tail pointing down at their head, and the shake itself standing big and clear inside it (with a soft pulse)
+  const fc = FLAVORS[c.want] ? FLAVORS[c.want][1] : col("#ffffff"),
+    hw = 15,
+    hh = 19,
+    rr = 6,
+    pu = 1 + Math.max(0, Math.sin(t * 4 + c.seed * 5)) * 0.06,
+    box = (ex, cc) => {
+      rect(x - hw - ex + rr, y - hh - ex, (hw + ex - rr) * 2, (hh + ex) * 2, cc);
+      rect(x - hw - ex, y - hh - ex + rr, (hw + ex) * 2, (hh + ex - rr) * 2, cc);
+      for (const sx of [-1, 1])
+        for (const sy of [-1, 1]) disc(x + sx * (hw + ex - rr), y + sy * (hh + ex - rr), rr, cc);
+    };
+  box(2.5, withA(col("#0a0614"), 0.9)); // the dark edge
+  tri(x - 9, y + hh - 1, x + 1, y + hh - 1, x - 13, y + hh + 11, withA(col("#0a0614"), 0.9));
+  box(0.8, fc); // the frame, in the flavour's colour
+  tri(x - 8, y + hh - 2, x - 1, y + hh - 2, x - 11.5, y + hh + 8, fc);
+  box(-1.2, col("#1c1430")); // the dark inside - nothing for the glow to bloom on
+  R.setAdd(true);
+  glow(x, y + 2, 15, withA(fc, 0.22)); // (the shake lit softly from behind)
+  R.setAdd(false);
   push();
-  translate(x, y + 8);
-  scaleBy(0.62);
+  translate(x, y + 13);
+  scaleBy(0.8 * pu);
   drawGlass(0, 0, c.want, 1, 0);
   pop();
 }
@@ -63404,7 +63421,7 @@ function drawEggs(g, s) {
 // THE VERSION (from v1.2.0, 5 October 2026): MAJOR.MINOR.PATCH - a new MINOR for a batch of new things, a new PATCH for
 // fixes and small touches - with the day it was made next to it. (Before this the versions were named after the date,
 // like v2026.10.05c.)
-const GAME_VERSION = "v1.4.47",
+const GAME_VERSION = "v1.4.48",
   GAME_DATE = "13.10.2026",
   VERSION_TEXT = GAME_VERSION + "  ·  " + GAME_DATE;
 const FB = '"Chakra Petch", "Segoe UI", sans-serif';
@@ -69863,6 +69880,11 @@ profWire();
 //  the game, and where the motion capture, the folk songs and the fonts come from. Both from the menu at any time.
 // =====================================================================================
 const NEWS = [
+  {
+    ver: "v1.4.48",
+    title: "CLEARER ORDERS, POLISHED BARS",
+    items: ["ORDER BUBBLES ARE CLEAR SPEECH BUBBLES, NOT WHITE BLOBS", "SOFTER, NICER LIGHT ON THE BAR TOPS"],
+  },
   {
     ver: "v1.4.47",
     title: "CLEAN MUSIC, A REAL SAGITTARIUS A*",

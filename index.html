@@ -2064,6 +2064,7 @@ const DICT_ROWS                             = [
   ["SCREEN:", "SKERM:", "EKRAN:"],
   ["CRT TV", "OU TV", "TELEWIZOR CRT"],
   ["FLAT", "PLAT", "PŁASKI"],
+  ["LIVES", "LEWENS", "ŻYCIA"],
   ["OFF (PIXEL LOOKS ONLY)", "AF (NET PIXEL-VOORKOMS)", "WYŁ. (TYLKO WYGLĄD PIKSELOWY)"],
   ["SCANLINES", "SKANDERLYNE", "LINIE SKANOWANIA"],
   ["GRAPHICS:", "GRAFIKA:", "GRAFIKA:"],
@@ -3914,7 +3915,12 @@ let RW = 1,
 // LAYOUT: "auto" picks the tall view whenever the screen is taller than it is wide; "wide" and "tall" force one
 let layout = store.get("layout", "auto"),
   VERT = false;
-const TV                                                              = { s: 1, x: 0, y: 0 }; // where the 540 x 960 tall view sits on the screen (see art.js)
+const TV                                                                           = {
+  s: 1,
+  x: 0,
+  y: 0,
+  wx: 1,
+}; // where the 540 x 960 tall view sits on the screen (see art.js)
 const LAYOUT_UI = { auto: "AUTO", wide: "WIDE", tall: "TALL" };
 function cycleLayout() {
   layout = { auto: "wide", wide: "tall", tall: "auto" }[layout] || "auto";
@@ -3965,6 +3971,10 @@ function resize() {
     TV.s = Math.max(0.1, Math.min(W / 500, (H - top - bottom) / 960));
     TV.x = (W - 500 * TV.s) / 2;
     TV.y = top;
+    // (v1.4.51) ON A WIDE SCREEN (a PC, a tablet on its side) the tall view used to be a narrow strip down the middle:
+    // now its bars spread out sideways into the room there is - up to 1.7 times as wide - while the people and the
+    // glasses keep their own shape
+    TV.wx = clamp((W / TV.s / 500) * 0.8, 1, 1.7);
   }
   if (typeof layoutText === "function" && $("vLayout")) layoutText();
   dpr = gfx === "cpu" || (R && R.kind === "CPU") ? 1 : Math.min(2, window.devicePixelRatio || 1);
@@ -4003,7 +4013,9 @@ window.addEventListener("resize", resize);
 const LOOKS_UI = ["ARCADE PIXELS", "8-BIT", "SMOOTH HD"],
   LOOK_PX = [1.25, 2, 1], // (v1.4.13: ARCADE a little finer - 1.25 units a pixel, so faces, hands and clothes read)
   LOOK_LEVELS = [8, 4, 0];
-let lookMode = clamp(store.get("look2", 0) | 0, 0, 2),
+// (v1.4.51) the 8-BIT look is gone, and SMOOTH HD is the default now: the choice is SMOOTH HD or ARCADE PIXELS (a new
+// setting - "look3" - so everyone starts in SMOOTH HD once; an old 8-BIT choice becomes SMOOTH HD)
+let lookMode = store.get("look3", 2) | 0 ? 2 : 0,
   retroLook = lookMode !== 2;
 let crtOn = store.get("crt", true);
 function toggleCrt() {
@@ -4012,7 +4024,7 @@ function toggleCrt() {
   if (!retroLook) {
     lookMode = 0;
     retroLook = true;
-    store.set("look2", lookMode);
+    store.set("look3", lookMode);
     crtOn = true;
     store.set("crt", crtOn);
     createRenderer(gfx);
@@ -4027,9 +4039,9 @@ function toggleCrt() {
   sfx("click");
 }
 function toggleLook() {
-  lookMode = (lookMode + 1) % 3;
+  lookMode = lookMode === 2 ? 0 : 2; // (SMOOTH HD <-> ARCADE PIXELS)
   retroLook = lookMode !== 2;
-  store.set("look2", lookMode);
+  store.set("look3", lookMode);
   createRenderer(gfx);
   updateLookText();
   sfx("click");
@@ -23975,7 +23987,7 @@ function vpt(l, x, h, side = 0) {
     xo = TV.x + 250 * (TV.s - s),
     yo = TV.y + 960 * (TV.s - s);
   return [
-    xo - ox + s * (VPX + ((l - 1.5) * VCOL + side) / z),
+    xo - ox + s * (VPX + (((l - 1.5) * VCOL + side) * (TV.wx || 1)) / z), // (v1.4.51: spread wider on a wide screen)
     yo - oy + s * (VPY + (VY0 - VPY) / z + (h * VSPR) / z),
     (s * VSPR) / z,
   ];
@@ -24000,7 +24012,7 @@ function vLaneAt(wx, wy) {
     vx = (wx + ox - TV.x - 250 * (TV.s - s)) / s,
     vy = (wy + oy - TV.y - 960 * (TV.s - s)) / s,
     z = clamp((VY0 - VPY) / Math.max(8, vy + 50 - VPY), 1, 1 + VZF);
-  return clamp(Math.round(((vx - VPX) * z) / VCOL + 1.5), 0, LANES - 1);
+  return clamp(Math.round(((vx - VPX) * z) / (VCOL * (TV.wx || 1)) + 1.5), 0, LANES - 1);
 }
 function drawVert(V, t) {
   {
@@ -24197,7 +24209,19 @@ function drawVert(V, t) {
     ); // shadow
     if (l < 1.5) quad4(bx, by, cx, cy, ex, ey, bx2, by2, V.face2);
     else quad4(ax, ay, dx, dy, fx, fy, ax2, ay2, V.face2); // the side you can see
-    quad4(ax, ay, bx, by, cx, cy, dx, dy, V.top2, V.top2, V.top, V.top); // the top
+    // (v1.4.51) the top a little darker than in the side view (seen from above it is a big, bright area that the glow
+    // turned into a glare), with a darker RUNNER MAT down the middle where the glasses slide - so they stand out
+    const t2 = shade(V.top2, 0.78),
+      t1 = shade(V.top, 0.78);
+    quad4(ax, ay, bx, by, cx, cy, dx, dy, t2, t2, t1, t1); // the top
+    {
+      const [m1x, m1y] = p(farX, 0, -hw * 0.42),
+        [m2x, m2y] = p(farX, 0, hw * 0.42),
+        [m3x, m3y] = p(nearX, 0, hw * 0.42),
+        [m4x, m4y] = p(nearX, 0, -hw * 0.42),
+        mc = withA(col("#140a12"), 0.32);
+      quad4(m1x, m1y, m2x, m2y, m3x, m3y, m4x, m4y, mc);
+    }
     line(ax, ay, dx, dy, 1.2, withA(C.white, 0.3));
     line(bx, by, cx, cy, 1.2, withA(C.black, 0.3));
     for (let k = 1; k < 6; k++) {
@@ -24298,10 +24322,27 @@ function drawVert(V, t) {
   for (const tp of tips) list.push({ x: tp.x, f: () => vAt(tp.lane, tp.x, 0, () => drawTip(tp, t)) });
   for (const cr of CRITS) list.push({ x: cr.x, f: () => vAt(cr.lane, cr.x, 0, () => drawCritter(cr, t)) }); // (v1.4.4)
   for (const u of powerups) list.push({ x: u.x, f: () => vAt(u.lane, u.x, 0, () => drawPowerup(u, t)) });
+  // (v1.4.51) THE GLASSES IN THE TALL VIEW, EASY TO SEE: half as big again, each with a soft glow on the bar under it
+  // (the shake's own colour - a pale blue for an empty) and, for a full one sliding along, a short bright streak behind
+  const bigGlass = (lane, x, flavor, full, spin, extra ) => {
+    const gy = LY(lane, x) - 3;
+    push();
+    translate(x, gy);
+    scaleBy(1.5);
+    translate(-x, -gy);
+    R.setAdd(true);
+    glowE(x, gy - 2, 18, 6, withA(full ? FLAVORS[flavor][0] : col("#bfe8ff"), full ? 0.45 : 0.3));
+    glow(x, gy - 14, 16, withA(full ? FLAVORS[flavor][0] : col("#cfe8ff"), full ? 0.22 : 0.14));
+    if (full) line(x + 8, gy - 10, x + 30, gy - 8, 3, withA(C.white, 0.25));
+    R.setAdd(false);
+    drawGlass(x, gy, flavor, full, spin);
+    if (extra) extra(gy);
+    pop();
+  };
   for (const m of empties)
     list.push({
       x: m.x,
-      f: () => vAt(m.lane, m.x, 0, () => drawGlass(m.x, LY(m.lane, m.x) - 3, null, 0, m.spin)),
+      f: () => vAt(m.lane, m.x, 0, () => bigGlass(m.lane, m.x, null, 0, m.spin)),
     });
   for (const sh of shakes)
     list.push({
@@ -24310,11 +24351,20 @@ function drawVert(V, t) {
         vAt(sh.lane, sh.x, 0, () =>
           sh.holy
             ? drawHoly(sh.x, LY(sh.lane, sh.x) - 3, t)
-            : (drawGlass(sh.x, LY(sh.lane, sh.x) - 3, sh.flavor, 1, 0),
-              sh.perfect &&
-                (R.setAdd(true),
-                glow(sh.x, LY(sh.lane, sh.x) - 13, 22, withA(col("#ffe060"), 0.55)),
-                R.setAdd(false)))
+            : bigGlass(
+                sh.lane,
+                sh.x,
+                sh.flavor,
+                1,
+                0,
+                sh.perfect
+                  ? (gy) => {
+                      R.setAdd(true);
+                      glow(sh.x, gy - 10, 22, withA(col("#ffe060"), 0.55));
+                      R.setAdd(false);
+                    }
+                  : null
+              )
         ),
     });
   for (const pl of shownPlayers()) {
@@ -63440,7 +63490,7 @@ function drawEggs(g, s) {
 // THE VERSION (from v1.2.0, 5 October 2026): MAJOR.MINOR.PATCH - a new MINOR for a batch of new things, a new PATCH for
 // fixes and small touches - with the day it was made next to it. (Before this the versions were named after the date,
 // like v2026.10.05c.)
-const GAME_VERSION = "v1.4.50",
+const GAME_VERSION = "v1.4.51",
   GAME_DATE = "14.10.2026",
   VERSION_TEXT = GAME_VERSION + "  ·  " + GAME_DATE;
 const FB = '"Chakra Petch", "Segoe UI", sans-serif';
@@ -63548,6 +63598,7 @@ function drawHud(fps) {
     inGame = G.state !== "menu" && !ending;
   const fD = (px) => Math.round(px * s * TXT()) + "px " + FD,
     fB = (px, w = 600) => w + " " + Math.round(px * s * TXT()) + "px " + FB; // (TEXT SIZE in the settings makes it all bigger)
+  nowPlayingHud(g, s); // (v1.4.51: the name of the tune that's playing)
   const sx = (wx) => ((MIRW ? PW - wx : wx) + ox) * u, // (a mirror bar: words over the pub follow it)
     sy = (wy) => (wy + oy) * u;
   g.textBaseline = "top";
@@ -63686,7 +63737,11 @@ function drawHud(fps) {
     // the lives sit just left of the buttons - or, on a narrow screen, in a row of their own just under them
     HUDB.under = !!btnL;
     HUDB.right = HUDB.under ? cssW - 14 * s : (btnAt || cssW - 14 * s) - 12 * s;
-    HUDB.lives = HUDB.under ? cssW : HUDB.right - (G.versus ? 0 : Math.max(0, G.lives)) * 22 * s - 10 * s; // (and the sign stays left of them)
+    HUDB.lives = HUDB.under
+      ? cssW
+      : HUDB.right -
+        (G.versus ? 0 : G.free || DF().kid ? 1 : Math.max(0, G.lives)) * 22 * s -
+        (G.versus ? 10 : 74) * s; // (and the sign stays left of them - and of the "LIVES 3")
     const scoreW = (G.versus ? 172 : twoP() ? 104 : 92) * s; // (how much room the score block on the left takes)
     // (no room at all between the scores and the buttons - two players' scores on a phone: the sign drops to its own
     //  line just under the buttons)
@@ -63860,20 +63915,30 @@ function drawHud(fps) {
     }
     // lives: little shakes, clear of the corner buttons. (v1.4.28) never over the score: if there are more lives than
     // there's room for (extra lives pile up), it shows as many as fit and then "x7"
-    const rightL = HUDB.right || cssW - pad - 190,
-      leftL = pad + (twoP() ? 150 : 118) * s,
+    // (v1.4.51) and the NUMBER, in words beside them - "LIVES 3" - or "LIVES \u221E" when they can't run out (free play,
+    // KID MODE); unlimited shows a single shake
+    const unl = !G.versus && (G.free || DF().kid),
+      rightL = HUDB.right || cssW - pad - 190,
+      leftL = pad + (twoP() ? 150 : 118) * s + 64 * s,
       fitN = Math.max(1, Math.floor((rightL - 14 * s - leftL) / (22 * s)) + 1),
-      nL = G.versus ? 0 : Math.max(0, G.lives),
-      showN = nL > fitN ? Math.max(1, fitN - 1) : nL;
-    if (nL > showN) {
+      nL = G.versus ? 0 : unl ? 1 : Math.max(0, G.lives),
+      showN = unl ? 1 : Math.min(nL, fitN);
+    if (!G.versus && inGame) {
+      const ly = HUDB.under ? HUDB.b + 6 * s : pad + 2 * s;
       g.textAlign = "right";
-      g.font = fD(14);
+      g.textBaseline = "middle";
+      g.font = fB(12, 800);
       g.fillStyle = "#ff8fbf";
-      g.fillText("x" + nL, rightL, (HUDB.under ? HUDB.b + 6 * s : pad + 2 * s) + 8 * s);
+      g.fillText(
+        T("LIVES") + " " + (unl ? "\u221E" : String(nL)),
+        rightL - 14 * s - Math.max(0, showN - 1) * 22 * s - 8 * s,
+        ly + 15 * s
+      );
       g.textAlign = "left";
+      g.textBaseline = "top";
     }
     for (let i = 0; i < showN; i++) {
-      const lx = rightL - 14 * s - (i + (nL > showN ? 1.6 : 0)) * 22 * s,
+      const lx = rightL - 14 * s - i * 22 * s,
         ly = HUDB.under ? HUDB.b + 6 * s : pad + 2 * s;
       g.fillStyle = "#ff8fbf";
       g.beginPath();
@@ -64692,6 +64757,36 @@ function roundRect(g, x, y, w, h, r) {
   g.arcTo(x, y, x + w, y, r);
   g.closePath();
 }
+
+// (v1.4.51) NOW PLAYING: when a tune starts, its name fades in at the bottom right for a few seconds - and it stays there
+// while the game is paused - so you always know what's playing
+function nowPlayingHud(g, s) {
+  if (!NOWPLAY || curTrack < 0 || NOWPLAY.i !== curTrack || !TRACKS[curTrack]) return;
+  const age = (performance.now() - NOWPLAY.at) / 1000,
+    a = G.state === "paused" ? 1 : clamp(Math.min(age * 2, (6 - age) * 1.5), 0, 1);
+  if (a <= 0.01) return;
+  const tr = TRACKS[curTrack],
+    txt = "\u266A  " + tr.title + (tr.where ? "  \u00B7  " + tr.where.toUpperCase() : ""),
+    px = Math.round(12 * s * TXT());
+  g.save();
+  g.font = "700 " + px + "px " + FB;
+  g.textAlign = "right";
+  g.textBaseline = "middle";
+  const w = g.measureText(txt).width + 18 * s,
+    x = cssW - 10 * s,
+    y = cssH - 44 * s;
+  g.globalAlpha = a * 0.7;
+  g.fillStyle = "rgba(10,6,20,.9)";
+  g.beginPath();
+  g.roundRect
+    ? g.roundRect(x - w, y - px * 0.95, w, px * 1.9, px * 0.9)
+    : g.rect(x - w, y - px * 0.95, w, px * 1.9);
+  g.fill();
+  g.globalAlpha = a;
+  g.fillStyle = "#ffd88a";
+  g.fillText(txt, x - 9 * s, y + 1);
+  g.restore();
+}
 // =====================================================================================
 //  SOUND  -  effects, an original diner boogie, and your own music
 // =====================================================================================
@@ -65368,13 +65463,13 @@ function sfx(name, x , kind ) {
       break;
     }
     case "nav": {
-      // (v1.4.31) MOVING round a menu: a soft wooden marimba note instead of a beep - each option has its own note on a
-      // pentatonic scale, so going up and down plays a little tune (it can never sound wrong)
-      const PENT = ["C5", "D5", "E5", "G5", "A5", "C6", "D6", "E6", "G6", "A6"],
-        f = nf(PENT[(((kind | 0) % PENT.length) + PENT.length) % PENT.length]);
-      tone("sine", f, f * 0.998, 0.16, 0.05, out, now, 0.002);
-      tone("sine", f * 3.9, f * 3.9, 0.03, 0.007, out, now, 0.001); // (the mallet hitting the wooden bar)
-      tone("triangle", f / 2, f / 2, 0.09, 0.012, out, now, 0.003);
+      // (v1.4.31) MOVING round a menu: a soft wooden marimba note instead of a beep. (v1.4.51: the SAME warm, mid note for
+      // every move - up, down, left or right - it used to change with each option, and some were high and sharp, so
+      // moving sideways or wrapping round jumped about in pitch)
+      const f = nf("E5");
+      tone("sine", f, f * 0.998, 0.18, 0.05, out, now, 0.003);
+      tone("sine", f * 2, f * 2, 0.05, 0.006, out, now, 0.002); // (a gentle wooden overtone)
+      tone("triangle", f / 2, f / 2, 0.1, 0.014, out, now, 0.003);
       break;
     }
     // ---- the protest: chanting, stomping, a whistle ----
@@ -68024,7 +68119,7 @@ function drum(kind, t, bus, accent = 1) {
   } else if (kind === "h") noise(0.04, 0.06 * accent, 9500, 7000, bus, t, "highpass");
   else if (kind === "o") noise(0.2, 0.06, 9000, 6000, bus, t, "highpass");
   else if (kind === "r")
-    noise(0.03, 0.07 * accent, 2200, 1600, bus, t, "bandpass"); // (v1.4.28: a soft wooden click - it used to be a little square-wave BEEP)
+    noise(0.07, 0.04 * accent, 1700, 1300, bus, t, "bandpass"); // (v1.4.28: a soft wooden click - it used to be a little square-wave BEEP; v1.4.51: softer and rounder, not a tick)
   else if (kind === "t") tone("sine", 200, 140, 0.25, 0.26 * accent, bus, t);
   else if (kind === "c") {
     noise(0.08, 0.2, 2500, 1500, bus, t, "bandpass");
@@ -68387,10 +68482,8 @@ function playStep2(tr, t0) {
         nch = chord(nsec.chords[0]),
         npc2 = (nch.pc + tp2 + 120) % 12,
         pm = degNote(tr, npc2, i === mot.length - 2 ? -2 : -1, tp2) + L.oct + (nsec.up || 0);
-      note2(L.wave, pm, st * 1.6, L.vol * 0.7, leadBus, t, {
-        duty: L.wave === "square" ? 0.25 : undefined,
-        stacc: true,
-      });
+      // (v1.4.51: soft and joined-up - the old clipped pick-up notes sounded like short stray bits)
+      note2(L.wave === "square" ? "triangle" : L.wave, pm, st * 1.8, L.vol * 0.55, leadBus, t, { att: 0.01 });
     }
   }
   // ---- (v1.4.5) the CHIP ARPEGGIO: on the lively tracks, once the song is going, the chord sparkles high up in a fast
@@ -68471,7 +68564,8 @@ function playStep2(tr, t0) {
   }
   if (tr.extra === "timpani" && s === 0) {
     tone("sine", mf(root - 12) * 2, mf(root - 12) * 1.9, 0.6, 0.35, B2, t);
-    if (bar % 4 === 3)
+    if (bar % 4 === 3 && !NO_ODD)
+      // (v1.4.51: the timpani's quick six-hit roll is off - short bits; the big hit stays)
       for (let i = 0; i < 6; i++)
         tone("sine", mf(root - 5) * 2, mf(root - 5) * 2, 0.15, 0.12 + i * 0.03, B2, t + st * (8 + i));
   }
@@ -68547,6 +68641,8 @@ function musicWanted() {
 }
 
 let curTrack = -1;
+// (v1.4.51) NOW PLAYING: which tune just started, and when - the HUD shows its name for a few seconds (and while paused)
+let NOWPLAY                                   = null;
 // SMOOTH TUNE CHANGES (v2026.10.05c): when the tune changes, the old one KEEPS PLAYING while it fades away on a gentle
 // curve (it used to stop dead and leave a silence), then the new one starts and swells in on a matching curve. If the
 // old tune is wanted back while it's fading, it simply swells back up. (In the music box a pick changes quickly.)
@@ -68639,6 +68735,7 @@ function schedule() {
     }
     MUSX.lp = -1; // (the filter follows below)
     setEchoFor(want, now);
+    if (want >= 0) NOWPLAY = { i: want, at: performance.now() }; // (v1.4.51: its name shows on screen for a moment)
   }
   // the music's low-pass: deep space gentle and muffled, like it's coming from far away; (v1.4.7) losing a life drops
   // it under water for a moment - then it opens back up
@@ -69496,13 +69593,15 @@ function navMove(d) {
   bs[i].scrollIntoView({ block: "nearest" });
   sfx("nav", undefined, i); // (v1.4.31: a soft marimba note, its own for each option)
 }
-const NAVT = { key: 0, pad: 0, padDir: "", padHeld: 0, a: 0, col: null, colEl: null }; // (menu timing: so a twitchy stick or a held button doesn't race through the options)
+const NAVT = { key: 0, pad: 0, padDir: "", padHeld: 0, a: 0, col: null, colEl: null, side: "L" }; // (menu timing: so a twitchy stick or a held button doesn't race through the options)
 // arrows and the D-pad move the way they point: down goes to the button BELOW, right to the one on the RIGHT (wrapping round at the edges)
 function navDir(dx, dy) {
   const bs = navButtons();
   if (!bs.length) return;
   const a = document.activeElement          ;
   if (!bs.includes(a)) {
+    NAVT.side = "L"; // (a fresh menu: start on the left)
+    NAVT.col = null;
     navMove(dx + dy > 0 ? 1 : -1);
     return;
   }
@@ -69510,50 +69609,54 @@ function navDir(dx, dy) {
       const r = el.getBoundingClientRect();
       return [r.left + r.width / 2, r.top + r.height / 2, r.width, r.height];
     },
-    [cx0, cy, cw, ch] = ctr(a);
-  // (a remembered COLUMN: going down stays on the left, or on the right if that's where you moved - like reading a page)
-  if (dx || NAVT.colEl !== a) NAVT.col = null;
-  const cx = dy && NAVT.col !== null ? NAVT.col : cx0;
-  let best = null,
-    bestS = 1e12,
-    wrap = null,
-    wrapS = -1e12;
-  for (const b of bs) {
-    if (b === a) continue;
-    const [bx, by, bw, bh] = ctr(b),
-      vx = bx - cx,
-      vy = by - cy,
-      along = dx ? vx * dx : vy * dy,
-      side = dx ? Math.abs(vy) : Math.abs(vx),
-      lane = dx ? (bh + ch) / 2 : (bw + cw) / 2,
-      // (v1.4.42) going up or down, a button that lies right under the remembered column always wins over one off
-      // to the side - so you stay on the left (or on the right, once you've moved there) all the way down the menu
-      under = !dx && cx >= bx - bw / 2 - 2 && cx <= bx + bw / 2 + 2;
-    if (along > 4) {
-      const sc = (dx || under ? 0 : 5000) + along + side * (side < lane ? 0.3 : 3);
-      if (sc < bestS) {
-        bestS = sc;
-        best = b;
-      }
-    } // (the nearest one that way, keeping to the same row or column)
-    else if (along < -4 && side < lane) {
-      const sc = -along;
-      if (sc > wrapS) {
-        wrapS = sc;
-        wrap = b;
-      }
+    cy = ctr(a)[1];
+  // the buttons in the same row as one (centres within half a button's height)
+  const rowOf = (el) => {
+    const [, y0, , h0] = ctr(el);
+    return bs.filter((b) => Math.abs(ctr(b)[1] - y0) < Math.min(h0, ctr(b)[3]) / 2);
+  };
+  let n = null;
+  if (dy) {
+    // (v1.4.51) UP AND DOWN GO ROW BY ROW: always to the very next row (it used to skip a row of two buttons when
+    // coming from a wide one), landing on the LEFT button of it - or the RIGHT one if that's the side you last moved
+    // to. A wider grid keeps to the remembered column. At the end, round to the far row.
+    const ahead = bs.filter((b) => b !== a && (ctr(b)[1] - cy) * dy > 4),
+      behind = bs.filter((b) => b !== a && (ctr(b)[1] - cy) * dy < -4),
+      pool = ahead.length ? ahead : behind;
+    if (!pool.length) return;
+    const key = (b) => (ctr(b)[1] - cy) * dy,
+      target = Math.min(...pool.map(key)), // (the nearest row ahead - or, wrapping round, the row at the far end)
+      first = pool.reduce((m, b) => (key(b) < key(m) ? b : m), pool[0]),
+      row = pool
+        .filter((b) => Math.abs(key(b) - target) < Math.min(ctr(b)[3], ctr(first)[3]) / 2)
+        .sort((p, q) => ctr(p)[0] - ctr(q)[0]);
+    if (row.length === 1) n = row[0];
+    else if (row.length === 2 || NAVT.col === null) n = NAVT.side === "R" ? row[row.length - 1] : row[0];
+    else
+      n = row.reduce(
+        (m, b) => (Math.abs(ctr(b)[0] - NAVT.col) < Math.abs(ctr(m)[0] - NAVT.col) ? b : m),
+        row[0]
+      );
+  } else {
+    // LEFT AND RIGHT: along the same row, wrapping round at its ends
+    const row = rowOf(a).sort((p, q) => ctr(p)[0] - ctr(q)[0]);
+    if (row.length < 2) {
+      NAVT.side = dx < 0 ? "L" : "R"; // (nothing beside it - but the next row of two will start on that side)
+      return;
     }
-  } // (at the edge: round to the far end of the same row / column)
-  const n = best || wrap;
+    const at = row.indexOf(a);
+    n = row[(at + dx + row.length) % row.length];
+    const nr = row.indexOf(n);
+    NAVT.side = nr === 0 ? "L" : nr === row.length - 1 ? "R" : NAVT.side;
+    NAVT.col = row.length > 2 ? ctr(n)[0] : null;
+  }
   if (!n) return;
-  if (dx) NAVT.col = ctr(n)[0];
-  else if (NAVT.col === null) NAVT.col = cx0;
   NAVT.colEl = n; // (remember which column we're in)
   document.body.classList.add("padnav");
   n.focus();
   navMark(n);
   n.scrollIntoView({ block: "nearest" });
-  sfx("nav", undefined, Math.max(0, bs.indexOf(n))); // (v1.4.31: a soft marimba note, its own for each option)
+  sfx("nav"); // (a soft marimba note - v1.4.51: the same one for every move)
 }
 // only ONE highlighted option: the one picked with the keys / controller. Moving the mouse hands the highlight back to the mouse.
 function navMark(b) {
@@ -69915,6 +70018,18 @@ profWire();
 //  the game, and where the motion capture, the folk songs and the fonts come from. Both from the menu at any time.
 // =====================================================================================
 const NEWS = [
+  {
+    ver: "v1.4.51",
+    title: "MENUS ROW BY ROW, SMOOTH HD, NOW PLAYING",
+    items: [
+      "DOWN GOES TO THE NEXT ROW - LEFT OR RIGHT, THE SIDE YOU CHOSE",
+      "ONE SOFT, PLEASANT SOUND FOR EVERY MENU MOVE",
+      "SMOOTH HD IS THE DEFAULT - THE 8-BIT LOOK IS GONE",
+      "THE NAME OF EACH TUNE SHOWS WHEN IT STARTS",
+      "LIVES SHOWN AS A NUMBER - OR \u221E WHEN UNLIMITED",
+      "THE TALL VIEW USES THE WHOLE WIDTH OF A PC SCREEN - BIGGER, CLEARER SHAKES",
+    ],
+  },
   {
     ver: "v1.4.50",
     title: "CLEARER FACES, SHINIER TIPS",

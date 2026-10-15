@@ -15898,8 +15898,9 @@ function floorTile(v, V, dark, h, lit, ax, ay, bx, by, cx, cy, dx, dy, k, r) {
       disc(rx2, ry2, 0.9, col("#8a94a8"));
       disc(ax, ay, 2.4, col((k + r) % 3 === 0 ? "#5fd0ff" : "#4a5466"), 1.4); // (a blue light at some of the joins)
     } else {
-      line(ax, ay, bx, by, 0.8, withA(col("#bfe8ff"), 0.4));
-      line(ax, ay, dx, dy, 0.8, withA(col("#bfe8ff"), 0.3));
+      // (v1.4.54: fainter seams - the bright grid was busier than the customers walking over it)
+      line(ax, ay, bx, by, 0.8, withA(col("#bfe8ff"), 0.18));
+      line(ax, ay, dx, dy, 0.8, withA(col("#bfe8ff"), 0.12));
       quad4(ax, ay, bx, by, bx, by + 1.2, ax, ay + 1.2, withA(C.white, 0.08));
     }
     if (hash(mx * 0.07 + my * 0.13) > 0.93) line(mx - 5, my - 1, mx + 4, my + 1.5, 0.7, withA(C.white, 0.18)); // (a scratch)
@@ -63490,7 +63491,7 @@ function drawEggs(g, s) {
 // THE VERSION (from v1.2.0, 5 October 2026): MAJOR.MINOR.PATCH - a new MINOR for a batch of new things, a new PATCH for
 // fixes and small touches - with the day it was made next to it. (Before this the versions were named after the date,
 // like v2026.10.05c.)
-const GAME_VERSION = "v1.4.53",
+const GAME_VERSION = "v1.4.54",
   GAME_DATE = "15.10.2026",
   VERSION_TEXT = GAME_VERSION + "  ·  " + GAME_DATE;
 const FB = '"Chakra Petch", "Segoe UI", sans-serif';
@@ -63609,7 +63610,7 @@ function drawHud(fps) {
       g.fillStyle = "rgba(4,2,10," + Math.min(1, G.fadeT / 0.45).toFixed(3) + ")";
       g.fillRect(0, 0, cssW, cssH);
     }
-    if (crtOn && !CRT_ACTIVE) drawScanlines(g);
+    if (crtOn && retroLook && !CRT_ACTIVE) drawScanlines(g); // (v1.4.54: never in SMOOTH HD - they striped the whole picture)
     return;
   }
   if (["approach", "story", "mini"].includes(G.state)) {
@@ -63620,7 +63621,7 @@ function drawHud(fps) {
       g.fillStyle = "rgba(4,2,10," + Math.min(1, G.fadeT / 0.45).toFixed(3) + ")";
       g.fillRect(0, 0, cssW, cssH);
     }
-    if (crtOn && !CRT_ACTIVE) drawScanlines(g);
+    if (crtOn && retroLook && !CRT_ACTIVE) drawScanlines(g); // (v1.4.54: never in SMOOTH HD - they striped the whole picture)
     return;
   } // (the full-screen scenes: just their own words)
   if (G.state === "jump" && G.jump && (G.jump.inter || G.jump.core)) {
@@ -63875,6 +63876,16 @@ function drawHud(fps) {
   }
   if (inGame) {
     const pad = 14 * s;
+    // (v1.4.54) a soft dark shade in the top corners, behind the score and the lives - so they read clearly over any
+    // bar (a bell, a lamp, a bright window used to sit right behind them)
+    for (const cx0 of [0, cssW]) {
+      const gr = g.createRadialGradient(cx0, 0, 0, cx0, 0, 250 * s);
+      gr.addColorStop(0, "rgba(4,2,12,.55)");
+      gr.addColorStop(0.6, "rgba(4,2,12,.28)");
+      gr.addColorStop(1, "rgba(4,2,12,0)");
+      g.fillStyle = gr;
+      g.fillRect(cx0 ? cssW - 250 * s : 0, 0, 250 * s, 250 * s);
+    }
     g.textAlign = "left";
     g.font = fD(22);
     g.fillStyle = "#ff5fa8";
@@ -63909,8 +63920,11 @@ function drawHud(fps) {
     } else {
       g.fillText(String(G.score).padStart(6, "0"), pad, pad);
       g.shadowBlur = 0;
-      g.font = fB(13);
-      g.fillStyle = "#b9a8b8";
+      g.font = fB(13, 700);
+      g.lineWidth = 3 * s;
+      g.strokeStyle = "rgba(4,2,12,.8)";
+      g.strokeText("HI " + String(Math.max(G.hi, G.score)).padStart(6, "0"), pad, pad + 30 * s);
+      g.fillStyle = "#e0d0e0"; // (v1.4.54: brighter, with a dark edge)
       g.fillText("HI " + String(Math.max(G.hi, G.score)).padStart(6, "0"), pad, pad + 30 * s);
     }
     // lives: little shakes, clear of the corner buttons. (v1.4.28) never over the score: if there are more lives than
@@ -64206,7 +64220,7 @@ function drawHud(fps) {
     g.fillStyle = "rgba(4,2,10," + Math.min(1, G.fadeT / 0.45).toFixed(3) + ")";
     g.fillRect(0, 0, cssW, cssH);
   } // smooth fades between levels
-  if (crtOn && !CRT_ACTIVE) drawScanlines(g);
+  if (crtOn && retroLook && !CRT_ACTIVE) drawScanlines(g); // (v1.4.54: never in SMOOTH HD - they striped the whole picture)
 }
 // ---- how to play, in the words of whatever you're holding (keyboard, controller or touch screen) ----
 function helpLines() {
@@ -70056,6 +70070,15 @@ profWire();
 //  the game, and where the motion capture, the folk songs and the fonts come from. Both from the menu at any time.
 // =====================================================================================
 const NEWS = [
+  {
+    ver: "v1.4.54",
+    title: "A CLEANER, SHARPER PICTURE",
+    items: [
+      "NO MORE SCANLINE STRIPES OVER SMOOTH HD",
+      "SCORE AND LIVES READ CLEARLY OVER ANY BAR",
+      "CALMER GLASS FLOORS",
+    ],
+  },
   {
     ver: "v1.4.53",
     title: "THE DOOR BELL, HUSHED",

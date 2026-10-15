@@ -63490,7 +63490,7 @@ function drawEggs(g, s) {
 // THE VERSION (from v1.2.0, 5 October 2026): MAJOR.MINOR.PATCH - a new MINOR for a batch of new things, a new PATCH for
 // fixes and small touches - with the day it was made next to it. (Before this the versions were named after the date,
 // like v2026.10.05c.)
-const GAME_VERSION = "v1.4.52",
+const GAME_VERSION = "v1.4.53",
   GAME_DATE = "15.10.2026",
   VERSION_TEXT = GAME_VERSION + "  ·  " + GAME_DATE;
 const FB = '"Chakra Petch", "Segoe UI", sans-serif';
@@ -64770,6 +64770,25 @@ function roundRect(g, x, y, w, h, r) {
 // (v1.4.51) NOW PLAYING: when a tune starts, its name fades in at the bottom right for a few seconds - and it stays there
 // while the game is paused - so you always know what's playing
 function nowPlayingHud(g, s) {
+  // (v1.4.53) the full-screen scenes (the trips between planets, the island, the mini-games, the shows) have no bottom
+  // strip - so the tune's name sits quietly in their bottom-right corner instead, small and out of the way
+  const scene =
+    G.state === "castaway" ||
+    ["approach", "story", "mini"].includes(G.state) ||
+    (G.state === "jump" && G.jump && (G.jump.inter || G.jump.core));
+  if (scene && MY.mode !== "off" && curTrack >= 0 && TRACKS[curTrack]) {
+    g.save();
+    g.font = "500 " + Math.round(12 * Math.max(s, 0.8)) + "px " + FB;
+    g.textAlign = "right";
+    g.textBaseline = "bottom";
+    g.fillStyle = "rgba(255,195,77,.75)";
+    g.fillText(
+      "\u266A " + (MY.mode === "mine" && MY.now ? MY.now : TRACKS[curTrack].title),
+      cssW - 12,
+      cssH - 10
+    );
+    g.restore();
+  }
   // (v1.4.52: the big label only while paused - the name is always in the bottom strip now, where it covers nothing)
   if (G.state !== "paused" || !NOWPLAY || curTrack < 0 || NOWPLAY.i !== curTrack || !TRACKS[curTrack]) return;
   const a = 1;
@@ -65223,9 +65242,10 @@ function sfx(name, x , kind ) {
       tone("sawtooth", 1300, 1700, 0.07, 0.04, out, now + 0.2);
       break; // a parrot: SQUAWK!
     case "chirp": // the velociraptor: a quick, bird-like trill
-      for (let i = 0; i < 4; i++)
-        tone("sine", 2400 + i * 180, 3400 + i * 200, 0.05, 0.05, out, now + i * 0.06);
-      tone("triangle", 1600, 900, 0.12, 0.03, out, now + 0.26);
+      // (v1.4.53: lower and softer - the old trill went up to 3400 Hz and pierced the music)
+      for (let i = 0; i < 3; i++)
+        tone("sine", 900 + i * 90, 1300 + i * 100, 0.09, 0.025, out, now + i * 0.08, 0.01);
+      tone("triangle", 800, 500, 0.14, 0.02, out, now + 0.26);
       break;
     case "danger": // URGENT: a customer is about to reach you - a sharp two-tone klaxon
       for (let i = 0; i < 2; i++) {
@@ -65255,15 +65275,16 @@ function sfx(name, x , kind ) {
       fl.frequency.value = 1300;
       fl.Q.value = 6;
       g.gain.setValueAtTime(0.0001, now);
-      g.gain.linearRampToValueAtTime(0.05, now + 0.03);
+      g.gain.linearRampToValueAtTime(0.026, now + 0.04);
       g.gain.exponentialRampToValueAtTime(0.0001, now + 0.32);
       o.connect(fl);
       fl.connect(g);
       g.connect(out);
       o.start(now);
       o.stop(now + 0.35);
-      ping(2400, 0.4, 0.04, out, now + 0.05);
-      ping(3600, 0.3, 0.02, out, now + 0.05);
+      // (v1.4.53: the two little high bell pings - 2400 and 3600 Hz, every time a customer came in, every few seconds -
+      //  were the short sounds over the music. Now just a soft creak, and a low, round wooden knock)
+      tone("sine", 330, 300, 0.22, 0.03, out, now + 0.04, 0.01);
       break;
     }
     case "smash": // a thud, the crash, glass tinkling down for a while
@@ -65375,7 +65396,8 @@ function sfx(name, x , kind ) {
       tone("sine", 60, 30, 1.6, 0.3, out, now + 0.05);
       break;
     case "step":
-      noise(0.04, 0.07, [3000, 1200, 900, 1500, 4000, 2500, 1800, 1100][venue()], 600, out, now, "bandpass");
+      // (v1.4.53: a soft, low footfall - it was a sharp 40 ms click, high on some planets)
+      noise(0.07, 0.04, [900, 800, 700, 900, 1000, 900, 800, 800][venue()], 400, out, now, "bandpass");
       break;
     case "clear": // a two-voice fanfare
       ["C5", "E5", "G5", "C6", "G5", "C6", "E6"].forEach((n, i) => {
@@ -70034,6 +70056,14 @@ profWire();
 //  the game, and where the motion capture, the folk songs and the fonts come from. Both from the menu at any time.
 // =====================================================================================
 const NEWS = [
+  {
+    ver: "v1.4.53",
+    title: "THE DOOR BELL, HUSHED",
+    items: [
+      "NO MORE HIGH LITTLE BELLS EVERY TIME A CUSTOMER COMES IN",
+      "THE TUNE'S NAME SHOWS IN EVERY SCENE",
+    ],
+  },
   {
     ver: "v1.4.52",
     title: "NO SHRILL NOTES, THE TUNE'S NAME ALWAYS THERE",

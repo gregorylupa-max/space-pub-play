@@ -63490,8 +63490,8 @@ function drawEggs(g, s) {
 // THE VERSION (from v1.2.0, 5 October 2026): MAJOR.MINOR.PATCH - a new MINOR for a batch of new things, a new PATCH for
 // fixes and small touches - with the day it was made next to it. (Before this the versions were named after the date,
 // like v2026.10.05c.)
-const GAME_VERSION = "v1.4.51",
-  GAME_DATE = "14.10.2026",
+const GAME_VERSION = "v1.4.52",
+  GAME_DATE = "15.10.2026",
   VERSION_TEXT = GAME_VERSION + "  ·  " + GAME_DATE;
 const FB = '"Chakra Petch", "Segoe UI", sans-serif';
 let FD = '"Bungee", "Impact", sans-serif';
@@ -64162,11 +64162,20 @@ function drawHud(fps) {
   const dev = R.kind === "GPU" ? "GPU · " + R.device : "CPU · software";
   // (only on the menu and in a game - not over the full-screen shows, the trips between planets or the mini-games)
   const techLine = !ATTRACT.on && ["menu", "play", "lost", "clear", "paused", "over"].includes(G.state);
+  // (v1.4.52) THE TUNE'S NAME, ALWAYS: down in the bottom strip next to the version, where it covers nothing
+  const songTxt =
+    MY.mode === "mine" && MY.now
+      ? "\u266A " + MY.now
+      : MY.mode !== "off" && curTrack >= 0 && TRACKS[curTrack]
+        ? "\u266A " + TRACKS[curTrack].title
+        : "";
+  g.font = fB(12, 500);
+  const songW = songTxt ? g.measureText(songTxt).width + 16 : 0;
   if (techLine && !(lift && cssW < 1000)) {
     // (it never runs into the version and date in the other corner: on a narrow screen the graphics card's name is
     //  cut short, and on a very narrow one only the frame rate is left)
     g.font = fB(12, 500);
-    const room = cssW - 12 - g.measureText(VERSION_TEXT).width - 24 - 34 * s - 16,
+    const room = cssW - 12 - g.measureText(VERSION_TEXT).width - 24 - 34 * s - 16 - songW,
       tail = "  ·  " + fps + " FPS" + (QUAL < 2 ? "  ·  AUTO QUALITY " + (QUAL ? "MEDIUM" : "LOW") : "");
     let d = dev.length > 60 ? dev.slice(0, 58) + "…" : dev;
     while (d.length > 8 && g.measureText(d + tail).width > room)
@@ -64183,9 +64192,9 @@ function drawHud(fps) {
   g.font = fB(12, 500);
   g.fillStyle = "rgba(185,168,184,.85)";
   g.fillText(VERSION_TEXT, cssW - 20 - glW, cssH - 11 - lift);
-  if (MY.mode === "mine" && MY.now) {
+  if (songTxt && songW < cssW * 0.45) {
     g.fillStyle = "rgba(255,195,77,.85)";
-    g.fillText("♪ " + MY.now, cssW - 20 - glW - g.measureText(VERSION_TEXT).width - 16, cssH - 11 - lift);
+    g.fillText(songTxt, cssW - 20 - glW - g.measureText(VERSION_TEXT).width - 16, cssH - 11 - lift);
   }
   kidHud(g, s, t, fD, sx, sy);
   gmClearHud(g, s); // (the galaxy map, after a level)
@@ -64761,9 +64770,9 @@ function roundRect(g, x, y, w, h, r) {
 // (v1.4.51) NOW PLAYING: when a tune starts, its name fades in at the bottom right for a few seconds - and it stays there
 // while the game is paused - so you always know what's playing
 function nowPlayingHud(g, s) {
-  if (!NOWPLAY || curTrack < 0 || NOWPLAY.i !== curTrack || !TRACKS[curTrack]) return;
-  const age = (performance.now() - NOWPLAY.at) / 1000,
-    a = G.state === "paused" ? 1 : clamp(Math.min(age * 2, (6 - age) * 1.5), 0, 1);
+  // (v1.4.52: the big label only while paused - the name is always in the bottom strip now, where it covers nothing)
+  if (G.state !== "paused" || !NOWPLAY || curTrack < 0 || NOWPLAY.i !== curTrack || !TRACKS[curTrack]) return;
+  const a = 1;
   if (a <= 0.01) return;
   const tr = TRACKS[curTrack],
     txt = "\u266A  " + tr.title + (tr.where ? "  \u00B7  " + tr.where.toUpperCase() : ""),
@@ -68005,7 +68014,7 @@ for (const tr of TRACKS) if (tr.motifs) for (const k in tr.motifs) tr.motifs[k] 
 const DRUMS = {
   // k kick · s snare · h hat · o open hat · r rim · t tom · c clap · z shaker
   intro: { k: "x.......x.......", h: "x.x.x.x.x.x.x.x." },
-  train: { k: "x.......x.......", s: "....x.......x...", h: "xxxxxxxxxxxxxxxx" },
+  train: { k: "x.......x.......", s: "....x.......x...", h: "x.x.x.x.x.x.x.x." }, // (v1.4.52: the hi-hat on the eighths - it ticked on every sixteenth)
   heart: { k: "x..x............", t: "..........x....." },
   polka: { k: "x.......x.......", s: "....x.......x...", h: "..x...x...x...x." },
   ice: { k: "x...............", r: "............x...", h: "......x.......x." },
@@ -68197,6 +68206,13 @@ function riser(dur, vol, bus, t) {
 // (v1.4.28) THE BEAT, for the pictures: when the band plays a beat, note when it falls (in the page's own clock), so
 // the room can move in time with the music it's actually hearing
 const MBEAT = { at: 0, len: 0 };
+// (v1.4.52) NO SHRILL NOTES: a tune's lifted sections (an octave up) on top of a high lead used to send the melody up to
+// 2000-3300 Hz - piercing little chirps (doubled by a buzzy square) that didn't sound like part of the music. Any melody
+// note above C6 (about 1050 Hz) now folds down an octave.
+const capHi = (m) => {
+  while (m > 84) m -= 12;
+  return m;
+};
 function playStep2(tr, t0) {
   {
     const dv = tr.folk ? 4 : tr.div || (tr.steps === 12 ? 6 : 4);
@@ -68320,7 +68336,7 @@ function playStep2(tr, t0) {
       break;
     case "arp": {
       const order = [0, 1, 2, 3, 2, 1, 0, 1],
-        m = 72 + (tones[order[(s >> 1) % 8] % tones.length] % 12) + (s >= 8 ? 12 : 0);
+        m = capHi(72 + (tones[order[(s >> 1) % 8] % tones.length] % 12) + (s >= 8 ? 12 : 0)); // (v1.4.52: never shrill)
       if (s % 2 === 0) cn(m, st * 3, 0.04, "sine", { att: 0.002 });
       break;
     }
@@ -68413,7 +68429,7 @@ function playStep2(tr, t0) {
     if (tok && tok !== "-" && tok !== ".") {
       let n = 1;
       while (i + n < mot.length && mot[i + n] === ".") n++;
-      const m = degNote(tr, pc, +tok, tp) + L.oct + (sc.up || 0);
+      const m = capHi(degNote(tr, pc, +tok, tp) + L.oct + (sc.up || 0));
       const d = st * 2 * n * 0.95,
         o           = {
           vib: L.vib,
@@ -68432,7 +68448,7 @@ function playStep2(tr, t0) {
         o.vibDelay = Math.min(0.35, d * 0.4);
       }
       const vol = o.duty ? L.vol * 0.9 : L.vol,
-        up1 = degNote(tr, pc, +tok + 1, tp) + L.oct + (sc.up || 0), // (the next note up the scale)
+        up1 = capHi(degNote(tr, pc, +tok + 1, tp) + L.oct + (sc.up || 0)), // (the next note up the scale)
         h = hash(bar * 13.1 + i * 3.7 + SEQ2.sec * 7.3 + SEQ2.loop * 1.9);
       // (v1.4.7) CHIP ORNAMENTS, second time round: now and then a quick TRILL on a long note, or a GRACE NOTE flicked
       // in just before one - the way the old game composers dressed up a repeat
@@ -68460,7 +68476,7 @@ function playStep2(tr, t0) {
       else if ((again || heat > 0.6) && mk !== "f")
         note2(
           L.wave === "sine" ? "triangle" : L.wave,
-          degNote(tr, pc, +tok - 2, tp) + L.oct,
+          capHi(degNote(tr, pc, +tok - 2, tp) + L.oct),
           d,
           L.vol * 0.36,
           leadBus,
@@ -68481,7 +68497,7 @@ function playStep2(tr, t0) {
         tp2 = wrap ? tr.keys[(SEQ2.loop + 1) % tr.keys.length] : tp,
         nch = chord(nsec.chords[0]),
         npc2 = (nch.pc + tp2 + 120) % 12,
-        pm = degNote(tr, npc2, i === mot.length - 2 ? -2 : -1, tp2) + L.oct + (nsec.up || 0);
+        pm = capHi(degNote(tr, npc2, i === mot.length - 2 ? -2 : -1, tp2) + L.oct + (nsec.up || 0));
       // (v1.4.51: soft and joined-up - the old clipped pick-up notes sounded like short stray bits)
       note2(L.wave === "square" ? "triangle" : L.wave, pm, st * 1.8, L.vol * 0.55, leadBus, t, { att: 0.01 });
     }
@@ -70018,6 +70034,14 @@ profWire();
 //  the game, and where the motion capture, the folk songs and the fonts come from. Both from the menu at any time.
 // =====================================================================================
 const NEWS = [
+  {
+    ver: "v1.4.52",
+    title: "NO SHRILL NOTES, THE TUNE'S NAME ALWAYS THERE",
+    items: [
+      "NO MORE PIERCING HIGH CHIRPS IN RED DUST HIGHWAY (OR ANY TUNE)",
+      "THE TUNE'S NAME STAYS IN THE BOTTOM CORNER",
+    ],
+  },
   {
     ver: "v1.4.51",
     title: "MENUS ROW BY ROW, SMOOTH HD, NOW PLAYING",
@@ -72260,9 +72284,9 @@ function folkStep(tr, t0) {
   const e = tr.byT[s];
   if (e) {
     const o = { vib: L.vib, lp: L.lp, swell: L.swell, stacc: L.stacc };
-    note2(L.wave, e.m + (L.oct || 0), e.d * st * 0.95, L.vol, leadBus, t, o);
+    note2(L.wave, capHi(e.m + (L.oct || 0)), e.d * st * 0.95, L.vol, leadBus, t, o); // (v1.4.52: never shrill)
     if (L.wave2)
-      note2(L.wave2, e.m + (L.oct || 0), e.d * st * 0.95, L.vol * 0.5, leadBus, t, { ...o, det: 7 });
+      note2(L.wave2, capHi(e.m + (L.oct || 0)), e.d * st * 0.95, L.vol * 0.5, leadBus, t, { ...o, det: 7 });
   }
   // the band, on the sixteenth-note grid: a bass on the beat, the chord on the off-beat - an oom-pah polka (2/4, 4/4),
   // a waltz (3/4: bass, chord, chord) or a lilting 6/8 (3/8, 6/8, 9/8: bass on each dotted quarter, chord in between)

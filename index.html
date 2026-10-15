@@ -5098,6 +5098,8 @@ const TYPES = [
   // a mystical dragon (rare, from level 7): it floats in on a long scaly body. Serve it (it takes a couple of shakes) and it
   //   breathes a rainbow of dragon fire down its bar: everyone on that bar is blown back, devils and all.
   { kind: "skeleton", speed: 1.1, push: 150, w: 1.0, bones: true },
+  // (v1.4.56) a GHOST (from level 3): a friendly sheet ghost that floats in, wailing softly - "BOO-TIFUL!" when served
+  { kind: "ghost", speed: 0.85, push: 145, w: 1.0, spook: true },
   { kind: "dragon", speed: 0.6, push: 75, w: 1.0, dragonB: true },
   // the GALACTIC GLUTTON - the last customer of the last bar: enormous, slow, and he wants a dozen shakes
   { kind: "glutton", speed: 0.42, push: 32, w: 1.0, glutton: true },
@@ -5893,7 +5895,7 @@ const paramsRaw = () => {
   const L0 = G.endless ? Math.min(20, G.endLvl || 1) : G.level,
     k2 = G.players === 2 ? 1.35 : 1,
     D = DF(); // two bartenders get a busier bar
-  const L = D.kid ? 1 + (L0 - 1) * 0.4 : D.easy ? 1 + (L0 - 1) * 0.6 : L0; // KID MODE: the stages get harder much more slowly (v1.4.42: EASY a good deal more slowly too)
+  const L = D.kid ? 1 + (L0 - 1) * 0.4 : D.easy ? 1 + (L0 - 1) * 0.45 : L0; // KID MODE: the stages get harder much more slowly (v1.4.42: EASY a good deal more slowly too)
   // a curve for the 20-stop tour: it climbs quickly through the solar system, then keeps tightening gently out in the galaxy
   const e = 1 - Math.exp(-(L - 1) / 7); // 0 at level 1, 0.73 at 10, 0.93 at 20
   // FRANTIC BUT FAIR: later levels pack the bar fuller and send people in faster and in bigger groups (and RUSH HOURS),
@@ -5915,19 +5917,23 @@ const paramsRaw = () => {
   // (v1.4.42) EASY, BALANCED: in the later levels Easy got almost as frantic as Normal - and a shake hardly pushed
   // anyone back any more. Now on Easy the bar fills up less (fewer people at once, smaller groups, longer pauses
   // between their steps), and a shake still sends a customer a good long way back down the bar, all the way through
-  if (D.easy)
+  // (v1.4.57) EASY, FLATTER STILL: the stops count for less (45%), and the climb levels off at about three-quarters of
+  // the way (the last stops of the tour no longer keep getting harder) - fewer people at once, a gentler speed-up
+  if (D.easy) {
+    const eE = Math.min(e, 0.78);
     return tourLoop({
-      total: Math.round(Math.min(44, 9 + L * 2.6) * k2),
-      maxOn: Math.round(Math.min(11, 3 + L * 0.7) * k2) + rush * 2,
-      spawn: ((1.9 - 1.2 * e) / k2) * D.spawn * (rush ? 0.5 : 1),
-      speed: (1 + 0.9 * e) * D.speed,
-      empty: (200 + 130 * e) * D.empty,
-      pause: 0.9 - 0.4 * e,
-      push: 1.05 - 0.1 * e,
-      group: 0.08 + 0.22 * e,
-      run: 1.05 + 0.3 * e,
-      slide: 1 + 0.15 * e,
+      total: Math.round(Math.min(38, 9 + L * 2.4) * k2),
+      maxOn: Math.round(Math.min(9, 3 + L * 0.55) * k2) + rush * 2,
+      spawn: ((1.9 - 1.1 * eE) / k2) * D.spawn * (rush ? 0.55 : 1),
+      speed: (1 + 0.75 * eE) * D.speed,
+      empty: (200 + 120 * eE) * D.empty,
+      pause: 0.9 - 0.35 * eE,
+      push: 1.05 - 0.08 * eE,
+      group: 0.08 + 0.18 * eE,
+      run: 1.05 + 0.3 * eE,
+      slide: 1 + 0.15 * eE,
     });
+  }
   return tourLoop({
     total: Math.round(Math.min(56, 9 + L * 3) * k2),
     maxOn: Math.round(Math.min(19, 3 + L) * k2) + rush * 4,
@@ -7056,8 +7062,10 @@ function spawnPower() {
   // when you're cruising (Shake Fever, lots of lives) the decaf turns up a bit more
   const low = !G.versus && G.lives <= 1,
     cruising = G.fever > 0 || (!G.versus && G.lives >= 5);
+  // (v1.4.57: on EASY the extra-life power-up turns up half as often - lives piled up into the dozens)
   const wt = (k) =>
     POWERS[k].w *
+    (k === "life" && difficulty === "easy" ? 0.5 : 1) *
     (low
       ? { shield: 2.5, life: 3, slow: 1.8, decaf: 0.3 }[k] || 1
       : cruising
@@ -7715,9 +7723,11 @@ function update(dt) {
                       ? TYPE_OF.skeleton
                       : G.level >= 3 && rs < 0.51
                         ? TYPE_OF.snake
-                        : G.level >= 4 && rs < 0.55
-                          ? TYPE_OF.zombie
-                          : TYPES[mix[Math.floor(Math.random() * mix.length)]];
+                        : G.level >= 3 && rs < 0.545
+                          ? TYPE_OF.ghost // (v1.4.56)
+                          : G.level >= 4 && rs < 0.585
+                            ? TYPE_OF.zombie
+                            : TYPES[mix[Math.floor(Math.random() * mix.length)]];
     if (G.level >= 3 && !G.sesameSeen && Math.random() < 0.03) {
       type = TYPE_OF.alibaba;
       G.sesameSeen = true;
@@ -7737,6 +7747,7 @@ function update(dt) {
         );
     }
     if (type.bones && Math.random() < 0.5) sfx("rattle", X0);
+    if (type.spook && Math.random() < 0.5) sfx("boo", X0); // (a soft, low "oooooh")
     if (type.zombie) {
       sfx("groan", X0);
       if (!demo && !G.zombieIntro) {
@@ -9302,6 +9313,16 @@ function update(dt) {
         }
         SCORER = null;
       }
+      if (catcher.type.spook && !demo)
+        G.callouts.push({
+          text: "BOO-TIFUL!",
+          x: projL(s.lane, catcher.x + 20, 0, VSIDE.c)[0],
+          y: projL(s.lane, catcher.x + 20, LY(s.lane, catcher.x) - 140, VSIDE.c)[1],
+          world: true,
+          c: "#dfe8ff",
+          life: 1.2,
+          max: 1.2,
+        });
       if (catcher.type.bones) {
         sfx("rattle", catcher.x);
         if (!demo)
@@ -9654,7 +9675,7 @@ function update(dt) {
         3
       );
       if (G.level + 1 > unlocked()) store.set("unlock", Math.min(LAST_LEVEL, G.level + 1));
-      if (G.level % 5 === 0 && G.level < LAST_LEVEL) {
+      if (G.level % (difficulty === "easy" ? 10 : 5) === 0 && G.level < LAST_LEVEL) {
         if (G.versus) for (const p of PL) p.lives++;
         else G.lives++;
         callout("MILESTONE: " + G.level + " STOPS DONE  ·  +1 LIFE", "#5ff5c8", 3);
@@ -11331,6 +11352,17 @@ function updateEnding(dt) {
     endToMenu();
     return;
   }
+  // (v1.4.57) the celebration likewise: not in its first 4 seconds, and then two presses to skip a part (at the final
+  // choice one press still plays on)
+  if (E.skip && !E.choose && E.kind !== "mw") {
+    if (t < 4 || !E.armT || t - E.armT > 2.5) {
+      if (t >= 4) {
+        E.armT = t;
+        sfx("nav");
+      }
+      E.skip = false;
+    }
+  }
   if (E.skip && t > 2) {
     if (t < 13) {
       E.t = 13;
@@ -11537,7 +11569,7 @@ function addScore(n, x , y ) {
   who.score = Math.max(0, who.score + n);
   G.score = twoP() ? (G.versus ? Math.max(P1.score, P2.score) : P1.score + P2.score) : P1.score;
   if (who.score >= who.nextLife) {
-    who.nextLife += 40000;
+    who.nextLife += difficulty === "easy" ? 80000 : 40000; // (v1.4.57: on EASY an extra life for every 80,000 points - half as many)
     if (G.versus) who.lives++;
     else G.lives++;
     callout(twoP() ? "EXTRA LIFE · P" + (who.id + 1) : "EXTRA LIFE!", "#5ff5c8", 2);
@@ -11733,6 +11765,17 @@ function finishJump() {
   } // first the trip, then Bogdan (sometimes), then the new place. (the press that skipped the jump doesn't pour)
 }
 function skipJump() {
+  // (v1.4.57) THE FINALE IS HARD TO MISS BY ACCIDENT: the dive into the heart of Andromeda can't be skipped in its first
+  // 4 seconds, and after that it takes TWO presses (the first one asks "PRESS AGAIN TO SKIP") - a thumb still on POUR
+  // from the last level used to skip it without noticing
+  if (G.jump && G.jump.core) {
+    if (G.jump.t < 4) return;
+    if (!G.jump.armT || G.jump.t - G.jump.armT > 2.5) {
+      G.jump.armT = G.jump.t;
+      sfx("nav");
+      return;
+    }
+  }
   const len = G.jump && G.jump.core ? CORE_LEN : G.jump && G.jump.inter ? INTER_LEN : JUMP_LEN;
   if (G.jump && G.jump.t < len - 0.8) {
     G.jump.t = Math.max(G.jump.t, len - 0.8);
@@ -12492,6 +12535,7 @@ function draw() {
   else {
     drawRoom(V, t);
     funDecor(V, t, "back");
+    roomDim(); // (v1.4.57: the very bright rooms toned down, behind the people and the glasses)
     for (let lane = 0; lane < LANES; lane++) {
       // (v1.4.28: a veil of haze between the bars was drawn here, over the WHOLE screen, three times a frame - v1.4.30:
       //  that depth haze is now baked into each bar's own picture instead - counterBody, sky.ts - which costs nothing)
@@ -12507,6 +12551,7 @@ function draw() {
         if (c.thief) funThiefFx(c, t);
       }
       drawCounter(lane, V, t);
+      counterDim(lane); // (v1.4.57)
       drawDrips(lane);
       drawWet(lane); // (v1.4.28: the wet trail a sliding shake leaves on the bar)
       for (const cr of CRITS) if (cr.lane === lane) drawCritter(cr, t); // (a caterpillar or a worm on the bar top)
@@ -14736,6 +14781,34 @@ function barReflect(x, gy, flavor, full, spin, t) {
   disc(x, gy + 0.5, 15, withA(col("#fff4dc"), 0.09), 1.6);
   disc(x - 4 + Math.sin(t * 3 + x * 0.05) * 2, gy + 0.2, 5, withA(C.white, 0.16), 0.7);
   R.setAdd(false);
+}
+
+// (v1.4.57) TOO BRIGHT TO PLAY: on a few stops (the snow lodge, the hot springs, the cloud towns, the ice bar...) the room
+// and the bars were so pale and bright that the glasses and the bartender were hard to pick out. Measured stop by stop, these
+// get the room behind and the bar tops toned down - the people and the glasses, drawn on top, keep their full colour.
+const ROOM_DIM                         = {
+  "GEYSERA HOT SPRINGS": 0.55,
+  "URANUS SNOW LODGE": 0.42,
+  "PUFFBALL SKY TOWN": 0.42,
+  "PRISMA DIAMOND DRIZZLE LODGE": 0.32,
+  "VENUS CLOUD CAFE": 0.26,
+  "EUROPA ICE BAR": 0.24,
+  "TRAPPIST-1 CRYSTAL TEA HOUSE": 0.08,
+  "THE ANDROMEDA CORE": 0.07,
+};
+const dimNow = () => (OUT ? 0 : ROOM_DIM[(VENUES[tourStop()] || {}).name] || 0);
+function roomDim() {
+  const k = dimNow();
+  if (k > 0) rect(-ox - 20, -oy - 20, W + 40, H + 40, withA(col("#08060e"), k));
+}
+function counterDim(lane) {
+  const k = dimNow();
+  if (!(k > 0)) return;
+  const a = X0 - 24,
+    b = X1 + 18,
+    ya = LY(lane, a),
+    yb = LY(lane, b);
+  quad4(a - 10, ya - 10, b - 10, yb - 10, b, yb + 28, a, ya + 28, withA(col("#08060e"), k * 0.8));
 }
 // =====================================================================================
 //  SKY TRAFFIC - what goes past the big windows: meteor showers, comets, flying saucers (sometimes
@@ -17739,6 +17812,10 @@ function customerBody(c, t, a) {
   } // the robots, five different models
   if (c.type.bones) {
     drawSkeleton(c, t, a);
+    return;
+  }
+  if (c.type.spook) {
+    drawGhost(c, t, a); // (v1.4.56: a ghost)
     return;
   }
   if (c.type.boss) {
@@ -24436,6 +24513,10 @@ function drawVert(V, t) {
     for (const it of F.items) list.push({ x: it.x, f: () => vAt(it.lane, it.x, 0, () => drawFiredItem(it)) });
     list.push({ x: F.bx, f: () => vAt(F.lane, F.bx, VSIDE.p, () => drawBoss(F, t)) });
   }
+  {
+    const k = dimNow();
+    if (k > 0) rect(-ox - 20, -oy - 20, W + 40, H + 40, withA(col("#08060e"), k)); // (v1.4.57: too-bright stops toned down)
+  }
   list.sort((a, b) => (G.mirror ? b.x - a.x : a.x - b.x)); // (far things first - on a mirror bar the far end is the taps)
   for (const it of list) it.f();
   if (hasPw("freeze")) for (const c of customers) if (c.state === "walk") drawIce(c, t);
@@ -29961,6 +30042,118 @@ function drawSkeleton(c, t, a) {
   tri(0.5, hy + 3, 2.5, hy + 3, 1.5, hy + 6, ink);
   rect(-5, hy + 10 + jaw, 12, 4, dk);
   for (let i = 0; i < 5; i++) line(-4 + i * 2.5, hy + 9, -4 + i * 2.5, hy + 12 + jaw, 0.8, ink); // teeth and jaw
+  pop();
+}
+// ---- (v1.4.56) A GHOST: a friendly old-fashioned sheet ghost that FLOATS in - never touching the floor - bobbing gently,
+//      its hem rippling in waves, a little see-through and glowing. Big dark eyes and a round "oooh" mouth; served, it
+//      holds the shake in one stubby sheet-arm and you can see the pink go down inside it; happy, it smiles and blushes.
+//      Near the end of the bar its eyes glow red (it's getting cross). ----
+function drawGhost(c, t, a) {
+  const A = (cc, k = 1) => withA(cc, cc[3] * a * k),
+    sheet = col("#eef4ff"),
+    shade2 = col("#b8c8e8"),
+    ink = col("#160c28");
+  const walking = c.state === "walk" && c.moving,
+    pushed = c.state === "pushed",
+    drink = c.state === "drink",
+    out = c.state === "out",
+    happy = c.happy > 0;
+  const ph = t * 2.2 + c.ph * 3,
+    hov = -16 - Math.sin(ph) * 3.5 - (out ? 6 : 0), // (it floats - the hem never touches the floor; leaving, it rises a little)
+    lean = pushed ? -0.28 : walking ? 0.1 : 0.03,
+    see = OUT ? 1 : 0.82; // (a little see-through)
+  // its soft shadow on the floor, smaller when it bobs up
+  disc(0, -1, 12 - Math.sin(ph) * 2, A(col("#000000"), 0.16), 3);
+  push();
+  translate(0, hov);
+  rotate(lean);
+  // a wispy trail behind it as it drifts along
+  if (!OUT && (walking || out || pushed)) {
+    R.setAdd(true);
+    for (let i = 1; i <= 3; i++)
+      glowE(-10 - i * 9, -18 + Math.sin(ph - i) * 3, 9 - i * 2, 6 - i, A(col("#cfe0ff"), 0.22 / i));
+    R.setAdd(false);
+  }
+  if (!OUT) {
+    R.setAdd(true);
+    glow(0, -32, 34, A(col("#bfd8ff"), 0.22)); // (its ghostly glow)
+    R.setAdd(false);
+  }
+  // THE SHEET: a dome on top, widening down to a rippling, scalloped hem
+  const P = [],
+    top = -62,
+    hw = 17;
+  for (let i = 0; i <= 12; i++) {
+    const an = Math.PI + (i / 12) * Math.PI; // (the dome: left, over the top, right)
+    P.push([Math.cos(an) * 14, top + Math.sin(an) * 14]);
+  }
+  for (let i = 1; i <= 6; i++) P.push([14 + (hw - 14) * (i / 6), top + (i / 6) * 60]); // right side, flaring out
+  const n = 16;
+  for (let i = 0; i <= n; i++) {
+    const x = hw - (2 * hw * i) / n,
+      wave = Math.sin(i * 1.4 - t * 7 + c.ph * 5);
+    P.push([x, -2 + wave * 3.5 + (i % 2 ? -3 : 1.5)]); // the hem: scallops that ripple along
+  }
+  for (let i = 5; i >= 1; i--) P.push([-14 - (hw - 14) * (i / 6), top + (i / 6) * 60]); // and up the left side
+  const cx0 = 0,
+    cy0 = -32;
+  for (let i = 0; i < P.length; i++) {
+    const p1 = P[i],
+      p2 = P[(i + 1) % P.length];
+    tri(cx0, cy0, p1[0], p1[1], p2[0], p2[1], A(sheet, see));
+  }
+  // soft folds in the cloth, and a shadowed side
+  for (const fx of [-7, 2, 10]) line(fx, -40, fx - 1 + Math.sin(ph + fx) * 1.5, -6, 2.4, A(shade2, 0.35));
+  disc(-9, -30, 7, A(shade2, 0.25), 18);
+  // the shake, seen through the sheet as it goes down
+  if (drink) {
+    const k = 1 - c.drinkT;
+    if (k > 0.15) disc(2, -42 + k * 22, 4 + k * 3, A(col("#ff8fbf"), 0.45), 3 + k * 2);
+  }
+  // little stubby sheet-arms: waving when happy, one reaching out with the shake when it drinks
+  const armAt = (sd) => {
+    let ang = sd > 0 ? 0.5 : 2.6;
+    if (walking) ang += Math.sin(ph * 1.6 + (sd > 0 ? 0 : 2)) * 0.25;
+    if (drink && sd > 0) ang = -0.5;
+    if (happy && sd < 0) ang = -2.3 + Math.sin(t * 12) * 0.35;
+    if (pushed) ang = sd > 0 ? -0.9 : -2.2;
+    const sx = sd * 12,
+      sy = -40,
+      ex = sx + Math.cos(ang) * 11,
+      ey = sy + Math.sin(ang) * 11;
+    line(sx, sy, ex, ey, 6, A(sheet, see));
+    disc(ex, ey, 3.4, A(sheet, see));
+    disc(ex, ey + 1, 2, A(shade2, 0.4));
+    return [ex, ey];
+  };
+  armAt(-1);
+  const [gx, gy] = armAt(1);
+  if (drink) {
+    push();
+    translate(gx + 2, gy - 3);
+    rotate(-0.6);
+    drawMiniGlass(1 - c.drinkT, (cc) => withA(cc, cc[3] * a));
+    pop();
+  }
+  // THE FACE: big dark oval eyes with a glint, and a round "oooh" - or a smile and rosy cheeks when it's happy
+  const ey = -60,
+    cross = c.state === "walk" && c.x > X1 - 170,
+    blink = Math.sin(t * 1.3 + c.ph * 9) > 0.97;
+  for (const ex of [-4, 5]) {
+    if (blink) line(ex - 2.5, ey, ex + 2.5, ey, 1.6, A(ink));
+    else {
+      disc(ex, ey, 2.8, A(ink), pushed ? 4.4 : 3.8);
+      disc(ex + 0.8, ey - 1.2, 0.9, A(cross ? col("#ff4050") : col("#ffffff"), 0.9));
+    }
+  }
+  if (happy || drink) {
+    arc(1, ey + 6, 4, 0.2, Math.PI - 0.2, 1.4, A(ink), 8);
+    disc(-8, ey + 5, 2.4, A(col("#ff8fbf"), 0.5), 1.5);
+    disc(10, ey + 5, 2.4, A(col("#ff8fbf"), 0.5), 1.5);
+  } else {
+    const o = walking ? 2.2 + Math.abs(Math.sin(t * 3)) * 1.2 : 1.8; // ("ooooOOOoooh")
+    disc(1.5, ey + 8, o * 0.8, A(ink), o);
+  }
   pop();
 }
 // ---- a mystical dragon: a long serpent body floating in coils, scales, a mane, horns, whiskers - jade, gold, silver or black ----
@@ -40273,6 +40466,7 @@ const NICE = {
   rex: "T-REX",
   raptor: "RAPTOR",
   skeleton: "SKELETON",
+  ghost: "GHOST",
   dragon: "DRAGON",
   snake: "SNAKE",
   zombie: "ZOMBIE",
@@ -46010,7 +46204,7 @@ const CORE_CAPS                     = [
   [20.5, "ONE OF THEM IS REALLY A RING OF OLD RED STARS CIRCLING THE BLACK HOLE - SEEN FROM THE SIDE"],
   [24.5, "IT'S QUIET NOW - IT ISN'T SWALLOWING MUCH. JUST AS WELL: WE'RE ONLY HERE TO SERVE SHAKES!"],
   [26.6, "THE WHOLE TOUR SERVED - BOTH GALAXIES!"],
-  [28.2, "LET'S GO HOME! THE TOUR STARTS AGAIN - HARDER!"], // (v1.4.28: straight back to Mercury, a notch harder)
+  [28.2, "AND NOW - THE CELEBRATION!"], // (v1.4.57: the big party, then the tour again from Mercury, harder)
 ];
 function startCore() {
   G.state = "jump";
@@ -46038,16 +46232,12 @@ function updateCore(dt) {
   if (J.t > 17 && once("c3")) sfx("chime", undefined, 2);
   if (J.t > 28 && once("c4")) sfx("bonus");
   if (J.t >= CORE_LEN) {
-    // (v1.4.28) LET'S GO HOME: no long party any more - the prize, and straight back to Mercury to tour it all again, harder
+    // (v1.4.57) AND NOW, THE CELEBRATION: the one big party of the game comes here, at the very end - the prize, the
+    // fireworks and the crowd, BEST BARTENDER IN THE UNIVERSE and the credits - and then PLAY ON (the tour again from
+    // Mercury, faster) or back to the menu. (v1.4.28 had cut it short, straight back to Mercury; the Milky Way's own party
+    // is gone now, so this is where it belongs.)
     G.jump = null;
-    funWon();
-    const lives = G.versus ? 0 : Math.max(0, G.lives);
-    for (const p of active()) {
-      SCORER = p;
-      addScore(Math.round((50000 + lives * 10000) / active().length));
-    }
-    SCORER = null;
-    newTour();
+    startEnding("final");
   }
 }
 function drawCore(t) {
@@ -46248,6 +46438,26 @@ function coreHud(g, s) {
   if (j > 7) {
     g.globalAlpha = clamp(Math.min((j - 7) * 1.5, (CORE_LEN - j) * 2), 0, 1);
     neon2(g, "THE HEART OF ANDROMEDA", cx, cssH * 0.1, 24 * s, "#ffc34d");
+    g.globalAlpha = 1;
+  }
+  // (v1.4.57) how to skip it: two presses (so a thumb still on POUR doesn't skip the finale by accident)
+  if (j > 4) {
+    const J = G.jump,
+      armed = J.armT !== undefined && j - J.armT < 2.5;
+    g.globalAlpha = armed ? 0.95 : 0.5;
+    g.font = Math.round(11 * s) + "px " + FB;
+    g.fillStyle = "#fff3e2";
+    g.fillText(
+      armed
+        ? lastDev === "touch"
+          ? "TAP AGAIN TO SKIP"
+          : "PRESS AGAIN TO SKIP"
+        : lastDev === "touch"
+          ? "TAP TWICE TO SKIP"
+          : "PRESS TWICE TO SKIP",
+      cx,
+      cssH - 18 * s
+    );
     g.globalAlpha = 1;
   }
   g.textBaseline = "top";
@@ -63511,7 +63721,7 @@ function drawEggs(g, s) {
 // THE VERSION (from v1.2.0, 5 October 2026): MAJOR.MINOR.PATCH - a new MINOR for a batch of new things, a new PATCH for
 // fixes and small touches - with the day it was made next to it. (Before this the versions were named after the date,
 // like v2026.10.05c.)
-const GAME_VERSION = "v1.4.55",
+const GAME_VERSION = "v1.4.56",
   GAME_DATE = "15.10.2026",
   VERSION_TEXT = GAME_VERSION + "  ·  " + GAME_DATE;
 const FB = '"Chakra Petch", "Segoe UI", sans-serif';
@@ -63758,11 +63968,7 @@ function drawHud(fps) {
     // the lives sit just left of the buttons - or, on a narrow screen, in a row of their own just under them
     HUDB.under = !!btnL;
     HUDB.right = HUDB.under ? cssW - 14 * s : (btnAt || cssW - 14 * s) - 12 * s;
-    HUDB.lives = HUDB.under
-      ? cssW
-      : HUDB.right -
-        (G.versus ? 0 : G.free || DF().kid ? 1 : Math.max(0, G.lives)) * 22 * s -
-        (G.versus ? 10 : 74) * s; // (and the sign stays left of them - and of the "LIVES 3")
+    HUDB.lives = HUDB.under ? cssW : HUDB.right - (G.versus ? 10 : 120) * s; // (and the sign stays left of the "LIVES 3")
     const scoreW = (G.versus ? 172 : twoP() ? 104 : 92) * s; // (how much room the score block on the left takes)
     // (no room at all between the scores and the buttons - two players' scores on a phone: the sign drops to its own
     //  line just under the buttons)
@@ -63949,47 +64155,28 @@ function drawHud(fps) {
     }
     // lives: little shakes, clear of the corner buttons. (v1.4.28) never over the score: if there are more lives than
     // there's room for (extra lives pile up), it shows as many as fit and then "x7"
-    // (v1.4.51) and the NUMBER, in words beside them - "LIVES 3" - or "LIVES \u221E" when they can't run out (free play,
-    // KID MODE); unlimited shows a single shake
+    // (v1.4.51) and the NUMBER, in words - "LIVES 3" - or "LIVES \u221E" when they can't run out (free play, KID MODE).
+    // (v1.4.57) just the words and the number now, a little bigger - no row of little shakes (with a dozen lives it
+    // turned into a long row, and the number already says it)
     const unl = !G.versus && (G.free || DF().kid),
       rightL = HUDB.right || cssW - pad - 190,
-      leftL = pad + (twoP() ? 150 : 118) * s + 64 * s,
-      fitN = Math.max(1, Math.floor((rightL - 14 * s - leftL) / (22 * s)) + 1),
-      nL = G.versus ? 0 : unl ? 1 : Math.max(0, G.lives),
-      showN = unl ? 1 : Math.min(nL, fitN);
+      nL = G.versus ? 0 : Math.max(0, G.lives);
     if (!G.versus && inGame) {
-      const ly = HUDB.under ? HUDB.b + 6 * s : pad + 2 * s;
+      const ly = HUDB.under ? HUDB.b + 6 * s : pad + 2 * s,
+        txt = T("LIVES") + " " + (unl ? "\u221E" : String(nL));
       g.textAlign = "right";
       g.textBaseline = "middle";
-      g.font = fB(12, 800);
-      g.fillStyle = "#ff8fbf";
-      g.fillText(
-        T("LIVES") + " " + (unl ? "\u221E" : String(nL)),
-        rightL - 14 * s - Math.max(0, showN - 1) * 22 * s - 8 * s,
-        ly + 15 * s
-      );
+      g.font = fD(17);
+      g.lineWidth = 4 * s;
+      g.strokeStyle = "rgba(4,2,12,.85)";
+      g.strokeText(txt, rightL - 10 * s, ly + 13 * s);
+      g.fillStyle = nL <= 1 && !unl ? "#ff5a6a" : "#ff8fbf"; // (red on your last life)
+      g.shadowColor = "rgba(255,95,168,.5)";
+      g.shadowBlur = 8 * s;
+      g.fillText(txt, rightL - 10 * s, ly + 13 * s);
+      g.shadowBlur = 0;
       g.textAlign = "left";
       g.textBaseline = "top";
-    }
-    for (let i = 0; i < showN; i++) {
-      const lx = rightL - 14 * s - i * 22 * s,
-        ly = HUDB.under ? HUDB.b + 6 * s : pad + 2 * s;
-      g.fillStyle = "#ff8fbf";
-      g.beginPath();
-      g.moveTo(lx, ly + 6 * s);
-      g.lineTo(lx + 12 * s, ly + 6 * s);
-      g.lineTo(lx + 10 * s, ly + 24 * s);
-      g.lineTo(lx + 2 * s, ly + 24 * s);
-      g.closePath();
-      g.fill();
-      g.fillStyle = "#fff1d6";
-      g.beginPath();
-      g.arc(lx + 6 * s, ly + 5 * s, 5 * s, Math.PI, 0);
-      g.fill();
-      g.fillStyle = "#ff3b4f";
-      g.beginPath();
-      g.arc(lx + 6 * s, ly + 1 * s, 2 * s, 0, 6.283);
-      g.fill();
     }
     // holy water left: little blue bottles under the score
     const holyOn = G.state !== "bonus" && G.level >= 2;
@@ -64633,7 +64820,13 @@ function drawEndingHud(g, s, fD, fB) {
     small("A NEW TOUR, FASTER - OR BACK TO THE MENU?", y - 20 * s, "#fff3e2", 13, 0.9);
   } else if (et > 2)
     small(
-      (lastDev === "touch" ? "TAP TO SKIP" : "PRESS ANY KEY TO SKIP") +
+      (E.armT !== undefined && et - E.armT < 2.5
+        ? lastDev === "touch"
+          ? "TAP AGAIN TO SKIP"
+          : "PRESS AGAIN TO SKIP"
+        : lastDev === "touch"
+          ? "TAP TWICE TO SKIP"
+          : "PRESS TWICE TO SKIP") +
         (lastDev === "pad" ? "  ·  B: MAIN MENU" : lastDev === "touch" ? "" : "  ·  ESC: MAIN MENU"),
       cssH - 46 * s,
       "rgba(255,243,226,.5)",
@@ -65871,6 +66064,31 @@ function sfx(name, x , kind ) {
         0.07
       );
       break;
+    case "boo": {
+      // (v1.4.56) a ghost drifting in: a soft, low, wavering "oooooh" - gentle, under the music
+      const o = AC.createOscillator(),
+        l = AC.createOscillator(),
+        lg = AC.createGain(),
+        g = AC.createGain();
+      o.type = "sine";
+      o.frequency.setValueAtTime(330, now);
+      o.frequency.linearRampToValueAtTime(420, now + 0.5);
+      o.frequency.linearRampToValueAtTime(290, now + 1.3);
+      l.frequency.value = 5;
+      lg.gain.value = 9;
+      l.connect(lg);
+      lg.connect(o.frequency);
+      g.gain.setValueAtTime(0.0001, now);
+      g.gain.linearRampToValueAtTime(0.03, now + 0.35);
+      g.gain.exponentialRampToValueAtTime(0.0001, now + 1.4);
+      o.connect(g);
+      g.connect(out);
+      o.start(now);
+      l.start(now);
+      o.stop(now + 1.45);
+      l.stop(now + 1.45);
+      break;
+    }
     case "sputnik":
       break; // (v1.4.28: silent now - its "beep-beep... beep-beep" sounded like stray beeps behind the music)
     case "bagpipe": {
@@ -70090,6 +70308,17 @@ profWire();
 //  the game, and where the motion capture, the folk songs and the fonts come from. Both from the menu at any time.
 // =====================================================================================
 const NEWS = [
+  {
+    ver: "v1.4.56",
+    title: "GHOSTS!",
+    items: [
+      "FRIENDLY SHEET GHOSTS FLOAT IN AS CUSTOMERS (FROM LEVEL 3) - BOO-TIFUL!",
+      "THE BRIGHTEST BARS TONED DOWN - GLASSES AND BARTENDER EASY TO SEE",
+      "HALF AS MANY FREE LIVES ON EASY - AND A GENTLER CLIMB TO THE END",
+      "LIVES SHOWN AS A NUMBER ONLY",
+      "THE BIG CELEBRATION AFTER ANDROMEDA - PRESS TWICE TO SKIP",
+    ],
+  },
   {
     ver: "v1.4.55",
     title: "EASY AND TAP, AND ON TO ANDROMEDA",

@@ -5826,11 +5826,12 @@ const DIFFS = {
     catchW: 1,
   },
 };
-let difficulty = DIFFS[store.get("diff", "normal")] ? store.get("diff", "normal") : "normal";
+// (v1.4.55) EASY is the default difficulty now (a new setting, "diff2", so everyone starts on EASY once)
+let difficulty = DIFFS[store.get("diff2", "easy")] ? store.get("diff2", "easy") : "easy";
 const DF = () => DIFFS[G.demo ? "normal" : G.free ? "kid" : difficulty]; // (FREE PLAY is always gentle)
 function cycleDiff() {
   difficulty = { kid: "easy", easy: "normal", normal: "hard", hard: "kid" }[difficulty];
-  store.set("diff", difficulty);
+  store.set("diff2", difficulty);
   diffText();
   sfx("click");
 }
@@ -6191,10 +6192,12 @@ function barXAt(lane, wx, wy) {
 }
 const coarse = matchMedia("(pointer: coarse)").matches;
 // POUR: "hold" = the arcade way (hold to fill, let go to slide); "tap" = one press and the shake fills and slides by itself
-let pourMode = store.get("pourMode", coarse ? "tap" : "hold");
+// (v1.4.55) TAP TO POUR is the default everywhere now - one press fills the shake and slides it (a new setting,
+// "pourMode2", so everyone starts with TAP once; HOLD is still one click away in the settings)
+let pourMode = store.get("pourMode2", "tap");
 function togglePour() {
   pourMode = pourMode === "tap" ? "hold" : "tap";
-  store.set("pourMode", pourMode);
+  store.set("pourMode2", pourMode);
   pourText();
   sfx("click");
   for (const p of PL) p.autoPour = false;
@@ -11207,6 +11210,23 @@ const ENDING_LEN = 40;
 // TWO REWARDS: "mw" - the whole Milky Way served (a party, then on to Andromeda); "final" - both galaxies served:
 // BEST BARTENDER IN THE UNIVERSE, the credits - and then the tour starts again from Mercury, harder
 function startEnding(kind = "final") {
+  if (kind === "mw") {
+    // (v1.4.55) THE MILKY WAY DONE: no party and no stop here any more (Esc or the gamepad's B during that party used to
+    // end the whole game) - just the galaxy bonus, a cheer, and straight on to the great jump to Andromeda. The big
+    // celebration comes once, at the very end, after Andromeda.
+    const lives = G.versus ? 0 : Math.max(0, G.lives);
+    for (const p of active()) {
+      SCORER = p;
+      addScore(G.versus ? 25000 + p.lives * 5000 : Math.round((25000 + lives * 5000) / active().length));
+    }
+    SCORER = null;
+    callout("THE WHOLE MILKY WAY SERVED!  ON TO ANDROMEDA!", "#ffd24d", 3.2);
+    sfx("bonus");
+    G.mwDone = true;
+    G.state = "bonus";
+    funAfterBonus();
+    return;
+  }
   if (kind === "final" && !G.coreShown && !G.endless && !G.ta && !G.brush && !G.versus) {
     G.coreShown = true; // (first, the dive into the heart of Andromeda - core.ts - and then this again, for the party)
     startCore();
@@ -63491,7 +63511,7 @@ function drawEggs(g, s) {
 // THE VERSION (from v1.2.0, 5 October 2026): MAJOR.MINOR.PATCH - a new MINOR for a batch of new things, a new PATCH for
 // fixes and small touches - with the day it was made next to it. (Before this the versions were named after the date,
 // like v2026.10.05c.)
-const GAME_VERSION = "v1.4.54",
+const GAME_VERSION = "v1.4.55",
   GAME_DATE = "15.10.2026",
   VERSION_TEXT = GAME_VERSION + "  ·  " + GAME_DATE;
 const FB = '"Chakra Petch", "Segoe UI", sans-serif';
@@ -70070,6 +70090,15 @@ profWire();
 //  the game, and where the motion capture, the folk songs and the fonts come from. Both from the menu at any time.
 // =====================================================================================
 const NEWS = [
+  {
+    ver: "v1.4.55",
+    title: "EASY AND TAP, AND ON TO ANDROMEDA",
+    items: [
+      "THE GAME STARTS ON EASY",
+      "TAP TO POUR IS THE DEFAULT",
+      "AFTER THE MILKY WAY: STRAIGHT ON TO ANDROMEDA - THE PARTY IS AT THE VERY END",
+    ],
+  },
   {
     ver: "v1.4.54",
     title: "A CLEANER, SHARPER PICTURE",

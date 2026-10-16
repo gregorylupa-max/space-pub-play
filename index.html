@@ -44662,7 +44662,7 @@ function nightSide(r, tk, a = 0.88, rows = 40) {
     const th = -Math.PI / 2 + (i / rows) * Math.PI,
       y = r * Math.sin(th),
       hw = r * Math.cos(th);
-    P.push([y, hw * tk, hw, Math.max(1, hw * 0.3)]);
+    P.push([y, hw * tk, hw, Math.max(1, hw * 0.5)]); // (v1.4.59: a wider, softer twilight between day and night - it was 0.3, a hard-looking edge)
   }
   for (let i = 0; i < rows; i++) {
     const [y0, x0, h0, s0] = P[i],
@@ -44752,11 +44752,33 @@ function wSun(r, t) {
     );
   } // the streamers of the corona
   R.setAdd(false);
-  disc(0, 0, r, col("#f07818"));
-  disc(0, 0, r * 0.95, col("#ff9a28"));
-  disc(0, 0, r * 0.82, col("#ffb840"));
-  disc(0, 0, r * 0.62, col("#ffd060"));
-  disc(0, 0, r * 0.38, col("#ffe898")); // (darker towards the edge, like the real Sun)
+  // (v1.4.59) THE SUN'S FACE, SEAMLESS: no more five flat rings - a smooth blend through many shades, deep orange at the
+  // rim, through amber, gold and warm yellow to a pale cream at the heart, the colour changing continuously (darker
+  // towards the edge, the "limb darkening" of the real Sun), in some sixty fine steps you can't see
+  const SUNC = [
+      "#d85008",
+      "#ea6a12",
+      "#f5861e",
+      "#fca22c",
+      "#ffba3c",
+      "#ffcd52",
+      "#ffdc6e",
+      "#ffe890",
+      "#fff2b4",
+      "#fff8d6",
+    ].map((h) => col(h)),
+    shadeAt = (f) => {
+      const x = clamp(f, 0, 1) * (SUNC.length - 1),
+        i = Math.min(SUNC.length - 2, Math.floor(x));
+      return mix(SUNC[i], SUNC[i + 1], x - i);
+    },
+    STEPS = 64;
+  for (let i = 0; i < STEPS; i++) {
+    const k = i / (STEPS - 1), // 0 at the rim, 1 at the middle
+      rr = r * (1 - k * 0.97),
+      f = 0.95 * (1 - Math.pow(1 - k, 2.4)); // (an orange rim, then quickly into the yellows - golds and warm yellows over most of the face, a pale heart)
+    disc(0, 0, rr, shadeAt(f));
+  }
   for (let i = 0; i < 160; i++) {
     const a = hash(i * 1.7) * 6.283,
       d = Math.sqrt(hash(i * 2.9)) * r * 0.93,
@@ -44765,19 +44787,63 @@ function wSun(r, t) {
       Math.cos(a) * d,
       Math.sin(a) * d,
       r * (0.025 + hash(i * 5) * 0.03),
-      withA(col(i % 2 ? "#fff4c8" : "#e07010"), 0.12 + 0.12 * fl)
+      withA(col(i % 2 ? "#fff0b8" : "#f08a24"), 0.07 + 0.08 * fl) // (v1.4.59: softer, closer shades - no speckle)
     );
   } // the boiling granules
   const rot = t * 0.05;
-  for (const [lon, lat, s] of [
+  // (v1.4.59) SUNSPOTS, like the real thing: bright patches of faculae round each group; a soft penumbra shading from
+  // bronze to dark brown, streaked with fine radial filaments; a deep umbra at the heart - and little companion spots
+  for (const [lon, lat, sz] of [
     [0.3, 0.25, 0.07],
     [0.55, 0.3, 0.045],
     [2.4, -0.2, 0.06],
     [4.1, 0.15, 0.05],
   ]) {
-    onSphere(r, rot, lon, lat, r * s * 1.7, col("#c85a10"));
-    onSphere(r, rot, lon, lat, r * s, col("#4a1a04"));
-  } // sunspots, cooler (and darker) than all round them
+    const d = lon - rot,
+      cz = Math.cos(lat) * Math.cos(d);
+    if (cz <= 0.08) continue;
+    R.setAdd(true);
+    for (let k = 0; k < 4; k++)
+      onSphere(
+        r,
+        rot,
+        lon + (hash(lon * 9 + k) - 0.5) * 0.3,
+        lat + (hash(lat * 7 + k) - 0.5) * 0.2,
+        r * sz * (1.2 + hash(k + lon) * 0.8),
+        withA(col("#fff0b0"), 0.18)
+      );
+    R.setAdd(false); // faculae
+    onSphere(r, rot, lon, lat, r * sz * 2.0, withA(col("#e07818"), 0.55));
+    onSphere(r, rot, lon, lat, r * sz * 1.7, col("#b85a14"));
+    onSphere(r, rot, lon, lat, r * sz * 1.45, col("#94440e"));
+    onSphere(r, rot, lon, lat, r * sz * 1.2, col("#6e300a")); // the penumbra, shading inwards
+    const x = r * Math.cos(lat) * Math.sin(d),
+      y = -r * Math.sin(lat),
+      fs = Math.max(0.15, Math.cos(d));
+    if (cz > 0.3)
+      for (let k = 0; k < 14; k++) {
+        const a = (k / 14) * 6.283,
+          r1 = r * sz * 0.65,
+          r2 = r * sz * (1.45 + 0.2 * hash(k + lon * 3));
+        line(
+          x + Math.cos(a) * r1 * fs,
+          y + Math.sin(a) * r1,
+          x + Math.cos(a) * r2 * fs,
+          y + Math.sin(a) * r2,
+          Math.max(0.6, r * 0.004),
+          withA(col("#d07a30"), 0.4)
+        );
+      } // the filaments
+    onSphere(r, rot, lon, lat, r * sz * 0.72, col("#3a1404"));
+    onSphere(r, rot, lon, lat, r * sz * 0.45, col("#1e0802")); // the umbra
+    for (let k = 0; k < 3; k++) {
+      const ln = lon + 0.12 + k * 0.06 + hash(k * 3 + lon) * 0.04,
+        lt = lat - 0.04 + (hash(k * 5 + lat) - 0.5) * 0.1,
+        ss = r * sz * (0.28 + hash(k + lat * 5) * 0.2);
+      onSphere(r, rot, ln, lt, ss * 1.6, col("#8a3e0c"));
+      onSphere(r, rot, ln, lt, ss * 0.8, col("#2a0c02"));
+    } // companions trailing behind
+  }
   R.setAdd(true);
   for (let i = 0; i < 4; i++) {
     const a = 0.6 + i * 1.55 + Math.sin(t * 0.13 + i) * 0.2,
@@ -44849,28 +44915,88 @@ const EARTH_LAND = [
   [5.5, -0.5, 0.15],
 ];
 function wEarth(r, t, moon = true) {
-  worldBall(r, col("#2a6ad0"), col("#163c8a"));
+  // (v1.4.59) THE OCEANS: one smooth sweep of blue - a deep navy at the rim, brightening to a clear azure where the
+  // Sun stands overhead (the upper left) - instead of a flat blue ball
+  const OC = ["#0a2258", "#123a86", "#1c56b4", "#2a72d4", "#3c8ce6", "#5aa6f0"].map((h) => col(h));
+  for (let i = 0; i < 30; i++) {
+    const k = i / 29,
+      x = k * (OC.length - 1),
+      j2 = Math.min(OC.length - 2, Math.floor(x));
+    disc(-r * 0.2 * k, -r * 0.17 * k, r * (1 - k * 0.78), mix(OC[j2], OC[j2 + 1], x - j2));
+  }
   const rot = t * 0.09;
-  continentsOn(r, rot, col("#2e7a34"), EARTH_LAND);
+  // (v1.4.59) THE LAND, ORGANIC: every continent built of several overlapping lumps, so the coasts are ragged, not
+  // round - with turquoise shallows round them, and patches of deep forest scattered over the green
+  const lumps = (fn) => {
+    EARTH_LAND.forEach(([lon, lat, sz], i) => {
+      for (let k = 0; k < 4; k++)
+        fn(
+          lon + (hash(i * 5.1 + k) - 0.5) * sz * 1.6,
+          lat + (hash(i * 3.3 + k * 2) - 0.5) * sz * 1.2,
+          sz * (0.55 + 0.3 * hash(i + k * 7)),
+          i,
+          k
+        );
+    });
+  };
+  lumps((lon, lat, sz) => onSphere(r, rot, lon, lat, r * sz * 1.3, withA(col("#2ab0c0"), 0.4)));
+  lumps((lon, lat, sz) => onSphere(r, rot, lon, lat, r * sz * 1.14, withA(col("#4ac8c8"), 0.35))); // shallow seas
+  lumps((lon, lat, sz) => onSphere(r, rot, lon, lat, r * sz, col("#3a8a3a"))); // the land
+  lumps((lon, lat, sz, i, k) => {
+    if ((i + k) % 2 === 0)
+      onSphere(r, rot, lon + sz * 0.15, lat - sz * 0.1, r * sz * 0.45, withA(col("#245e2a"), 0.7));
+  }); // forests
   continentsOn(
     r,
     rot,
     col("#c8a860"),
     EARTH_LAND.filter((p, i) => i % 4 === 1).map(([a, b, s]) => [a + 0.04, b - 0.03, s * 0.55])
   ); // deserts
+  for (const [lon, lat, sz] of EARTH_LAND.filter((p, i) => i % 3 === 0))
+    onSphere(r, rot, lon - 0.03, lat + 0.06, r * sz * 0.18, withA(col("#8a7a6a"), 0.7), 1.8, 0.6); // (mountain ranges)
   polarCap(r, 1.02, col("#f4f8ff"));
   polarCap(r, -1.05, col("#f4f8ff")); // the ice caps
-  for (let i = 0; i < 34; i++)
-    onSphere(
-      r,
-      rot * 1.25 + t * 0.02,
-      hash(i * 4.1) * 6.283,
-      (hash(i * 2.7) - 0.5) * 2.4,
-      r * (0.05 + hash(i * 9) * 0.07),
-      withA(C.white, 0.7),
-      2.6,
-      0.8
-    ); // clouds, drifting faster than the ground
+  // a glint of the Sun on the water, up to the upper left
+  R.setAdd(true);
+  disc(-r * 0.38, -r * 0.3, r * 0.16, withA(col("#cfe8ff"), 0.22), r * 0.11);
+  disc(-r * 0.38, -r * 0.3, r * 0.06, withA(C.white, 0.3), r * 0.04);
+  R.setAdd(false);
+  // (v1.4.59) THE CLOUDS: drifting faster than the ground - clusters of soft, stretched wisps along the weather bands
+  // (busy near the equator and in the stormy middle latitudes), each casting a faint shadow just below it, and two big
+  // spiral storms turning
+  const crot = rot * 1.25 + t * 0.02;
+  for (let i = 0; i < 26; i++) {
+    const band = i % 3,
+      lon0 = hash(i * 4.1) * 6.283,
+      lat0 = band === 0 ? (hash(i * 2.7) - 0.5) * 0.5 : (band === 1 ? 1 : -1) * (0.55 + hash(i * 2.7) * 0.4);
+    for (let k = 0; k < 5; k++) {
+      const lon = lon0 + (hash(i * 7 + k) - 0.5) * 0.35,
+        lat = lat0 + (hash(i * 11 + k) - 0.5) * 0.16,
+        sz = r * (0.035 + hash(i * 13 + k) * 0.05);
+      onSphere(r, crot, lon, lat - 0.035, sz, withA(col("#0a1a3a"), 0.12), 2.4, 0.7); // its shadow
+      onSphere(r, crot, lon, lat, sz, withA(C.white, 0.42 + 0.3 * hash(i + k * 3)), 2.4, 0.7);
+    }
+  }
+  for (const [lon0, lat0, dir] of [
+    [1.2, 0.45, 1],
+    [4.0, -0.5, -1],
+  ]) {
+    for (let k = 0; k < 14; k++) {
+      const a = k * 0.55 * dir + t * 0.3 * dir,
+        d = 0.02 + k * 0.016;
+      onSphere(
+        r,
+        crot,
+        lon0 + Math.cos(a) * d * 1.6,
+        lat0 + Math.sin(a) * d,
+        r * (0.012 + k * 0.0035),
+        withA(C.white, 0.75 - k * 0.03),
+        1.6,
+        0.9
+      );
+    }
+    onSphere(r, crot, lon0, lat0, r * 0.012, withA(col("#2a5aa0"), 0.6)); // (the eye)
+  } // the spiral storms
   sunSheen(r, 0.18);
   nightSide(r, 0.3, 0.9);
   // city lights on the night side
@@ -52749,6 +52875,31 @@ function drawMini(t) {
     const gx = M.x,
       gy = MINI_GY;
     M.pile = M.pile || [];
+    // (v1.4.59) FALLING THINGS: a soft shadow on the counter right under each one - smaller and darker as it comes
+    // down, so you can judge where it will land - and a faint motion streak above it
+    for (const it of M.items)
+      if (!it.inG && it.vx === undefined && it.y < 466) {
+        const k = clamp(1 - (466 - it.y) / 440, 0, 1);
+        glowE(it.x, 471, 22 - k * 10, 4 - k * 1.5, withA(C.black, 0.12 + 0.3 * k));
+      }
+    R.setAdd(true);
+    for (const it of M.items)
+      if (!it.inG && it.vy > 120)
+        quad4(
+          it.x - 6,
+          it.y - 34,
+          it.x + 6,
+          it.y - 34,
+          it.x + 3,
+          it.y - 8,
+          it.x - 3,
+          it.y - 8,
+          withA(C.white, 0),
+          withA(C.white, 0),
+          withA(col(ING[it.kind] || "#ffffff"), 0.18),
+          withA(col(ING[it.kind] || "#ffffff"), 0.18)
+        );
+    R.setAdd(false);
     for (const it of M.items) if (!it.inG) drawIngredient(it.kind, it.x, it.y, 1.3, it.rot);
     drawMiniGlassBig(M, t, () => {
       for (const it of M.items) if (it.inG) drawIngredient(it.kind, it.x, it.y, 0.85, it.rot);
@@ -63799,7 +63950,7 @@ function drawEggs(g, s) {
 // THE VERSION (from v1.2.0, 5 October 2026): MAJOR.MINOR.PATCH - a new MINOR for a batch of new things, a new PATCH for
 // fixes and small touches - with the day it was made next to it. (Before this the versions were named after the date,
 // like v2026.10.05c.)
-const GAME_VERSION = "v1.4.58",
+const GAME_VERSION = "v1.4.59",
   GAME_DATE = "16.10.2026",
   VERSION_TEXT = GAME_VERSION + "  ·  " + GAME_DATE;
 const FB = '"Chakra Petch", "Segoe UI", sans-serif';
@@ -70386,6 +70537,17 @@ profWire();
 //  the game, and where the motion capture, the folk songs and the fonts come from. Both from the menu at any time.
 // =====================================================================================
 const NEWS = [
+  {
+    ver: "v1.4.59",
+    title: "A SEAMLESS SUN, A LIVING EARTH",
+    items: [
+      "THE SUN: ONE SEAMLESS BLEND OF ORANGES, GOLDS AND YELLOWS",
+      "REAL SUNSPOTS: PENUMBRA, UMBRA, FILAMENTS AND FACULAE",
+      "THE EARTH: DEEP BLUE OCEANS, A SUN GLINT, RAGGED COASTS, SWIRLING CLOUDS AND STORMS",
+      "A SOFT TWILIGHT ON EVERY PLANET",
+      "FALLING THINGS CAST SHADOWS IN THE CATCHING GAMES",
+    ],
+  },
   {
     ver: "v1.4.58",
     title: "REAL SPACE ROCKS",

@@ -44641,16 +44641,19 @@ function onSphere(r, rot, lon, lat, sz, c, kx = 1, ky = 1) {
 }
 // a band of latitude (lat0..lat1, radians): chord-shaped strips that stay inside the disc
 function latBand(r, lat0, lat1, c, wob = 0, t = 0) {
+  // (v1.4.60) FEATHERED BANDS: each band in eight thin strips, strongest in the middle and fading out at both edges, so
+  // the belts and zones of the gas giants melt softly into one another instead of meeting in hard straight lines
   const y0 = -r * Math.sin(lat1),
     y1 = -r * Math.sin(lat0),
-    n = 3;
+    n = 8;
   for (let i = 0; i < n; i++) {
     const a = y0 + ((y1 - y0) * i) / n,
       b = y0 + ((y1 - y0) * (i + 1)) / n,
       far = Math.abs(a) > Math.abs(b) ? a : b,
       hw = r * 0.985 * Math.sqrt(Math.max(0, 1 - (far / r) ** 2)),
-      dy = wob ? Math.sin(t * 0.5 + i + lat0 * 9) * wob : 0;
-    if (hw > 1) rect(-hw, a + dy, hw * 2, b - a, c);
+      dy = wob ? Math.sin(t * 0.5 + i * 0.4 + lat0 * 9) * wob : 0,
+      f = Math.pow(Math.sin((Math.PI * (i + 0.5)) / n), 0.7);
+    if (hw > 1) rect(-hw, a + dy, hw * 2, b - a + 0.5, withA(c, c[3] * f));
   }
 }
 // the night side (the Sun is to the left): a smooth mesh from the day/night edge - a half-ellipse that sweeps across as
@@ -44707,9 +44710,15 @@ function polarCap(r, lat, c) {
 }
 // the base of a world: a darker rim, the body, a softer middle - so it looks round
 function worldBall(r, c1, c2) {
-  disc(0, 0, r, shade(c2, 0.8));
-  disc(0, 0, r * 0.985, c2);
-  disc(-r * 0.05, -r * 0.04, r * 0.9, c1);
+  // (v1.4.60) a SMOOTH ball: some thirty fine steps from a darker rim, through the planet's deeper colour, to its light
+  // colour where the Sun shines straight down - no flat rings
+  const rim = shade(c2, 0.8),
+    N = 28;
+  for (let i = 0; i < N; i++) {
+    const k = i / (N - 1),
+      c = k < 0.12 ? mix(rim, c2, k / 0.12) : mix(c2, c1, Math.pow((k - 0.12) / 0.88, 0.7));
+    disc(-r * 0.07 * k, -r * 0.06 * k, r * (1 - k * 0.86), c);
+  }
 }
 // the glow of an atmosphere round the edge, brightest on the day side
 function atmosphere(r, c, a) {
@@ -45042,7 +45051,12 @@ function wMoonBall(r, t) {
     [-0.1, -0.1, 0.12],
     [0.6, 0.6, 0.12],
   ])
-    onSphere(r, rot, lon + 0.4, lat, r * s, col("#7a7a76")); // the seas of old lava
+    for (const [k, al] of [
+      [1.25, 0.3],
+      [1, 0.5],
+      [0.7, 0.6],
+    ]         )
+      onSphere(r, rot, lon + 0.4 + (k - 1) * 0.04, lat, r * s * k, withA(col("#6e6e6a"), al)); // the seas of old lava (v1.4.60: soft-edged)
   for (let i = 0; i < 26; i++) {
     const lon = hash(i * 3.7) * 2.6 - 1.3 + 0.4,
       lat = (hash(i * 6.1) - 0.5) * 2.4,
@@ -45086,7 +45100,12 @@ function wMars(r, t) {
     [4.6, 0.35, 0.18, "#8a3a1e"],
     [5.4, -0.45, 0.22, "#7a321a"],
   ]         )
-    onSphere(r, rot, lon, lat, r * s, withA(col(c), 0.7), 1.4, 0.8); // the dark markings
+    for (const [k, al] of [
+      [1.35, 0.3],
+      [1, 0.42],
+      [0.62, 0.55],
+    ]         )
+      onSphere(r, rot, lon + (k - 1) * 0.05, lat, r * s * k, withA(col(c), al), 1.4, 0.8); // the dark markings (v1.4.60: soft, layered)
   for (let i = 0; i < 9; i++)
     onSphere(r, rot, 1.6 + i * 0.09, -0.12 - Math.sin(i) * 0.03, r * 0.04, col("#5a2210"), 1.6, 0.6); // a great canyon
   onSphere(r, rot, 2.9, 0.3, r * 0.12, col("#e88a5a"));
@@ -63950,7 +63969,7 @@ function drawEggs(g, s) {
 // THE VERSION (from v1.2.0, 5 October 2026): MAJOR.MINOR.PATCH - a new MINOR for a batch of new things, a new PATCH for
 // fixes and small touches - with the day it was made next to it. (Before this the versions were named after the date,
 // like v2026.10.05c.)
-const GAME_VERSION = "v1.4.59",
+const GAME_VERSION = "v1.4.60",
   GAME_DATE = "16.10.2026",
   VERSION_TEXT = GAME_VERSION + "  ·  " + GAME_DATE;
 const FB = '"Chakra Petch", "Segoe UI", sans-serif';
@@ -70537,6 +70556,15 @@ profWire();
 //  the game, and where the motion capture, the folk songs and the fonts come from. Both from the menu at any time.
 // =====================================================================================
 const NEWS = [
+  {
+    ver: "v1.4.60",
+    title: "SMOOTHER PLANETS",
+    items: [
+      "EVERY PLANET A SMOOTH, ROUND BALL",
+      "SOFT, MELTING BANDS ON THE GAS GIANTS",
+      "SOFT SEAS ON THE MOON, SOFT MARKINGS ON MARS",
+    ],
+  },
   {
     ver: "v1.4.59",
     title: "A SEAMLESS SUN, A LIVING EARTH",

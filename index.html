@@ -5897,7 +5897,10 @@ const paramsRaw = () => {
     D = DF(); // two bartenders get a busier bar
   const L = D.kid ? 1 + (L0 - 1) * 0.4 : D.easy ? 1 + (L0 - 1) * 0.45 : L0; // KID MODE: the stages get harder much more slowly (v1.4.42: EASY a good deal more slowly too)
   // a curve for the 20-stop tour: it climbs quickly through the solar system, then keeps tightening gently out in the galaxy
-  const e = 1 - Math.exp(-(L - 1) / 7); // 0 at level 1, 0.73 at 10, 0.93 at 20
+  const e0 = 1 - Math.exp(-(L - 1) / 7); // 0 at level 1, 0.73 at 10, 0.93 at 20 (kept for EASY and KID MODE)
+  // (v1.4.57) NORMAL and HARD climb GRADUALLY over the whole 40-stop tour now - before, nearly all of it came in the first
+  // ten stops and the rest hardly changed: 0 at level 1, 0.45 at 10, 0.72 at 20, 0.86 at 30, 0.93 at 40
+  const e = D.kid || D.easy ? e0 : 1 - Math.exp(-(L - 1) / 15);
   // FRANTIC BUT FAIR: later levels pack the bar fuller and send people in faster and in bigger groups (and RUSH HOURS),
   // but you get quicker too - you run and slide faster, so it's always possible to keep up
   const rush = G.rush > 0 ? 1 : 0;
@@ -5935,8 +5938,9 @@ const paramsRaw = () => {
     });
   }
   return tourLoop({
-    total: Math.round(Math.min(56, 9 + L * 3) * k2),
-    maxOn: Math.round(Math.min(19, 3 + L) * k2) + rush * 4,
+    // (v1.4.57: the crowd grows steadily all the way to the last stop, instead of reaching its biggest by stop 16)
+    total: Math.round(Math.min(56, 12 + L * 1.15) * k2),
+    maxOn: Math.round(Math.min(19, 4 + L * 0.4) * k2) + rush * 4,
     spawn: ((1.9 - 1.5 * e) / k2) * D.spawn * (rush ? 0.35 : 1),
     speed: (1 + 1.25 * e) * D.speed,
     empty: (200 + 170 * e) * D.empty,
@@ -9531,6 +9535,18 @@ function update(dt) {
       SCORER = null;
       sfx("catch", catcher.x);
       sfx("voice", catcher.x, catcher.type.kind);
+      {
+        // (v1.4.57) A SATISFYING SERVE: a burst of sparkles in the shake's own colour where it's caught, and a quick
+        // shockwave ring - bigger for a perfect pour or a hot combo (gentler in calm mode)
+        const fc = FLAVORS[s.flavor] ? FLAVORS[s.flavor][0] : col("#ffffff"),
+          big = s.perfect || G.combo >= 3,
+          n = Math.round((big ? 14 : 7) * (COMFORT.calm ? 0.5 : 1)),
+          y0 = LY(s.lane, catcher.x) - 46;
+        sparkle(catcher.x + 14, y0, [fc[0], fc[1], fc[2], 1], n, s.lane);
+        if (big) sparkle(catcher.x + 14, y0, [1, 0.95, 0.75, 1], Math.round(n / 2), s.lane);
+        const [rx, ry] = at(s.lane, catcher.x + 16, y0 + 6);
+        rings.push({ x: rx, y: ry, r: big ? 70 : 42, life: 0.32, max: 0.32 });
+      }
       G.nbCatch = { lane: s.lane, x: catcher.x, t: G.time, c: catcher }; // (v1.4.20: the neighbours turn to look - characters.ts)
       if (catcher.type.holy)
         sparkle(catcher.x + 10, LY(s.lane, catcher.x) - 60, [1, 0.92, 0.5, 1], 10, s.lane);
@@ -15300,7 +15316,9 @@ function ghost(p, x, y, s, c, t) {
 function drawSpeedTrails(t, p) {
   const DUR = 0.45,
     live = G.state === "play" || G.state === "menu";
-  const hot = p.id ? [col("#3f8fff"), col("#9fe8ff")] : [col("#ff3b2f"), col("#ffd040")];
+  // (v1.4.57) a lighter, cooler trail: icy blue-white for player 1, soft pink for player 2 (the old red-and-yellow
+  // smear looked more like fire than speed, and hid the bar behind)
+  const hot = p.id ? [col("#ff7ac8"), col("#ffe0f2")] : [col("#5fd8ff"), col("#e4fbff")];
   const at = (x) => projL(p.lane, x + 8, LY(p.lane, x) + 30, VSIDE.p),
     ps = pS(p.lane, p.x, VSIDE.p);
   // running: a glowing streak and fading afterimages back along the bar
@@ -15322,8 +15340,8 @@ function drawSpeedTrails(t, p) {
       ox2,
       oy2 - 12 * ps,
       withA(hot[0], 0),
-      withA(hot[1], 0.4),
-      withA(hot[1], 0.3),
+      withA(hot[1], 0.22),
+      withA(hot[1], 0.16),
       withA(hot[0], 0)
     );
     quad4(
@@ -15336,8 +15354,8 @@ function drawSpeedTrails(t, p) {
       ox2,
       oy2 - 30 * ps,
       withA(C.white, 0),
-      withA(C.white, 0.4),
-      withA(C.white, 0.32),
+      withA(C.white, 0.22),
+      withA(C.white, 0.16),
       withA(C.white, 0)
     );
     for (let b = 0; b < 2; b++) {
@@ -15350,7 +15368,7 @@ function drawSpeedTrails(t, p) {
         x += back * Math.random() * 12 * ps;
         y += (Math.random() - 0.5) * 12 * ps;
       }
-      polyline(pts, 1.6, withA(b ? hot[1] : C.white, 0.8));
+      polyline(pts, 1.2, withA(b ? hot[1] : C.white, 0.4));
     }
     R.setAdd(false);
   }
@@ -15359,7 +15377,7 @@ function drawSpeedTrails(t, p) {
       age = G.time - h.t,
       k = 1 - age / 0.38,
       [gx, gy] = at(h.x);
-    ghost(p, gx, gy, ps, withA(age < 0.14 ? hot[1] : hot[0], 0.55 * k), t);
+    ghost(p, gx, gy, ps, withA(age < 0.14 ? hot[1] : hot[0], 0.26 * k), t);
   }
   // jumping between bars: a quick smear from where you were, fading out before it reaches you
   const hop = p.laneT < DUR && p.laneT >= 0 && p.from !== undefined && p.from !== p.lane && live;
@@ -15410,7 +15428,7 @@ function drawSpeedTrails(t, p) {
         ax + (bx0 - ax) * f,
         ay + (by0 - ay) * f,
         s,
-        withA(i % 2 ? hot[1] : hot[0], fade * (0.5 - 0.3 * f)),
+        withA(i % 2 ? hot[1] : hot[0], fade * (0.3 - 0.18 * f)),
         t
       );
     }
@@ -63721,8 +63739,8 @@ function drawEggs(g, s) {
 // THE VERSION (from v1.2.0, 5 October 2026): MAJOR.MINOR.PATCH - a new MINOR for a batch of new things, a new PATCH for
 // fixes and small touches - with the day it was made next to it. (Before this the versions were named after the date,
 // like v2026.10.05c.)
-const GAME_VERSION = "v1.4.56",
-  GAME_DATE = "15.10.2026",
+const GAME_VERSION = "v1.4.57",
+  GAME_DATE = "16.10.2026",
   VERSION_TEXT = GAME_VERSION + "  ·  " + GAME_DATE;
 const FB = '"Chakra Petch", "Segoe UI", sans-serif';
 let FD = '"Bungee", "Impact", sans-serif';
@@ -70308,6 +70326,15 @@ profWire();
 //  the game, and where the motion capture, the folk songs and the fonts come from. Both from the menu at any time.
 // =====================================================================================
 const NEWS = [
+  {
+    ver: "v1.4.57",
+    title: "A STEADY CLIMB, A SATISFYING SERVE",
+    items: [
+      "NORMAL AND HARD GET HARDER GRADUALLY OVER ALL 40 STOPS",
+      "SPARKLES AND A SHOCKWAVE ON EVERY SERVE",
+      "A LIGHTER, ICY SPEED TRAIL FOR THE BARTENDER",
+    ],
+  },
   {
     ver: "v1.4.56",
     title: "GHOSTS!",

@@ -52643,14 +52643,7 @@ function drawMini(t) {
     for (const it of M.items) {
       if (it.kind === "star") drawIngredient("star", it.x, it.y, 1, it.rot);
       else {
-        push();
-        translate(it.x, it.y);
-        rotate(it.rot);
-        scaleBy(it.r);
-        poly([-1, -0.7, -0.2, -1, 0.8, -0.8, 1, 0.1, 0.5, 0.9, -0.5, 0.95, -1, 0.2], col("#6a5a52"));
-        disc(-0.3, -0.2, 0.25, col("#4a3e3a"));
-        disc(0.4, 0.3, 0.18, col("#4a3e3a"));
-        pop();
+        drawRock(it.x, it.y, it.r, it.rot, (it.r * 7.3) % 17, 1); // (v1.4.58: a properly shaded tumbling rock)
       }
     }
     for (const f of M.fx || []) {
@@ -54624,12 +54617,22 @@ function drawApproach(t) {
       true
     );
   if (Wd.belt)
-    for (let i = 0; i < 40; i++) {
+    // (v1.4.58) THE ASTEROID BELT: real tumbling rocks - lumpy, lit by the Sun on one side, cratered - and with depth:
+    // the ones on the far side of the ring smaller and dimmer, the near ones bigger and brighter
+    for (let i = 0; i < 46; i++) {
       const a = hash(i * 1.7) * 6.283 + t * 0.02 * (1 + hash(i)),
         rx = (240 + hash(i * 3) * 160) * k,
         x = px + Math.cos(a) * rx,
-        y = py + Math.sin(a) * rx * 0.25;
-      disc(x, y, (3 + hash(i * 5) * 6) * k, col("#6a5a52"));
+        y = py + Math.sin(a) * rx * 0.25,
+        near = 0.5 + 0.5 * Math.sin(a); // (0 at the back of the ring, 1 at the front)
+      drawRock(
+        x,
+        y,
+        (3 + hash(i * 5) * 7) * k * (0.7 + 0.5 * near),
+        t * (0.2 + hash(i * 9)) + i,
+        i,
+        0.45 + 0.55 * near
+      );
     }
   // the special places: a comet, TRAPPIST-1's family, a nebula, a pulsar, a black hole, a star cluster, a galaxy's core
   if (Wd.comet) {
@@ -55268,6 +55271,63 @@ function fitText(g, text, x, y, maxW, weight, px, c) {
   }
   g.fillStyle = c;
   g.fillText(text, x, y);
+}
+
+// (v1.4.58) A SPACE ROCK, properly painted: a lumpy outline (its own shape from the seed), turning as it tumbles, but
+// always lit from the upper left - a shadowed body, a sunlit face, a bright rim of light, craters with lit lower edges,
+// and a faint cold rim on the dark side. lit: 0..1 (dimmer far away).
+function drawRock(x, y, r, rot, seed, lit = 1) {
+  if (r < 0.5) return;
+  const n = 11,
+    P = [],
+    base = col("#3e342f"),
+    face = col("#8a786a"),
+    hi = col("#c8b8a4");
+  for (let i = 0; i < n; i++) {
+    const a = rot + (i / n) * 6.283,
+      rr = r * (0.74 + 0.3 * hash(seed * 3.1 + i * 1.37));
+    P.push([x + Math.cos(a) * rr, y + Math.sin(a) * rr]);
+  }
+  const fan = (k, dx, dy, c) => {
+    for (let i = 0; i < n; i++) {
+      const p1 = P[i],
+        p2 = P[(i + 1) % n];
+      tri(
+        x + dx,
+        y + dy,
+        x + dx + (p1[0] - x) * k,
+        y + dy + (p1[1] - y) * k,
+        x + dx + (p2[0] - x) * k,
+        y + dy + (p2[1] - y) * k,
+        c
+      );
+    }
+  };
+  fan(1, 0, 0, withA(base, lit)); // the body, in shadow
+  fan(0.8, -r * 0.13, -r * 0.13, withA(face, lit)); // the face turned to the Sun
+  fan(0.42, -r * 0.3, -r * 0.3, withA(hi, 0.55 * lit)); // its brightest part
+  for (let i = 0; i < 3; i++) {
+    const a = rot * 0.7 + seed + i * 2.1,
+      d = r * (0.25 + 0.3 * hash(seed + i)),
+      cx = x + Math.cos(a) * d,
+      cy = y + Math.sin(a) * d,
+      cr = r * (0.14 + 0.1 * hash(seed * 2 + i));
+    disc(cx, cy, cr, withA(base, 0.75 * lit), cr * 0.85);
+    arc(cx + cr * 0.15, cy + cr * 0.15, cr, 0.1, 1.6, Math.max(0.6, cr * 0.25), withA(hi, 0.5 * lit), 6); // (its lit lower rim)
+  }
+  if (r > 3) {
+    for (let i = 0; i < n; i++) {
+      const p1 = P[i],
+        p2 = P[(i + 1) % n],
+        mx = (p1[0] + p2[0]) / 2 - x,
+        my = (p1[1] + p2[1]) / 2 - y,
+        facing = -(mx + my) / (Math.hypot(mx, my) * 1.414 || 1); // (how much this edge faces the light)
+      if (facing > 0.25)
+        line(p1[0], p1[1], p2[0], p2[1], Math.max(0.8, r * 0.07), withA(hi, 0.7 * facing * lit));
+      else if (facing < -0.5)
+        line(p1[0], p1[1], p2[0], p2[1], Math.max(0.6, r * 0.05), withA(col("#7a8ab0"), 0.35 * lit));
+    }
+  }
 }
 // =====================================================================================
 //  HOLIDAYS (v2026.10.03q): CHRISTMAS, HALLOWEEN and the Polish ALL SAINTS' DAY dress up the whole pub.
@@ -63739,7 +63799,7 @@ function drawEggs(g, s) {
 // THE VERSION (from v1.2.0, 5 October 2026): MAJOR.MINOR.PATCH - a new MINOR for a batch of new things, a new PATCH for
 // fixes and small touches - with the day it was made next to it. (Before this the versions were named after the date,
 // like v2026.10.05c.)
-const GAME_VERSION = "v1.4.57",
+const GAME_VERSION = "v1.4.58",
   GAME_DATE = "16.10.2026",
   VERSION_TEXT = GAME_VERSION + "  ·  " + GAME_DATE;
 const FB = '"Chakra Petch", "Segoe UI", sans-serif';
@@ -70326,6 +70386,11 @@ profWire();
 //  the game, and where the motion capture, the folk songs and the fonts come from. Both from the menu at any time.
 // =====================================================================================
 const NEWS = [
+  {
+    ver: "v1.4.58",
+    title: "REAL SPACE ROCKS",
+    items: ["SHADED, CRATERED, TUMBLING ASTEROIDS - ROUND CERES AND IN THE STORK'S MINI-GAME"],
+  },
   {
     ver: "v1.4.57",
     title: "A STEADY CLIMB, A SATISFYING SERVE",

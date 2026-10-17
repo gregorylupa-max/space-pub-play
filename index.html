@@ -16554,11 +16554,32 @@ function drawDoor(lane, t, V) {
     R.setAdd(false);
     rect(x - 8, y - 77, 20, 6, c);
   };
-  if (v !== 1 && v !== 9) rect(x - 30, y - 80, 64, 84, col("#000000")); // (the arched doorways draw their own dark opening)
+  // (v1.4.64) a rectangle with rounded corners, as one shape
+  const rrPts = (x0, y0, w, h, r) => {
+    const P = [];
+    r = Math.max(0.5, Math.min(r, w / 2, h / 2));
+    for (const [cx, cy, a0] of [
+      [x0 + r, y0 + r, Math.PI],
+      [x0 + w - r, y0 + r, Math.PI * 1.5],
+      [x0 + w - r, y0 + h - r, 0],
+      [x0 + r, y0 + h - r, Math.PI / 2],
+    ])
+      for (let k = 0; k <= 4; k++) {
+        const an = a0 + (k / 4) * (Math.PI / 2);
+        P.push(cx + Math.cos(an) * r, cy + Math.sin(an) * r);
+      }
+    return P;
+  };
+  const dark = col("#000000");
+  // (v1.4.64) no more square boxes: most doorways are arched now, the rest have rounded corners
+  if (v === 5) poly(rrPts(x - 30, y - 80, 64, 84, 12), dark);
+  else if (v === 0 || v === 2 || v === 4 || v === 6 || v === 10)
+    poly(archAt(x + 2, y - 58, 32, 22, y + 4), dark);
   if (v === 0) {
-    rect(x - 34, y - 84, 72, 6, V.trim);
-    rect(x - 34, y - 84, 6, 88, V.trim);
-    rect(x + 32, y - 84, 6, 88, V.trim);
+    // the diner: a curved chrome-trimmed arch
+    poly(archAt(x + 2, y - 58, 38, 28, y + 4), V.trim);
+    poly(archAt(x + 2, y - 58, 32, 22, y + 4), dark);
+    arc(x + 2, y - 58, 35, Math.PI * 1.08, Math.PI * 1.5, 1.5, withA(C.white, 0.2), 8);
     swing(V.face, V.face2, false);
     sign(V.neon);
   } else if (v === 1) {
@@ -16575,10 +16596,21 @@ function drawDoor(lane, t, V) {
   } // saloon doors and a lucky horseshoe
   else if (v === 2) {
     // a mine tunnel: timber props and a hanging lantern
-    rect(x - 36, y - 86, 76, 10, col("#5a3a20"));
-    rect(x - 36, y - 86, 76, 3, col("#7a5a30"));
-    rect(x - 36, y - 80, 10, 84, col("#5a3a20"));
-    rect(x + 30, y - 80, 10, 84, col("#5a3a20"));
+    // (v1.4.64: a rounded tunnel mouth - curved timber over the top instead of a square frame)
+    poly(archAt(x + 2, y - 58, 39, 29, y + 4), col("#5a3a20"));
+    poly(archAt(x + 2, y - 58, 31, 21, y + 4), dark);
+    arc(x + 2, y - 58, 37, Math.PI * 1.05, Math.PI * 1.95, 2, col("#7a5a30"), 14); // (its lit outer edge)
+    for (let k = 1; k < 6; k++) {
+      const an = Math.PI + (k / 6) * Math.PI;
+      line(
+        x + 2 + Math.cos(an) * 31,
+        y - 58 + Math.sin(an) * 21,
+        x + 2 + Math.cos(an) * 39,
+        y - 58 + Math.sin(an) * 29,
+        1,
+        withA(C.black, 0.4)
+      );
+    } // (the joints between the curved beams)
     for (let j = 0; j < 3; j++) disc(x + 2 + (j - 1) * 14, y - 30 + j * 6, 6, withA(col("#2a2018"), 0.8), 3);
     const lx = x + 2 + Math.sin(t * 1.5 + lane) * 2;
     line(x + 2, y - 76, lx, y - 66, 1, C.chromeDk);
@@ -16609,48 +16641,52 @@ function drawDoor(lane, t, V) {
     }
   } else if (v === 4) {
     // an arch of ice blocks with icicles and a frosty shimmer
+    // (v1.4.64: a real rounded arch now - the blocks curve over the top like an igloo door, softly rounded)
+    const ax = x + 2,
+      ay = y - 58;
+    for (let j = 0; j < 4; j++) {
+      const c1 = shade(col("#9fd8f0"), 0.8 + (j % 2) * 0.15);
+      poly(rrPts(x - 39, y - 54 + j * 14.5, 11, 13, 3.5), c1);
+      poly(rrPts(x + 32, y - 54 + j * 14.5, 11, 13, 3.5), shade(c1, 1.04));
+    } // the two sides
+    const nb = 7;
+    for (let j = 0; j < nb; j++) {
+      const a0 = Math.PI + (j / nb) * Math.PI + 0.03,
+        a1 = Math.PI + ((j + 1) / nb) * Math.PI - 0.03,
+        P = [];
+      for (let k = 0; k <= 4; k++) {
+        const an = a0 + ((a1 - a0) * k) / 4;
+        P.push(ax + Math.cos(an) * 43, ay + Math.sin(an) * 32);
+      }
+      for (let k = 4; k >= 0; k--) {
+        const an = a0 + ((a1 - a0) * k) / 4;
+        P.push(ax + Math.cos(an) * 32, ay + Math.sin(an) * 22);
+      }
+      poly(P, shade(col("#c8f0ff"), 0.82 + (j % 2) * 0.14));
+    } // the curved blocks over the top
     for (let j = 0; j < 7; j++) {
-      rect(x - 38, y - 86 + j * 13, 10, 12, shade(col("#9fd8f0"), 0.8 + (j % 2) * 0.15));
-      rect(x + 30, y - 86 + j * 13, 10, 12, shade(col("#9fd8f0"), 0.85 + (j % 2) * 0.1));
-    }
-    for (let j = 0; j < 6; j++)
-      rect(x - 28 + j * 10, y - 88, 10, 9, shade(col("#c8f0ff"), 0.85 + (j % 2) * 0.12));
-    for (let j = 0; j < 8; j++)
-      tri(
-        x - 26 + j * 8,
-        y - 79,
-        x - 20 + j * 8,
-        y - 79,
-        x - 23 + j * 8,
-        y - 70 - hash(j + lane) * 8,
-        col("#e8faff")
-      );
+      const an = Math.PI + ((j + 0.5) / 7) * Math.PI,
+        ix = ax + Math.cos(an) * 31,
+        iy = ay + Math.sin(an) * 21;
+      tri(ix - 3, iy, ix + 3, iy, ix, iy + 7 + hash(j + lane) * 7, col("#e8faff"));
+    } // icicles hanging from the arch
     R.setAdd(true);
-    quad4(
-      x - 28,
-      y - 78,
-      x + 30,
-      y - 78,
-      x + 30,
-      y + 2,
-      x - 28,
-      y + 2,
-      withA(col("#9fe8ff"), open ? 0.04 : 0.14 + 0.04 * Math.sin(t * 3))
-    );
+    poly(archAt(ax, ay, 31, 21, y + 2), withA(col("#9fe8ff"), open ? 0.04 : 0.14 + 0.04 * Math.sin(t * 3)));
     R.setAdd(false);
   } else if (v === 5) {
     // an airlock: two panels slide apart, hazard stripes, a status light
+    // (v1.4.64: a rounded frame and rounded panels, like a real airlock - no sharp square box)
     const g = open ? 26 : 0;
-    rect(x - 36, y - 86, 76, 8, C.chromeDk);
-    rect(x - 36, y - 86, 8, 90, C.chromeDk);
-    rect(x + 32, y - 86, 8, 90, C.chromeDk);
+    poly(rrPts(x - 36, y - 86, 76, 90, 16), C.chromeDk);
+    poly(rrPts(x - 29, y - 79, 62, 83, 11), dark);
+    arc(x + 2, y - 40, 44, Math.PI * 1.15, Math.PI * 1.4, 1.5, withA(C.white, 0.18), 6);
     for (const [px2, dir] of [
       [x - 28, -1],
       [x + 2, 1],
     ]) {
       const ox2 = px2 + dir * g;
       if (Math.abs(g) < 28) {
-        rect(Math.max(x - 28, ox2), y - 78, Math.min(30, 30 - g), 82, col("#8a90a8"));
+        poly(rrPts(Math.max(x - 28, ox2), y - 78, Math.min(30, 30 - g), 82, 7), col("#8a90a8"));
         for (let j = 0; j < 4; j++)
           tri(
             ox2 + (dir < 0 ? 26 : 2),
@@ -16670,17 +16706,26 @@ function drawDoor(lane, t, V) {
     rect(x - 1, y - 84, 6, 4, sc);
   } else if (v === 6) {
     // velvet curtains that part, with gold tassels
-    rect(x - 36, y - 88, 76, 9, col("#c8a040"));
-    for (let j = 0; j < 9; j++) disc(x - 32 + j * 9, y - 79, 3.5, col("#a01830"), 3);
+    // (v1.4.64: a rounded gold theatre arch - the curtains hang from its curve, so no square box)
+    const ay = y - 58,
+      archY = (px) => ay - Math.sqrt(Math.max(0, 1 - ((px - x - 2) / 32) ** 2)) * 22 + 1; // (the top of the opening)
+    poly(archAt(x + 2, ay, 38, 28, y + 4), col("#c8a040"));
+    poly(archAt(x + 2, ay, 32, 22, y + 4), dark);
+    arc(x + 2, ay, 36, Math.PI * 1.08, Math.PI * 1.5, 1.5, withA(C.white, 0.25), 8);
+    for (let j = 0; j < 9; j++) {
+      const an = Math.PI + ((j + 0.5) / 9) * Math.PI;
+      disc(x + 2 + Math.cos(an) * 30, ay + Math.sin(an) * 20, 3.2, col("#a01830"), 2.6);
+    } // (the scalloped pelmet, following the arch)
     for (const dir of [-1, 1]) {
       const ow = 30 - open * 20;
       for (let j = 0; j < 4; j++) {
-        const cx2 = dir < 0 ? x - 28 + (j * ow) / 4 : x + 32 - (j * ow) / 4;
+        const cx2 = dir < 0 ? x - 28 + (j * ow) / 4 : x + 32 - (j * ow) / 4,
+          cx3 = cx2 + ((dir * ow) / 4) * (dir < 0 ? 1 : -1) * -1;
         quad4(
           cx2,
-          y - 78,
-          cx2 + ((dir * ow) / 4) * (dir < 0 ? 1 : -1) * -1,
-          y - 78,
+          archY(cx2),
+          cx3,
+          archY(cx3),
           cx2 + Math.sin(t * 2 + j) * 1.5,
           y + 2,
           cx2,
@@ -16750,16 +16795,21 @@ function drawDoor(lane, t, V) {
     arc(ax, y - 86, 6, 0.3, Math.PI - 0.3, 2.4, col("#a8a8b0"), 10);
   } else if (v === 10) {
     // (v1.4.27) A BEAD CURTAIN: strings of coloured beads that swing apart as someone pushes through
-    rect(x - 34, y - 84, 72, 6, col("#6a4a2a"));
+    // (v1.4.64: hung in a rounded wooden arch - each string starts from the curve, so the curtain has a round top)
+    poly(archAt(x + 2, y - 58, 37, 27, y + 4), col("#6a4a2a"));
+    poly(archAt(x + 2, y - 58, 32, 22, y + 4), dark);
+    arc(x + 2, y - 58, 35, Math.PI * 1.08, Math.PI * 1.5, 1.5, withA(C.white, 0.16), 8);
     for (let j = 0; j < 14; j++) {
-      const bx = x - 30 + j * 4.6,
+      const bx = x - 28 + j * 4.6,
         push2 = open * (j < 7 ? -1 : 1) * (1 - Math.abs(j - 6.5) / 7) * 16,
-        sw2 = Math.sin(t * 2 + j) * 1.2;
+        sw2 = Math.sin(t * 2 + j) * 1.2,
+        top = y - 58 - Math.sqrt(Math.max(0, 1 - ((bx - x - 2) / 32) ** 2)) * 22 + 3,
+        stp = (y - top) / 13.5;
       for (let q = 0; q < 14; q++) {
         const f = q / 13;
         disc(
           bx + (push2 + sw2) * f * f,
-          y - 76 + q * 5.6,
+          top + q * stp,
           1.5,
           col(["#ff5fa8", "#ffd24d", "#5ff5c8", "#9f8aff"][(j + q) % 4])
         );
@@ -16796,12 +16846,43 @@ function barrelShade(cx, cy, rx, ry) {
 // its top and a dark one down its right side
 function metalBox(x0, y0, w, h, c) {
   const lt = mix(c, C.white, 0.28),
-    dk = shade(c, 0.55);
-  quad4(x0, y0, x0 + w * 0.45, y0, x0 + w * 0.45, y0 + h, x0, y0 + h, lt, c, c, lt);
-  quad4(x0 + w * 0.45, y0, x0 + w, y0, x0 + w, y0 + h, x0 + w * 0.45, y0 + h, c, dk, dk, c);
+    dk = shade(c, 0.55),
+    m = x0 + w * 0.45,
+    r = Math.min(7, w * 0.16, h * 0.2); // (v1.4.64: softly rounded corners - no sharp-edged box)
+  // the middle band, full width
+  quad4(x0, y0 + r, m, y0 + r, m, y0 + h - r, x0, y0 + h - r, lt, c, c, lt);
+  quad4(m, y0 + r, x0 + w, y0 + r, x0 + w, y0 + h - r, m, y0 + h - r, c, dk, dk, c);
+  // the top and bottom bands, pulled in for the rounded corners
+  for (const [ya, yb] of [
+    [y0, y0 + r],
+    [y0 + h - r, y0 + h],
+  ]) {
+    quad4(x0 + r, ya, m, ya, m, yb, x0 + r, yb, mix(lt, c, r / (w * 0.45)), c, c, mix(lt, c, r / (w * 0.45)));
+    quad4(
+      m,
+      ya,
+      x0 + w - r,
+      ya,
+      x0 + w - r,
+      yb,
+      m,
+      yb,
+      c,
+      mix(dk, c, r / (w * 0.55)),
+      mix(dk, c, r / (w * 0.55)),
+      c
+    );
+  }
+  for (const [cx, cy, cc] of [
+    [x0 + r, y0 + r, lt],
+    [x0 + w - r, y0 + r, dk],
+    [x0 + r, y0 + h - r, lt],
+    [x0 + w - r, y0 + h - r, dk],
+  ])
+    disc(cx, cy, r, cc);
   rect(x0 + w * 0.18, y0 + 2, 2, h - 4, withA(C.white, 0.35)); // (a long reflection)
-  rect(x0, y0, w, 1.4, withA(C.white, 0.5));
-  rect(x0 + w - 1.4, y0, 1.4, h, withA(C.black, 0.35));
+  rect(x0 + r, y0, w - r * 2, 1.4, withA(C.white, 0.5));
+  rect(x0 + w - 1.4, y0 + r, 1.4, h - r * 2, withA(C.black, 0.35));
 }
 // (v1.4.38) a glass window into the machine: the shake inside swirling round, bubbles rising (quicker while it pours),
 // its level dipping as it pours, and a shine on the glass
@@ -16954,7 +17035,7 @@ function drawTap(lane, t, V) {
     // a sleek dispenser with a holo screen - (v1.4.38) a bevelled, shaded body, glowing neon strips down both edges,
     // scanlines on the screen and a window showing the shake inside
     metalBox(x, y - 80, 44, 120, col("#5a5a74"));
-    rect(x + 3, y - 77, 38, 3, V.neon);
+    rect(x + 7, y - 77, 30, 3, V.neon);
     R.setAdd(true);
     for (const ex of [x + 1, x + 41]) {
       rect(ex, y - 74, 2, 108, withA(V.neon, 0.55 + 0.2 * Math.sin(t * 2 + lane)));
@@ -64041,7 +64122,7 @@ function drawEggs(g, s) {
 // THE VERSION (from v1.2.0, 5 October 2026): MAJOR.MINOR.PATCH - a new MINOR for a batch of new things, a new PATCH for
 // fixes and small touches - with the day it was made next to it. (Before this the versions were named after the date,
 // like v2026.10.05c.)
-const GAME_VERSION = "v1.4.63",
+const GAME_VERSION = "v1.4.64",
   GAME_DATE = "17.10.2026",
   VERSION_TEXT = GAME_VERSION + "  ·  " + GAME_DATE;
 const FB = '"Chakra Petch", "Segoe UI", sans-serif';
@@ -70723,6 +70804,11 @@ profWire();
 //  the game, and where the motion capture, the folk songs and the fonts come from. Both from the menu at any time.
 // =====================================================================================
 const NEWS = [
+  {
+    ver: "v1.4.64",
+    title: "ROUND DOORS EVERYWHERE",
+    items: ["EVERY DOOR IS ARCHED OR ROUNDED NOW", "ROUNDED FILLING MACHINES"],
+  },
   {
     ver: "v1.4.63",
     title: "TOUGHER BOSSES, NO FLICKER, ROUNDER SHAPES",

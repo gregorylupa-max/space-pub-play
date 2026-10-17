@@ -7069,7 +7069,7 @@ function spawnPower() {
   // (v1.4.57: on EASY the extra-life power-up turns up half as often - lives piled up into the dozens)
   const wt = (k) =>
     POWERS[k].w *
-    (k === "life" && difficulty === "easy" ? 0.5 : 1) *
+    (k === "life" && difficulty === "easy" ? 0.25 : 1) * // (v1.4.63: and halved again)
     (low
       ? { shield: 2.5, life: 3, slow: 1.8, decaf: 0.3 }[k] || 1
       : cruising
@@ -9691,7 +9691,8 @@ function update(dt) {
         3
       );
       if (G.level + 1 > unlocked()) store.set("unlock", Math.min(LAST_LEVEL, G.level + 1));
-      if (G.level % (difficulty === "easy" ? 10 : 5) === 0 && G.level < LAST_LEVEL) {
+      if (G.level % (difficulty === "easy" ? 20 : 5) === 0 && G.level < LAST_LEVEL) {
+        // (v1.4.63: on EASY the milestone life only every 20 stops - half as many)
         if (G.versus) for (const p of PL) p.lives++;
         else G.lives++;
         callout("MILESTONE: " + G.level + " STOPS DONE  ·  +1 LIFE", "#5ff5c8", 3);
@@ -11585,7 +11586,7 @@ function addScore(n, x , y ) {
   who.score = Math.max(0, who.score + n);
   G.score = twoP() ? (G.versus ? Math.max(P1.score, P2.score) : P1.score + P2.score) : P1.score;
   if (who.score >= who.nextLife) {
-    who.nextLife += difficulty === "easy" ? 80000 : 40000; // (v1.4.57: on EASY an extra life for every 80,000 points - half as many)
+    who.nextLife += difficulty === "easy" ? 160000 : 40000; // (v1.4.57: on EASY an extra life for every 80,000 points - half as many) (v1.4.63: halved again - every 160,000)
     if (G.versus) who.lives++;
     else G.lives++;
     callout(twoP() ? "EXTRA LIFE · P" + (who.id + 1) : "EXTRA LIFE!", "#5ff5c8", 2);
@@ -15370,13 +15371,15 @@ function drawSpeedTrails(t, p) {
     );
     for (let b = 0; b < 2; b++) {
       // a couple of sparks crackling in the wake
-      const pts = [];
-      let x = ex + back * Math.random() * 30 * ps,
-        y = ey - (10 + Math.random() * 50) * ps;
+      // (v1.4.63: each spark holds for a tenth of a second instead of jumping every frame - no flicker)
+      const pts = [],
+        sd = Math.floor(G.time * 10) * 5.71 + b * 17.3;
+      let x = ex + back * hash(sd) * 30 * ps,
+        y = ey - (10 + hash(sd + 1) * 50) * ps;
       for (let j = 0; j < 4; j++) {
         pts.push(x, y);
-        x += back * Math.random() * 12 * ps;
-        y += (Math.random() - 0.5) * 12 * ps;
+        x += back * hash(sd + 2 + j) * 12 * ps;
+        y += (hash(sd + 7 + j) - 0.5) * 12 * ps;
       }
       polyline(pts, 1.2, withA(b ? hot[1] : C.white, 0.4));
     }
@@ -15445,11 +15448,13 @@ function drawSpeedTrails(t, p) {
     R.setAdd(true);
     for (let b = 0; b < 3; b++) {
       // jagged bolts, re-drawn every frame so they crackle
-      const pts = [];
+      // (v1.4.63: a new shape 20 times a second rather than every frame - still crackling, but no strobe)
+      const pts = [],
+        sd = Math.floor(G.time * 20) * 3.37 + b * 41.9;
       for (let j = 0; j <= 8; j++) {
         const f = j / 8,
-          jx = (Math.random() - 0.5) * 22 * Math.sin(f * Math.PI),
-          jy = (Math.random() - 0.5) * 10;
+          jx = (hash(sd + j) - 0.5) * 22 * Math.sin(f * Math.PI),
+          jy = (hash(sd + 13 + j) - 0.5) * 10;
         pts.push(ax + (bx - ax) * f + jx, ay - 40 + (by - ay) * f + jy);
       }
       polyline(pts, 3 - b * 0.6, withA(b === 2 ? C.white : hot[b], fade));
@@ -15591,11 +15596,13 @@ function drawPowerFx(t) {
     const [x, y] = projL(p.lane, p.x + 8, LY(p.lane, p.x) + 30, VSIDE.p),
       s = pS(p.lane, p.x, VSIDE.p);
     if (hasPw("shield")) {
-      const a = G.pw.shield < 3 ? (Math.sin(t * 16) > 0 ? 0.7 : 0.25) : 0.7;
+      // (v1.4.63) softer, so the barman inside stays clear - and running out it pulses gently instead of
+      // strobing on and off 8 times a second
+      const a = G.pw.shield < 3 ? 0.2 + 0.3 * (0.5 + 0.5 * Math.sin(t * 7)) : 0.45;
       R.setAdd(true);
       ring(x, y - 34 * s, 40 * s + Math.sin(t * 5) * 2, 2, withA(C.mint, a));
-      glow(x, y - 34 * s, 46 * s, withA(C.mint, 0.12));
-      arc(x - 10 * s, y - 50 * s, 18 * s, Math.PI * 1.1, Math.PI * 1.45, 2, withA(C.white, 0.5), 5);
+      glow(x, y - 34 * s, 46 * s, withA(C.mint, 0.06));
+      arc(x - 10 * s, y - 50 * s, 18 * s, Math.PI * 1.1, Math.PI * 1.45, 2, withA(C.white, 0.3), 5);
       R.setAdd(false);
     }
     if (hasPw("magnet")) {
@@ -15609,16 +15616,22 @@ function drawPowerFx(t) {
     }
     if (hasPw("speed")) {
       R.setAdd(true);
+      // (v1.4.63) the little sparks of speed: they used to jump to a new random place every single frame (a
+      // flicker) - now each spark holds for a moment (10 a second), off to the side of the barman, and fades
+      const tick = Math.floor(t * 10),
+        fk = 1 - ((t * 10) % 1);
       for (let b = 0; b < 2; b++) {
-        const pts = [];
-        let bx = x + (Math.random() - 0.5) * 16 * s,
-          by = y - Math.random() * 60 * s;
+        const pts = [],
+          sd = tick * 7.13 + b * 31.7,
+          side = b ? 1 : -1;
+        let bx = x + side * (12 + hash(sd) * 10) * s,
+          by = y - (8 + hash(sd + 1) * 52) * s;
         for (let j = 0; j < 5; j++) {
           pts.push(bx, by);
-          bx += (Math.random() - 0.5) * 14 * s;
-          by += (Math.random() - 0.4) * 12 * s;
+          bx += side * hash(sd + 2 + j) * 7 * s;
+          by += (hash(sd + 9 + j) - 0.4) * 12 * s;
         }
-        polyline(pts, 1.4, withA(b ? col("#ffd040") : C.white, 0.9));
+        polyline(pts, 1.4, withA(b ? col("#ffd040") : col("#fff4c0"), 0.65 * fk));
       }
       R.setAdd(false);
     }
@@ -15811,8 +15824,29 @@ function barFront(v, lane, V, a, b, ya, yb) {
     for (let x = a + 30; x < b - 40; x += 110) {
       const y = Y(x) + 8,
         pc = col(["#f0e0a0", "#a0c8f0", "#f0f0f0"][Math.floor(x / 110) % 3]);
-      quad4(x, y, x + 26, Y(x + 26) + 8, x + 26, Y(x + 26) + 21, x, y + 13, pc);
-      for (let j = 0; j < 4; j++) rect(x + 4 + j * 5, y + 4 + j * 0.25, 3, 5, col("#3a3a5a"));
+      // (v1.4.63) the plates have rounded corners and a rim now, and soft rounded letters - no hard little blocks
+      const y2 = Y(x + 26) + 8,
+        rc = 3,
+        pts = [];
+      const corner = (cx, cy, a0) => {
+        for (let k = 0; k <= 3; k++) {
+          const an = a0 + (k / 3) * (Math.PI / 2);
+          pts.push(cx + Math.cos(an) * rc, cy + Math.sin(an) * rc);
+        }
+      };
+      corner(x + rc, y + rc, Math.PI);
+      corner(x + 26 - rc, y2 + rc, Math.PI * 1.5);
+      corner(x + 26 - rc, y2 + 13 - rc, 0);
+      corner(x + rc, y + 13 - rc, Math.PI / 2);
+      poly(pts, shade(pc, 0.62));
+      for (let k = 0; k < pts.length; k += 2) {
+        const mx = x + 13,
+          my = (y + y2) / 2 + 6.5;
+        pts[k] = mx + (pts[k] - mx) * 0.86;
+        pts[k + 1] = my + (pts[k + 1] - my) * 0.8;
+      }
+      poly(pts, pc);
+      for (let j = 0; j < 4; j++) disc(x + 5.5 + j * 5, y + 6.5 + j * 0.25, 1.5, col("#3a3a5a"), 2.6);
       disc(x + 2, y + 2, 0.8, C.chromeDk);
       disc(x + 24, Y(x + 24) + 10, 0.8, C.chromeDk);
     }
@@ -16138,18 +16172,10 @@ function sideScene(type, edge, dir, py, pr, wAt, y0, y1, t) {
   else if (type === "phobos" || type === "deimos") {
     const r = type === "phobos" ? pr * 0.7 : pr * 0.4,
       cy = type === "phobos" ? py : py - 60;
-    const pts = [];
-    for (let i = 0; i < 9; i++) {
-      const a = (i / 9) * 6.283 + t * 0.01;
-      pts.push(
-        edge + dir * r * 0.15 + Math.cos(a) * r * (0.85 + hash(i + r) * 0.3),
-        cy + Math.sin(a) * r * 0.75 * (0.85 + hash(i * 3 + r) * 0.3)
-      );
-    }
-    poly(pts, col("#8a7a6a"));
-    for (let i = 0; i < 4; i++)
-      disc(edge + dir * r * (0.1 + hash(i) * 0.4), cy + (hash(i * 5) - 0.5) * r, r * 0.12, col("#6a5a4a"));
-    disc(edge + dir * r * 0.5, cy + r * 0.2, r * 0.7, withA(col("#02030c"), 0.45));
+    // (v1.4.63) the little moons flickered: their lumpy outline came from hash(i + r), and r follows the window's size,
+    // which shifts a hair every frame - so the shape was re-rolled 60 times a second. Now each moon is one properly
+    // painted rock with its own fixed shape, turning very slowly
+    drawRock(edge + dir * r * 0.15, cy, r, t * 0.01, type === "phobos" ? 3 : 11, 0.85);
     if (type === "deimos") {
       disc(edge, y1 + pr * 1.4, pr * 2.2, col("#b05a30"));
       add(() => glow(edge, y1, pr * 1.6, withA(col("#ff8f5f"), 0.35)));
@@ -16512,13 +16538,23 @@ function drawDoor(lane, t, V) {
       }
     }
   };
+  // (v1.4.63) a round-topped shape: straight sides from yb up to cy, then a half-ellipse over the top
+  const archAt = (ax, cy, rx, ry, yb) => {
+    const P = [ax - rx, yb];
+    for (let k = 0; k <= 16; k++) {
+      const an = Math.PI + (k / 16) * Math.PI;
+      P.push(ax + Math.cos(an) * rx, cy + Math.sin(an) * ry);
+    }
+    P.push(ax + rx, yb);
+    return P;
+  };
   const sign = (c) => {
     R.setAdd(true);
     glow(x + 2, y - 74, 14, withA(c, 0.6));
     R.setAdd(false);
     rect(x - 8, y - 77, 20, 6, c);
   };
-  rect(x - 30, y - 80, 64, 84, col("#000000"));
+  if (v !== 1 && v !== 9) rect(x - 30, y - 80, 64, 84, col("#000000")); // (the arched doorways draw their own dark opening)
   if (v === 0) {
     rect(x - 34, y - 84, 72, 6, V.trim);
     rect(x - 34, y - 84, 6, 88, V.trim);
@@ -16526,11 +16562,16 @@ function drawDoor(lane, t, V) {
     swing(V.face, V.face2, false);
     sign(V.neon);
   } else if (v === 1) {
-    rect(x - 34, y - 84, 72, 7, shade(V.face, 0.8));
-    rect(x - 34, y - 84, 7, 88, shade(V.face, 0.8));
-    rect(x + 31, y - 84, 7, 88, shade(V.face, 0.8));
+    // (v1.4.63) a rounded, arched doorway instead of a square box: the frame curves over the top
+    const fc = shade(V.face, 0.8),
+      ax = x + 2,
+      ay = y - 62;
+    const archPts = (rx, ry, yb) => archAt(ax, ay, rx, ry, yb);
+    poly(archPts(36, 24, y + 4), fc);
+    poly(archPts(29, 18, y + 4), col("#000000"));
+    arc(ax, ay, 33, Math.PI * 1.08, Math.PI * 1.5, 1.5, withA(C.white, 0.14), 8); // (a soft highlight along the arch)
     swing(shade(V.face, 1.1), V.face2, true);
-    arc(x + 2, y - 76, 5, 0.3, Math.PI - 0.3, 2, C.chrome, 6);
+    arc(ax, y - 74, 5, 0.3, Math.PI - 0.3, 2, C.chrome, 6);
   } // saloon doors and a lucky horseshoe
   else if (v === 2) {
     // a mine tunnel: timber props and a hanging lantern
@@ -16674,36 +16715,39 @@ function drawDoor(lane, t, V) {
     rect(cx - 30, y - 1, 60, 4, col("#4a4a5a")); // the step
   } else if (v === 9) {
     // (v1.4.27) A FARMHOUSE STABLE DOOR: planks, a top half that swings open on its own, a horseshoe for luck
-    rect(x - 32, y - 82, 68, 4, col("#5a3a22"));
-    line(x - 32, y - 80, x - 32, y + 2, 4, col("#5a3a22"));
-    line(x + 34, y - 80, x + 34, y + 2, 4, col("#5a3a22"));
+    // (v1.4.63) with a rounded, arched top and a curved frame - no more square box
+    const fr = col("#5a3a22"),
+      ax = x + 2,
+      ay = y - 60;
+    poly(archAt(ax, ay, 36, 26, y + 2), fr); // the frame
+    poly(archAt(ax, ay, 31, 21, y + 2), col("#000000")); // the dark doorway
+    arc(ax, ay, 34, Math.PI * 1.08, Math.PI * 1.5, 1.5, withA(C.white, 0.14), 8); // (a soft highlight along the arch)
     const pl = col("#8a5a32"),
-      w2 = 60 * Math.cos(open * 1.2);
-    quad4(x - 30, y - 38, x + 30, y - 38, x + 30, y + 2, x - 30, y + 2, pl); // the bottom half
+      oc = Math.cos(open * 1.2); // (how far the top half is still across the doorway)
+    poly(archAt(ax, y - 34, 30, 4, y + 2), pl); // the bottom half (its top edge softly rounded)
     for (let j = 1; j < 6; j++)
-      line(x - 30 + j * 10, y - 38, x - 30 + j * 10, y + 2, 1, withA(C.black, 0.35));
-    line(x - 28, y - 36, x + 28, y, 2.4, shade(pl, 0.75));
-    quad4(
-      x - 30,
-      y - 78,
-      x - 30 + w2,
-      y - 78 + open * 4,
-      x - 30 + w2,
-      y - 40 + open * 4,
-      x - 30,
-      y - 40,
-      shade(pl, 1.08)
-    ); // the top half
-    for (let j = 1; j < 6; j++)
+      line(x - 28 + j * 10, y - 36, x - 28 + j * 10, y + 2, 1, withA(C.black, 0.35));
+    line(x - 26, y - 33, x + 30, y, 2.4, shade(pl, 0.75));
+    // the top half, round-topped, swinging open from its left hinge
+    const top = archAt(ax, ay, 30, 20, y - 40);
+    for (let k = 0; k < top.length; k += 2) {
+      top[k] = x - 28 + (top[k] - (x - 28)) * oc;
+      top[k + 1] += open * 4 * ((top[k] - (x - 28)) / 60);
+    }
+    poly(top, shade(pl, 1.08));
+    for (let j = 1; j < 6; j++) {
+      const lx = x - 28 + j * 10,
+        dy = Math.sqrt(Math.max(0, 1 - ((lx - ax) / 30) ** 2)) * 20;
       line(
-        x - 30 + (w2 * j) / 6,
-        y - 78 + (open * 4 * j) / 6,
-        x - 30 + (w2 * j) / 6,
-        y - 40 + (open * 4 * j) / 6,
+        x - 28 + (lx - (x - 28)) * oc,
+        ay - dy + 2,
+        x - 28 + (lx - (x - 28)) * oc,
+        y - 40,
         1,
         withA(C.black, 0.3)
       );
-    arc(x + 2, y - 86, 6, 0.3, Math.PI - 0.3, 2.4, col("#a8a8b0"), 10);
+    }
+    arc(ax, y - 86, 6, 0.3, Math.PI - 0.3, 2.4, col("#a8a8b0"), 10);
   } else if (v === 10) {
     // (v1.4.27) A BEAD CURTAIN: strings of coloured beads that swing apart as someone pushes through
     rect(x - 34, y - 84, 72, 6, col("#6a4a2a"));
@@ -40866,8 +40910,18 @@ function kidUpdate(dt, demo) {
     if (G.boss !== true && G.total - G.served <= 4) {
       if (!G.boss) G.total++;
       G.boss = true;
-      const lane = Math.floor(Math.random() * LANES),
-        T0 = TYPE_OF[bk];
+      // (v1.4.63) TOUGHER BOSSES: hungrier (more shakes), quicker to march on you, and each shake shoves them back less -
+      // more so on harder settings and on every new tour (a copy of the type, so the boss's own numbers stay as they are)
+      const B0 = TYPE_OF[bk],
+        dk = { kid: 0, easy: 1, normal: 2, hard: 3 }[difficulty] ?? 1,
+        lp = Math.min(3, G.loop || 0),
+        lane = Math.floor(Math.random() * LANES),
+        T0 = {
+          ...B0,
+          need: B0.need + [0, 2, 3, 5][dk] + lp * 2,
+          speed: B0.speed * [1, 1.25, 1.4, 1.6][dk] * (1 + lp * 0.1),
+          push: B0.push * [1, 0.85, 0.75, 0.65][dk],
+        };
       customers.push({
         lane,
         x: X0 - 40,
@@ -55458,14 +55512,22 @@ function fitText(g, text, x, y, maxW, weight, px, c) {
 // and a faint cold rim on the dark side. lit: 0..1 (dimmer far away).
 function drawRock(x, y, r, rot, seed, lit = 1) {
   if (r < 0.5) return;
-  const n = 11,
+  // (v1.4.63) a big rock (a moon in a window) gets a smooth, many-sided outline: the same 11 lumps, eased into
+  // each other, so it no longer looks like a cut gem - small rocks keep their crisp 11 corners
+  const m = 11,
+    sub = r > 24 ? 3 : 1,
+    n = m * sub,
     P = [],
     base = col("#3e342f"),
     face = col("#8a786a"),
     hi = col("#c8b8a4");
+  const lump = (i) => 0.74 + 0.3 * hash(seed * 3.1 + (((i % m) + m) % m) * 1.37);
   for (let i = 0; i < n; i++) {
     const a = rot + (i / n) * 6.283,
-      rr = r * (0.74 + 0.3 * hash(seed * 3.1 + i * 1.37));
+      i0 = Math.floor(i / sub),
+      f = (i % sub) / sub,
+      e = (1 - Math.cos(f * Math.PI)) / 2,
+      rr = r * (lump(i0) * (1 - e) + lump(i0 + 1) * e);
     P.push([x + Math.cos(a) * rr, y + Math.sin(a) * rr]);
   }
   const fan = (k, dx, dy, c) => {
@@ -63979,7 +64041,7 @@ function drawEggs(g, s) {
 // THE VERSION (from v1.2.0, 5 October 2026): MAJOR.MINOR.PATCH - a new MINOR for a batch of new things, a new PATCH for
 // fixes and small touches - with the day it was made next to it. (Before this the versions were named after the date,
 // like v2026.10.05c.)
-const GAME_VERSION = "v1.4.62",
+const GAME_VERSION = "v1.4.63",
   GAME_DATE = "17.10.2026",
   VERSION_TEXT = GAME_VERSION + "  ·  " + GAME_DATE;
 const FB = '"Chakra Petch", "Segoe UI", sans-serif';
@@ -64003,7 +64065,7 @@ function tourMap(g, s, a) {
     half = MW_LAST > 0 ? MW_LAST : n,
     w = Math.min(cssW * 0.94, 980 * s),
     x0 = (cssW - w) / 2,
-    y = cssH * 0.8,
+    y = cssH * (cssH > cssW * 1.1 ? 0.68 : 0.8), // (v1.4.63: in a tall window it sits closer under the ship - no empty gap)
     gap = 34 * s;
   const hw = (w - gap) / 2,
     step = hw / Math.max(1, half - 1),
@@ -64141,6 +64203,24 @@ function drawHud(fps) {
     g.globalAlpha = 1;
     const a1 = Math.min(1, j * 2, Math.max(0, 4.4 - j) * 2),
       a3 = Math.min(1, Math.max(0, j - 7.3) * 2);
+    // (v1.4.63) a soft dark halo behind the jump's words, so they read clearly over the hyperspace streaks
+    const shadeT = (y, w, a) => {
+      if (a <= 0) return;
+      const rg = g.createRadialGradient(cx, y, 0, cx, y, w);
+      rg.addColorStop(0, "rgba(6,4,18,.62)");
+      rg.addColorStop(1, "rgba(6,4,18,0)");
+      g.save();
+      g.globalAlpha = a;
+      g.translate(cx, y);
+      g.scale(1, 0.32);
+      g.translate(-cx, -y);
+      g.fillStyle = rg;
+      g.fillRect(cx - w, y - w, w * 2, w * 2);
+      g.restore();
+    };
+    shadeT(cssH * 0.1 + 12 * s, Math.min(cssW * 0.48, 260 * s), Math.max(a1, a3));
+    if (j > 4.4 && j < 7)
+      shadeT(cssH * 0.14, Math.min(cssW * 0.48, 230 * s), Math.min(1, (j - 4.4) * 3, (7 - j) * 3));
     if (a1 > 0) {
       g.globalAlpha = a1;
       neon2(g, "ON OUR WAY...", cx, cssH * 0.1, 24 * s, "#9fd0ff");
@@ -64257,12 +64337,34 @@ function drawHud(fps) {
     g.font = fD(px);
     const room = HUDB.room || Math.max(140, cssW - (cssW < 700 ? 200 * s : 330)),
       wd = g.measureText(txt).width;
-    if (wd > room) g.font = fD((px * room) / wd);
+    // (v1.4.63) a long warning on a narrow phone shrank to tiny letters - now it breaks onto two lines instead
+    const ws = txt.split(" ");
+    let lines = [txt];
+    if (wd > room && (px * room) / wd < 15 && ws.length > 2) {
+      let best = 1,
+        bd = 1e9;
+      for (let i = 1; i < ws.length; i++) {
+        const d = Math.abs(
+          g.measureText(ws.slice(0, i).join(" ")).width - g.measureText(ws.slice(i).join(" ")).width
+        );
+        if (d < bd) {
+          bd = d;
+          best = i;
+        }
+      }
+      lines = [ws.slice(0, best).join(" ").trim(), ws.slice(best).join(" ").trim()];
+      px = 18;
+    }
+    g.font = fD(px);
+    const wMax = Math.max(...lines.map((l) => g.measureText(l).width));
+    if (wMax > room) g.font = fD((px * room) / wMax);
     g.fillStyle = colr;
     g.shadowColor = colr;
     g.shadowBlur = 16 * s;
     g.globalAlpha = a;
-    g.fillText(txt, signX, signY || sy(10));
+    const y0 = signY || sy(10),
+      lh = parseFloat(g.font) * 1.05;
+    lines.forEach((l, i) => g.fillText(l, signX, y0 + (i - (lines.length - 1) / 2) * lh));
     g.shadowBlur = 0;
     g.globalAlpha = 1;
   };
@@ -64524,7 +64626,9 @@ function drawHud(fps) {
       g.save();
       g.globalAlpha = clamp((1.2 - since) / 0.3, 0, 1);
       g.textAlign = "left";
-      g.translate(pad + 150 * s, pad + 4 * s + 8 * s);
+      // (v1.4.63: on a narrow screen the neon sign's words fill the top row, so the combo drops under the score instead)
+      if (cssW < 700) g.translate(pad, pad + 96 * s);
+      else g.translate(pad + 150 * s, pad + 4 * s + 8 * s);
       g.scale(pop, pop);
       g.font = fD(14 + (n - 2) * 2);
       g.lineWidth = 4 * s;
@@ -64941,8 +65045,9 @@ function drawSigns(g, s, t, sx, sy) {
 function drawEndingHud(g, s, fD, fB) {
   const E = G.end,
     et = E.t,
-    cx = cssW / 2,
     tall = cssH > cssW * 1.1;
+  let cx = cssW / 2,
+    colW = cssW * 0.92; // where the words sit and how wide they may get (the credits use a side column)
   const fit = (txt, px, maxW) => {
     g.font = fD(px);
     const w = g.measureText(txt).width;
@@ -64950,7 +65055,7 @@ function drawEndingHud(g, s, fD, fB) {
   };
   const big = (txt, y, c, px, a = 1) => {
     g.globalAlpha = a;
-    fit(txt, px, cssW * 0.92);
+    fit(txt, px, colW);
     g.fillStyle = c;
     g.shadowColor = c;
     g.shadowBlur = 18 * s;
@@ -64962,7 +65067,7 @@ function drawEndingHud(g, s, fD, fB) {
     g.globalAlpha = a;
     g.font = fB(px, 700);
     const w = g.measureText(txt).width;
-    if (w > cssW * 0.92) g.font = fB((px * cssW * 0.92) / w, 700);
+    if (w > colW) g.font = fB((px * colW) / w, 700);
     g.fillStyle = c;
     g.fillText(txt, cx, y);
     g.globalAlpha = 1;
@@ -65064,15 +65169,34 @@ function drawEndingHud(g, s, fD, fB) {
         ["", "", 0],
         ["THANK YOU FOR PLAYING!", "#ffd24d", 1],
       ];
-      const bot = cssH * (tall ? 0.5 : 0.5),
+      // (v1.4.63) the credits used to roll straight over you and the trophy - now they roll up in a dark
+      // glass panel off to the side (in a tall window: up top, above the podium), so you stay in the spotlight
+      const top = 14 * s,
+        bot = tall ? cssH * 0.42 : cssH * 0.56,
+        pw = tall ? cssW * 0.9 : Math.min(cssW * 0.3, 380 * s),
         y0 = bot - (et - 25.5) * 55 * s,
         step = 30 * s; // they roll up through the sky, above the party
+      cx = tall ? cssW / 2 : 18 * s + pw / 2;
+      colW = pw - 24 * s;
+      const pa = Math.min(1, (et - 25) * 2);
+      g.globalAlpha = 0.62 * pa;
+      g.fillStyle = "rgba(10,6,24,1)";
+      g.beginPath();
+      g.roundRect(cx - pw / 2, top - 6 * s, pw, bot - top + 12 * s, 14 * s);
+      g.fill();
+      g.globalAlpha = 0.5 * pa;
+      g.strokeStyle = "#ff5fa8";
+      g.lineWidth = 1.5 * s;
+      g.stroke();
+      g.globalAlpha = 1;
       lines.forEach(([txt, c, b], i) => {
         const y = y0 + i * step;
-        if (!txt || y < 10 * s || y > bot) return;
-        const a = Math.min(1, (y - 10 * s) / (40 * s), (bot - y) / (30 * s));
+        if (!txt || y < top + 6 * s || y > bot - 6 * s) return;
+        const a = Math.min(1, (y - top - 6 * s) / (40 * s), (bot - 6 * s - y) / (30 * s));
         b ? big(txt, y, c, 20, a) : small(txt, y, c, 15, a);
       });
+      cx = cssW / 2;
+      colW = cssW * 0.92;
     }
   }
   ENDHIT.play = ENDHIT.menu = null;
@@ -70599,6 +70723,17 @@ profWire();
 //  the game, and where the motion capture, the folk songs and the fonts come from. Both from the menu at any time.
 // =====================================================================================
 const NEWS = [
+  {
+    ver: "v1.4.63",
+    title: "TOUGHER BOSSES, NO FLICKER, ROUNDER SHAPES",
+    items: [
+      "BOSSES WANT MORE SHAKES AND MARCH FASTER",
+      "EASY: HALF AS MANY EXTRA LIVES AGAIN",
+      "NO MORE FLICKERING MOONS, SHIELDS OR SPARKS",
+      "ROUNDED DOORS AND PLATES AT FERRUM AND MARS",
+      "THE CREDITS ROLL BESIDE THE PODIUM",
+    ],
+  },
   {
     ver: "v1.4.62",
     title: "POINTS WITH PUNCH, A LIVELY COMBO",

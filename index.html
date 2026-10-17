@@ -1660,6 +1660,44 @@ function line(x1, y1, x2, y2, w, c) {
     ny = ((dx / L) * w) / 2;
   quad4(x1 + nx, y1 + ny, x2 + nx, y2 + ny, x2 - nx, y2 - ny, x1 - nx, y1 - ny, c);
 }
+// (v1.4.65) A RIBBON along a path: one even band of colour w wide (no overlapping pieces, so a see-through colour
+// stays even), its strength fading to nothing at both ends over the first and last fifth
+function ribbon(pts, w, c, fade = 0.2) {
+  const n = pts.length / 2;
+  if (n < 2) return;
+  const N = [];
+  for (let i = 0; i < n; i++) {
+    const a = Math.max(0, i - 1),
+      b = Math.min(n - 1, i + 1),
+      dx = pts[b * 2] - pts[a * 2],
+      dy = pts[b * 2 + 1] - pts[a * 2 + 1],
+      L = Math.hypot(dx, dy) || 1;
+    N.push([(-dy / L) * w * 0.5, (dx / L) * w * 0.5]);
+  }
+  const al = (i) => {
+    const u = i / (n - 1);
+    return c[3] * Math.min(1, u / fade, (1 - u) / fade);
+  };
+  for (let i = 0; i < n - 1; i++) {
+    const [x0, y0, x1, y1] = [pts[i * 2], pts[i * 2 + 1], pts[i * 2 + 2], pts[i * 2 + 3]],
+      c0 = withA(c, al(i)),
+      c1 = withA(c, al(i + 1));
+    quad4(
+      x0 + N[i][0],
+      y0 + N[i][1],
+      x1 + N[i + 1][0],
+      y1 + N[i + 1][1],
+      x1 - N[i + 1][0],
+      y1 - N[i + 1][1],
+      x0 - N[i][0],
+      y0 - N[i][1],
+      c0,
+      c1,
+      c1,
+      c0
+    );
+  }
+}
 // (v1.4.65) the same for the 2D overlay canvas: starts a rounded-rectangle path (fill() / stroke() it after)
 function rbox(g, x, y, w, h, r) {
   g.beginPath();
@@ -13805,20 +13843,17 @@ function drawSaturn(x, y, r, tilt, c1, c2, rot = 0) {
   disc(0, 0, r, shade(c2, 0.7));
   disc(0, 0, r * 0.97, shade(c1, 0.82));
   disc(-r * 0.06, -r * 0.06, r * 0.88, c1);
+  // (v1.4.65) its bands follow the round edge and melt softly into each other (they were flat strips whose square
+  // ends stuck out past the planet), and the night side is a soft shadow, not a hard-edged dark disc
   for (let i = -4; i <= 4; i++) {
     const yy = i * r * 0.2,
-      hw = r * 0.97 * Math.sqrt(Math.max(0, 1 - (yy / r) ** 2));
-    if (hw > 1)
-      rect(
-        -hw,
-        yy - r * 0.05,
-        hw * 2,
-        r * (0.06 + hash(i + 7) * 0.05),
-        withA(i % 2 ? c2 : shade(c1, 1.12), 0.4)
-      );
+      h = r * (0.04 + hash(i + 7) * 0.035),
+      la = (v) => Math.asin(Math.max(-1, Math.min(1, -v / r)));
+    latBand(r, la(yy + h), la(yy - h), withA(i % 2 ? c2 : shade(c1, 1.12), 0.5));
   }
   disc(-r * 0.35, -r * 0.4, r * 0.4, withA(C.white, 0.12));
-  disc(r * 0.32, r * 0.22, r * 0.86, withA(col("#02030c"), 0.42), r * 0.86); // highlight, night side
+  if (r > 20) nightSide(r, 0.25, 0.72);
+  else disc(r * 0.32, r * 0.22, r * 0.86, withA(col("#02030c"), 0.42), r * 0.86); // highlight, night side (a small far-off Saturn keeps the simple shadow)
   {
     const pts = [];
     for (let i = 0; i <= 24; i++) {
@@ -13827,7 +13862,7 @@ function drawSaturn(x, y, r, tilt, c1, c2, rot = 0) {
         py = Math.sin(a) * r * 1.6 * tilt - r * 0.12;
       if (px * px + py * py < r * r * 0.95) pts.push(px, py);
     }
-    if (pts.length > 3) polyline(pts, r * 0.08, withA(col("#02030c"), 0.35));
+    if (pts.length > 3) ribbon(pts, r * 0.08, withA(col("#02030c"), 0.3), 0.3); // (v1.4.65: one even, soft band that fades out at its ends)
   } // the rings' shadow
   for (const b of RING_BANDS) ringBand(0, 0, r * b[0], r * b[1], tilt, 0, Math.PI, rc(b, false), n); // the near half, in front
   {
@@ -13836,7 +13871,7 @@ function drawSaturn(x, y, r, tilt, c1, c2, rot = 0) {
       const a = 0.15 + (i / 10) * 0.8;
       sh.push(Math.cos(a) * r * 1.75, Math.sin(a) * r * 1.75 * tilt);
     }
-    polyline(sh, r * 0.42 * tilt, withA(col("#02030c"), 0.3));
+    ribbon(sh, r * 0.42 * tilt, withA(col("#02030c"), 0.3), 0.25);
   } // the planet's shadow on the rings
   pop();
 }
@@ -54745,22 +54780,32 @@ function drawWorld(Wd, x, y, r, t) {
   }
   if (Wd.cracks)
     for (let i = 0; i < 9; i++) {
+      // (v1.4.65) EUROPA'S CRACKS as smooth curving lines that taper away at both ends, kept inside the round edge -
+      // they were two straight pieces with a corner, and could poke out past the side of the moon
       const a = hash(i * 2.2) * 6.283,
-        d = hash(i * 4.4) * r * 0.7;
-      polyline(
-        [
-          x + Math.cos(a) * d,
-          y + Math.sin(a) * d,
-          x + Math.cos(a + 0.4) * (d + r * 0.3),
-          y + Math.sin(a + 0.4) * (d + r * 0.3),
-          x + Math.cos(a + 0.2) * (d + r * 0.5),
-          y + Math.sin(a + 0.2) * (d + r * 0.5),
-        ].map((v, j) =>
-          j % 2 ? clamp(v, y - r * 0.95, y + r * 0.95) : clamp(v, x - r * 0.95, x + r * 0.95)
-        ),
-        r * 0.02,
-        withA(col(Wd.cracks), 0.7)
-      );
+        d = hash(i * 4.4) * r * 0.7,
+        P0 = [x + Math.cos(a) * d, y + Math.sin(a) * d],
+        P1 = [x + Math.cos(a + 0.4) * (d + r * 0.3), y + Math.sin(a + 0.4) * (d + r * 0.3)],
+        P2 = [x + Math.cos(a + 0.2) * (d + r * 0.5), y + Math.sin(a + 0.2) * (d + r * 0.5)],
+        pts = [];
+      for (let k = 0; k <= 16; k++) {
+        const u = k / 16;
+        let px = (1 - u) * (1 - u) * P0[0] + 2 * u * (1 - u) * P1[0] + u * u * P2[0],
+          py = (1 - u) * (1 - u) * P0[1] + 2 * u * (1 - u) * P1[1] + u * u * P2[1];
+        const dd = Math.hypot(px - x, py - y);
+        if (dd > r * 0.9) {
+          px = x + ((px - x) * r * 0.9) / dd;
+          py = y + ((py - y) * r * 0.9) / dd;
+        }
+        pts.push(px, py);
+      }
+      ribbon(pts, r * 0.022, withA(col(Wd.cracks), 0.7), 0.25);
+      ribbon(
+        pts.map((v, j) => v + (j % 2 ? r * 0.018 : r * 0.01)),
+        r * 0.01,
+        withA(col(Wd.cracks), 0.3),
+        0.3
+      ); // (a fainter twin beside it - Europa's cracks are double ridges)
     }
   if (Wd.wisps)
     for (let i = 0; i < 4; i++) {
@@ -64324,7 +64369,7 @@ function drawEggs(g, s) {
 // THE VERSION (from v1.2.0, 5 October 2026): MAJOR.MINOR.PATCH - a new MINOR for a batch of new things, a new PATCH for
 // fixes and small touches - with the day it was made next to it. (Before this the versions were named after the date,
 // like v2026.10.05c.)
-const GAME_VERSION = "v1.4.65",
+const GAME_VERSION = "v1.4.66",
   GAME_DATE = "17.10.2026",
   VERSION_TEXT = GAME_VERSION + "  ·  " + GAME_DATE;
 const FB = '"Chakra Petch", "Segoe UI", sans-serif';
@@ -71055,6 +71100,11 @@ profWire();
 //  the game, and where the motion capture, the folk songs and the fonts come from. Both from the menu at any time.
 // =====================================================================================
 const NEWS = [
+  {
+    ver: "v1.4.66",
+    title: "SMOOTH SATURN AND EUROPA",
+    items: ["SATURN'S BANDS, SHADOW AND RINGS ARE SOFT AND ROUND", "EUROPA'S CRACKS CURVE AND TAPER"],
+  },
   {
     ver: "v1.4.65",
     title: "ROUND PLANETS, FASTER BOSSES, QUICKER CONTROLS",

@@ -1660,6 +1660,29 @@ function line(x1, y1, x2, y2, w, c) {
     ny = ((dx / L) * w) / 2;
   quad4(x1 + nx, y1 + ny, x2 + nx, y2 + ny, x2 - nx, y2 - ny, x1 - nx, y1 - ny, c);
 }
+// (v1.4.65) the same for the 2D overlay canvas: starts a rounded-rectangle path (fill() / stroke() it after)
+function rbox(g, x, y, w, h, r) {
+  g.beginPath();
+  if (g.roundRect) g.roundRect(x, y, w, h, Math.max(0, Math.min(r, w / 2, h / 2)));
+  else g.rect(x, y, w, h);
+}
+// (v1.4.65) a rectangle with rounded corners, drawn as one shape (r is kept small enough to fit)
+function rrect(x0, y0, w, h, r, c) {
+  r = Math.max(0.5, Math.min(r, w / 2, h / 2));
+  const P = [x0 + w / 2, y0 + h / 2];
+  for (const [cx, cy, a0] of [
+    [x0 + r, y0 + r, Math.PI],
+    [x0 + w - r, y0 + r, Math.PI * 1.5],
+    [x0 + w - r, y0 + h - r, 0],
+    [x0 + r, y0 + h - r, Math.PI / 2],
+  ])
+    for (let k = 0; k <= 4; k++) {
+      const an = a0 + (k / 4) * (Math.PI / 2);
+      P.push(cx + Math.cos(an) * r, cy + Math.sin(an) * r);
+    }
+  P.push(P[2], P[3]);
+  poly(P, c);
+}
 function poly(pts, c) {
   for (let i = 2; i + 3 < pts.length; i += 2)
     tri(pts[0], pts[1], pts[i], pts[i + 1], pts[i + 2], pts[i + 3], c);
@@ -6328,12 +6351,18 @@ window.addEventListener("keydown", (e) => {
     return;
   } // 1-4: straight to that bar
   const two = G.players === 2 && G.state !== "menu";
-  if (k === "KeyW" || (k === "ArrowUp" && !two)) pressedEdge.up = true;
-  if (k === "KeyS" || (k === "ArrowDown" && !two)) pressedEdge.down = true;
+  // (v1.4.65) a QUICK DOUBLE PRESS is never lost: a second press that comes before the first was used is kept for
+  // the next frame - so tapping up twice fast always moves you two bars
+  const queue = (E0, d) => {
+    if (E0[d]) E0[d + "2"] = true;
+    E0[d] = true;
+  };
+  if (k === "KeyW" || (k === "ArrowUp" && !two)) queue(pressedEdge, "up");
+  if (k === "KeyS" || (k === "ArrowDown" && !two)) queue(pressedEdge, "down");
   if (k === "KeyA" || (k === "ArrowLeft" && !two)) pressedEdge.left = true;
   if (k === "KeyD" || (k === "ArrowRight" && !two)) pressedEdge.right = true;
-  if (two && k === "ArrowUp") pressedEdge2.up = true;
-  if (two && k === "ArrowDown") pressedEdge2.down = true;
+  if (two && k === "ArrowUp") queue(pressedEdge2, "up");
+  if (two && k === "ArrowDown") queue(pressedEdge2, "down");
   if (two && k === "ArrowLeft") pressedEdge2.left = true;
   if (two && k === "ArrowRight") pressedEdge2.right = true;
   if (k === "KeyV" && G.state !== "bonus") {
@@ -6484,6 +6513,7 @@ function readPads() {
   read(pad2, pb, pressedEdge2);
   if (wasAttract && !ATTRACT.on) {
     pressedEdge.up = pressedEdge.down = pressedEdge.left = pressedEdge.right = false;
+    pressedEdge.up2 = pressedEdge.down2 = false;
     setTimeout(() => {
       const b = $("bStart");
       if (b && !$("menu").hidden) b.focus();
@@ -6641,6 +6671,11 @@ function playerInput(id) {
   e.holy = false;
   e.cross = false;
   e.up = e.down = e.left = e.right = e.lu = e.ld = false;
+  if (e.up2 || e.down2) {
+    e.up = !!e.up2;
+    e.down = !!e.down2;
+    e.up2 = e.down2 = false;
+  } // (the queued second press, for next time)
   e.jump = -1;
   let pour = anyKey(...K.p) || pd.pour || !!th.pour || !!th.barPour;
   // the button that started the game (or skipped the jump, or resumed) must be let go first - so the barman doesn't pour straight away
@@ -7338,9 +7373,9 @@ function update(dt) {
       if (!inp.up && !inp.down && P.rep <= 0 && (inp.upHeld || inp.downHeld)) {
         if (inp.upHeld) inp.up = true;
         else inp.down = true;
-        P.rep = 0.16;
+        P.rep = 0.12; // (v1.4.65: a held direction repeats a little quicker - was 0.16 s, and 0.28 s before the first repeat)
       }
-      if (inp.up || inp.down) P.rep = Math.max(P.rep, 0.28);
+      if (inp.up || inp.down) P.rep = Math.max(P.rep, 0.22);
     }
     if (!demo && (pourMode === "tap" || oneBtn())) {
       // TAP: one press starts a pour that fills and slides by itself
@@ -7431,8 +7466,8 @@ function update(dt) {
           : inp.right || (inp.pour && P.x < TAPX)
             ? (inp.pour ? 420 : 290) * spd
             : 0;
-      P.vx = (P.vx || 0) + (tv - (P.vx || 0)) * Math.min(1, dt * (tv ? 24 : 32));
-      if (!tv && Math.abs(P.vx) < 6) P.vx = 0;
+      P.vx = (P.vx || 0) + (tv - (P.vx || 0)) * Math.min(1, dt * (tv ? 36 : 46)); // (v1.4.65: snappier - was 24 / 32)
+      if (!tv && Math.abs(P.vx) < 10) P.vx = 0;
       P.x = clamp(P.x + P.vx * dt, X0 + 40, TAPX);
       if ((P.x <= X0 + 40 && P.vx < 0) || (P.x >= TAPX && P.vx > 0)) P.vx = 0;
       if (P.vx < -1) {
@@ -8531,6 +8566,14 @@ function update(dt) {
           (G.twC || 1) *
           (DF().easy && c.x > X1 - 170 ? 0.6 : 1); // (v1.4.42: on EASY, near your end they slow right down - time to serve them)
         c.x += v;
+        // (v1.4.65) nobody walks INTO a boss: a customer coming up behind one on the same bar waits a step behind it,
+        // instead of disappearing inside its huge body
+        // (and a boss coming up behind someone waits behind them too - it doesn't trample over them)
+        for (const o of customers) {
+          if (o === c || o.lane !== c.lane || o.state !== "walk" || !(o.type.boss || c.type.boss)) continue;
+          const gap = 80;
+          if (o.x >= c.x - 4 && c.x > o.x - gap) c.x = Math.max(c.x - v, Math.min(c.x, o.x - gap));
+        }
         const w0 = c.walk || 0;
         c.walk = w0 + v;
         if (c.type.kind === "rex" && Math.floor(c.walk / 30) !== Math.floor(w0 / 30)) {
@@ -11539,7 +11582,9 @@ function gameOver() {
   fillTable($("overTable"), table, -1);
   funGameOver();
   showPanels();
-  sfx("over");
+  // (v1.4.65) after the grand celebration (you WON) no sad game-over sound while you type your initials - a happy
+  // fanfare instead; the sad one is only for a game that really ended
+  sfx(G.won ? "fanfare" : "over");
   {
     const sv = contOn() && !G.won && contSave();
     $("oCont").hidden = !sv;
@@ -12559,7 +12604,10 @@ function draw() {
       laneT(lane); // everything on this bar is drawn at its depth
       drawDoor(lane, t, V);
       doorLight(lane); // (v1.4.32)
-      for (const c of customers.filter((c) => c.lane === lane).sort((a, b) => a.x - b.x)) {
+      // (v1.4.65: a boss is drawn first, behind everybody else on its bar, so its huge body never hides them)
+      for (const c of customers
+        .filter((c) => c.lane === lane)
+        .sort((a, b) => (b.type.boss ? 1 : 0) - (a.type.boss ? 1 : 0) || a.x - b.x)) {
         drawCustomer(c, t);
         if (c.gold) kidDrawVip(c, t);
         if (c.hurry) drawHurry(c, t);
@@ -24558,7 +24606,7 @@ function drawVert(V, t) {
   }
   for (const c of customers)
     list.push({
-      x: c.x,
+      x: c.type.boss ? c.x - 80 : c.x, // (v1.4.65: a boss goes in behind the customers queued up close to it)
       f: () =>
         vAt(c.lane, c.x, VSIDE.c, () => {
           drawCustomer(c, t);
@@ -41000,7 +41048,7 @@ function kidUpdate(dt, demo) {
         T0 = {
           ...B0,
           need: B0.need + [0, 2, 3, 5][dk] + lp * 2,
-          speed: B0.speed * [1, 1.25, 1.4, 1.6][dk] * (1 + lp * 0.1),
+          speed: B0.speed * [1, 2.5, 2.8, 3.2][dk] * (1 + lp * 0.1), // (v1.4.65: twice as fast again - Kid mode left alone)
           push: B0.push * [1, 0.85, 0.75, 0.65][dk],
         };
       customers.push({
@@ -44788,17 +44836,24 @@ function onSphere(r, rot, lon, lat, sz, c, kx = 1, ky = 1) {
 function latBand(r, lat0, lat1, c, wob = 0, t = 0) {
   // (v1.4.60) FEATHERED BANDS: each band in eight thin strips, strongest in the middle and fading out at both edges, so
   // the belts and zones of the gas giants melt softly into one another instead of meeting in hard straight lines
+  if (OUT) return; // (v1.4.65: bands are markings ON the planet - they must not cast outlines that poke out past its rim)
   const y0 = -r * Math.sin(lat1),
     y1 = -r * Math.sin(lat0),
     n = 8;
   for (let i = 0; i < n; i++) {
     const a = y0 + ((y1 - y0) * i) / n,
       b = y0 + ((y1 - y0) * (i + 1)) / n,
-      far = Math.abs(a) > Math.abs(b) ? a : b,
-      hw = r * 0.985 * Math.sqrt(Math.max(0, 1 - (far / r) ** 2)),
-      dy = wob ? Math.sin(t * 0.5 + i * 0.4 + lat0 * 9) * wob : 0,
-      f = Math.pow(Math.sin((Math.PI * (i + 0.5)) / n), 0.7);
-    if (hw > 1) rect(-hw, a + dy, hw * 2, b - a + 0.5, withA(c, c[3] * f));
+      dy = wob ? Math.sin(t * 0.5 + lat0 * 9) * wob : 0, // (v1.4.65: the whole band drifts together - strips that drifted apart left thin lines and gaps)
+      // (v1.4.65) each strip's ends follow the round edge exactly (a trapezoid, not a rectangle), so the bands meet
+      // the rim in a smooth curve - no little steps down the sides of the planet
+      hwA = r * 0.985 * Math.sqrt(Math.max(0, 1 - ((a + dy) / r) ** 2)),
+      hwB = r * 0.985 * Math.sqrt(Math.max(0, 1 - ((b + dy) / r) ** 2)),
+      // (v1.4.65: the strength now changes smoothly down each strip - a gradient - so no fine stripes show)
+      fA = Math.pow(Math.sin((Math.PI * i) / n), 0.7),
+      fB = Math.pow(Math.sin((Math.PI * (i + 1)) / n), 0.7),
+      cA = withA(c, c[3] * fA),
+      cB = withA(c, c[3] * fB);
+    if (Math.max(hwA, hwB) > 1) quad4(-hwA, a + dy, hwA, a + dy, hwB, b + dy, -hwB, b + dy, cA, cA, cB, cB);
   }
 }
 // the night side (the Sun is to the left): a smooth mesh from the day/night edge - a half-ellipse that sweeps across as
@@ -44810,25 +44865,35 @@ function nightSide(r, tk, a = 0.88, rows = 40) {
     const th = -Math.PI / 2 + (i / rows) * Math.PI,
       y = r * Math.sin(th),
       hw = r * Math.cos(th);
-    P.push([y, hw * tk, hw, Math.max(1, hw * 0.5)]); // (v1.4.59: a wider, softer twilight between day and night - it was 0.3, a hard-looking edge)
+    P.push([y, hw * tk, hw, Math.max(1, Math.min(hw * 0.75, hw * (1 - tk) * 0.98))]); // (v1.4.59: a wider, softer twilight between day and night - it was 0.3, a hard-looking edge; v1.4.65: wider still)
   }
   for (let i = 0; i < rows; i++) {
     const [y0, x0, h0, s0] = P[i],
       [y1, x1, h1, s1] = P[i + 1];
-    quad4(
-      x0 - s0,
-      y0,
-      x0 + s0,
-      y0,
-      x1 + s1,
-      y1,
-      x1 - s1,
-      y1,
-      withA(dk, 0),
-      withA(dk, a),
-      withA(dk, a),
-      withA(dk, 0)
-    );
+    // (v1.4.65) the twilight in six steps along an S-curve (smoothstep), not one straight ramp - a straight ramp
+    // left a visible crease where it began, like a hard line down the middle of the planet
+    const m = 6,
+      sm = (u) => u * u * (3 - 2 * u);
+    for (let j = 0; j < m; j++) {
+      const u0 = j / m,
+        u1 = (j + 1) / m,
+        ca = withA(dk, a * sm(u0)),
+        cb = withA(dk, a * sm(u1));
+      quad4(
+        x0 - s0 + 2 * s0 * u0,
+        y0,
+        x0 - s0 + 2 * s0 * u1,
+        y0,
+        x1 - s1 + 2 * s1 * u1,
+        y1,
+        x1 - s1 + 2 * s1 * u0,
+        y1,
+        ca,
+        cb,
+        cb,
+        ca
+      );
+    }
     const e0 = Math.min(h0, x0 + s0),
       e1 = Math.min(h1, x1 + s1);
     quad4(e0, y0, h0, y0, h1, y1, e1, y1, withA(dk, a));
@@ -44868,12 +44933,62 @@ function worldBall(r, c1, c2) {
 // the glow of an atmosphere round the edge, brightest on the day side
 function atmosphere(r, c, a) {
   R.setAdd(true);
+  // (v1.4.65) a soft rim of air: wide and faint, narrow and bright - now drawn as smooth curved bands that fade out
+  // softly at both edges and at both ends (the old thick line pieces left little steps down the rim, and stopped
+  // in a hard straight cut at the top and the bottom)
+  const a0 = Math.PI * 0.36,
+    a1 = Math.PI * 1.64,
+    n = 72;
   for (const [wd, aa] of [
     [0.12, 0.18],
     [0.06, 0.3],
     [0.025, 0.5],
-  ])
-    arc(0, 0, r, Math.PI * 0.42, Math.PI * 1.58, r * wd, withA(c, a * aa), 48); // (a soft rim of air: wide and faint, narrow and bright)
+  ]) {
+    const ri = r - (r * wd) / 2,
+      ro = r + (r * wd) / 2;
+    for (let i = 0; i < n; i++) {
+      const u0 = i / n,
+        u1 = (i + 1) / n,
+        b0 = a0 + (a1 - a0) * u0,
+        b1 = a0 + (a1 - a0) * u1,
+        e0 = Math.pow(Math.sin(Math.PI * u0), 0.8), // (fading in and out along its length)
+        e1 = Math.pow(Math.sin(Math.PI * u1), 0.8),
+        cm = withA(c, 0),
+        k0 = withA(c, a * aa * e0),
+        k1 = withA(c, a * aa * e1);
+      const mid = r; // the brightest line runs along the rim itself
+      // the outer half: bright at the rim, fading to nothing outside
+      quad4(
+        Math.cos(b0) * mid,
+        Math.sin(b0) * mid,
+        Math.cos(b0) * ro,
+        Math.sin(b0) * ro,
+        Math.cos(b1) * ro,
+        Math.sin(b1) * ro,
+        Math.cos(b1) * mid,
+        Math.sin(b1) * mid,
+        k0,
+        cm,
+        cm,
+        k1
+      );
+      // the inner half: fading to nothing inside the planet
+      quad4(
+        Math.cos(b0) * ri,
+        Math.sin(b0) * ri,
+        Math.cos(b0) * mid,
+        Math.sin(b0) * mid,
+        Math.cos(b1) * mid,
+        Math.sin(b1) * mid,
+        Math.cos(b1) * ri,
+        Math.sin(b1) * ri,
+        cm,
+        k0,
+        k1,
+        cm
+      );
+    }
+  }
   glow(-r * 0.2, 0, r * 1.35, withA(c, a * 0.18));
   R.setAdd(false);
 }
@@ -52153,6 +52268,7 @@ const STORY = {
 // =====================================================================================
 function funGameStart() {
   fpClearAll(); // (no SETTINGS or PLAY MORE screen left open behind the game)
+  G.folkUsed = []; // (v1.4.65: a new game - every folk song can be played once again)
   G.endless = !!G.endlessNext;
   G.endlessNext = false;
   G.endLvl = 1;
@@ -52192,12 +52308,17 @@ function funLevelStart() {
     } catch (e) {
       /* (still loading: the folk songs aren't ready yet) */
     }
+    // (v1.4.65) NO TUNE TWICE IN A GAME: a folk song the band has already played is not picked again - every stage
+    // keeps its own tune (all 40 are different), and each folk song turns up at most once
+    const used = G.folkUsed || (G.folkUsed = []);
+    pool = pool.filter((k) => !used.includes(k));
     G.folk =
       (nat || Math.random() < 0.25) && pool.length ? pool[Math.floor(Math.random() * pool.length)] : null;
     if (nat === "za" && Math.random() < 0.4) {
       const k = FOLK_ALL.findIndex((f) => f.title === "SHOSHOLOZA");
-      if (k >= 0) G.folk = FOLK_FIRST + k;
+      if (k >= 0 && !used.includes(FOLK_FIRST + k)) G.folk = FOLK_FIRST + k;
     } // (on Heritage Day and Freedom Day the band often strikes up Shosholoza)
+    if (G.folk !== null && !G.demo) used.push(G.folk);
     if (G.folk !== null && !G.demo)
       G.callouts.push({
         text: "♪ THE BAND PLAYS: " + TRACKS[G.folk].title + " - A " + TRACKS[G.folk].where.toUpperCase(),
@@ -53081,8 +53202,10 @@ function drawMini(t) {
     if (M.kind === "mixer") {
       // the recipe card
       const cy0 = 120;
-      rect(30, cy0 - 36, 200, 70, withA(col("#fff8ec"), 0.92));
-      rect(30, cy0 - 36, 200, 4, col("#ff5fa8"));
+      // (v1.4.65: a rounded card with a soft shadow, and a rounded pink tab along the top)
+      rrect(33, cy0 - 31, 200, 70, 12, withA(C.black, 0.3));
+      rrect(30, cy0 - 36, 200, 70, 12, withA(col("#fff8ec"), 0.94));
+      rrect(44, cy0 - 36, 172, 5, 2.5, col("#ff5fa8"));
       M.recipe.forEach((k, i) => {
         drawIngredient(k, 70 + i * 60, cy0, 1.2, 0);
         if (M.have.includes(k)) {
@@ -53150,8 +53273,23 @@ function drawStory(t) {
   glow(480, 520, 160, withA(col("#ff5fa8"), 0.2));
   R.setAdd(false);
   disc(480, 560, 200, col("#3a2e4a"), 70);
-  rect(400, 470, 160, 24, col("#5a4a6a"));
-  rect(410, 452, 140, 20, col("#ff5fa8"));
+  // (v1.4.65) the little diner, drawn properly: a rounded body, a glass dome, a row of warm lit windows and its
+  // pink neon sign glowing - instead of two flat boxes
+  arc(480, 560, 199, Math.PI * 1.15, Math.PI * 1.85, 2, withA(col("#8a7aa8"), 0.5), 24); // (the rim of the little world)
+  disc(480, 466, 58, withA(col("#bfe0ff"), 0.22), 30); // the glass dome
+  arc(480, 466, 56, Math.PI * 1.2, Math.PI * 1.45, 2, withA(C.white, 0.5), 8);
+  rrect(398, 462, 164, 32, 14, col("#5a4a6a")); // the body
+  rrect(398, 462, 164, 6, 3, col("#7a6a8e"));
+  for (let i = 0; i < 6; i++) {
+    const wx = 414 + i * 26;
+    disc(wx, 479, 7, col("#2a2038"));
+    disc(wx, 479, 5.5, mix(col("#ffd890"), col("#ffb060"), (i % 3) / 3));
+  } // the lit windows
+  R.setAdd(true);
+  glow(480, 446, 70, withA(col("#ff5fa8"), 0.35 + 0.08 * Math.sin(t * 2)));
+  R.setAdd(false);
+  rrect(418, 438, 124, 18, 9, col("#ff5fa8")); // the neon sign
+  rrect(422, 441, 116, 3, 1.5, withA(C.white, 0.45));
   const bx = lerpA(1100, 640, e),
     by = 230 + Math.sin(t * 1.4) * 10;
   drawBocian(bx, by, 2.4, t, (c) => c);
@@ -53805,11 +53943,14 @@ function funHud(g, s, t, fD, sx, sy) {
         lh = fs * 1.35,
         bh = 30 * s + ls.length * lh + 8,
         by = cssH * 0.93 - bh; // (the words wrap to fit the box, and the box grows to fit them)
+      // (v1.4.65: a rounded box, not a sharp rectangle)
       g.fillStyle = "rgba(10,8,30,.78)";
-      g.fillRect(bx, by, bw, bh);
+      g.beginPath();
+      g.roundRect ? g.roundRect(bx, by, bw, bh, 14 * s) : g.rect(bx, by, bw, bh);
+      g.fill();
       g.strokeStyle = "rgba(95,245,200,.6)";
       g.lineWidth = 2;
-      g.strokeRect(bx, by, bw, bh);
+      g.stroke();
       g.font = Math.round(11 * s) + "px " + FD;
       g.fillStyle = "#5ff5c8";
       g.fillText("DID YOU KNOW?", cssW / 2, by + 14 * s);
@@ -54443,6 +54584,31 @@ function funApproachUpdate(dt) {
   }
   A0.held = inp.pour;
 }
+// (v1.4.65) A SOFT, ROUNDED STROKE: a run of overlapping round dots along a path, its width and strength easing from
+// one end to the other - for the markings on far-off planets (no flat-ended sticks or hard corners)
+function softStroke(pts, w0, w1, c, a0 = 1, a1 = 1) {
+  let L = 0;
+  const seg = [];
+  for (let i = 2; i < pts.length; i += 2) {
+    const d = Math.hypot(pts[i] - pts[i - 2], pts[i + 1] - pts[i - 1]);
+    seg.push(d);
+    L += d;
+  }
+  if (L <= 0) return;
+  const step = Math.max(0.6, Math.min(w0, w1) * 0.45),
+    n = Math.min(160, Math.ceil(L / step));
+  let si = 0,
+    acc = 0;
+  for (let k = 0; k <= n; k++) {
+    const dist = (k / n) * L;
+    while (si < seg.length - 1 && acc + seg[si] < dist) acc += seg[si++];
+    const f = seg[si] > 0 ? (dist - acc) / seg[si] : 0,
+      px = pts[si * 2] + (pts[si * 2 + 2] - pts[si * 2]) * f,
+      py = pts[si * 2 + 1] + (pts[si * 2 + 3] - pts[si * 2 + 1]) * f,
+      u = k / n;
+    disc(px, py, (w0 + (w1 - w0) * u) / 2, withA(c, c[3] * (a0 + (a1 - a0) * u)));
+  }
+}
 function drawWorld(Wd, x, y, r, t) {
   if (!Wd.b) return;
   if (Wd.real) {
@@ -54504,12 +54670,27 @@ function drawWorld(Wd, x, y, r, t) {
   disc(x, y, r * 0.985, c0);
   disc(x - r * 0.05, y - r * 0.04, r * 0.9, c1);
   const rot = t * 0.06; // (features sit on the sphere and turn with it)
-  if (Wd.bands)
+  if (Wd.bands) {
+    // (v1.4.65) SOFT BANDS: each was one flat strip as wide as the planet at its middle, so its corners stuck out past
+    // the round edge - blocky steps all down the sides. Now they are feathered bands that follow the sphere and melt
+    // into each other (like the gas giants'), drifting a touch
+    push();
+    translate(x, y);
     for (let i = -4; i <= 4; i++) {
-      const yy = y + i * r * 0.2,
-        ww = r * Math.sqrt(Math.max(0, 1 - ((yy - y) / r) ** 2));
-      rect(x - ww, yy - r * 0.07, ww * 2, r * 0.12, withA(col(Wd.bands[(i + 8) % Wd.bands.length]), 0.6));
+      const yc = i * r * 0.2,
+        h = r * 0.12,
+        la = (v) => Math.asin(Math.max(-1, Math.min(1, -v / r)));
+      latBand(
+        r,
+        la(yc + h),
+        la(yc - h),
+        withA(col(Wd.bands[(i + 8) % Wd.bands.length]), 0.55),
+        r * 0.012,
+        t + i
+      );
     }
+    pop();
+  }
   push();
   translate(x, y);
   if (Wd.craters)
@@ -54586,7 +54767,15 @@ function drawWorld(Wd, x, y, r, t) {
       const yy = y - r * 0.5 + i * r * 0.32,
         ww = r * Math.sqrt(1 - ((yy - y) / r) ** 2) * 0.8,
         o = ((t * 30 * (1 + i * 0.3)) % (ww * 2)) - ww;
-      line(x + o - r * 0.15, yy, x + o + r * 0.15, yy, r * 0.03, withA(C.white, 0.7));
+      // (v1.4.65: a soft wisp that bows round the sphere and tapers at both ends, not a flat white stick)
+      const P = [];
+      for (let k = 0; k <= 8; k++) {
+        const u = k / 8,
+          px = x + o + (u - 0.5) * r * 0.34;
+        P.push(px, yy + ((px - x) / r) ** 2 * r * 0.06 * Math.sign(yy - y || 1));
+      }
+      softStroke(P.slice(0, 10), r * 0.006, r * 0.03, withA(C.white, 0.55), 0.1, 1);
+      softStroke(P.slice(8), r * 0.03, r * 0.006, withA(C.white, 0.55), 1, 0.1);
     }
   if (Wd.heart) {
     disc(x + r * 0.15, y + r * 0.2, r * 0.25, col("#f4ece0"));
@@ -54603,12 +54792,13 @@ function drawWorld(Wd, x, y, r, t) {
       const a = hash(i * 2.7) * 6.283,
         d = Math.sqrt(hash(i * 5.3)) * r * 0.8,
         pts = [];
-      for (let k = 0; k < 4; k++) {
-        const aa = a + k * 0.35,
-          dd = d + k * r * 0.12;
-        pts.push(x + Math.cos(aa) * Math.min(dd, r * 0.92), y + Math.sin(aa) * Math.min(dd, r * 0.92));
+      // (v1.4.65: a smooth, curving river of lava that narrows as it flows - it was three straight pieces)
+      for (let k = 0; k <= 12; k++) {
+        const aa = a + k * 0.105,
+          dd = d + k * r * 0.036 + Math.sin(k * 0.9 + i) * r * 0.015;
+        pts.push(x + Math.cos(aa) * Math.min(dd, r * 0.9), y + Math.sin(aa) * Math.min(dd, r * 0.9));
       }
-      polyline(pts, r * 0.035, col(Wd.lava));
+      softStroke(pts, r * 0.045, r * 0.012, col(Wd.lava), 1, 0.7);
     }
     R.setAdd(true);
     glow(x, y, r * 1.25, withA(col(Wd.lava), 0.18 + 0.06 * Math.sin(t * 2)));
@@ -54706,8 +54896,16 @@ function drawWorld(Wd, x, y, r, t) {
     for (let i = 0; i < 16; i++) {
       const rx = x + (hash(i * 2.3) - 0.5) * r * 1.6,
         ry = y - r + ((hash(i * 7.1) * r * 2 + t * r * 1.2) % (r * 2));
-      if (Math.hypot(rx - x, ry - y) < r * 0.95)
-        line(rx, ry, rx - sl, ry + r * 0.12, r * 0.015, withA(col(Wd.rain), 0.75));
+      // (v1.4.65: each drop a streak with a round bright head and a tail that fades - no flat little sticks)
+      if (Math.hypot(rx - x, ry - y) < r * 0.9)
+        softStroke(
+          [rx, ry, rx - sl, ry + r * 0.12],
+          r * 0.004,
+          r * 0.02,
+          withA(col(Wd.rain), 0.75),
+          0.05,
+          0.9
+        );
     }
   }
   // (v1.4.1) a shine of sunlight, a smooth night side that stays inside the planet, and an atmosphere where there's air
@@ -61931,10 +62129,11 @@ function coachHud(g, s, t, fD, sx, sy) {
     tx = clamp(x, w / 2 + 6, cssW - w / 2 - 6),
     ty = y - 22 * s - b;
   g.fillStyle = "rgba(20,10,30,.85)";
-  g.fillRect(tx - w / 2, ty - 22 * s, w, 24 * s);
+  rbox(g, tx - w / 2, ty - 22 * s, w, 24 * s, 9 * s); // (v1.4.65: rounded)
+  g.fill();
   g.strokeStyle = "#ffd24d";
   g.lineWidth = 2 * s;
-  g.strokeRect(tx - w / 2, ty - 22 * s, w, 24 * s);
+  g.stroke();
   g.fillStyle = "#fff3e2";
   g.fillText(tip.text, tx, ty - 4 * s);
   g.restore();
@@ -62382,10 +62581,11 @@ function drawGalaxyMap(g, w, h, cur, hop, t, opts                               
       bx = clamp(x - tw / 2 - 8, 4, w - tw - 20),
       by = clamp(y + rN * 2.6, 4, h - bh - 4);
     g.fillStyle = "rgba(10,6,20,.88)";
-    g.fillRect(bx, by, tw + 16, bh);
+    rbox(g, bx, by, tw + 16, bh, bh / 2); // (v1.4.65: a rounded label)
+    g.fill();
     g.strokeStyle = gmRegion(i).c;
     g.lineWidth = 1;
-    g.strokeRect(bx, by, tw + 16, bh);
+    g.stroke();
     g.fillStyle = "#fff3e2";
     g.textAlign = "left";
     g.textBaseline = "middle";
@@ -62761,14 +62961,16 @@ function drawCupPanel() {
           lost = m.w && nm && m.w !== nm,
           live = nx === m;
         g.fillStyle = won ? "rgba(255,210,77,.22)" : "rgba(255,255,255,.06)";
-        g.fillRect(x, y - fs * 0.9, bw, fs * 1.8);
+        rbox(g, x, y - fs * 0.9, bw, fs * 1.8, fs * 0.5); // (v1.4.65: rounded)
+        g.fill();
         g.strokeStyle = live
           ? "rgba(95,245,200," + (0.6 + 0.4 * Math.sin(t * 5)).toFixed(2) + ")"
           : won
             ? "#ffd24d"
             : "rgba(255,140,200,.28)";
         g.lineWidth = live ? 2 : 1;
-        g.strokeRect(x, y - fs * 0.9, bw, fs * 1.8);
+        rbox(g, x, y - fs * 0.9, bw, fs * 1.8, fs * 0.5);
+        g.stroke();
         g.font = "700 " + Math.round(fs) + "px " + FB;
         g.fillStyle = lost ? "rgba(255,243,226,.35)" : won ? "#ffd24d" : "#fff3e2";
         g.fillText(nm || (r0 === 0 ? "— bye —" : "?"), x + 8, y);
@@ -64122,7 +64324,7 @@ function drawEggs(g, s) {
 // THE VERSION (from v1.2.0, 5 October 2026): MAJOR.MINOR.PATCH - a new MINOR for a batch of new things, a new PATCH for
 // fixes and small touches - with the day it was made next to it. (Before this the versions were named after the date,
 // like v2026.10.05c.)
-const GAME_VERSION = "v1.4.64",
+const GAME_VERSION = "v1.4.65",
   GAME_DATE = "17.10.2026",
   VERSION_TEXT = GAME_VERSION + "  ·  " + GAME_DATE;
 const FB = '"Chakra Petch", "Segoe UI", sans-serif';
@@ -64185,7 +64387,8 @@ function tourMap(g, s, a) {
         xb = X(i - 1) + 8 * s,
         V0 = VENUES[i0];
       g.strokeStyle = i0 < half ? "rgba(159,208,255,.5)" : "rgba(255,159,208,.5)";
-      g.strokeRect(xa, y - 16 * s, xb - xa, 32 * s);
+      rbox(g, xa, y - 16 * s, xb - xa, 32 * s, 12 * s); // (v1.4.65: rounded)
+      g.stroke();
       lbl(
         V0.sol
           ? "THE SOLAR SYSTEM"
@@ -65293,12 +65496,13 @@ function drawEndingHud(g, s, fD, fB) {
     const button = (x, label, hint, col1, hit) => {
       g.globalAlpha = 0.92;
       g.fillStyle = "rgba(14,10,30,.85)";
-      g.fillRect(x, y, bw, bh);
+      rbox(g, x, y, bw, bh, 14 * s); // (v1.4.65: rounded buttons)
+      g.fill();
       g.strokeStyle = col1;
       g.lineWidth = 2.5 * s;
       g.shadowColor = col1;
       g.shadowBlur = 14 * s * pulse;
-      g.strokeRect(x, y, bw, bh);
+      g.stroke();
       g.shadowBlur = 0;
       g.globalAlpha = 1;
       g.font = fD(15);
@@ -65674,10 +65878,26 @@ function audio() {
   musVol.connect(master);
   fxBus = AC.createGain();
   fxBus.gain.value = 0.5;
-  fxBus.connect(fxVol);
+  // (v1.4.65) NO SHRILL TICKS: every sound effect passes a gentle low-pass at 4.2 kHz - the tiny high pings (coins,
+  // glints, bell overtones) that cut through the music as short sharp sounds are rounded off; nothing else changes much
+  {
+    const lp = AC.createBiquadFilter();
+    lp.type = "lowpass";
+    lp.frequency.value = 4200;
+    lp.Q.value = 0.5;
+    fxBus.connect(lp);
+    lp.connect(fxVol);
+  }
   bgBus = AC.createGain();
   bgBus.gain.value = VOL.bg;
-  bgBus.connect(fxBus);
+  {
+    const lp = AC.createBiquadFilter(); // (and the background's own noises are softer still: below 2 kHz)
+    lp.type = "lowpass";
+    lp.frequency.value = 2000;
+    lp.Q.value = 0.5;
+    bgBus.connect(lp);
+    lp.connect(fxBus);
+  }
   musicBus = AC.createGain();
   musicBus.gain.value = MY.mode === "original" ? 0.3 : 0;
   musLP = AC.createBiquadFilter();
@@ -65788,6 +66008,12 @@ function tone(type, f0, f1, dur, vol, bus = fxBus, when = AC.currentTime + SOON,
   o.stop(when + dur + 0.03);
 }
 function noise(dur, vol, f0, f1, bus = fxBus, when = AC.currentTime + SOON, type = "lowpass") {
+  // (v1.4.65) a very short, very high burst of noise is a sharp TICK - those are kept lower and quieter
+  if (dur < 0.07 && f0 > 2800 && type !== "lowpass") {
+    f0 = Math.min(f0, 2200);
+    f1 = Math.min(f1, 1800);
+    vol *= 0.55;
+  }
   const s = AC.createBufferSource(),
     fl = AC.createBiquadFilter(),
     gn = AC.createGain();
@@ -65838,8 +66064,25 @@ function fxOut(x) {
   }, 7000); // (long enough that no sound's tail is ever cut off mid-note)
   return out;
 }
-const ping = (f, dur, vol, out, when) => tone("sine", f, f * 0.995, dur, vol, out, when, 0.002); // glass, bells
-const blip = (f0, f1, dur, vol, out, when, type = "square") => tone(type, f0, f1, dur, vol, out, when, 0.003);
+// glass, bells - (v1.4.65: a ping above 2.6 kHz is folded down an octave or two and played a little softer, with a
+// gentler 6 ms start: the coins, glints and sparkles no longer tick sharply through the music)
+const ping = (f, dur, vol, out, when) => {
+  let k = 1;
+  while (f > 2600) {
+    f /= 2;
+    k *= 0.75;
+  }
+  tone("sine", f, f * 0.995, dur, vol * k, out, when, k < 1 ? 0.006 : 0.002);
+};
+// (v1.4.65: a blip above 2.6 kHz drops an octave and gets a little quieter too - no piercing top notes)
+const blip = (f0, f1, dur, vol, out, when, type = "square") => {
+  while (Math.max(f0, f1) > 2600) {
+    f0 /= 2;
+    f1 /= 2;
+    vol *= 0.8;
+  }
+  tone(type, f0, f1, dur, vol, out, when, 0.003);
+};
 function glass(out, when, vol = 0.06, base = 2600) {
   for (const k of [1, 1.47, 2.09, 2.78])
     ping(
@@ -65910,18 +66153,26 @@ function sfx(name, x , kind ) {
         C6 = 1046.5 * up; // (a quick run of customers climbs the scale)
       tone("sine", 130, 60, 0.16, 0.22, out, now);
       noise(0.05, 0.22, 2600, 900, out, now + 0.02, "bandpass"); // the door shuts / the register drawer clunks
-      noise(0.03, 0.18, 6000, 4000, out, now + 0.07, "highpass");
+      noise(0.05, 0.06, 1600, 900, out, now + 0.07, "bandpass"); // (v1.4.65: a soft clunk - it was a sharp 6 kHz click)
       for (const [k, v, d] of [
         [1, 0.09, 1.1],
         [2.76, 0.035, 0.7],
         [5.4, 0.015, 0.4],
       ])
-        ping(2637 * k, d, v, out, now + 0.08); // the bell: CHING!
+        ping(1318.5 * k, d, v * 0.6, out, now + 0.08); // the bell: CHING! (v1.4.65: an octave lower and softer - it was a shrill 2.6 kHz)
       [1, 1.26, 1.5, 2].forEach((m, i) => {
-        blip(C6 * m, C6 * m, i === 3 ? 0.28 : 0.08, i === 3 ? 0.06 : 0.05, out, now + 0.16 + i * 0.065);
-        ping(C6 * m * 2, 0.25, 0.012, out, now + 0.16 + i * 0.065);
-      });
-      for (let i = 0; i < 4; i++) ping(3600 + R2() * 1800, 0.1, 0.025, out, now + 0.3 + i * 0.04); // a few coins
+        blip(
+          C6 * m * 0.5,
+          C6 * m * 0.5,
+          i === 3 ? 0.28 : 0.1,
+          i === 3 ? 0.05 : 0.035,
+          out,
+          now + 0.16 + i * 0.065,
+          "triangle"
+        );
+      }); // (a soft rising ta-da, down an octave - the high glints on top are gone)
+      // (v1.4.65: the little coin clinks - tiny pings at 3.6-5.4 kHz, heard every time anyone was served, even in the
+      //  demo - are gone: they were the short sharp sounds behind the music)
       break;
     }
     case "bell": {
@@ -65978,7 +66229,7 @@ function sfx(name, x , kind ) {
       tone("sawtooth", 220, 110, 0.35, 0.06, out, now);
       break;
     case "dangertick":
-      tone("square", 1180, 1180, 0.05, 0.03, out, now);
+      tone("sine", 660, 640, 0.09, 0.03, out, now, 0.008); // (v1.4.65: a soft round tone - it was a sharp square-wave tick)
       tone("sine", 90, 60, 0.12, 0.12, out, now);
       break; // (the heartbeat while it's still close)
     case "door": {
@@ -66246,7 +66497,7 @@ function sfx(name, x , kind ) {
         tone("sine", 70, 40, 0.12, 0.2, out, now + i * 0.26);
         noise(0.08, 0.12, 600, 150, out, now + i * 0.26);
       }
-      if (Math.random() < 0.3) sfx("whistle", x);
+      // (v1.4.65: no more piercing 2.9 kHz whistles from the crowd now and then - that was a sharp sound out of nowhere)
       break;
     }
     case "bonk":
@@ -70804,6 +71055,20 @@ profWire();
 //  the game, and where the motion capture, the folk songs and the fonts come from. Both from the menu at any time.
 // =====================================================================================
 const NEWS = [
+  {
+    ver: "v1.4.65",
+    title: "ROUND PLANETS, FASTER BOSSES, QUICKER CONTROLS",
+    items: [
+      "SMOOTH ROUND PLANETS - NO MORE BLOCKY EDGES",
+      "BOSSES MARCH TWICE AS FAST - AND NEVER HIDE OTHER CUSTOMERS",
+      "QUICKER, SNAPPIER CONTROLS",
+      "NO FOLK SONG TWICE IN A GAME",
+      "NO MORE SHORT SHARP SOUNDS BEHIND THE MUSIC",
+      "A FANFARE, NOT A SAD SOUND, AFTER THE CELEBRATION",
+      "ROUNDED FACT BOXES, MAP, BUTTONS AND TIPS",
+      "A PROPER LITTLE DINER IN THE STORY SCENES",
+    ],
+  },
   {
     ver: "v1.4.64",
     title: "ROUND DOORS EVERYWHERE",

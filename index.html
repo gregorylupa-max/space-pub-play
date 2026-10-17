@@ -12291,7 +12291,7 @@ const C = {
 const FLAVORS = [
   [col("#ff8fbf"), col("#ff6fa8")],
   [col("#9a5a3a"), col("#7a4028")],
-  [col("#8ff0c0"), col("#5fd8a0")],
+  [col("#6fe0a8"), col("#3fbf88")], // (v1.4.61: a deeper mint - the pale one bloomed to white under the lamps)
 ];
 const SHIRTS = ["#ff5fa8", "#5f9fff", "#ffc34d", "#8a5fff", "#5ff5c8", "#ff7a3d"].map((h) => col(h));
 // Retro palettes: a wallpaper colour and pattern, a bar top, a bar front, brass trim and the floor tiles
@@ -12575,6 +12575,7 @@ function draw() {
       for (const u of powerups) if (u.lane === lane) drawPowerup(u, t);
       for (const m of empties)
         if (m.lane === lane) {
+          if (!OUT) glowE(m.x, LY(lane, m.x) - 2, 9, 2.2, withA(C.black, 0.32)); // (v1.4.61: a soft shadow under it, on the bar)
           barReflect(m.x, LY(lane, m.x) - 3, null, 0, m.spin, t);
           glassGhosts(m, LY(lane, m.x) - 3, null, 0, m.spin, 0, col("#cfe8ff"));
           drawGlass(m.x, LY(lane, m.x) - 3, null, 0, m.spin);
@@ -12586,6 +12587,7 @@ function draw() {
             drawHoly(s.x, gy, t);
             continue;
           }
+          if (!OUT) glowE(s.x, gy + 1, 10, 2.4, withA(C.black, 0.34)); // (v1.4.61: a soft contact shadow on the bar)
           barReflect(s.x, gy, s.flavor, 1, 0, t);
           if (!OUT && Math.abs(s.x - (s._wx ?? s.x + 99)) > 13) {
             s._wx = s.x;
@@ -12608,8 +12610,16 @@ function draw() {
           R.setAdd(true);
           line(s.x + 9, gy - 8, s.x + 40, gy - 6, 3, withA(C.white, 0.22));
           if (s.perfect) {
-            glow(s.x, gy - 10, 22, withA(col("#ffe060"), 0.55));
-            line(s.x + 9, gy - 12, s.x + 50, gy - 10, 4, withA(col("#ffe060"), 0.5));
+            // (v1.4.61: a warm golden halo round it - no longer so bright that it hid the glass in a white blob)
+            glow(s.x, gy - 14, 26, withA(col("#ffd040"), 0.2));
+            line(s.x + 9, gy - 12, s.x + 50, gy - 10, 3, withA(col("#ffe060"), 0.35));
+            const tw = (t * 3 + s.x * 0.01) % 1;
+            star(
+              s.x - 6 + tw * 14,
+              gy - 34 + Math.sin(tw * 6) * 3,
+              3.2 * Math.sin(tw * Math.PI),
+              withA(col("#fff4c0"), 0.9)
+            ); // (a twinkle)
           }
           R.setAdd(false);
         } // (a perfect pour glows gold)
@@ -24476,7 +24486,7 @@ function drawVert(V, t) {
                 sh.perfect
                   ? (gy) => {
                       R.setAdd(true);
-                      glow(sh.x, gy - 10, 22, withA(col("#ffe060"), 0.55));
+                      glow(sh.x, gy - 14, 24, withA(col("#ffd040"), 0.22)); // (v1.4.61: a softer golden halo)
                       R.setAdd(false);
                     }
                   : null
@@ -63969,8 +63979,8 @@ function drawEggs(g, s) {
 // THE VERSION (from v1.2.0, 5 October 2026): MAJOR.MINOR.PATCH - a new MINOR for a batch of new things, a new PATCH for
 // fixes and small touches - with the day it was made next to it. (Before this the versions were named after the date,
 // like v2026.10.05c.)
-const GAME_VERSION = "v1.4.60",
-  GAME_DATE = "16.10.2026",
+const GAME_VERSION = "v1.4.61",
+  GAME_DATE = "17.10.2026",
   VERSION_TEXT = GAME_VERSION + "  ·  " + GAME_DATE;
 const FB = '"Chakra Petch", "Segoe UI", sans-serif';
 let FD = '"Bungee", "Impact", sans-serif';
@@ -70556,6 +70566,15 @@ profWire();
 //  the game, and where the motion capture, the folk songs and the fonts come from. Both from the menu at any time.
 // =====================================================================================
 const NEWS = [
+  {
+    ver: "v1.4.61",
+    title: "CLEARER SHAKES ON THE BAR",
+    items: [
+      "A PERFECT POUR SHINES GOLD - THE GLASS STAYS VISIBLE",
+      "A DEEPER MINT GREEN",
+      "SOFT SHADOWS UNDER EVERY GLASS",
+    ],
+  },
   {
     ver: "v1.4.60",
     title: "SMOOTHER PLANETS",

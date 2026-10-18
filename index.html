@@ -1660,6 +1660,31 @@ function line(x1, y1, x2, y2, w, c) {
     ny = ((dx / L) * w) / 2;
   quad4(x1 + nx, y1 + ny, x2 + nx, y2 + ny, x2 - nx, y2 - ny, x1 - nx, y1 - ny, c);
 }
+// (v1.4.68) A STREAK - a falling drop or a gust of wind: a round bright head at (hx, hy) and a tail that narrows and
+// fades to nothing at (tx, ty). (Drawn with plain lines these were flat little sticks with square ends.)
+function streak(hx, hy, tx, ty, w, c) {
+  const dx = tx - hx,
+    dy = ty - hy,
+    L = Math.hypot(dx, dy) || 1,
+    nx = (-dy / L) * w * 0.5,
+    ny = (dx / L) * w * 0.5,
+    c0 = withA(c, 0);
+  quad4(
+    hx + nx,
+    hy + ny,
+    tx + nx * 0.15,
+    ty + ny * 0.15,
+    tx - nx * 0.15,
+    ty - ny * 0.15,
+    hx - nx,
+    hy - ny,
+    c,
+    c0,
+    c0,
+    c
+  );
+  disc(hx, hy, w * 0.5, c);
+}
 // (v1.4.65) A RIBBON along a path: one even band of colour w wide (no overlapping pieces, so a see-through colour
 // stays even), its strength fading to nothing at both ends over the first and last fifth
 function ribbon(pts, w, c, fade = 0.2) {
@@ -2823,6 +2848,8 @@ const DICT_ROWS                             = [
   ["INDIAN", "INDIESE", "INDYJSCY"],
   ["AUSTRIAN", "OOSTENRYKSE", "AUSTRIACCY"],
   ["GERMAN", "DUITSE", "NIEMIECCY"],
+  ["RUSSIAN", "RUSSIESE", "ROSYJSCY"],
+  ["UKRAINIAN", "OEKRAÏENSE", "UKRAIŃSCY"],
   [
     "WAIT! I WAS STILL WASHING THE WINDOWS!",
     "WAG! EK WAS NOG BESIG OM DIE VENSTERS TE WAS!",
@@ -5273,6 +5300,11 @@ const TYPES = [
   { kind: "fireman", speed: 0.9, push: 130, w: 1.08, uni: true },
   { kind: "guard", speed: 1.1, push: 150, w: 1.05, uni: true },
   { kind: "footy", speed: 1.2, push: 160, w: 1.0, uni: true },
+  // (v1.4.68) four sea creatures from the deeps of space
+  { kind: "kingcrab", speed: 0.5, push: 34, w: 1.0, glutton: true, boss: true, need: 7 },
+  { kind: "kraken", speed: 0.44, push: 34, w: 1.0, glutton: true, boss: true, need: 8 },
+  { kind: "angler", speed: 0.48, push: 34, w: 1.0, glutton: true, boss: true, need: 8 },
+  { kind: "starwhale", speed: 0.4, push: 32, w: 1.0, glutton: true, boss: true, need: 9 },
 ];
 const UNI_KINDS = ["soldier", "police", "fireman", "guard", "footy"];
 const uniNat = (c) =>
@@ -5343,6 +5375,17 @@ const ANCIENT_LINES = {
 };
 const VELO_LINES = ["SKREEE! *HAPPY CHIRP*", "CHIRRUP! (THAT MEANS YUM)", "TAP TAP TAP! *GULP*"];
 const THANKS = { af: "BAIE DANKIE!", pl: "DZIEKUJE!", za: ["NGIYABONGA!", "ENKOSI!", "SIYABONGA!"] };
+// (v1.4.68) how the Russian and Ukrainian visitors say thank you (and what it means)
+const FAN_THANKS = {
+  ru: [
+    ["SPASIBO!", "Russian: thank you"],
+    ["BOLSHOYE SPASIBO!", "Russian: thank you very much"],
+  ],
+  ua: [
+    ["DYAKUYU!", "Ukrainian: thank you"],
+    ["SPASYBI!", "Ukrainian: thanks"],
+  ],
+};
 const SA_AF = [
   ["BAIE DANKIE!", "Afrikaans"],
   ["DANKIE, BOET!", "Afrikaans"],
@@ -5412,6 +5455,9 @@ const FAN_LOOKS = {
   in: ["ind", "ind2", "ind"], // (v1.3.5) a lady in a sari, a cricket fan in India blue
   at: ["aut", "aut2"], // a man in lederhosen and a Tyrolean hat, a lady in a dirndl
   de: ["ger", "ger2"], // German football fans in black, red and gold
+  // (v1.4.68) RUSSIAN and UKRAINIAN visitors in traditional dress
+  ru: ["rus", "rus2"], // a man in an embroidered kosovorotka shirt and a fur ushanka, a lady in a sarafan and kokoshnik
+  ua: ["ukr", "ukr2"], // a man in an embroidered vyshyvanka shirt, a lady in a vyshyvanka with a vinok flower crown
 };
 const FAN_SLOGANS = {
   pl: ["POLSKA!", "BIALO-CZERWONI!", "POLSKA, GOL!"],
@@ -5430,6 +5476,8 @@ const FAN_SLOGANS = {
   in: ["INDIA! INDIA!", "NAMASTE!", "BHARAT!"],
   at: ["SERVUS!", "AUSTRIA!", "PROST - WITH MILKSHAKE!", "HOLLA-RI-DI-HO!", "BABA!"],
   de: ["DEUTSCHLAND!", "AUF GEHT'S!", "TOR! TOR! TOR!"],
+  ru: ["PRIVET!", "DAVAI, DAVAI!", "ROSSIYA!"],
+  ua: ["DOBRYI DEN!", "UKRAINA!", "VPERED!"],
 };
 const FAN_NAMES = {
   pl: ["POLISH FOOTBALL", "#ff5f6f"],
@@ -5440,15 +5488,36 @@ const FAN_NAMES = {
   in: ["INDIAN", "#ff9933"],
   at: ["AUSTRIAN", "#ff5f6f"],
   de: ["GERMAN", "#ffce00"],
+  ru: ["RUSSIAN", "#7fa8ff"],
+  ua: ["UKRAINIAN", "#ffd500"],
 };
-const FAN_ORDER = ["za", "pl", "sc", "za", "pl", "gb", "za", "in", "pl", "fr", "za", "de", "pl", "at"]; // South Africans and Poles come most often
+const FAN_ORDER = [
+  "za",
+  "pl",
+  "sc",
+  "za",
+  "pl",
+  "gb",
+  "za",
+  "in",
+  "pl",
+  "fr",
+  "za",
+  "de",
+  "pl",
+  "at",
+  "za",
+  "ru",
+  "pl",
+  "ua",
+]; // South Africans and Poles come most often
 const pickNation = () => {
   const r = Math.random();
   return r < 0.38
     ? "za"
     : r < 0.66
       ? "pl"
-      : ["sc", "gb", "fr", "in", "at", "de"][Math.floor(Math.random() * 6)];
+      : ["sc", "gb", "fr", "in", "at", "de", "ru", "ua"][Math.floor(Math.random() * 8)];
 };
 const fanGear = (look, i) => ({
   flag: i % 2 === 0,
@@ -9114,6 +9183,11 @@ function update(dt) {
       if (!demo && (catcher.type.kind === "oom" || catcher.type.kind === "ranger")) saThanks(catcher, "af"); // the Afrikaners say thanks in Afrikaans
       if (!demo && catcher.fan && catcher.fan.nation === "za")
         saThanks(catcher, isAf(catcher) ? "af" : { zulu: "zu", xhosa: "xh" }[catcher.fan.look] || "all"); // and the SA fans in their own languages
+      if (!demo && catcher.fan && FAN_THANKS[catcher.fan.nation]) {
+        const ft = FAN_THANKS[catcher.fan.nation],
+          [w, en] = ft[Math.floor(catcher.seed * 97) % ft.length];
+        worldText(w, catcher, "#ffd24d", en);
+      } // (v1.4.68: the Russian and Ukrainian visitors say thank you in their own language)
       if (catcher.type.heritage && !demo) {
         const th = THANKS[catcher.type.heritage];
         if (catcher.type.heritage !== "pl") saThanks(catcher, catcher.type.heritage);
@@ -17762,6 +17836,10 @@ const FAN_WEAR = {
   aut2: ["#2e7d4f", "#b0303a", "#2a1a10"], // a green dirndl bodice, a red skirt
   ger: ["#f4f4f4", "#202020", "#f0f0f0"],
   ger2: ["#1a1a1a", "#1a1a1a", "#202020"],
+  rus: ["#c8202a", "#20202a", "#3a2410"], // (v1.4.68) a red kosovorotka, dark trousers, boots
+  rus2: ["#1e4fa8", "#c8202a", "#3a2410"], // a blue sarafan over a red skirt
+  ukr: ["#f6f2ea", "#2a3a8a", "#3a2410"], // a white embroidered vyshyvanka, blue sharovary trousers
+  ukr2: ["#f6f2ea", "#b0202a", "#3a2410"], // a white vyshyvanka, a red skirt
 };
 const CARTOON_BUILD = new Set([
   "golem",
@@ -20555,6 +20633,46 @@ function drawTorsoBase(kind, c, t, A, tw, th, body, L, angry, step) {
         rect(-tw / 2 + 1, top + 10, tw - 2, 2, A(col("#dd0000")));
         rect(-tw / 2 + 1, top + 12, tw - 2, 2, A(col("#ffce00")));
       } // black, red and gold across the chest
+      if (lk === "rus") {
+        // (v1.4.68) THE KOSOVOROTKA: the collar opens at the side, edged with embroidery, and a woven belt
+        line(3, top, 3, top + 9, 1.1, A(col("#ffd24d")));
+        for (let i = 0; i < 4; i++) disc(4.6, top + 1.5 + i * 2.2, 0.6, A(col("#ffd24d")));
+        rect(-tw / 2 + 1, top, tw - 2, 1.6, A(col("#ffd24d")));
+        rect(-tw / 2 + 1, top + 17, tw - 2, 2.2, A(col("#20202a")));
+        disc(-tw / 2 + 3, top + 21, 1.2, A(col("#ffd24d"))); // (the belt's tassel)
+      }
+      if (lk === "rus2") {
+        // THE SARAFAN: a long pinafore over a white blouse with full sleeves, a line of gold buttons down the front
+        rect(-tw / 2 + 1, top, tw - 2, 4, A(col("#f6f2ea")));
+        quad4(
+          -tw / 2 + 3,
+          top + 3,
+          tw / 2 - 3,
+          top + 3,
+          tw / 2,
+          top + 24,
+          -tw / 2,
+          top + 24,
+          A(col("#1e4fa8"))
+        );
+        for (let i = 0; i < 6; i++) disc(0, top + 6 + i * 3, 0.8, A(col("#ffd24d")));
+        rect(-tw / 2, top + 22, tw, 1.6, A(col("#ffd24d")));
+      }
+      if (lk === "ukr" || lk === "ukr2") {
+        // THE VYSHYVANKA: a white linen shirt with red and black cross-stitch embroidery down the chest and at the collar
+        const em = [col("#c8202a"), col("#1a1a1a")];
+        for (let i = 0; i < 6; i++) {
+          disc(-1.6, top + 2 + i * 2.4, 0.9, A(em[i % 2]));
+          disc(1.6, top + 2 + i * 2.4, 0.9, A(em[(i + 1) % 2]));
+        }
+        for (let i = 0; i < 5; i++) disc(-4 + i * 2, top + 0.6, 0.7, A(em[i % 2]));
+        if (lk === "ukr")
+          rect(-tw / 2 + 1, top + 17, tw - 2, 2.6, A(col("#ffd500"))); // (a yellow sash)
+        else {
+          rect(-tw / 2 + 2, top + 18, tw - 4, 1.8, A(col("#2a5a3a"))); // (a green waist band)
+          for (let i = 0; i < 3; i++) disc(-4 + i * 4, top + 9, 0.9, A(col("#d8a020"))); // (strings of coral and gold beads - the namysto)
+        }
+      }
     }
     if (kind === "cowboy") {
       const vc = A(col("#6a4020"));
@@ -21894,6 +22012,44 @@ function drawHead(kind, x, hy, t, c, A, angry, look, L, mouth = "flat", eyes = "
         disc(x - 7 + Math.cos(a) * 1.6, hy - 10 + Math.sin(a) * 1.6, 0.9, A(col("#f8f8f0")));
       }
       disc(x - 7, hy - 10, 0.7, A(col("#ffd24d")));
+    } else if (lk === "rus") {
+      // (v1.4.68) a Russian visitor: a fur USHANKA hat with its flaps down, and a beard
+      disc(x - 1, hy - 5, 10, A(col(["#6a4a2a", "#c8a060", "#2a1a10"][Math.floor(c.seed * 3) % 3])), 5);
+      face();
+      disc(x + 3, hy + 6, 4.5, A(col(["#6a4a2a", "#a07040", "#2a1a10"][Math.floor(c.seed * 3) % 3])), 3); // (the beard)
+      disc(x, hy - 9, 12, A(col("#5a4030")), 7);
+      for (let i = 0; i < 9; i++) disc(x - 10 + i * 2.5, hy - 6, 1.6, A(col("#7a5a40"))); // (the furry brim)
+      disc(x - 10, hy + 1, 3.4, A(col("#5a4030")), 6); // (an ear flap)
+    } else if (lk === "rus2") {
+      // a lady in a KOKOSHNIK: the tall rounded headdress, red and gold, with pearls along its edge, and a long braid
+      disc(x - 1, hy - 5, 10, A(col(c.seed > 0.5 ? "#c89a50" : "#6a4020")), 5.5);
+      line(x - 9, hy - 2, x - 12, hy + 18, 3, A(col(c.seed > 0.5 ? "#c89a50" : "#6a4020"))); // (the braid)
+      face();
+      disc(x, hy - 10, 11, A(col("#c8202a")), 9);
+      disc(x, hy - 10, 8.5, A(col("#e03a3a")), 6.6);
+      for (let i = 0; i < 9; i++) {
+        const a = Math.PI + (i / 8) * Math.PI;
+        disc(x + Math.cos(a) * 10.5, hy - 10 + Math.sin(a) * 8.5, 0.9, A(col("#f8f4e8")));
+      } // (pearls round its edge)
+      disc(x, hy - 14, 2.2, A(col("#ffd24d"))); // (a gold medallion)
+    } else if (lk === "ukr") {
+      // (v1.4.68) a Ukrainian visitor: short hair and a fine moustache
+      disc(x - 1, hy - 6, 10, A(col(["#6a4a2a", "#c8a060", "#2a1a10"][Math.floor(c.seed * 3) % 3])), 5);
+      face();
+      disc(x + 4, hy + 4.4, 4, A(col(["#6a4a2a", "#a07040", "#2a1a10"][Math.floor(c.seed * 3) % 3])), 1.2); // (the moustache)
+    } else if (lk === "ukr2") {
+      // a VINOK: a crown of flowers - poppies, cornflowers, daisies - with long coloured ribbons down the back
+      disc(x - 1, hy - 5, 10, A(col(c.seed > 0.5 ? "#d8b060" : "#5a3418")), 5.5);
+      face();
+      const rib = ["#c8202a", "#ffd500", "#2a6ad0", "#2a8a4a"];
+      for (let i = 0; i < 4; i++) line(x - 9, hy - 6, x - 13 + i * 1.6, hy + 20, 1.4, A(col(rib[i])));
+      const fl = ["#d8202a", "#2a6ad0", "#f8f4e8", "#ffd500", "#d8202a", "#2a6ad0", "#f8f4e8"];
+      for (let i = 0; i < 7; i++) {
+        const fx = x - 10 + i * 3.4,
+          fy = hy - 10 - Math.sin((i / 6) * Math.PI) * 2.6;
+        disc(fx, fy, 2.1, A(col(fl[i])));
+        disc(fx, fy, 0.8, A(col("#ffd24d")));
+      }
     } else if (lk === "ger" || lk === "ger2") {
       // a German football fan: black, red and gold on the cheek (and a bobble hat for some)
       disc(x - 1, hy - 6, 10, A(col(["#c8a060", "#6a4a2a", "#2a1a10"][Math.floor(c.seed * 3) % 3])), 5);
@@ -24915,7 +25071,16 @@ function drawFlag(nation, x, y, w, h, t, ph, A) {
       band(0, 1 / 3, "#c8102e");
       band(1 / 3, 2 / 3, "#ffffff");
       band(2 / 3, 1, "#c8102e");
-    } else if (nation === "de") {
+    } else if (nation === "ru") {
+      band(0, 1 / 3, "#ffffff");
+      band(1 / 3, 2 / 3, "#0039a6");
+      band(2 / 3, 1, "#d52b1e");
+    } // (v1.4.68) white, blue and red
+    else if (nation === "ua") {
+      band(0, 0.5, "#0057b7");
+      band(0.5, 1, "#ffd700");
+    } // blue over yellow
+    else if (nation === "de") {
       band(0, 1 / 3, "#000000");
       band(1 / 3, 2 / 3, "#dd0000");
       band(2 / 3, 1, "#ffce00");
@@ -30581,7 +30746,7 @@ function drawTwistFx(t) {
     for (let i = 0; i < 24; i++) {
       const y = T + hash(i * 3.3) * h,
         x = L + ((((hash(i * 7.7) * w + (G.warp > 0 ? -t * 1600 : -t * 90)) % w) + w) % w);
-      line(x, y, x + (G.warp > 0 ? 120 : 30), y, 1.5, withA(c, 0.35 * k));
+      streak(x + (G.warp > 0 ? 120 : 30), y, x, y, 2, withA(c, 0.35 * k)); // (v1.4.68: tapered streaks, not flat sticks)
     }
     R.setAdd(false);
   }
@@ -30592,7 +30757,7 @@ function drawTwistFx(t) {
       const y = T + hash(i * 1.7) * h,
         sp = 500 + hash(i) * 700,
         x = L + ((((hash(i * 5.1) * w + t * sp) % w) + w) % w);
-      line(x, y, x + 18 + hash(i * 2) * 20, y + 3, 1.4, withA(col("#e8c890"), 0.35 * k));
+      streak(x + 18 + hash(i * 2) * 20, y + 3, x, y, 1.9, withA(col("#e8c890"), 0.35 * k));
     }
   }
   if (G.heat > 0) {
@@ -30613,7 +30778,7 @@ function drawTwistFx(t) {
     for (let i = 0; i < 140; i++) {
       const x = L + ((hash(i * 1.7) * w + t * 60) % w),
         y = T + ((hash(i * 5.3) * h + t * (520 + hash(i) * 260)) % h);
-      line(x, y, x - 6, y + 18, 1.3, withA(c, 0.3 * k)); // (v1.4.49: lighter)
+      streak(x - 6, y + 18, x, y, 1.8, withA(c, 0.3 * k)); // (v1.4.49: lighter)
     }
     R.setAdd(false);
   }
@@ -30625,7 +30790,7 @@ function drawTwistFx(t) {
       const y = T + hash(i * 2.3) * h,
         sp = 900 + hash(i) * 600,
         x = L + ((((hash(i * 5.1) * w - dir * t * sp) % w) + w) % w);
-      line(x, y, x + dir * (50 + hash(i * 3) * 60), y + 2, 1.4, withA(C.white, 0.3 * k));
+      streak(x + dir * (50 + hash(i * 3) * 60), y + 2, x, y, 1.9, withA(C.white, 0.3 * k));
     }
     R.setAdd(false);
   }
@@ -40737,6 +40902,10 @@ const NICE = {
   watcher: "THE THOUSAND-EYED WATCHER",
   crystal: "THE CRYSTAL COLOSSUS",
   sporemaw: "THE SPORE MAW",
+  kraken: "THE KRAKEN",
+  kingcrab: "THE KING CRAB",
+  angler: "THE ABYSS ANGLER",
+  starwhale: "THE STAR WHALE",
   socrates: "SOCRATES",
   aristotle: "ARISTOTLE",
   emperor: "ROMAN EMPEROR",
@@ -40784,6 +40953,10 @@ const BOSS_KINDS = [
   "rogueking",
   "sporemaw",
   "hydra",
+  "kingcrab", // (v1.4.68: the sea creatures)
+  "kraken",
+  "angler",
+  "starwhale",
   "glutton",
 ];
 function stickerCats()                                       {
@@ -40932,13 +41105,25 @@ const BOSS_AT = {
   5: "babyblob",
   9: "jellyqueen",
   12: "moongiant",
+  14: "kingcrab", // (v1.4.68: four more bosses - sea creatures from the deeps of space)
   16: "watcher",
+  18: "kraken",
   20: "robogob",
   24: "crystal",
+  25: "angler",
   28: "gulper",
+  30: "starwhale",
   32: "rogueking",
   35: "sporemaw",
   38: "hydra",
+};
+// (v1.4.68) and on every new tour the bosses swap places, so the tour brings different ones at each stop
+const BOSS_POOL = Object.values(BOSS_AT);
+const bossFor = (lv) => {
+  const b = BOSS_AT[lv];
+  if (!b) return null;
+  const lp = G.loop || 0;
+  return lp ? BOSS_POOL[(BOSS_POOL.indexOf(b) + lp * 5) % BOSS_POOL.length] : b;
 };
 //   (the Milky Way: the end of the asteroid belt, of the solar system, of the galaxy;
 //    Andromeda: the giant planet PA-99-N2 b, the end of its system at the rogue planet, and the supernova shack)
@@ -41068,7 +41253,7 @@ function kidUpdate(dt, demo) {
   }
   for (const p of PL) if (p.petJoy > 0) p.petJoy = Math.max(0, p.petJoy - dt * 1.2);
   // the boss of each world turns up near the end of its last level (see BOSS_AT)
-  const bk = BOSS_AT[G.level];
+  const bk = bossFor(G.level);
   if (bk && !demo && G.state === "play" && !G.bossDone) {
     if (G.boss && !customers.some((c) => c.type.kind === bk)) G.boss = "again";
     if (G.boss !== true && G.total - G.served <= 4) {
@@ -42962,7 +43147,207 @@ function bossSpore(c, t, M          , H       , a) {
   return hy - 44;
 }
 
+// =====================================================================================
+//  (v1.4.68) FOUR SEA CREATURES FROM THE DEEPS OF SPACE join the bosses:
+//    THE KRAKEN - a giant octopus, eight curling arms that reach out for the shake
+//    THE KING CRAB - a huge armoured crab who snaps his claws and walks sideways
+//    THE ABYSS ANGLER - a deep-sea anglerfish with a glowing lure and a mouth full of needle teeth
+//    THE STAR WHALE - a vast gentle whale who swims through space, blowing a spout of stardust
+// =====================================================================================
+function bossKraken(c, t, M          , H       , a) {
+  const k = M.k,
+    hy = -96 + Math.sin(t * 1.6) * 3,
+    hw = 32 + k * 5,
+    hh = 34 + k * 3,
+    body = "#c0406a",
+    dark = "#7a1a4a";
+  // the eight arms, curling and waving - the front two reach for a coming shake
+  for (let i = 0; i < 8; i++) {
+    const s = i < 4 ? -1 : 1,
+      j0 = i % 4,
+      reach = M.hungry && j0 === 3 ? 20 + M.near * 30 : 0,
+      pts           = [];
+    for (let j = 0; j <= 10; j++) {
+      const f = j / 10,
+        curl = Math.sin(t * 2 + i * 1.3 + f * 5) * 10 * f;
+      pts.push(
+        s * (10 + j0 * 7) + s * f * (16 + j0 * 6) + curl + (s > 0 ? reach * f : 0),
+        hy + hh * 0.6 + f * (60 - j0 * 6) - reach * f * 0.5
+      );
+    }
+    ribbon(pts, 9 - j0 * 0.8, withA(col(j0 % 2 ? body : "#a8305a"), a), 0.02);
+    for (let j = 3; j <= 9; j += 2)
+      disc(pts[j * 2], pts[j * 2 + 1] + 2, 1.8, withA(col("#ffc0d8"), 0.85 * a)); // (the suckers)
+  }
+  // the great head, the mantle
+  disc(0, hy, hw, H(dark), hh);
+  disc(-2, hy - 3, hw * 0.93, H(body), hh * 0.92);
+  disc(-hw * 0.35, hy - hh * 0.5, hw * 0.32, withA(C.white, 0.22 * a), hh * 0.22); // (the shine)
+  for (let i = 0; i < 6; i++)
+    disc(
+      -hw * 0.5 + hash(i * 3) * hw,
+      hy - hh * 0.6 + hash(i * 7) * hh * 0.6,
+      2.4,
+      withA(col("#ff8ab0"), 0.7 * a)
+    ); // (spots)
+  bossEye(-12, hy + 10, 7, M, H, "#3a6a2a");
+  bossEye(12, hy + 10, 7, M, H, "#3a6a2a");
+  bossMouth(0, hy + 22, 6, M, H, "#4a0a2a");
+  bossDrool(2, hy + 28, M, t, a);
+  bossBurpPuff(6, hy + 24, M, a, "#e0c8ff");
+  return hy - hh;
+}
+function bossCrab(c, t, M          , H       , a) {
+  const k = M.k,
+    by = -62 + (M.walking ? Math.abs(M.step) * 2 : 0),
+    bw = 44 + k * 6,
+    bh = 26 + k * 3,
+    shell = "#e0502a",
+    dark = "#8a2a14",
+    snap = M.hungry ? Math.abs(Math.sin(t * 9)) : 0.2 + 0.1 * Math.sin(t * 2);
+  // the legs, four each side, stepping
+  for (const s of [-1, 1])
+    for (let i = 0; i < 4; i++) {
+      const lx = s * (bw * 0.5 + i * 7),
+        ph = Math.sin(t * 7 + i + (s > 0 ? 1.5 : 0)) * (M.walking ? 6 : 1),
+        pts = [s * bw * 0.4, by + 8, lx + s * 12, by - 4 + ph, lx + s * 20, by + 26 + i * 2];
+      ribbon(pts, 5, H(dark), 0.01);
+      disc(pts[2], pts[3], 3.4, H(shell)); // (a rounded knee)
+      disc(pts[4], pts[5], 2.4, H(dark)); // (and a pointed tip)
+    }
+  // the two great claws, held up - they open and snap as a shake comes
+  for (const s of [-1, 1]) {
+    const cx = s * (bw + 14),
+      cy = by - 34 - (s > 0 && M.hungry ? M.near * 10 : 0);
+    ribbon([s * bw * 0.6, by - 6, s * (bw + 6), by - 18, cx, cy + 10], 7, H(dark), 0.01);
+    disc(cx, cy, 15, H(dark), 11);
+    disc(cx - s * 1, cy - 1, 13.5, H(shell), 9.5);
+    const o = 0.25 + snap * 0.5;
+    push();
+    translate(cx + s * 6, cy - 6);
+    rotate(-s * o);
+    disc(s * 8, -4, 9, H(shell), 4.5); // (the top pincer)
+    pop();
+    disc(cx + s * 12, cy + 4, 8, H("#c8401e"), 4);
+    disc(cx - s * 4, cy - 5, 4, withA(C.white, 0.25 * a), 2.4);
+  }
+  // the shell, wide and knobbly
+  disc(0, by, bw, H(dark), bh);
+  disc(-2, by - 2, bw * 0.95, H(shell), bh * 0.88);
+  for (let i = 0; i < 7; i++)
+    disc(-bw * 0.7 + i * bw * 0.23, by - bh * 0.5 + Math.sin(i * 1.7) * 3, 3, H("#f07a4a"));
+  disc(-bw * 0.4, by - bh * 0.45, bw * 0.3, withA(C.white, 0.2 * a), bh * 0.18);
+  // eyes on stalks
+  for (const s of [-1, 1]) {
+    line(s * 9, by - bh * 0.7, s * 12, by - bh - 14, 3, H(dark));
+    bossEye(s * 12, by - bh - 16, 6, M, H, "#1a1a1a");
+  }
+  bossMouth(0, by + 2, 6, M, H, "#4a0a0a");
+  bossDrool(2, by + 8, M, t, a);
+  bossBurpPuff(6, by + 4, M, a, "#fff0e0");
+  return by - bh - 26;
+}
+function bossAngler(c, t, M          , H       , a) {
+  const k = M.k,
+    by = -84 + Math.sin(t * 1.8) * 4,
+    bw = 40 + k * 7,
+    bh = 32 + k * 4,
+    skin = "#3a4a6a",
+    dark = "#1a2238",
+    open = M.hungry || M.gulp > 0 ? 0.5 + M.near * 0.5 : 0.15;
+  // the tail fin, swishing
+  const sw = Math.sin(t * 4) * 6;
+  poly([bw * 0.8, by, bw + 26, by - 20 + sw, bw + 20, by + sw * 0.3, bw + 26, by + 20 + sw], H(dark));
+  // the body
+  disc(0, by, bw, H(dark), bh);
+  disc(-2, by - 2, bw * 0.95, H(skin), bh * 0.9);
+  for (let i = 0; i < 5; i++) disc(-bw * 0.2 + i * 9, by + bh * 0.4, 2, withA(col("#7af0ff"), 0.6 * a)); // (glowing dots on its belly)
+  // the huge jaw, with needle teeth
+  const mx = -bw * 0.55,
+    my = by + 6,
+    mh = 6 + open * 14;
+  disc(mx, my, 22, H("#0a0a14"), mh);
+  for (let i = 0; i < 7; i++) {
+    const tx = mx - 18 + i * 6;
+    tri(tx - 1.8, my - mh * 0.8, tx + 1.8, my - mh * 0.8, tx, my - mh * 0.8 + 6, H("#f4f0e0"));
+    tri(tx + 1.2, my + mh * 0.8, tx + 4.8, my + mh * 0.8, tx + 3, my + mh * 0.8 - 6, H("#f4f0e0"));
+  }
+  // its glowing lure on a long rod, bobbing in front of its face
+  const lx = -bw * 0.9 + Math.sin(t * 2) * 4,
+    ly = by - bh - 26 + Math.cos(t * 2.4) * 3,
+    pulse = 0.6 + 0.4 * Math.sin(t * 5);
+  ribbon([-6, by - bh * 0.8, -bw * 0.4, by - bh - 30, lx, ly], 2.4, H(dark), 0.01);
+  if (!OUT) {
+    R.setAdd(true);
+    glow(lx, ly, 26, withA(col("#9ff8ff"), 0.6 * pulse * a));
+    R.setAdd(false);
+  }
+  disc(lx, ly, 5, H("#e8ffff"));
+  bossEye(-bw * 0.15, by - bh * 0.35, 8, M, H, "#d0a020");
+  bossBurpPuff(mx, my, M, a, "#c8f8ff");
+  return by - bh - 30;
+}
+function bossWhale(c, t, M          , H       , a) {
+  const k = M.k,
+    by = -96 + Math.sin(t * 1.1) * 5,
+    bw = 58 + k * 8,
+    bh = 34 + k * 4,
+    back = "#2a4a9a",
+    belly = "#c8d8f0";
+  // the great tail, beating slowly behind
+  const tb = Math.sin(t * 1.6) * 10;
+  ribbon([bw * 0.7, by, bw + 18, by - 8 + tb * 0.4, bw + 30, by - 18 + tb], 16, H(back), 0.01);
+  poly([bw + 30, by - 18 + tb, bw + 52, by - 34 + tb, bw + 40, by - 16 + tb, bw + 52, by + 0 + tb], H(back));
+  // the body, dark blue above, pale grooved belly below, sprinkled with stars
+  disc(0, by, bw, H("#14286a"), bh);
+  disc(-2, by - 2, bw * 0.97, H(back), bh * 0.9);
+  disc(-6, by + bh * 0.35, bw * 0.82, H(belly), bh * 0.5);
+  for (let i = 0; i < 5; i++)
+    ribbon(
+      [-bw * 0.6, by + bh * 0.2 + i * 4, bw * 0.4, by + bh * 0.3 + i * 4],
+      1,
+      withA(col("#8aa0c8"), 0.6 * a),
+      0.2
+    );
+  for (let i = 0; i < 10; i++)
+    star(
+      -bw * 0.7 + hash(i * 3.3) * bw * 1.4,
+      by - bh * 0.7 + hash(i * 5.1) * bh * 0.6,
+      1.6 + hash(i) * 1.6,
+      withA(col("#fff4c0"), (0.5 + 0.5 * Math.sin(t * 3 + i)) * a)
+    );
+  // the flipper, paddling
+  push();
+  translate(-bw * 0.1, by + bh * 0.4);
+  rotate(0.5 + Math.sin(t * 2) * 0.25);
+  disc(10, 6, 18, H(back), 6);
+  pop();
+  // a spout of stardust from its blowhole, now and then
+  const sp = (t * 0.4) % 1;
+  if (sp < 0.4 && !OUT) {
+    const f = sp / 0.4;
+    R.setAdd(true);
+    for (let i = 0; i < 6; i++)
+      glow(
+        -bw * 0.2 + (i - 2.5) * 5 * f,
+        by - bh - f * 40 - i * 4,
+        6 + i,
+        withA(col("#bfe8ff"), 0.5 * (1 - f) * a)
+      );
+    R.setAdd(false);
+  }
+  bossEye(-bw * 0.62, by + 2, 6, M, H, "#1a2a5a");
+  bossMouth(-bw * 0.78, by + 14, 8, M, H, "#3a0a2a");
+  bossDrool(-bw * 0.74, by + 20, M, t, a);
+  bossBurpPuff(-bw * 0.7, by + 14, M, a, "#d8ecff");
+  return by - bh - 10;
+}
+
 const BOSS_DRAW = {
+  kraken: bossKraken,
+  kingcrab: bossCrab,
+  angler: bossAngler,
+  starwhale: bossWhale,
   babyblob: bossBlob,
   moongiant: bossMoon,
   robogob: bossRobo,
@@ -43948,20 +44333,20 @@ function drawStopMood(t) {
       case "rain": {
         const y = T + fmod(hy * H0 + tt * (180 + hs * 80), H0),
           x = L + hx * W0;
-        line(x, y, x - 2, y + 12, 1.2, withA(c, 0.45));
+        streak(x - 2, y + 12, x, y, 1.6, withA(c, 0.45)); // (v1.4.68: soft drops)
         break;
       }
       case "glassrain": {
         const p = fmod(hy + tt * (0.5 + hs * 0.3), 1),
           x = L + fmod(hx * W0 - p * 300, W0),
           y = T + p * H0;
-        line(x, y, x - 14, y + 6, 1.1, withA(c, 0.5));
+        streak(x - 14, y + 6, x, y, 1.5, withA(c, 0.5));
         break;
       }
       case "streak": {
         const x = L + fmod(hx * W0 + tt * (90 + hs * 120), W0),
           y = T + hy * H0;
-        line(x, y, x - 16 - hs * 18, y, 1, withA(c, 0.3));
+        streak(x, y, x - 16 - hs * 18, y, 1.5, withA(c, 0.3));
         break;
       }
       case "haze": {
@@ -45814,7 +46199,14 @@ function drawWeather(t) {
           len = 30 + hash(i * 3.3) * 80 * gust,
           x = L + fm(hash(i * 5.7) * w + tt * sp * gust, w + len) - len,
           y = T + hash(i * 7.9) * h + Math.sin(tt * 2 + i) * 6;
-        line(x, y, x + len, y - len * 0.08, 1.6 + hash(i) * 2, A(i % 3 ? "#ffe9a0" : "#9fe8ff", 0.85 * gust));
+        streak(
+          x + len,
+          y - len * 0.08,
+          x,
+          y,
+          1.6 + hash(i) * 2,
+          A(i % 3 ? "#ffe9a0" : "#9fe8ff", 0.85 * gust)
+        ); // (v1.4.68: tapered)
         if (i % 5 === 0) glow(x + len, y, 6, A("#fff4d0", 0.6 * gust));
       }
       R.setAdd(false);
@@ -45832,8 +46224,8 @@ function drawWeather(t) {
           x = x0 - ph * 90,
           r = 3 + hash(i * 8.1) * 3.5;
         if (ph < 0.92) {
-          line(x, y, x + 40, y - 46, r * 1.1, A("#ff7a20", 0.55));
-          line(x, y, x + 18, y - 21, r * 0.7, A("#ffd080", 0.7));
+          streak(x, y, x + 40, y - 46, r * 1.6, A("#ff7a20", 0.55)); // (v1.4.68: a fiery tail that fades away)
+          streak(x, y, x + 18, y - 21, r * 1.0, A("#ffd080", 0.7));
           glow(x, y, r * 4, A("#ffb060", 0.6));
           disc(x, y, r, A("#fff0c0", 0.95));
         } else {
@@ -45881,7 +46273,7 @@ function drawWeather(t) {
           span = land - T + 40,
           y = T - 40 + fm(hash(i * 4.7) * span + tt * sp, span),
           x = L + hash(i * 6.1) * (w + 80) - (y - T) * 0.18;
-        line(x, y, x + 7, y - 36, 2, A(i % 4 ? "#bfe0ff" : "#ffffff", 0.75));
+        streak(x, y, x + 7, y - 36, 2.2, A(i % 4 ? "#bfe0ff" : "#ffffff", 0.75)); // (v1.4.68: a round head, a fading tail)
         if (y > land - 18) {
           const k = (y - (land - 18)) / 58;
           arc(x, land, 4 + k * 14, Math.PI, Math.PI * 2, 1.6, A("#cfe8ff", 0.75 * (1 - k)), 10);
@@ -64370,7 +64762,7 @@ function drawEggs(g, s) {
 // THE VERSION (from v1.2.0, 5 October 2026): MAJOR.MINOR.PATCH - a new MINOR for a batch of new things, a new PATCH for
 // fixes and small touches - with the day it was made next to it. (Before this the versions were named after the date,
 // like v2026.10.05c.)
-const GAME_VERSION = "v1.4.67",
+const GAME_VERSION = "v1.4.69",
   GAME_DATE = "18.10.2026",
   VERSION_TEXT = GAME_VERSION + "  ·  " + GAME_DATE;
 const FB = '"Chakra Petch", "Segoe UI", sans-serif';
@@ -71101,6 +71493,20 @@ profWire();
 //  the game, and where the motion capture, the folk songs and the fonts come from. Both from the menu at any time.
 // =====================================================================================
 const NEWS = [
+  {
+    ver: "v1.4.69",
+    title: "SEA MONSTERS AND NEW VISITORS",
+    items: [
+      "NEW BOSSES: THE KING CRAB, THE KRAKEN, THE ABYSS ANGLER, THE STAR WHALE",
+      "BOSSES SWAP PLACES ON EVERY NEW TOUR",
+      "RUSSIAN AND UKRAINIAN VISITORS IN TRADITIONAL DRESS",
+    ],
+  },
+  {
+    ver: "v1.4.68",
+    title: "SOFT RAIN AND WIND",
+    items: ["RAIN, HAIL AND WIND FALL AS SOFT TAPERED STREAKS"],
+  },
   {
     ver: "v1.4.67",
     title: "THE RECIPE CARD FITS ON A PHONE",

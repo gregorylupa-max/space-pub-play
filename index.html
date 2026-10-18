@@ -26,7 +26,7 @@ body { user-select: none; -webkit-user-select: none; -webkit-tap-highlight-color
   position: fixed; left: 50%; top: 50%; transform: translate(-50%, -50%); width: min(640px, calc(100% - 32px));
   max-height: calc(100% - 32px); overflow-y: auto; box-sizing: border-box;
   display: flex; flex-direction: column; gap: 14px; padding: 26px 26px 22px;
-  background: var(--panel); border: 1px solid var(--line); border-radius: 14px;
+  background: var(--panel); border: 1px solid var(--line); border-radius: 22px; /* (v1.4.71: rounder - was 14px) */
   box-shadow: 0 0 40px rgba(95, 245, 200, .12), inset 0 0 30px rgba(255, 95, 168, .06);
   backdrop-filter: blur(6px) saturate(1.2); -webkit-backdrop-filter: blur(6px) saturate(1.2); /* (v1.4.10: see-through - the game shows softly through the menus) */
 }
@@ -39,7 +39,7 @@ body { user-select: none; -webkit-user-select: none; -webkit-tap-highlight-color
 .buttons { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
 button {
   font: 600 15px/1.2 var(--body); letter-spacing: .06em; color: var(--ink); cursor: pointer;
-  background: rgba(20, 22, 50, .58); border: 1px solid var(--line); border-radius: 9px; padding: 12px 12px; min-height: 48px;
+  background: rgba(20, 22, 50, .58); border: 1px solid var(--line); border-radius: 16px; padding: 12px 12px; min-height: 48px; /* (v1.4.71: rounder - was 9px) */
   display: flex; align-items: center; justify-content: center; gap: 8px; text-align: center;
 }
 button:focus { outline: none; }
@@ -147,7 +147,7 @@ body.lefty #touch .grp { flex-direction: row-reverse; }
 #jbViz { width: 100%; height: 56px; display: block; border-radius: 10px; background: rgba(0,0,0,.35); }
 button b { color: var(--amber); font-weight: 700; }
 .add { font: 600 15px/1.2 var(--body); letter-spacing: .06em; color: var(--amber); cursor: pointer; border: 1px dashed rgba(255, 195, 77, .6);
-  border-radius: 9px; padding: 12px; min-height: 48px; box-sizing: border-box; display: flex; align-items: center; justify-content: center; background: rgba(40, 30, 10, .35); }
+  border-radius: 16px; padding: 12px; min-height: 48px; box-sizing: border-box; display: flex; align-items: center; justify-content: center; background: rgba(40, 30, 10, .35); }
 .add:hover { box-shadow: 0 0 14px rgba(255, 195, 77, .35); }
 kbd { font: 600 11px var(--body); color: var(--dim); border: 1px solid var(--line); border-radius: 4px; padding: 1px 5px; }
 .info { margin: 0; font-size: 13px; color: var(--dim); line-height: 1.45; min-height: 2.9em; }
@@ -8671,7 +8671,7 @@ function update(dt) {
           (c.wolf ? 1.6 : 1) *
           (c.hyde ? 1.6 : 1) *
           (G.twC || 1) *
-          (DF().easy && c.x > X1 - 170 ? 0.6 : 1); // (v1.4.42: on EASY, near your end they slow right down - time to serve them)
+          (DF().easy && c.x > X1 - 170 && !c.type.boss ? 0.6 : 1); // (v1.4.42: on EASY, near your end they slow right down - time to serve them) (v1.4.71: but not a boss - he keeps coming)
         c.x += v;
         // (v1.4.65) nobody walks INTO a boss: a customer coming up behind one on the same bar waits a step behind it,
         // instead of disappearing inside its huge body
@@ -38123,13 +38123,18 @@ function bonusBackdrop(L, Wd, t, b) {
     const px = cx + 50 + Math.sin(t * 0.07) * 20,
       py = cy - 30,
       pr = 46;
-    disc(px, py, pr, col("#d8905a"));
+    // (v1.4.71: a properly shaded ball with soft bands and a soft night side - it was flat strips and a hard shadow)
+    push();
+    translate(px, py);
+    worldBall(pr, col("#e8a068"), col("#a0602e"));
     for (let k = -3; k <= 3; k++) {
-      const yy = py + k * pr * 0.22,
-        ww = pr * Math.sqrt(Math.max(0, 1 - (k * 0.22) ** 2));
-      rect(px - ww, yy - 2, ww * 2, 4, withA(col(k % 2 ? "#b86a3a" : "#f0c090"), 0.55));
+      const yc = k * pr * 0.22,
+        la = (v) => Math.asin(Math.max(-1, Math.min(1, -v / pr)));
+      latBand(pr, la(yc + 2.5), la(yc - 2.5), withA(col(k % 2 ? "#b86a3a" : "#f0c090"), 0.55));
     }
-    disc(px + pr * 0.3, py + pr * 0.2, pr * 0.95, withA(col("#05030c"), 0.45)); // its night side
+    sunSheen(pr, 0.12);
+    nightSide(pr, 0.25, 0.75); // its night side
+    pop();
     const ring = (front) => {
       const pts = [];
       for (let k = 0; k <= 24; k++) {
@@ -41268,8 +41273,8 @@ function kidUpdate(dt, demo) {
         T0 = {
           ...B0,
           need: B0.need + [0, 2, 3, 5][dk] + lp * 2,
-          speed: B0.speed * [1, 2.5, 2.8, 3.2][dk] * (1 + lp * 0.1), // (v1.4.65: twice as fast again - Kid mode left alone)
-          push: B0.push * [1, 0.85, 0.75, 0.65][dk],
+          speed: B0.speed * [1, 3.4, 3.4, 3.6][dk] * (1 + lp * 0.1), // (v1.4.65: twice as fast again - Kid mode left alone) (v1.4.71: on EASY as fast as on NORMAL, and he no longer slows down near your end)
+          push: B0.push * [1, 0.75, 0.72, 0.65][dk],
         };
       customers.push({
         lane,
@@ -53288,11 +53293,20 @@ function funMiniUpdate(dt) {
           sfx("boing");
           sfx("clink"); // ...it bounces straight back OFF the glass
           M.hurt = 0.8;
-          if (M.endIn === undefined) {
+          if (M.kind === "mixer") {
+            // (v1.4.71) THE MIXER, as its instructions say: the wrong thing spoils this shake - the glass is emptied and
+            // you start that shake again - but the round goes on (it used to end the whole round at once)
+            M.yuck = 1.3;
+            M.yuckWhat = it.kind;
+            M.have = [];
+            M.pile = [];
+            for (const o of M.items) if (o.inG) o.dead = true;
+            sfx("aww");
+          } else if (M.endIn === undefined) {
             M.wrong = it.kind;
             M.endIn = 1.3;
             sfx("aww");
-          } // the WRONG thing caught: it bounces off - and the round is over (in every mode)
+          } // the WRONG thing caught: it bounces off - and the cherry round is over
           continue;
         }
         it.inG = true;
@@ -53360,25 +53374,29 @@ function drawMiniGlassBig(M, t, inside) {
     gy - 2 * s,
     withA(col("#cfefff"), 0.16)
   ); // the back of the glass
+  // (v1.4.71: in the mixer an EMPTY glass is really empty - no shake in it until you catch the first thing)
   const lvl =
       M.kind === "cherry"
         ? Math.min(0.82, 0.12 + M.score * 0.035)
-        : Math.min(0.82, 0.15 + M.have.length * 0.22),
+        : M.have.length
+          ? Math.min(0.82, 0.08 + M.have.length * 0.24)
+          : 0,
     fl = FLAVORS[M.kind === "mixer" ? 0 : 0];
-  quad4(
-    gx - (6 + 2 * lvl) * s + 1,
-    gy - (2 + 29 * lvl) * s,
-    gx + (6 + 2 * lvl) * s - 1,
-    gy - (2 + 29 * lvl) * s,
-    gx + 6 * s - 1,
-    gy - 2 * s,
-    gx - 6 * s + 1,
-    gy - 2 * s,
-    withA(fl[0], 0.55),
-    withA(fl[0], 0.55),
-    withA(fl[1], 0.7),
-    withA(fl[1], 0.7)
-  ); // the shake inside
+  if (lvl > 0)
+    quad4(
+      gx - (6 + 2 * lvl) * s + 1,
+      gy - (2 + 29 * lvl) * s,
+      gx + (6 + 2 * lvl) * s - 1,
+      gy - (2 + 29 * lvl) * s,
+      gx + 6 * s - 1,
+      gy - 2 * s,
+      gx - 6 * s + 1,
+      gy - 2 * s,
+      withA(fl[0], 0.55),
+      withA(fl[0], 0.55),
+      withA(fl[1], 0.7),
+      withA(fl[1], 0.7)
+    ); // the shake inside
   for (let i = Math.max(0, n - 21); i < n; i++) {
     const p = M.pile[i],
       row = Math.min(Math.floor(i / 3), 6),
@@ -53612,6 +53630,16 @@ function drawMini(t) {
           withA(col(ING[it.kind] || "#ffffff"), 0.18)
         );
     R.setAdd(false);
+    // (v1.4.71) in the mixer, what the recipe still needs glows with a soft green ring as it falls - easy to spot
+    if (M.kind === "mixer" && !OUT) {
+      R.setAdd(true);
+      for (const it of M.items)
+        if (!it.inG && it.vx === undefined && M.recipe.includes(it.kind) && !M.have.includes(it.kind)) {
+          glow(it.x, it.y, 34, withA(col("#5ff5a0"), 0.35 + 0.1 * Math.sin(t * 5 + it.x)));
+          arc(it.x, it.y, 24, 0, 6.283, 2, withA(col("#9fffc8"), 0.55), 24);
+        }
+      R.setAdd(false);
+    }
     for (const it of M.items) if (!it.inG) drawIngredient(it.kind, it.x, it.y, 1.3, it.rot);
     drawMiniGlassBig(M, t, () => {
       for (const it of M.items) if (it.inG) drawIngredient(it.kind, it.x, it.y, 0.85, it.rot);
@@ -54243,7 +54271,24 @@ function funHud(g, s, t, fD, sx, sy) {
         cssW / 2,
         VERT ? Math.max(70 * s, fitCssY(0) - 14 * s) : 64 * s // (tall screen: just above the play area, clear of the buttons)
       );
-      if (M.yuck > 0) neon2(g, "YUCK! START AGAIN", cssW / 2, cssH * 0.4, 24 * s, "#ff5fa8");
+      if (M.yuck > 0) {
+        neon2(g, "YUCK! START AGAIN", cssW / 2, cssH * 0.4, 24 * s, "#ff5fa8");
+        const yn =
+          {
+            strawberry: "A STRAWBERRY",
+            banana: "A BANANA",
+            choc: "CHOCOLATE",
+            icecream: "ICE CREAM",
+            mint: "MINT",
+            sock: "A SOCK",
+            chili: "A CHILLI",
+          }[M.yuckWhat] || "";
+        if (yn) {
+          g.font = fD(15);
+          g.fillStyle = "#fff3e2";
+          g.fillText(yn + " IS NOT IN THIS RECIPE (OR YOU HAVE IT ALREADY)", cssW / 2, cssH * 0.4 + 30 * s);
+        }
+      } // (v1.4.71: and what it was)
       if (M.made > 0) neon2(g, "SHAKE MADE!", cssW / 2, cssH * 0.4, 26 * s, "#5ff5c8");
     } else if (M.crashed) {
       neon2(g, "OUCH! AN ASTEROID!", cssW / 2, cssH * 0.26, 28 * s, "#ff9a5a");
@@ -55438,13 +55483,29 @@ function drawApproach(t) {
     const gx = L + w * 0.82,
       gy = T + h * 0.24,
       gr = 130 * k;
-    disc(gx, gy, gr, col("#a86a2a"));
+    // (v1.4.71) THE GIANT behind Geysera, painted properly: a shaded ball, soft feathered bands that follow the curve,
+    // a sheen of sunlight, a rim of air and a soft night side - it was flat strips with stepped square edges and a
+    // hard-edged shadow
+    push();
+    translate(gx, gy);
+    worldBall(gr, col("#e0a050"), col("#8a5220"));
     for (let i = -4; i <= 4; i++) {
-      const yy = gy + i * gr * 0.2,
-        ww = gr * Math.sqrt(Math.max(0, 1 - ((yy - gy) / gr) ** 2));
-      rect(gx - ww, yy - gr * 0.06, ww * 2, gr * 0.1, withA(col(i % 2 ? "#f0c070" : "#c8803a"), 0.7));
+      const yc = i * gr * 0.2,
+        hh = gr * 0.055,
+        la = (v) => Math.asin(Math.max(-1, Math.min(1, -v / gr)));
+      latBand(
+        gr,
+        la(yc + hh),
+        la(yc - hh),
+        withA(col(i % 2 ? "#f0c070" : "#b8702e"), 0.6),
+        gr * 0.006,
+        t + i
+      );
     }
-    disc(gx + gr * 0.3, gy + gr * 0.25, gr * 1.02, withA(col("#02030c"), 0.5), gr * 0.8);
+    sunSheen(gr, 0.12);
+    atmosphere(gr, col("#ffc880"), 0.35);
+    nightSide(gr, 0.2, 0.8);
+    pop();
   }
   if (Wd.ellipt) {
     R.setAdd(true);
@@ -64762,7 +64823,7 @@ function drawEggs(g, s) {
 // THE VERSION (from v1.2.0, 5 October 2026): MAJOR.MINOR.PATCH - a new MINOR for a batch of new things, a new PATCH for
 // fixes and small touches - with the day it was made next to it. (Before this the versions were named after the date,
 // like v2026.10.05c.)
-const GAME_VERSION = "v1.4.70",
+const GAME_VERSION = "v1.4.71",
   GAME_DATE = "18.10.2026",
   VERSION_TEXT = GAME_VERSION + "  ·  " + GAME_DATE;
 const FB = '"Chakra Petch", "Segoe UI", sans-serif';
@@ -71500,6 +71561,17 @@ profWire();
 //  the game, and where the motion capture, the folk songs and the fonts come from. Both from the menu at any time.
 // =====================================================================================
 const NEWS = [
+  {
+    ver: "v1.4.71",
+    title: "FASTER BOSSES ON EASY, A CLEARER MIXER, ROUNDER MENUS",
+    items: [
+      "BOSSES ON EASY MARCH FASTER AND DON'T SLOW DOWN AT THE END",
+      "THE MIXER: A WRONG CATCH JUST STARTS THE SHAKE AGAIN",
+      "WHAT THE RECIPE NEEDS GLOWS GREEN AS IT FALLS",
+      "ROUNDER BUTTONS AND PANELS IN EVERY MENU",
+      "A ROUND, SMOOTH GIANT BEHIND GEYSERA",
+    ],
+  },
   {
     ver: "v1.4.70",
     title: "A CLEARER BOSS COUNTER",

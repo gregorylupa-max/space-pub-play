@@ -62182,17 +62182,17 @@ function drawPushBus(f, L, Rr, y, k, t) {
   scaleBy(k);
   const green = col("#3a8a4a"),
     cream = col("#f0e6c8");
-  rect(-80, -34, 160, 30, cream);
-  rect(-80, -6, 160, 30, green);
-  disc(-80, 9, 4, green, 15);
-  disc(80, 9, 4, green, 15); // (rounded ends)
-  rect(-80, -8, 160, 4, col("#c8a040")); // (the trim line)
-  for (let i = 0; i < 7; i++) rect(-66 + i * 19, -30, 15, 18, col("#2a3a4a")); // the windows
-  for (let i = 0; i < 7; i++) line(-64 + i * 19, -28, -58 + i * 19, -14, 1, withA(C.white, 0.25));
-  rect(-82, -40, 164, 7, cream);
-  rect(-48, -46, 54, 10, col("#1a1a1a"));
+  // (v1.4.72: a properly rounded old bus - a domed roof, rounded corners, rounded windows - not a stack of boxes)
+  rrect(-86, -44, 172, 68, 14, green); // the body, green below
+  rrect(-86, -44, 172, 40, 14, cream); // cream above, with the rounded roof
+  rect(-86, -12, 172, 8, cream);
+  rect(-86, -8, 172, 4, col("#c8a040")); // (the trim line)
+  rrect(-84, -44, 168, 5, 2.5, withA(C.white, 0.35)); // (a shine along the roof)
+  for (let i = 0; i < 7; i++) rrect(-66 + i * 19, -32, 15, 19, 4, col("#2a3a4a")); // the windows
+  for (let i = 0; i < 7; i++) line(-63 + i * 19, -29, -58 + i * 19, -16, 1, withA(C.white, 0.25));
+  rrect(-48, -50, 54, 11, 4, col("#1a1a1a"));
   pixText("PLEASE PUSH", -21, -41, 1.2, col("#ffd24d")); // (the destination board, honestly)
-  rect(-88, 18, 176, 5, col("#8a8e98"));
+  rrect(-90, 17, 180, 6, 3, col("#8a8e98")); // the bumper
   rect(-60, 20, 14, 3, withA(C.black, 0.4)); // (a dent)
   for (const wx of [-52, 50]) {
     disc(wx, 25, 11, col("#1a1a1a"));
@@ -62207,7 +62207,7 @@ function drawPushBus(f, L, Rr, y, k, t) {
     );
   }
   disc(-82, 8, 4, col("#fff4c0")); // a headlight
-  rect(82, 6, 4, 6, col("#c02020")); // a tail light
+  rrect(81, 5, 5, 8, 2, col("#c02020")); // a tail light
   rect(84, 14, 8, 3, col("#5a5e68")); // the exhaust pipe
   // the driver at his window, leaning out shouting "PUSH!" (and cheering when it starts)
   disc(-70, -24, 6, col("#5c3620"));
@@ -64823,7 +64823,7 @@ function drawEggs(g, s) {
 // THE VERSION (from v1.2.0, 5 October 2026): MAJOR.MINOR.PATCH - a new MINOR for a batch of new things, a new PATCH for
 // fixes and small touches - with the day it was made next to it. (Before this the versions were named after the date,
 // like v2026.10.05c.)
-const GAME_VERSION = "v1.4.71",
+const GAME_VERSION = "v1.4.72",
   GAME_DATE = "18.10.2026",
   VERSION_TEXT = GAME_VERSION + "  ·  " + GAME_DATE;
 const FB = '"Chakra Petch", "Segoe UI", sans-serif';
@@ -71561,6 +71561,11 @@ profWire();
 //  the game, and where the motion capture, the folk songs and the fonts come from. Both from the menu at any time.
 // =====================================================================================
 const NEWS = [
+  {
+    ver: "v1.4.72",
+    title: "A ROUNDED OLD BUS",
+    items: ["THE BUS THAT NEEDS A PUSH IS ROUNDED NOW"],
+  },
   {
     ver: "v1.4.71",
     title: "FASTER BOSSES ON EASY, A CLEARER MIXER, ROUNDER MENUS",

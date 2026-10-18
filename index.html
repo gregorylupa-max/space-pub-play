@@ -64762,7 +64762,7 @@ function drawEggs(g, s) {
 // THE VERSION (from v1.2.0, 5 October 2026): MAJOR.MINOR.PATCH - a new MINOR for a batch of new things, a new PATCH for
 // fixes and small touches - with the day it was made next to it. (Before this the versions were named after the date,
 // like v2026.10.05c.)
-const GAME_VERSION = "v1.4.69",
+const GAME_VERSION = "v1.4.70",
   GAME_DATE = "18.10.2026",
   VERSION_TEXT = GAME_VERSION + "  ·  " + GAME_DATE;
 const FB = '"Chakra Petch", "Segoe UI", sans-serif';
@@ -65709,13 +65709,20 @@ function drawSigns(g, s, t, sx, sy) {
     // the outlaw's challenge, and a VIP's patience running out
     if (c.type.glutton && c.state !== "out") {
       const [x, y] = projL(c.lane, c.x + 12, LY(c.lane, c.x) - 190, VSIDE.c);
-      g.font = Math.round(11 * s) + "px " + FD;
-      g.fillStyle = "#ff5fd8";
-      g.fillText(
-        (c.type.boss ? "BOSS  ·  " : "") + (c.fed || 0) + " / " + (c.type.need || GLUTTON_FED) + " SHAKES",
-        sx(x),
-        sy(y)
-      );
+      // (v1.4.70: on a dark rounded pill with a pink edge, a little bigger - it was hard to read over the stage show)
+      const lbl =
+        (c.type.boss ? "BOSS  ·  " : "") + (c.fed || 0) + " / " + (c.type.need || GLUTTON_FED) + " SHAKES";
+      g.font = Math.round(12 * s) + "px " + FD;
+      const lw = g.measureText(lbl).width + 16 * s,
+        lh = 20 * s;
+      g.fillStyle = "rgba(14,6,24,.82)";
+      rbox(g, sx(x) - lw / 2, sy(y) - lh / 2, lw, lh, lh / 2);
+      g.fill();
+      g.strokeStyle = "rgba(255,95,216,.7)";
+      g.lineWidth = 1.5 * s;
+      g.stroke();
+      g.fillStyle = "#ff8ae6";
+      g.fillText(lbl, sx(x), sy(y) + 1);
     } // how hungry is he still?
     if ((c.outlaw && c.hold) || (c.vip > 0 && !c.vipDone)) {
       const [x, y] = projL(c.lane, c.x + 12, LY(c.lane, c.x) - 128, VSIDE.c),
@@ -71493,6 +71500,11 @@ profWire();
 //  the game, and where the motion capture, the folk songs and the fonts come from. Both from the menu at any time.
 // =====================================================================================
 const NEWS = [
+  {
+    ver: "v1.4.70",
+    title: "A CLEARER BOSS COUNTER",
+    items: ["THE BOSS'S SHAKE COUNTER IS EASY TO READ"],
+  },
   {
     ver: "v1.4.69",
     title: "SEA MONSTERS AND NEW VISITORS",

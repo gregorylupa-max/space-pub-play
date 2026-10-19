@@ -7133,8 +7133,8 @@ function demoInput(dt) {
     if (P.x > pu.x + 4) inp.left = true;
     return inp;
   } // grab a power-up when it's quiet
-  // NOTHING TO DO (his bars are quiet): he never just stands there - he walks up the bar to pick up a tip, or to wipe the
-  // counter, and comes back (any real work and he drops it straight away)
+  // NOTHING TO DO (his bars are quiet): he walks up the bar to pick up a tip, if there is one, and comes back (any real
+  // work and he drops it straight away) - otherwise he waits at the tap
   const busy =
     urgent >= 0 ||
     !calm ||
@@ -7151,8 +7151,9 @@ function demoInput(dt) {
   } else if (!P.wander && P.x >= TAPX - 1) {
     P.demoIdle = (P.demoIdle || 0) + dt;
     if (P.demoIdle > 0.8) {
+      // (v1.4.75) only when there's a real tip to pick up - he no longer jogs up an empty bar and back for nothing
       const tp = tips.find((u) => u.lane === P.lane && u.x > X0 + 60);
-      P.wander = { x: tp ? tp.x - 6 : rnd(TAPX - 230, TAPX - 90) };
+      if (tp) P.wander = { x: tp.x - 6 };
       P.demoIdle = 0;
     }
   }
@@ -64831,7 +64832,7 @@ function drawEggs(g, s) {
 // THE VERSION (from v1.2.0, 5 October 2026): MAJOR.MINOR.PATCH - a new MINOR for a batch of new things, a new PATCH for
 // fixes and small touches - with the day it was made next to it. (Before this the versions were named after the date,
 // like v2026.10.05c.)
-const GAME_VERSION = "v1.4.74",
+const GAME_VERSION = "v1.4.75",
   GAME_DATE = "19.10.2026",
   VERSION_TEXT = GAME_VERSION + "  ·  " + GAME_DATE;
 const FB = '"Chakra Petch", "Segoe UI", sans-serif';
@@ -71569,6 +71570,11 @@ profWire();
 //  the game, and where the motion capture, the folk songs and the fonts come from. Both from the menu at any time.
 // =====================================================================================
 const NEWS = [
+  {
+    ver: "v1.4.75",
+    title: "A CALMER DEMO BARMAN",
+    items: ["THE DEMO BARMAN NO LONGER RUNS FOR NOTHING"],
+  },
   {
     ver: "v1.4.74",
     title: "BIGGER ON AN UPRIGHT PHONE",

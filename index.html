@@ -17072,13 +17072,15 @@ function drawTap(lane, t, V) {
     pouring = active().some((p) => p.lane === lane && p.pouring);
   const fc = FLAVORS[lane % 3][0],
     hand = on ? C.red : col("#8a2030");
+  // (v1.4.73: the spout and the pull handle on every machine are rounded - they were little square blocks)
   const spout = (c1, c2) => {
-    rect(x - 16, y - 40, 22, 8, c1);
-    rect(x - 18, y - 36, 6, 10, c2);
+    rrect(x - 16, y - 40, 22, 8, 4, c1);
+    rrect(x - 18, y - 36, 6, 10, 3, c2);
   };
   const handle = (c1) => {
-    rect(x + 14, y - 30, 8, 22, c1);
-    rect(x + 12, y - 36, 12, 8, hand);
+    rrect(x + 14, y - 30, 8, 22, 4, c1);
+    rrect(x + 12, y - 37, 12, 9, 4.5, hand);
+    disc(x + 15, y - 34, 1.6, withA(C.white, 0.45)); // (a gleam on the knob)
   };
   // (v1.4.38) a soft shadow where the machine stands
   disc(x + 22, y + 40, 30, withA(C.black, 0.3), 6);
@@ -17102,8 +17104,8 @@ function drawTap(lane, t, V) {
     metalBox(x + 2, y - 84, 40, 124, col("#c83a2a")); // (v1.4.38: shaded, not flat)
     disc(x + 22, y - 84, 20, col("#c83a2a"), 8);
     disc(x + 22, y - 86, 13, col("#f0f0e0"), 6);
-    rect(x + 15, y - 88, 14, 4, fc);
-    rect(x + 8, y - 66, 28, 16, col("#101018"));
+    rrect(x + 15, y - 88, 14, 4, 2, fc);
+    rrect(x + 8, y - 66, 28, 16, 4, col("#101018"));
     for (let j = 0; j < 4; j++) rect(x + 10 + j * 6.5, y - 63, 5, 9, col("#f0e8c0"));
     rect(x + 10 + 3 * 6.5, y - 63 + ((t * (pouring ? 30 : 0)) % 9), 5, 2, col("#c83a2a"));
     polyline([x + 2, y - 30, x - 10, y - 20, x - 14, y - 34], 3, col("#202020"));
@@ -17200,7 +17202,7 @@ function drawTap(lane, t, V) {
     }
     R.setAdd(false);
     shakeJar(x + 9, y - 36, 26, 24, fc, t, lane, pouring);
-    rect(x + 7, y - 70, 30, 24, col("#05101a"));
+    rrect(x + 7, y - 70, 30, 24, 5, col("#05101a"));
     R.setAdd(true);
     for (let j = 0; j < 5; j++)
       rect(
@@ -17241,7 +17243,7 @@ function drawTap(lane, t, V) {
       }
       R.setAdd(false);
     }
-    rect(x + 8, y - 20, 28, 10, fc);
+    rrect(x + 8, y - 20, 28, 10, 5, fc);
     spout(col("#ffd060"), col("#a07020"));
     handle(col("#ffd060"));
   } else {
@@ -64823,8 +64825,8 @@ function drawEggs(g, s) {
 // THE VERSION (from v1.2.0, 5 October 2026): MAJOR.MINOR.PATCH - a new MINOR for a batch of new things, a new PATCH for
 // fixes and small touches - with the day it was made next to it. (Before this the versions were named after the date,
 // like v2026.10.05c.)
-const GAME_VERSION = "v1.4.72",
-  GAME_DATE = "18.10.2026",
+const GAME_VERSION = "v1.4.73",
+  GAME_DATE = "19.10.2026",
   VERSION_TEXT = GAME_VERSION + "  ·  " + GAME_DATE;
 const FB = '"Chakra Petch", "Segoe UI", sans-serif';
 let FD = '"Bungee", "Impact", sans-serif';
@@ -71561,6 +71563,11 @@ profWire();
 //  the game, and where the motion capture, the folk songs and the fonts come from. Both from the menu at any time.
 // =====================================================================================
 const NEWS = [
+  {
+    ver: "v1.4.73",
+    title: "ROUNDED TAPS",
+    items: ["ROUNDED SPOUTS, HANDLES AND PLATES ON EVERY FILLING MACHINE"],
+  },
   {
     ver: "v1.4.72",
     title: "A ROUNDED OLD BUS",

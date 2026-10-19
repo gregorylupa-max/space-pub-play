@@ -12597,8 +12597,9 @@ function miniFit() {
   const VS = G.state === "paused" ? G.prev : G.state;
   if (!VERT || !((VS === "mini" && G.mini) || (VS === "bonus" && bonus))) return null;
   // (the play area's far edges - 50 each side - are only scenery: they may go off the screen, so it can be bigger)
-  const s = Math.min((W - 8) / (PW - 100), (H * 0.62) / PH);
-  return { s, x: (W - PW * s) / 2 - ox, y: H * 0.54 - (PH * s) / 2 - oy };
+  // (v1.4.74: the mini-games narrow their playing field on a tall screen - see MINI_TALL - so they can be shown bigger)
+  const s = Math.min((W - 8) / (PW - (VS === "mini" ? 300 : 100)), (H * 0.62) / PH);
+  return { s, x: (W - PW * s) / 2 - ox, y: H * (VS === "mini" ? 0.6 : 0.54) - (PH * s) / 2 - oy }; // (v1.4.74: the mini-games sit lower - open sky above, not a blank strip below)
 }
 // where a height in the fitted play area is on the screen (CSS pixels, for the words over it)
 function fitCssY(ly) {
@@ -53063,6 +53064,9 @@ function breakRefresh() {
 // =====================================================================================
 //  MINI-GAMES: CHERRY CATCH, BOGDAN'S DELIVERY, SHAKE MIXER
 // =====================================================================================
+// (v1.4.74) on a phone held upright the mini-games play on a narrower field (the middle of the wide one), so the
+// whole thing can be drawn about a third bigger and fill more of the screen
+const MINI_TALL = () => VERT;
 const MINI_KINDS = ["cherry", "stork", "mixer"],
   MINI_NAMES = { cherry: "CHERRY CATCH", stork: "BOGDAN'S SPACE DELIVERY", mixer: "THE SHAKE MIXER" };
 const MINI_HELP = {
@@ -53230,7 +53234,7 @@ function funMiniUpdate(dt) {
       Rt = inp.right || (M.ptr && M.px > M.x + 10);
     if (M.ptr && !inp.left && !inp.right) M.x += (M.px - M.x) * Math.min(1, dt * 12);
     else M.x += ((Rt ? 1 : 0) - (L ? 1 : 0)) * 560 * dt;
-    M.x = clamp(M.x, 70, 890);
+    M.x = clamp(M.x, MINI_TALL() ? 190 : 70, MINI_TALL() ? 770 : 890); // (v1.4.74: a narrower field on a tall screen)
     M.spawn -= dt;
     if (M.spawn <= 0 && M.endIn === undefined) {
       M.spawn = rnd(0.35, 0.6) * (M.kind === "mixer" ? 1.1 : 1);
@@ -53252,7 +53256,7 @@ function funMiniUpdate(dt) {
       }
       M.items.push({
         kind: k,
-        x: rnd(80, 880),
+        x: MINI_TALL() ? rnd(200, 760) : rnd(80, 880),
         y: -20,
         vy: rnd(150, 230) + M.t * 5,
         rot: rnd(0, 6),
@@ -53659,7 +53663,7 @@ function drawMini(t) {
     if (M.kind === "mixer") {
       // the recipe card
       const cy0 = 120,
-        dx = FITV ? 34 : 0; // (v1.4.66: on a phone the play area's edges are off the screen - the card moves in to stay whole)
+        dx = FITV ? 136 : 0; // (v1.4.66: on a phone the play area's edges are off the screen - the card moves in to stay whole) (v1.4.74: further in, for the narrower field)
       // (v1.4.65: a rounded card with a soft shadow, and a rounded pink tab along the top)
       rrect(33 + dx, cy0 - 31, 200, 70, 12, withA(C.black, 0.3));
       rrect(30 + dx, cy0 - 36, 200, 70, 12, withA(col("#fff8ec"), 0.94));
@@ -55435,7 +55439,9 @@ function drawApproach(t) {
     B = H - oy + 20,
     w = Rr - L,
     h = B - T,
-    k = Math.min(w / 960, h / 540),
+    // (v1.4.74) on a phone held upright the planet and the orbiting diner were sized for a wide screen and sat small
+    // in the middle of a tall, empty view - now they're sized to the width of the screen, half as big again
+    k = h > w * 1.1 ? Math.min(w / 620, h / 760) : Math.min(w / 960, h / 540),
     Wd = WORLDS[tourStop()] || {},
     u0 = A0.t / APPROACH_LEN;
   deepSky(L, Rr, T, B, t, 40 + A0.t, G.level * 5, h * 1.05);
@@ -55789,7 +55795,7 @@ function drawApproach(t) {
   }
   // the planet, with our diner sailing round it in orbit: behind it on the far side, in front on the near side
   const a = Math.PI * (1.05 - u0 * 1.25),
-    orx = (r > 0 ? r : 120 * k) + 150 * k,
+    orx = (r > 0 ? r : 120 * k) + (h > w * 1.1 ? 70 : 150) * k, // (v1.4.74: a tighter orbit on a tall screen, so the diner stays in view)
     ox2 = px + Math.cos(a) * orx,
     oy2 = py + Math.sin(a) * orx * 0.28,
     front = Math.sin(a) > 0,
@@ -64825,7 +64831,7 @@ function drawEggs(g, s) {
 // THE VERSION (from v1.2.0, 5 October 2026): MAJOR.MINOR.PATCH - a new MINOR for a batch of new things, a new PATCH for
 // fixes and small touches - with the day it was made next to it. (Before this the versions were named after the date,
 // like v2026.10.05c.)
-const GAME_VERSION = "v1.4.73",
+const GAME_VERSION = "v1.4.74",
   GAME_DATE = "19.10.2026",
   VERSION_TEXT = GAME_VERSION + "  ·  " + GAME_DATE;
 const FB = '"Chakra Petch", "Segoe UI", sans-serif';
@@ -71563,6 +71569,11 @@ profWire();
 //  the game, and where the motion capture, the folk songs and the fonts come from. Both from the menu at any time.
 // =====================================================================================
 const NEWS = [
+  {
+    ver: "v1.4.74",
+    title: "BIGGER ON AN UPRIGHT PHONE",
+    items: ["BIGGER PLANETS AS YOU ARRIVE ON AN UPRIGHT PHONE", "BIGGER MINI-GAMES ON AN UPRIGHT PHONE"],
+  },
   {
     ver: "v1.4.73",
     title: "ROUNDED TAPS",

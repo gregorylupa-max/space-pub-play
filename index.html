@@ -556,6 +556,8 @@ const PROFILE_KEYS = new Set([
   "taBest",
   "rushBest",
   "rushBest10",
+  "rushBest14", // (v1.4.76: all fourteen bosses - the sea creatures too)
+  "taGhost", // (v1.4.76: your best Time Attack run, to race against)
   "mice",
   "petGrow",
   "petGrowInit",
@@ -929,6 +931,7 @@ function makeGL(cv, power, retro, levels, crt) {
     K2 = 0,
     K3 = 0;
   function pk(c) {
+    if (GHOST > 0) c = ghostC(c); // (v1.4.76: the Time Attack ghost - see modes.ts)
     const a = c[3],
       r = c[0] * a,
       g2 = c[1] * a,
@@ -1307,16 +1310,17 @@ function make2D(cv, cpuLevels) {
   }
   let sc = 1,
     calls = 0;
-  const css = (c) =>
-    "rgba(" +
-    ((c[0] * 255) | 0) +
-    "," +
-    ((c[1] * 255) | 0) +
-    "," +
-    ((c[2] * 255) | 0) +
-    "," +
-    c[3].toFixed(3) +
-    ")";
+  const css = (c) => css0(GHOST > 0 ? ghostC(c) : c), // (v1.4.76: the Time Attack ghost)
+    css0 = (c) =>
+      "rgba(" +
+      ((c[0] * 255) | 0) +
+      "," +
+      ((c[1] * 255) | 0) +
+      "," +
+      ((c[2] * 255) | 0) +
+      "," +
+      c[3].toFixed(3) +
+      ")";
   const sprites = new Map();
   function sprite(c) {
     const key = (((c[0] * 15) | 0) << 8) | (((c[1] * 15) | 0) << 4) | ((c[2] * 15) | 0);
@@ -1597,6 +1601,10 @@ const TX = (x, y) => M[0] * x + M[2] * y + M[4],
 // Drawing a figure a few times shifted by one pixel in this mode, then normally on top, gives it a crisp pixel outline.
 let OUT = null,
   ADD = false;
+// (v1.4.76) GHOST DRAWING: while GHOST is above 0, every colour is washed towards a pale moonlit blue and made that
+// see-through - how the Time Attack ghost (your best run, racing beside you) is drawn with the bartender's own drawing
+let GHOST = 0;
+const ghostC = (c) => [c[0] * 0.35 + 0.42, c[1] * 0.35 + 0.55, c[2] * 0.35 + 0.62, c[3] * GHOST];
 const oc = (c) => (ADD || c[3] < 0.5 ? null : OUT);
 function tri(ax, ay, bx, by, cx, cy, c) {
   if (OUT && !(c = oc(c))) return;
@@ -3178,6 +3186,7 @@ const DICT_ROWS                             = [
     "GORĄCZKA KOKTAJLI!  PODWÓJNE PUNKTY  ·  NATYCHMIASTOWE NALEWANIE",
   ],
   ["FEVER OVER", "KOORS VERBY", "KONIEC GORĄCZKI"],
+  ["LEVEL WITH YOUR GHOST", "GELYK MET JOU SPOOK", "RÓWNO Z TWOIM DUCHEM"], // (v1.4.76)
   [
     "DON'T SERVE DEVILS! REFUSE THEM OR SEND HOLY WATER",
     "MOENIE DUIWELS BEDIEN NIE! WEIER HULLE OF STUUR WYWATER",
@@ -3576,13 +3585,18 @@ const DICT_ROWS                             = [
     "NIE MASZ OCHOTY?  NACIŚNIJ ESC (LUB K), BY POMINĄĆ TĘ MINIGRĘ",
   ],
   [
-    "BOSS RUSH!  ALL TEN BOSSES, ONE AFTER ANOTHER",
-    "BAAS-STORMLOOP!  AL TIEN BASE, EEN NA DIE ANDER",
-    "SZTURM NA BOSSÓW!  WSZYSTKICH DZIESIĘCIU, JEDEN PO DRUGIM",
+    "BOSS RUSH!  ALL FOURTEEN BOSSES, ONE AFTER ANOTHER",
+    "BAAS-STORMLOOP!  AL VEERTIEN BASE, EEN NA DIE ANDER",
+    "SZTURM NA BOSSÓW!  WSZYSTKICH CZTERNASTU, JEDEN PO DRUGIM",
   ],
 ];
 // the texts that carry numbers or names: patterns
 const DICT_PAT                             = [
+  // (v1.4.76) in a row, and the Time Attack ghost
+  [/^(\d+) IN A ROW!$/, "$1 AGTER MEKAAR!", "$1 Z RZĘDU!"],
+  [/^\+(\d+) COINS  ·  (\d+) IN A ROW$/, "+$1 MUNTE  ·  $2 AGTER MEKAAR", "+$1 MONET  ·  $2 Z RZĘDU"],
+  [/^AHEAD OF YOUR GHOST BY (\d+)$/, "$1 VOOR JOU SPOOK", "PRZED TWOIM DUCHEM O $1"],
+  [/^BEHIND YOUR GHOST BY (\d+)$/, "$1 AGTER JOU SPOOK", "ZA TWOIM DUCHEM O $1"],
   [
     /^(.+) FANS ARE HERE!  DOUBLE POINTS$/,
     "$1 ONDERSTEUNERS IS HIER!  DUBBEL PUNTE",
@@ -3642,22 +3656,22 @@ const DICT_PAT                             = [
     "PIĘĆDZIESIĘCIU OBSŁUŻONYCH W $1!  REKORD $2",
   ],
   [
-    /^ALL TEN BOSSES BEATEN IN ([\d:.]+)!  A NEW BEST TIME!$/,
-    "AL TIEN BASE VERSLAAN IN $1!  'N NUWE BESTE TYD!",
-    "WSZYSTKICH DZIESIĘCIU BOSSÓW POKONANO W $1!  NOWY REKORD!",
+    /^ALL FOURTEEN BOSSES BEATEN IN ([\d:.]+)!  A NEW BEST TIME!$/,
+    "AL VEERTIEN BASE VERSLAAN IN $1!  'N NUWE BESTE TYD!",
+    "WSZYSTKICH CZTERNASTU BOSSÓW POKONANO W $1!  NOWY REKORD!",
   ],
   [
-    /^ALL TEN BOSSES BEATEN IN ([\d:.]+)!$/,
-    "AL TIEN BASE VERSLAAN IN $1!",
-    "WSZYSTKICH DZIESIĘCIU BOSSÓW POKONANO W $1!",
+    /^ALL FOURTEEN BOSSES BEATEN IN ([\d:.]+)!$/,
+    "AL VEERTIEN BASE VERSLAAN IN $1!",
+    "WSZYSTKICH CZTERNASTU BOSSÓW POKONANO W $1!",
   ],
   [/^BOSS (\d+) \/ (\d+)$/, "BAAS $1 / $2", "BOSS $1 / $2"],
   [/^TIME ATTACK: 50 SERVED IN ([\d:.]+)$/, "TYDJAG: 50 BEDIEN IN $1", "NA CZAS: 50 OBSŁUŻONYCH W $1"],
   [/^TIME ATTACK: (\d+) \/ (\d+) SERVED$/, "TYDJAG: $1 / $2 BEDIEN", "NA CZAS: OBSŁUŻONO $1 / $2"],
   [
-    /^BOSS RUSH: ALL TEN BOSSES IN ([\d:.]+)$/,
-    "BAAS-STORMLOOP: AL TIEN BASE IN $1",
-    "SZTURM NA BOSSÓW: WSZYSTKICH DZIESIĘCIU W $1",
+    /^BOSS RUSH: ALL FOURTEEN BOSSES IN ([\d:.]+)$/,
+    "BAAS-STORMLOOP: AL VEERTIEN BASE IN $1",
+    "SZTURM NA BOSSÓW: WSZYSTKICH CZTERNASTU W $1",
   ],
   [
     /^BOSS RUSH: (\d+) OF (\d+) BOSSES BEATEN$/,
@@ -3680,6 +3694,11 @@ const DICT_PAT                             = [
     "VLAK $1 / $2$3·$4BEDIEN $5 / $6",
     "POZIOM $1 / $2$3·$4OBSŁUŻONO $5 / $6",
   ],
+  [
+    /^LEVEL (\d+) \/ (\d+)(\s+)·(\s+)SERVED (\d+)$/,
+    "VLAK $1 / $2$3·$4BEDIEN $5",
+    "POZIOM $1 / $2$3·$4OBSŁUŻONO $5",
+  ], // (v1.4.76: Time Attack)
   [/^LEVEL (\d+) OF (\d+)$/, "VLAK $1 VAN $2", "POZIOM $1 Z $2"],
   [/^LEVEL (\d+)$/, "VLAK $1", "POZIOM $1"],
   [/^COMBO x(\d+)$/, "KOMBO x$1", "KOMBO x$1"],
@@ -6087,6 +6106,7 @@ const here = () => VENUES[tourStop()];
 
 function resetGame(demo) {
   G.streak = 0;
+  G.chain = 0; // (v1.4.76: shakes served in a row without a slip - twists.ts)
   G.fever = 0;
   G.demo = demo;
   G.won = false;
@@ -9679,6 +9699,7 @@ function update(dt) {
       G.lastCatch = G.time;
       if (!demo) G.runCombo = Math.max(G.runCombo || 0, G.combo);
       feverAdd(1, demo);
+      chainServe(catcher, s, demo); // (v1.4.76: longer fevers, and "10 IN A ROW!")
       twistServed(catcher, s, demo);
       kidServe(catcher, s, demo);
       funServe(catcher, s, demo);
@@ -9689,7 +9710,7 @@ function update(dt) {
         LY(s.lane, catcher.x) - 80
       );
       SCORER = null;
-      sfx("catch", catcher.x);
+      sfx("catch", catcher.x, G.combo); // (v1.4.76: the chime climbs with the combo)
       sfx("voice", catcher.x, catcher.type.kind);
       {
         // (v1.4.57) A SATISFYING SERVE: a burst of sparkles in the shake's own colour where it's caught, and a quick
@@ -10801,6 +10822,29 @@ function feverAdd(k, demo) {
     for (let i = 0; i < 30; i++) confetti(rnd(0, PW), -10, 1);
   }
 }
+// (v1.4.76) KEEP THE FEVER GOING: every shake served while the fever's on adds half a second (up to six more seconds
+// than it started with), so a good run can ride it a long way
+const FEVER_MORE = 0.5,
+  FEVER_MAX = FEVER_LEN + 6;
+// (v1.4.76) IN A ROW: shakes served without a single slip, all game long (a slip, a lost life, starts it again). At
+// 10, 25 and 50 in a row - and every 50 after - a cheer, confetti and some coins for the shop.
+const CHAIN_AT = [10, 25, 50],
+  CHAIN_COINS = [3, 8, 20];
+function chainServe(c, s, demo) {
+  if (demo) return;
+  if (G.fever > 0) G.fever = Math.min(FEVER_MAX, G.fever + FEVER_MORE);
+  G.chain = (G.chain || 0) + 1;
+  const n = G.chain,
+    i = CHAIN_AT.indexOf(n),
+    big = i < 0 && n > 50 && n % 50 === 0;
+  if (i < 0 && !big) return;
+  const coinsN = big ? CHAIN_COINS[2] : CHAIN_COINS[i];
+  callout(n + " IN A ROW!", n >= 50 ? "#ffd24d" : n >= 25 ? "#5ff5c8" : "#ff9fe0", 1.8);
+  sfx("cheer", c.x);
+  const many = Math.round((n >= 50 ? 40 : n >= 25 ? 26 : 16) * (COMFORT.calm ? 0.5 : 1));
+  for (let k = 0; k < many; k++) confetti(rnd(0, PW), -10, 1);
+  addCoins(coinsN, n + " IN A ROW");
+}
 // DRAGON FIRE: a rainbow of flame rolls down the dragon's bar and blows everybody on it back to the door
 // four kinds: JADE (the mystic one), GOLD (its fire is worth double), SILVER (it blesses you: holy water full, cross ready)
 // and BLACK (its shadow fire rolls down the bars either side too)
@@ -11171,6 +11215,7 @@ function lose(why, lane, x) {
   G.combo = 0;
   G.streak = 0;
   G.fever = 0;
+  G.chain = 0; // (v1.4.76: the "in a row" count starts again)
   lifeLostMech();
   G.shake = 10;
   G.flash = 0.35;
@@ -12790,6 +12835,11 @@ function draw() {
       funTapLight(lane, t);
       funLaneDraw(lane, t);
       for (const b of G.peels || []) if (b.lane === lane) drawPeel(b, t);
+      if (G.ta) {
+        pop();
+        laneT(lane);
+        ghostDraw(lane, t); // (v1.4.76: your best Time Attack run, racing beside you - behind the real bartender)
+      }
       for (const pl of AP)
         if (pl.lane === lane) {
           pop();
@@ -24861,6 +24911,10 @@ function drawVert(V, t) {
               )
         ),
     });
+  {
+    const gn = ghostNow(); // (v1.4.76: the Time Attack ghost - just behind the bartender in the drawing order)
+    if (gn) list.push({ x: gn.x + 0.95, f: () => vAt(gn.lane, gn.x, VSIDE.p, () => ghostDraw(gn.lane, t)) });
+  }
   for (const pl of shownPlayers()) {
     let x = pl.x;
     if (G.state === "lost" && G.lost && G.lost.why === "grab" && G.lost.lane === pl.lane)
@@ -63548,10 +63602,14 @@ function drawCupPanel() {
 //  CHALLENGE MODES (v2026.10.04ar)
 //    TIME ATTACK - serve 50 customers as fast as you can. The clock runs while you play (not while paused); lose all
 //                  your lives and it's over. Your best time is kept (each player profile has its own).
-//    BOSS RUSH   - the ten bosses back to back: the Baby Blob, the Jelly Queen, the Moon Giant, the Thousand-Eyed Watcher,
-//                  Robo-Gob, the Crystal Colossus, the Gulper, the Rogue King, the Spore Maw and the Hydra - straight from
-//                  one boss level to the next (no bonus rounds in between). Your best time too (v1.4.33: a new record
-//                  book, "rushBest10", since ten bosses take longer than six).
+//    BOSS RUSH   - every boss back to back: the Baby Blob, the Jelly Queen, the Moon Giant, the Thousand-Eyed Watcher,
+//                  Robo-Gob, the Crystal Colossus, the Gulper, the Rogue King, the Spore Maw and the Hydra - and since
+//                  v1.4.76 the four sea creatures too (the King Crab, the Kraken, the Angler and the Star Whale) - straight
+//                  from one boss level to the next (no bonus rounds in between). Your best time too (v1.4.33: a new record
+//                  book, "rushBest10", since ten bosses take longer than six; v1.4.76: "rushBest14" for all fourteen).
+//    THE GHOST   - (v1.4.76) in Time Attack your BEST run races beside you: a see-through bartender doing exactly what
+//                  you did that time, and a counter that says whether you're ahead of it or behind. Beat it and your new
+//                  run becomes the ghost. (Kept per player profile, like the best time; only for one player.)
 // =====================================================================================
 const TA_GOAL = 50,
   RUSH_LEVELS = Object.keys(BOSS_AT)
@@ -63574,14 +63632,16 @@ function modeStart(which               ) {
   callout(
     which === "ta"
       ? "TIME ATTACK!  SERVE " + TA_GOAL + " AS FAST AS YOU CAN"
-      : "BOSS RUSH!  ALL TEN BOSSES, ONE AFTER ANOTHER",
+      : "BOSS RUSH!  ALL FOURTEEN BOSSES, ONE AFTER ANOTHER",
     "#ff5fa8",
     2.8
   );
 }
 // ---- hooks from the game ----
 function modesGameStart() {
-  G.ta = G.taNext ? { served: 0, t: 0, endT: 0 } : null;
+  G.ta = G.taNext
+    ? { served: 0, t: 0, endT: 0, rec: { l: [], x: [], s: [] }, recT: 0, ghost: ghostLoad(), gp: null }
+    : null;
   G.brush = G.brushNext ? { i: 0, t: 0 } : null;
   G.taNext = G.brushNext = false;
 }
@@ -63594,7 +63654,10 @@ function modesServed() {
   if (G.ta.served >= TA_GOAL) {
     const best = store.get("taBest", 0),
       nb = !best || G.ta.t < best;
-    if (nb) store.set("taBest", +G.ta.t.toFixed(1));
+    if (nb) {
+      store.set("taBest", +G.ta.t.toFixed(1));
+      ghostSave(); // (this run becomes the ghost to beat)
+    }
     callout(
       "FIFTY SERVED IN " + fmtTime(G.ta.t) + (nb ? "!  A NEW BEST TIME!" : "!  BEST " + fmtTime(best)),
       "#ffd24d",
@@ -63607,7 +63670,10 @@ function modesServed() {
 function modesUpdate(dt) {
   if (G.demo) return;
   const playing = ["play", "lost", "clear", "bonus"].includes(G.state) && !(G.readyT > 0);
-  if (G.ta && playing && !G.ta.endT) G.ta.t += dt;
+  if (G.ta && playing && !G.ta.endT) {
+    G.ta.t += dt;
+    ghostRecord(dt);
+  }
   if (G.brush && playing) G.brush.t += dt;
   if (G.ta && G.ta.endT > 0) {
     G.ta.endT -= dt;
@@ -63622,11 +63688,15 @@ function rushNext() {
   const R0 = G.brush;
   R0.i++;
   if (R0.i >= RUSH_LEVELS.length) {
-    const best = store.get("rushBest10", 0),
+    const best = store.get("rushBest14", 0),
       nb = !best || R0.t < best;
-    if (nb) store.set("rushBest10", +R0.t.toFixed(1));
+    if (nb) store.set("rushBest14", +R0.t.toFixed(1));
     R0.done = true;
-    callout("ALL TEN BOSSES BEATEN IN " + fmtTime(R0.t) + (nb ? "!  A NEW BEST TIME!" : "!"), "#ffd24d", 3);
+    callout(
+      "ALL FOURTEEN BOSSES BEATEN IN " + fmtTime(R0.t) + (nb ? "!  A NEW BEST TIME!" : "!"),
+      "#ffd24d",
+      3
+    );
     gameOver();
     return;
   }
@@ -63650,7 +63720,99 @@ function modesHud(g, s, fD) {
   g.shadowColor = "#ff5fa8";
   g.shadowBlur = 8 * s;
   g.fillText(txt, 14 * s, 14 * s + (twoP() ? 96 : 66) * s);
+  const gd = ghostDiff();
+  if (gd !== null) {
+    // (v1.4.76) the race against your ghost: ahead in green, level in white, behind in orange
+    const gt =
+      gd > 0
+        ? "AHEAD OF YOUR GHOST BY " + gd
+        : gd < 0
+          ? "BEHIND YOUR GHOST BY " + -gd
+          : "LEVEL WITH YOUR GHOST";
+    g.font = fD(10);
+    g.fillStyle = g.shadowColor = gd > 0 ? "#5ff5a0" : gd < 0 ? "#ffa05f" : "#cfe8ff";
+    g.fillText(gt, 14 * s, 14 * s + (twoP() ? 96 : 66) * s + 18 * s);
+  }
   g.restore();
+}
+// =====================================================================================
+//  THE GHOST (v1.4.76): your best Time Attack run, sampled ten times a second - which bar you were on, where along it,
+//  and how many you'd served by then - so it can be played back beside you next time
+// =====================================================================================
+const GHOST_DT = 0.1,
+  GHOST_MAX = 6000; // (ten minutes - a run slower than that isn't kept)
+function ghostLoad() {
+  const g0 = store.get("taGhost", null);
+  return g0 && g0.l && g0.l.length > 10 && !twoP() ? g0 : null;
+}
+function ghostRecord(dt) {
+  const ta = G.ta;
+  if (!ta || twoP() || ta.rec.l.length >= GHOST_MAX) return;
+  ta.recT -= dt;
+  while (ta.recT <= 0 && ta.rec.l.length < GHOST_MAX) {
+    ta.recT += GHOST_DT;
+    ta.rec.l.push(P1.lane);
+    ta.rec.x.push(Math.round(P1.x));
+    ta.rec.s.push(ta.served);
+  }
+}
+function ghostSave() {
+  const ta = G.ta;
+  if (!ta || twoP() || ta.rec.l.length < 10 || ta.rec.l.length >= GHOST_MAX) return;
+  ta.rec.s.push(ta.served);
+  store.set("taGhost", { l: ta.rec.l, x: ta.rec.x, s: ta.rec.s });
+}
+// where the ghost is now (between two samples), or null when there's no ghost or its run is over
+function ghostNow() {
+  const ta = G.ta;
+  if (!ta || !ta.ghost || G.demo || twoP()) return null;
+  const gh = ta.ghost,
+    f = ta.t / GHOST_DT,
+    i = Math.floor(f);
+  if (i >= gh.l.length - 1) return null;
+  const k = f - i,
+    same = gh.l[i] === gh.l[i + 1];
+  return {
+    lane: k > 0.5 && !same ? gh.l[i + 1] : gh.l[i],
+    x: same ? gh.x[i] + (gh.x[i + 1] - gh.x[i]) * k : gh.x[i],
+    s: gh.s[i],
+  };
+}
+// how many shakes you are ahead of the ghost (negative: behind); null when there's nothing to race
+function ghostDiff() {
+  const ta = G.ta;
+  if (!ta || !ta.ghost || G.demo || twoP() || ta.endT) return null;
+  const gh = ta.ghost,
+    i = Math.min(gh.s.length - 1, Math.floor(ta.t / GHOST_DT));
+  return ta.served - (gh.s[i] || 0);
+}
+// drawn on its bar like the bartender (draw.ts and tall.ts call this in the bar's turn), see-through and pale blue
+function ghostDraw(lane, t) {
+  const n = ghostNow();
+  if (!n || n.lane !== lane) return;
+  const ta = G.ta,
+    gp = ta.gp || (ta.gp = Object.assign({}, P1, { dust: [], spr: null, hsp: null, splat: [] })),
+    dx = n.x - gp.x;
+  gp.lane = n.lane;
+  gp.from = n.lane;
+  gp.laneT = 1;
+  gp.slipT = gp.turnT = gp.throwT = gp.stunT = gp.dashT = gp.crossT = gp.grabT = 0;
+  gp.pouring = false;
+  gp.pour = 0;
+  gp.fired = false;
+  gp.char = P1.char;
+  if (Math.abs(dx) > 0.3) {
+    gp.dir = gp.face = Math.sign(dx);
+    gp.idle = 0;
+  } else gp.dir = 0;
+  gp.walk = (gp.walk || 0) + Math.abs(dx);
+  gp.x = n.x;
+  const keep = P;
+  P = gp;
+  GHOST = 0.32;
+  drawPlayer(t);
+  GHOST = 0;
+  P = keep;
 }
 function modesGameOver() {
   const add = (t) => {
@@ -63666,13 +63828,13 @@ function modesGameOver() {
   if (G.brush)
     add(
       G.brush.done
-        ? "BOSS RUSH: ALL TEN BOSSES IN " + fmtTime(G.brush.t)
+        ? "BOSS RUSH: ALL FOURTEEN BOSSES IN " + fmtTime(G.brush.t)
         : "BOSS RUSH: " + G.brush.i + " OF " + RUSH_LEVELS.length + " BOSSES BEATEN"
     );
 }
 function modesMenuText() {
   const ta = store.get("taBest", 0),
-    ru = store.get("rushBest10", 0),
+    ru = store.get("rushBest14", 0),
     a = document.getElementById("vTa"),
     b = document.getElementById("vRush");
   if (a) a.textContent = ta ? "BEST " + fmtTime(ta) : "";
@@ -64832,7 +64994,7 @@ function drawEggs(g, s) {
 // THE VERSION (from v1.2.0, 5 October 2026): MAJOR.MINOR.PATCH - a new MINOR for a batch of new things, a new PATCH for
 // fixes and small touches - with the day it was made next to it. (Before this the versions were named after the date,
 // like v2026.10.05c.)
-const GAME_VERSION = "v1.4.75",
+const GAME_VERSION = "v1.4.76",
   GAME_DATE = "19.10.2026",
   VERSION_TEXT = GAME_VERSION + "  ·  " + GAME_DATE;
 const FB = '"Chakra Petch", "Segoe UI", sans-serif';
@@ -65215,7 +65377,9 @@ function drawHud(fps) {
   if (inGame && G.state !== "bonus") {
     g.font = fB(12, 700);
     if (!subNow.length) {
-      const lt = "LEVEL " + G.level + " / " + LAST_LEVEL + "   ·   SERVED " + G.served + " / " + G.total;
+      const lt = G.ta // (v1.4.76: Time Attack has no "of how many" - its customers keep coming, so just the count)
+        ? "LEVEL " + G.level + " / " + LAST_LEVEL + "   ·   SERVED " + G.served
+        : "LEVEL " + G.level + " / " + LAST_LEVEL + "   ·   SERVED " + G.served + " / " + G.total;
       backing(lt, sx(PW / 2), lineY, 1);
       g.globalAlpha = 1;
       g.fillStyle = "rgba(255,243,226,.9)";
@@ -65227,10 +65391,15 @@ function drawHud(fps) {
     g.fillStyle = "rgba(255,255,255,.15)";
     g.fillRect(bx, by, bw, 4 * s);
     g.fillStyle = "#5ff5c8";
-    g.fillRect(bx, by, (bw * G.served) / Math.max(1, G.total), 4 * s);
+    g.fillRect(
+      bx,
+      by,
+      bw * (G.ta ? Math.min(1, G.ta.served / TA_GOAL) : G.served / Math.max(1, G.total)),
+      4 * s
+    ); // (Time Attack: towards its fifty)
     // the SHAKE FEVER meter: fills as you serve and catch without a slip; full = fever time
     const fv = G.fever > 0,
-      fk = fv ? G.fever / FEVER_LEN : (G.streak || 0) / FEVER_AT,
+      fk = Math.min(1, fv ? G.fever / FEVER_LEN : (G.streak || 0) / FEVER_AT), // (v1.4.76: a fed fever can run past full)
       fy = by + 7 * s;
     g.fillStyle = "rgba(255,255,255,.1)";
     g.fillRect(bx, fy, bw, 3 * s);
@@ -66636,12 +66805,22 @@ function sfx(name, x , kind ) {
       noise(0.28, 0.22, 900, 250, out);
       tone("sine", 200, 90, 0.2, 0.1, out, now);
       break;
-    case "catch": // a thunk in the hand, the glass rings, a happy chime
+    case "catch": {
+      // a thunk in the hand, the glass rings, a happy chime
       tone("sine", 170, 80, 0.12, 0.25, out, now);
       glass(out, now + 0.01, 0.07);
       blip(nf("E6"), nf("E6"), 0.08, 0.05, out, now + 0.04);
       blip(nf("A6"), nf("A6"), 0.1, 0.04, out, now + 0.1);
+      // (v1.4.76) A COMBO SINGS: from the second quick catch in a row a third note joins, climbing a gentle scale with
+      // the combo - so a hot run sounds like it's going up. Kept under 1.8 kHz, soft sines (no sharp sounds).
+      const k = Math.min(6, kind | 0);
+      if (k >= 2) {
+        const sc2 = ["C6", "D6", "E6", "G6", "A6"][Math.min(4, k - 2)];
+        tone("sine", nf(sc2), nf(sc2), 0.16, 0.05, out, now + 0.17, 0.006);
+        if (k >= 6) tone("sine", nf("E6"), nf("E6"), 0.14, 0.035, out, now + 0.23, 0.006); // (and a sparkle on top)
+      }
       break;
+    }
     case "voice":
       voice(out, now, kind, false);
       break;
@@ -71570,6 +71749,17 @@ profWire();
 //  the game, and where the motion capture, the folk songs and the fonts come from. Both from the menu at any time.
 // =====================================================================================
 const NEWS = [
+  {
+    ver: "v1.4.76",
+    title: "RACE YOUR GHOST",
+    items: [
+      "TIME ATTACK: RACE A GHOST OF YOUR BEST RUN",
+      "10, 25 AND 50 IN A ROW: CONFETTI AND COINS",
+      "THE CATCH CHIME CLIMBS WITH YOUR COMBO",
+      "SHAKE FEVER LASTS LONGER AS YOU SERVE",
+      "BOSS RUSH HAS ALL FOURTEEN BOSSES",
+    ],
+  },
   {
     ver: "v1.4.75",
     title: "A CALMER DEMO BARMAN",

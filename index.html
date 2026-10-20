@@ -587,12 +587,29 @@ function reloadGame(delay = 0) {
 }
 const storeKey = (k) =>
   PROFILE !== "main" && PROFILE_KEYS.has(k) ? "craterrun.p." + PROFILE + "." + k : "craterrun." + k;
+// (v1.4.77) A FRAME'S MEMORY OF THE SAVE: drawing one frame used to read the save about sixty times (which hat, how many
+// stars, the decorations...) - each one a trip to the browser's storage. While a frame is being made (main.ts turns this
+// on and off around it), each saved value is read from storage once and remembered until the frame ends; saving a value
+// updates what's remembered. Outside a frame nothing is remembered, so a read there always sees the storage itself.
+const STORE_MEM = { on: false, raw: new Map                       () };
+function storeFrame(on) {
+  STORE_MEM.on = on;
+  STORE_MEM.raw.clear();
+}
+function storeRaw(sk) {
+  if (!STORE_MEM.on) return localStorage.getItem(sk);
+  const m = STORE_MEM.raw;
+  if (m.has(sk)) return m.get(sk);
+  const v = localStorage.getItem(sk);
+  m.set(sk, v);
+  return v;
+}
 const store = {
   // (a value that can't be read, or has turned into the wrong kind of thing - a number where a list should be - gives the
   //  default instead, so a damaged save can never break the game)
   get(k, d) {
     try {
-      const v = localStorage.getItem(storeKey(k));
+      const v = storeRaw(storeKey(k));
       if (v === null) return d;
       const p = JSON.parse(v);
       if (
@@ -607,8 +624,10 @@ const store = {
     }
   },
   set(k, v) {
+    const sk = storeKey(k);
+    STORE_MEM.raw.delete(sk); // (v1.4.77: the next read sees the new value)
     try {
-      localStorage.setItem(storeKey(k), JSON.stringify(v));
+      localStorage.setItem(sk, JSON.stringify(v));
     } catch (e) {}
   },
 };
@@ -648,6 +667,10 @@ const col = (hex, a = 1) => {
 // SPEED: colours with a new alpha come from a big ring of reusable arrays instead of a fresh array each time
 // (tens of thousands a second otherwise, and the garbage collector stutters). Every one is used straight away -
 // copied into the vertex buffer - so a slot is long finished with before the ring comes back round to it.
+// (v1.4.77) QV - THE CORNERS OF THE SHAPE BEING DRAWN, handed to the renderer in one reused list of numbers. Passed one
+// by one, every corner that isn't a whole number was wrapped up as a little object of its own on the way (about 150
+// bytes of rubbish for each rectangle - a megabyte a frame), and clearing that up is what made the odd frame stutter.
+const QV = new Float64Array(16);
 const WA = Array.from({ length: 16384 }, () => [0, 0, 0, 0]);
 let wai = 0;
 const withA = (c, a) => {
@@ -956,6 +979,60 @@ function makeGL(cv, power, retro, levels, crt) {
     data[i + 7] = s;
     n++;
   }
+  // (v1.4.77) a plain corner straight from QV: only whole numbers are handed over, so nothing needs boxing
+  function vq(q) {
+    const i = n * F,
+      j = (i + 2) * 2;
+    data[i] = QV[q] * sc;
+    data[i + 1] = QV[q + 1] * sc;
+    cols16[j] = K0;
+    cols16[j + 1] = K1;
+    cols16[j + 2] = K2;
+    cols16[j + 3] = K3;
+    data[i + 4] = 0;
+    data[i + 5] = 0;
+    data[i + 6] = 0;
+    data[i + 7] = 0;
+    n++;
+  }
+  // (v1.4.77) round() with its centre and size in QV (x, y, rx, ry in 0-3 - for a glow ry is rx). The corners
+  // go into QV 8-15 first, so vr() can copy them across handing over only whole numbers.
+  function roundQ(c, m) {
+    room(6);
+    const x = QV[0],
+      y = QV[1],
+      rx = QV[2],
+      ry = QV[3],
+      s = 1 / Math.max(1, Math.min(rx, ry) * sc);
+    QV[8] = x - rx;
+    QV[9] = y - ry;
+    QV[10] = x + rx;
+    QV[11] = y + ry;
+    QV[12] = m;
+    QV[13] = s;
+    pk(c);
+    vr(8, 9, -1, -1);
+    vr(10, 9, 1, -1);
+    vr(10, 11, 1, 1);
+    vr(8, 9, -1, -1);
+    vr(10, 11, 1, 1);
+    vr(8, 11, -1, 1);
+  }
+  function vr(qx, qy, uu, ww) {
+    const i = n * F,
+      j = (i + 2) * 2;
+    data[i] = QV[qx] * sc;
+    data[i + 1] = QV[qy] * sc;
+    cols16[j] = K0;
+    cols16[j + 1] = K1;
+    cols16[j + 2] = K2;
+    cols16[j + 3] = K3;
+    data[i + 4] = uu;
+    data[i + 5] = ww;
+    data[i + 6] = QV[12];
+    data[i + 7] = QV[13];
+    n++;
+  }
   function round(x, y, rx, ry, c, m) {
     room(6);
     const s = 1 / Math.max(1, Math.min(rx, ry) * sc),
@@ -1079,6 +1156,46 @@ function makeGL(cv, power, retro, levels, crt) {
       vk(bx, by, 0, 0, 0, 0);
       vk(cx, cy, 0, 0, 0, 0);
     },
+    // (v1.4.77) the same shapes with their corners handed over in QV (see there) - no numbers boxed on the way
+    triQ(c) {
+      room(3);
+      pk(c);
+      vq(0);
+      vq(2);
+      vq(4);
+    },
+    quadQ(c1, c2, c3, c4) {
+      room(6);
+      if (c1 === c2 && c1 === c3 && c1 === c4) {
+        pk(c1);
+        vq(0);
+        vq(2);
+        vq(4);
+        vq(0);
+        vq(4);
+        vq(6);
+        return;
+      }
+      pk(c1);
+      vq(0);
+      pk(c2);
+      vq(2);
+      pk(c3);
+      vq(4);
+      pk(c1);
+      vq(0);
+      pk(c3);
+      vq(4);
+      pk(c4);
+      vq(6);
+    },
+    discQ(c) {
+      roundQ(c, 2);
+    },
+    glowP(c) {
+      QV[3] = QV[2];
+      roundQ(c, 1);
+    },
     quad(ax, ay, bx, by, cx, cy, dx, dy, c1, c2, c3, c4) {
       room(6);
       if (c1 === c2 && c1 === c3 && c1 === c4) {
@@ -1185,7 +1302,50 @@ function makeGL(cv, power, retro, levels, crt) {
       gl.viewport(0, 0, post.w, post.h);
       this.setAdd(false);
     },
+    // (v1.4.77) SILHOUETTES, DRAWN ONCE: a figure's outline is the same one-colour shape drawn four times a pixel apart
+    // (and its drop shadow and rim light the same shape again) - so the shape is worked out ONCE (silBegin/silEnd keep
+    // what's drawn instead of sending it), and silDraw copies it wherever it's wanted, in any colour. Seven runs of a
+    // character's whole drawing code become two.
+    get silOn() {
+      return !!capture;
+    },
+    silBegin() {
+      flush();
+      capture = [];
+    },
+    silEnd() {
+      flush();
+      const segs = capture;
+      capture = null;
+      return segs;
+    },
+    silDraw(segs, dx, dy, c) {
+      const ox = dx * sc,
+        oy = dy * sc;
+      pk(c);
+      for (const sg of segs) {
+        const cnt = sg.data.length / F;
+        room(cnt);
+        const i0 = n * F;
+        data.set(sg.data, i0);
+        const k3 = sg.add ? 0 : K3;
+        for (let q = 0, i = i0; q < cnt; q++, i += F) {
+          data[i] += ox;
+          data[i + 1] += oy;
+          const j = (i + 2) * 2;
+          cols16[j] = K0;
+          cols16[j + 1] = K1;
+          cols16[j + 2] = K2;
+          cols16[j + 3] = k3;
+        }
+        n += cnt;
+      }
+    },
     layer(key, fn, dx = 0, dy = 0) {
+      if (capture) {
+        fn(); // (v1.4.77: inside a silhouette being worked out - just draw it, no caching)
+        return;
+      }
       let L = statics.get(key);
       if (!L) {
         if (statics.size > 24) {
@@ -1365,6 +1525,19 @@ function make2D(cv, cpuLevels) {
     setAdd(a) {
       ADD = a;
       ctx.globalCompositeOperation = a ? "lighter" : "source-over";
+    },
+    // (v1.4.77) corners handed over in QV - see there
+    triQ(c) {
+      this.tri(QV[0], QV[1], QV[2], QV[3], QV[4], QV[5], c);
+    },
+    quadQ(c1, c2, c3, c4) {
+      this.quad(QV[0], QV[1], QV[2], QV[3], QV[4], QV[5], QV[6], QV[7], c1, c2, c3, c4);
+    },
+    discQ(c) {
+      this.disc(QV[0], QV[1], QV[2], QV[3], c);
+    },
+    glowP(c) {
+      this.glow(QV[0], QV[1], QV[2], c);
     },
     tri(ax, ay, bx, by, cx, cy, c) {
       ctx.fillStyle = css(c);
@@ -1608,40 +1781,85 @@ const ghostC = (c) => [c[0] * 0.35 + 0.42, c[1] * 0.35 + 0.55, c[2] * 0.35 + 0.6
 const oc = (c) => (ADD || c[3] < 0.5 ? null : OUT);
 function tri(ax, ay, bx, by, cx, cy, c) {
   if (OUT && !(c = oc(c))) return;
-  R.tri(TX(ax, ay), TY(ax, ay), TX(bx, by), TY(bx, by), TX(cx, cy), TY(cx, cy), c);
+  const m0 = M[0],
+    m1 = M[1],
+    m2 = M[2],
+    m3 = M[3],
+    m4 = M[4],
+    m5 = M[5];
+  QV[0] = m0 * ax + m2 * ay + m4;
+  QV[1] = m1 * ax + m3 * ay + m5;
+  QV[2] = m0 * bx + m2 * by + m4;
+  QV[3] = m1 * bx + m3 * by + m5;
+  QV[4] = m0 * cx + m2 * cy + m4;
+  QV[5] = m1 * cx + m3 * cy + m5;
+  R.triQ(c);
 }
 function quad4(ax, ay, bx, by, cx, cy, dx, dy, c1, c2 , c3 , c4 ) {
   if (OUT) {
     if (!oc(c1)) return;
     c1 = c2 = c3 = c4 = OUT;
   }
-  R.quad(
-    TX(ax, ay),
-    TY(ax, ay),
-    TX(bx, by),
-    TY(bx, by),
-    TX(cx, cy),
-    TY(cx, cy),
-    TX(dx, dy),
-    TY(dx, dy),
-    c1,
-    c2 || c1,
-    c3 || c2 || c1,
-    c4 || c1
-  );
+  const m0 = M[0],
+    m1 = M[1],
+    m2 = M[2],
+    m3 = M[3],
+    m4 = M[4],
+    m5 = M[5];
+  QV[0] = m0 * ax + m2 * ay + m4;
+  QV[1] = m1 * ax + m3 * ay + m5;
+  QV[2] = m0 * bx + m2 * by + m4;
+  QV[3] = m1 * bx + m3 * by + m5;
+  QV[4] = m0 * cx + m2 * cy + m4;
+  QV[5] = m1 * cx + m3 * cy + m5;
+  QV[6] = m0 * dx + m2 * dy + m4;
+  QV[7] = m1 * dx + m3 * dy + m5;
+  R.quadQ(c1, c2 || c1, c3 || c2 || c1, c4 || c1);
 }
-const rect = (x, y, w, h, c) => quad4(x, y, x + w, y, x + w, y + h, x, y + h, c);
+// (v1.4.77) a rectangle straight to the renderer (its corners into QV here - not handed on as eight loose numbers)
+function rect(x, y, w, h, c) {
+  if (OUT) {
+    if (!oc(c)) return;
+    c = OUT;
+  }
+  const m0 = M[0],
+    m1 = M[1],
+    m2 = M[2],
+    m3 = M[3],
+    x1 = x + w,
+    y1 = y + h,
+    ex = m0 * x + M[4],
+    ey = m1 * x + M[5],
+    fx = m0 * x1 + M[4],
+    fy = m1 * x1 + M[5];
+  QV[0] = ex + m2 * y;
+  QV[1] = ey + m3 * y;
+  QV[2] = fx + m2 * y;
+  QV[3] = fy + m3 * y;
+  QV[4] = fx + m2 * y1;
+  QV[5] = fy + m3 * y1;
+  QV[6] = ex + m2 * y1;
+  QV[7] = ey + m3 * y1;
+  R.quadQ(c, c, c, c);
+}
 const vgrad = (x, y, w, h, top, bot) => quad4(x, y, x + w, y, x + w, y + h, x, y + h, top, top, bot, bot);
 // (in the outline passes, details smaller than the outline itself - eyes, buttons, rivets, thin stitches - are skipped:
 //  they never reach the silhouette, and leaving them out makes outlined characters about a third cheaper to draw)
 const disc = (x, y, r, c, ry ) => {
   if (OUT && (!(c = oc(c)) || Math.min(r, ry ?? r) * TS() < 1.6)) return;
   const s = TS();
-  R.disc(TX(x, y), TY(x, y), r * s, (ry === undefined ? r : ry) * s, c);
+  QV[0] = TX(x, y);
+  QV[1] = TY(x, y);
+  QV[2] = r * s;
+  QV[3] = (ry === undefined ? r : ry) * s;
+  R.discQ(c);
 };
 const glow = (x, y, r, c) => {
   if (OUT) return;
-  R.glow(TX(x, y), TY(x, y), r * TS(), c);
+  QV[0] = TX(x, y);
+  QV[1] = TY(x, y);
+  QV[2] = r * TS();
+  R.glowP(c);
 };
 // an oval glow, rx wide and ry tall - it turns and squashes with the drawing (glow is always a perfect circle)
 const glowE = (x, y, rx, ry, c) => {
@@ -1661,12 +1879,39 @@ const glowE = (x, y, rx, ry, c) => {
 };
 function line(x1, y1, x2, y2, w, c) {
   if (OUT && w * TS() < 1.2) return;
+  if (OUT) {
+    if (!oc(c)) return;
+    c = OUT;
+  }
   const dx = x2 - x1,
     dy = y2 - y1,
     L = Math.hypot(dx, dy) || 1,
     nx = ((-dy / L) * w) / 2,
-    ny = ((dx / L) * w) / 2;
-  quad4(x1 + nx, y1 + ny, x2 + nx, y2 + ny, x2 - nx, y2 - ny, x1 - nx, y1 - ny, c);
+    ny = ((dx / L) * w) / 2,
+    m0 = M[0],
+    m1 = M[1],
+    m2 = M[2],
+    m3 = M[3],
+    m4 = M[4],
+    m5 = M[5];
+  // (v1.4.77: straight to the renderer, its four corners into QV - see rect)
+  let x = x1 + nx,
+    y = y1 + ny;
+  QV[0] = m0 * x + m2 * y + m4;
+  QV[1] = m1 * x + m3 * y + m5;
+  x = x2 + nx;
+  y = y2 + ny;
+  QV[2] = m0 * x + m2 * y + m4;
+  QV[3] = m1 * x + m3 * y + m5;
+  x = x2 - nx;
+  y = y2 - ny;
+  QV[4] = m0 * x + m2 * y + m4;
+  QV[5] = m1 * x + m3 * y + m5;
+  x = x1 - nx;
+  y = y1 - ny;
+  QV[6] = m0 * x + m2 * y + m4;
+  QV[7] = m1 * x + m3 * y + m5;
+  R.quadQ(c, c, c, c);
 }
 // (v1.4.68) A STREAK - a falling drop or a gust of wind: a round bright head at (hx, hy) and a tail that narrows and
 // fades to nothing at (tx, ty). (Drawn with plain lines these were flat little sticks with square ends.)
@@ -1738,19 +1983,23 @@ function rbox(g, x, y, w, h, r) {
   else g.rect(x, y, w, h);
 }
 // (v1.4.65) a rectangle with rounded corners, drawn as one shape (r is kept small enough to fit)
+// (v1.4.77: into one reused list, with the corner turns worked out once - no new lists made for every rectangle)
+const RRP           = [],
+  RRC = Array.from({ length: 20 }, (_, i) => {
+    const an = [Math.PI, Math.PI * 1.5, 0, Math.PI / 2][(i / 5) | 0] + ((i % 5) / 4) * (Math.PI / 2);
+    return [Math.cos(an), Math.sin(an)];
+  });
 function rrect(x0, y0, w, h, r, c) {
   r = Math.max(0.5, Math.min(r, w / 2, h / 2));
-  const P = [x0 + w / 2, y0 + h / 2];
-  for (const [cx, cy, a0] of [
-    [x0 + r, y0 + r, Math.PI],
-    [x0 + w - r, y0 + r, Math.PI * 1.5],
-    [x0 + w - r, y0 + h - r, 0],
-    [x0 + r, y0 + h - r, Math.PI / 2],
-  ])
-    for (let k = 0; k <= 4; k++) {
-      const an = a0 + (k / 4) * (Math.PI / 2);
-      P.push(cx + Math.cos(an) * r, cy + Math.sin(an) * r);
-    }
+  const P = RRP;
+  P.length = 0;
+  P.push(x0 + w / 2, y0 + h / 2);
+  for (let i = 0; i < 20; i++) {
+    const q = (i / 5) | 0,
+      cx = q === 0 || q === 3 ? x0 + r : x0 + w - r,
+      cy = q < 2 ? y0 + r : y0 + h - r;
+    P.push(cx + RRC[i][0] * r, cy + RRC[i][1] * r);
+  }
   P.push(P[2], P[3]);
   poly(P, c);
 }
@@ -1883,6 +2132,24 @@ function outlinedLit(fn, ink, rim, dx, dy) {
     fn();
     return;
   } // a struggling CPU skips outlines entirely
+  if (R.silBegin && !R.silOn && !OUT) {
+    // (v1.4.77) THE FAST WAY (the video card's drawing): the silhouette is worked out once, in outline mode, and copied
+    // for the shadow, the four outline passes and the rim light - in the same order and places as below
+    OUT = ink;
+    let segs = null;
+    R.silBegin();
+    try {
+      fn();
+    } finally {
+      segs = R.silEnd();
+      OUT = null;
+    }
+    if (CAST_SHADOW && QUAL >= 1) R.silDraw(segs, 4.2 * o, 3.2 * o, CAST_SHADOW);
+    for (const [ux, uy] of QUAL < 2 ? OUT2 : OUT4) R.silDraw(segs, ux * o, uy * o, ink);
+    if (rim && QUAL >= 1) R.silDraw(segs, dx * o, dy * o, rim);
+    fn();
+    return;
+  }
   if (CAST_SHADOW && QUAL >= 1) {
     OUT = CAST_SHADOW;
     M[4] += 4.2 * o;
@@ -3700,6 +3967,11 @@ const DICT_PAT                             = [
     "POZIOM $1 / $2$3·$4OBSŁUŻONO $5",
   ], // (v1.4.76: Time Attack)
   [/^LEVEL (\d+) OF (\d+)$/, "VLAK $1 VAN $2", "POZIOM $1 Z $2"],
+  // (v1.4.77) the second tour and after: "TOUR 2  ·  LEVEL 7 / 40  ·  SERVED 3 / 38", translated piece by piece
+  [/^TOUR (\d+)$/, "TOER $1", "TRASA $1"],
+  [/^LEVEL (\d+) \/ (\d+)$/, "VLAK $1 / $2", "POZIOM $1 / $2"],
+  [/^SERVED (\d+) \/ (\d+)$/, "BEDIEN $1 / $2", "OBSŁUŻONO $1 / $2"],
+  [/^SERVED (\d+)$/, "BEDIEN $1", "OBSŁUŻONO $1"],
   [/^LEVEL (\d+)$/, "VLAK $1", "POZIOM $1"],
   [/^COMBO x(\d+)$/, "KOMBO x$1", "KOMBO x$1"],
   [/^FLAWLESS x(.+)$/, "FOUTLOOS x$1", "BEZBŁĘDNIE x$1"],
@@ -6217,7 +6489,7 @@ function startLevel() {
     G.fadeT = 0.45;
   }
   if (!G.demo) {
-    callout("LEVEL " + G.level + " OF " + LAST_LEVEL + "  ·  " + here().name, "#5ff5c8", 2.6);
+    callout(levelOfTour(" OF ") + "  ·  " + here().name, "#5ff5c8", 2.6); // (v1.4.77: "TOUR 2  ·  LEVEL 7 OF 40")
     G.callouts.push({ text: here().sub, c: "#ffc34d", life: 2.6, max: 2.6, sub: true });
     {
       const pv = VENUES[tourStop() - 1];
@@ -14114,7 +14386,31 @@ function sideWall(edge, inner0, V, dir, t, v) {
   }
   const wAt = (y) => (innerAt(inner0, y) - edge) * dir;
   if (Math.max(...xs.map((x) => (x - edge) * dir)) < 4) return;
-  // the sky through the glass
+  // (v1.4.77) what never moves - the sky's colours through the glass and the glow of the nebulae - is drawn once and kept
+  // on the video card (camLayer); only the drifting stars and the planet outside are drawn fresh every frame
+  const key = "|" + v + "_" + tourStop() + "_" + dir + "_" + Math.round(edge) + "_" + Math.round(inner0);
+  camLayer("sideSky" + key, () => sideSky(edge, dir, ys, xs, N, S, wAt, y0, y1));
+  for (const [n, sp, sz, al] of SIDE_STARS)
+    for (let i = 0; i < n * (LOW() ? 0.5 : 1); i++) {
+      const y = y0 + ((hash(i * 2.7 + sp + dir) * (y1 - y0) + t * sp) % (y1 - y0)),
+        w = wAt(y),
+        x = edge + dir * hash(i * 1.3 + sp + dir) * w;
+      if (w > 2) rect(x, y, sz, sz, withA(C.white, al * (0.6 + 0.4 * Math.sin(t * 2 + i)) * (S.dim || 1)));
+    }
+  // a huge planet peeking in from the edge of the screen
+  const py = PH * 0.42 + PAR[1] * 0.6,
+    pr = Math.min(110, wAt(py + 110) * 0.85, wAt(py - 110) * 0.85 + 30);
+  if (here().mark === "skytown" && here().art === v)
+    skySide(edge, dir, wAt, y0, y1, py, t); // (v1.4.27: up in the clouds)
+  else sideScene(SIDE[v][dir > 0 ? 0 : 1], edge, dir, py, pr, wAt, y0, y1, t);
+  camLayer("sideBars" + key, () => sideBars(edge, inner0, V, dir, xs, y0, y1, wAt));
+}
+const SIDE_STARS = [
+  [50, 2, 1, 0.5],
+  [22, 6, 1.5, 0.85],
+];
+// the sky through a side window: its colours, and the soft glow of the nebulae
+function sideSky(edge, dir, ys, xs, N, S, wAt, y0, y1) {
   for (let i = 0; i < N; i++) {
     const f0 = i / N,
       f1 = (i + 1) / N;
@@ -14141,22 +14437,9 @@ function sideWall(edge, inner0, V, dir, t, v) {
     if (r > 4) glow(edge + dir * w * 0.5, y, r, withA(col(S.neb[i % 3]), 0.14 * (S.dim ? 0.5 : 1)));
   }
   R.setAdd(false);
-  for (const [n, sp, sz, al] of [
-    [50, 2, 1, 0.5],
-    [22, 6, 1.5, 0.85],
-  ])
-    for (let i = 0; i < n * (LOW() ? 0.5 : 1); i++) {
-      const y = y0 + ((hash(i * 2.7 + sp + dir) * (y1 - y0) + t * sp) % (y1 - y0)),
-        w = wAt(y),
-        x = edge + dir * hash(i * 1.3 + sp + dir) * w;
-      if (w > 2) rect(x, y, sz, sz, withA(C.white, al * (0.6 + 0.4 * Math.sin(t * 2 + i)) * (S.dim || 1)));
-    }
-  // a huge planet peeking in from the edge of the screen
-  const py = PH * 0.42 + PAR[1] * 0.6,
-    pr = Math.min(110, wAt(py + 110) * 0.85, wAt(py - 110) * 0.85 + 30);
-  if (here().mark === "skytown" && here().art === v)
-    skySide(edge, dir, wAt, y0, y1, py, t); // (v1.4.27: up in the clouds)
-  else sideScene(SIDE[v][dir > 0 ? 0 : 1], edge, dir, py, pr, wAt, y0, y1, t);
+}
+// the side window's bars at each floor level, lined up with the bars of the room, and its frame
+function sideBars(edge, inner0, V, dir, xs, y0, y1, wAt) {
   // window bars at each floor level, lined up with the bars of the room
   const fc = shade(V.wall, 0.55),
     fl = shade(V.wall2, 0.8);
@@ -40842,11 +41125,20 @@ const todayStr = () => {
 function levelStars() {
   return store.get("stars", {});
 }
+// (v1.4.77: worked out again only when the saved stars change - it's asked for many times a frame, for every hat and pet)
+const STAR_MEMO = { a: null                 , b: null                 , n: 0 };
 function totalStars() {
+  const a = storeRaw(storeKey("stars")),
+    b = storeRaw(storeKey("dailyStars"));
+  if (a === STAR_MEMO.a && b === STAR_MEMO.b) return STAR_MEMO.n;
   const s = levelStars();
   let n = 0;
   for (const k in s) n += s[k] | 0;
-  return n + (store.get("dailyStars", 0) | 0);
+  n += store.get("dailyStars", 0) | 0;
+  STAR_MEMO.a = a;
+  STAR_MEMO.b = b;
+  STAR_MEMO.n = n;
+  return n;
 }
 const starStr = (n, of = 3) => "★".repeat(n) + "☆".repeat(Math.max(0, of - n));
 // ---- HATS & PETS ----
@@ -52520,6 +52812,7 @@ const FP = {
   BRK = { open: false, t: 0 };
 const FLAV_NAMES = ["STRAWBERRY", "CHOCOLATE", "MINT"],
   FLAV_HEX = ["#ff8fbf", "#9a5a3a", "#8ff0c0"],
+  FLAV_TXT = ["#ff9fca", "#d89a6a", "#8ff0c0"], // (v1.4.77: the flavours as words on the screen - chocolate lighter, so it reads)
   FLAV_ICON = ["🍓", "🍫", "🌿"];
 const oneBtn = () => !!store.get("onebtn", false) && !twoP();
 // ---- COINS and STATS ----
@@ -54503,22 +54796,24 @@ function funHud(g, s, t, fD, sx, sy) {
     if (COMFORT.flav) {
       const f = P1.flav ?? 0;
       g.font = fD(12);
-      g.fillStyle = FLAV_HEX[f];
       g.textAlign = "left";
       HUDHIT.flav = [8 * s, cssH - 66 * s, 260 * s, 22 * s]; // (click it - or right-click anywhere - to change flavour)
-      g.fillText(
+      const ft =
         "FLAVOUR: " +
-          FLAV_NAMES[f] +
-          (oneBtn() || DF().kid
-            ? "  (AUTO)"
-            : lastDev === "touch" || coarse
-              ? ""
-              : lastDev === "pad"
-                ? "  (SELECT)"
-                : "  (E)"),
-        16 * s,
-        cssH - 56 * s
-      );
+        FLAV_NAMES[f] +
+        (oneBtn() || DF().kid
+          ? "  (AUTO)"
+          : lastDev === "touch" || coarse
+            ? ""
+            : lastDev === "pad"
+              ? "  (SELECT)"
+              : "  (E)");
+      // (v1.4.77) a dark edge round the letters, and chocolate a shade lighter - dark brown on a dark bar was hard to read
+      g.lineWidth = 3 * s;
+      g.strokeStyle = "rgba(8,4,16,.8)";
+      g.strokeText(ft, 16 * s, cssH - 56 * s);
+      g.fillStyle = FLAV_TXT[f];
+      g.fillText(ft, 16 * s, cssH - 56 * s);
       {
         const o = laneOrder(P1.lane);
         if (o !== null && !(oneBtn() || DF().kid)) {
@@ -64994,8 +65289,16 @@ function drawEggs(g, s) {
 // THE VERSION (from v1.2.0, 5 October 2026): MAJOR.MINOR.PATCH - a new MINOR for a batch of new things, a new PATCH for
 // fixes and small touches - with the day it was made next to it. (Before this the versions were named after the date,
 // like v2026.10.05c.)
-const GAME_VERSION = "v1.4.76",
-  GAME_DATE = "19.10.2026",
+// (v1.4.77) WHICH LEVEL, OF HOW MANY: "LEVEL 7 / 40" - and on the second tour and after, "TOUR 2  ·  LEVEL 7 / 40"
+// (it used to say "LEVEL 47 / 40")
+function levelOfTour(of) {
+  const lv = Math.max(1, G.level),
+    tour = Math.floor((lv - 1) / LAST_LEVEL) + 1,
+    inTour = ((lv - 1) % LAST_LEVEL) + 1;
+  return (tour > 1 ? "TOUR " + tour + "  ·  " : "") + "LEVEL " + inTour + of + LAST_LEVEL;
+}
+const GAME_VERSION = "v1.4.77",
+  GAME_DATE = "20.10.2026",
   VERSION_TEXT = GAME_VERSION + "  ·  " + GAME_DATE;
 const FB = '"Chakra Petch", "Segoe UI", sans-serif';
 let FD = '"Bungee", "Impact", sans-serif';
@@ -65378,8 +65681,8 @@ function drawHud(fps) {
     g.font = fB(12, 700);
     if (!subNow.length) {
       const lt = G.ta // (v1.4.76: Time Attack has no "of how many" - its customers keep coming, so just the count)
-        ? "LEVEL " + G.level + " / " + LAST_LEVEL + "   ·   SERVED " + G.served
-        : "LEVEL " + G.level + " / " + LAST_LEVEL + "   ·   SERVED " + G.served + " / " + G.total;
+        ? levelOfTour(" / ") + "   ·   SERVED " + G.served
+        : levelOfTour(" / ") + "   ·   SERVED " + G.served + " / " + G.total;
       backing(lt, sx(PW / 2), lineY, 1);
       g.globalAlpha = 1;
       g.fillStyle = "rgba(255,243,226,.9)";
@@ -71653,6 +71956,7 @@ function profDelete() {
       if (k && k.startsWith(pre)) gone.push(k);
     }
     for (const k of gone) localStorage.removeItem(k);
+    STORE_MEM.raw.clear(); // (v1.4.77: nothing remembered from before)
   } catch (e) {}
   store.set(
     "profiles",
@@ -71723,6 +72027,7 @@ async function profImport() {
       else
         try {
           localStorage.removeItem(storeKey(k));
+          STORE_MEM.raw.delete(storeKey(k));
         } catch (e) {} // (the code holds the whole of a player's progress: anything not in it starts fresh)
     $k("profMsg").textContent = "DONE! " + (o.name || "The") + "'s progress is in this profile now.";
     sfx("chime", undefined, 2);
@@ -71749,6 +72054,16 @@ profWire();
 //  the game, and where the motion capture, the folk songs and the fonts come from. Both from the menu at any time.
 // =====================================================================================
 const NEWS = [
+  {
+    ver: "v1.4.77",
+    title: "SMOOTHER AND LIGHTER",
+    items: [
+      "HALF AS MANY LITTLE HITCHES",
+      "CHARACTERS DRAWN TWICE A FRAME INSTEAD OF SEVEN TIMES",
+      "TOUR 2 SAYS 'TOUR 2 · LEVEL 7 / 40'",
+      "THE FLAVOUR NAME READS CLEARLY ON EVERY BAR",
+    ],
+  },
   {
     ver: "v1.4.76",
     title: "RACE YOUR GHOST",
@@ -73108,10 +73423,13 @@ function frame(ts) {
   requestAnimationFrame(frame);
   // (v1.4.8: the loading splash is taken away once, at start-up, below - it used to ask for two extra frames every frame)
   try {
+    storeFrame(true); // (v1.4.77: the save is read once per frame - engine.ts)
     frameWork(ts);
     CRASH.n = 0;
   } catch (e) {
     crashed(e);
+  } finally {
+    storeFrame(false);
   }
 }
 function frameWork(ts) {

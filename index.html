@@ -30,13 +30,26 @@ body { user-select: none; -webkit-user-select: none; -webkit-tap-highlight-color
   box-shadow: 0 0 40px rgba(95, 245, 200, .12), inset 0 0 30px rgba(255, 95, 168, .06);
   backdrop-filter: blur(6px) saturate(1.2); -webkit-backdrop-filter: blur(6px) saturate(1.2); /* (v1.4.10: see-through - the game shows softly through the menus) */
 }
+/* (v1.4.77) a panel title's count, in a small pill on the same line ("STICKER BOOK  12 / 216") */
+h2 .cnt { display: inline-block; vertical-align: middle; margin-left: .45em; padding: .12em .55em .1em; font-size: .42em; letter-spacing: .04em;
+  white-space: nowrap; color: var(--cyan); border: 1px solid rgba(95, 245, 200, .45); border-radius: 999px; text-shadow: 0 0 10px rgba(95, 245, 200, .5); }
+/* (v1.4.77) A PANEL TALLER THAN THE SCREEN scrolls - and its last button (DONE / BACK) now stays in reach at the bottom
+   instead of scrolling away below the edge */
+.panel > button.primary:last-child { position: sticky; bottom: 0; z-index: 2; box-shadow: 0 -10px 18px 6px rgba(14, 8, 28, .85); }
+.panel > .profRow:last-child:has(button.primary) { position: sticky; bottom: 0; z-index: 2; padding-top: 10px;
+  background: linear-gradient(rgba(14, 8, 28, 0), rgba(14, 8, 28, .9) 40%); }
 .panel > * { flex-shrink: 0; } /* (v1.4.1: when a panel is taller than the screen it scrolls - its parts used to squash and overlap) */
 .logo { margin: 0; font-family: var(--display); font-weight: 400; font-size: clamp(34px, 8.4vw, 60px); line-height: .98; letter-spacing: .01em; text-wrap: balance;
   color: var(--magenta); text-shadow: 0 0 16px rgba(255, 95, 168, .7), 0 0 40px rgba(255, 95, 168, .35); }
 .logo small { display: block; font-size: .4em; letter-spacing: .06em; margin-top: .35em; color: #ffc34d; text-shadow: 0 0 12px rgba(255, 195, 77, .55); }
 .logo span { display: block; color: var(--cyan); text-shadow: 0 0 16px rgba(95, 245, 200, .7), 0 0 40px rgba(95, 245, 200, .3); }
 .tag { margin: 0; color: var(--dim); font-size: 15px; letter-spacing: .04em; }
-.buttons { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+/* (v1.4.78: minmax(0, 1fr) - a long word in Afrikaans or Polish ("OORSPRONKLIK") can no longer push a column wider than
+   the screen; the word breaks onto the next line instead) */
+.buttons { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 10px; }
+/* (and inside a narrow button the setting's value drops to a line of its own rather than a word being cut in two;
+   only a word too long for the whole button is ever broken) */
+.buttons button { overflow-wrap: break-word; min-width: 0; flex-wrap: wrap; row-gap: 2px; }
 button {
   font: 600 15px/1.2 var(--body); letter-spacing: .06em; color: var(--ink); cursor: pointer;
   background: rgba(20, 22, 50, .58); border: 1px solid var(--line); border-radius: 16px; padding: 12px 12px; min-height: 48px; /* (v1.4.71: rounder - was 9px) */
@@ -65,16 +78,17 @@ button.primary { grid-column: 1 / -1; font-family: var(--display); font-weight: 
 button.primary:hover, button.primary:focus-visible { background: #a6ffe4; }
 button.wide { grid-column: 1 / -1; }
 button.na:not(.navsel) { opacity: .45; border-style: dashed; filter: grayscale(.8); }   /* (v1.4.47) a setting that does nothing in the current look */
-#jbList { grid-template-columns: 1fr 1fr; max-height: 52vh; overflow-y: auto; }
+#jbList { grid-template-columns: repeat(2, minmax(0, 1fr)); max-height: 52vh; overflow-y: auto; }
 .panel.side { left: 16px; transform: translateY(-50%); width: min(420px, 46vw); }
-#sbList, #wdHats, #wdPets, #shItems, #shDecor, #trList { grid-template-columns: 1fr 1fr; }
+.panel.side h2 { font-size: 34px; } /* (v1.4.77: the narrow side panels - so a title and its count fit on one line) */
+#sbList, #wdHats, #wdPets, #shItems, #shDecor, #trList { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 #trList { max-height: 52vh; overflow-y: auto; }
 #shItems button, #shDecor button, #trList button { text-align: left; display: flex; flex-direction: column; align-items: flex-start; gap: 3px; padding: 8px 10px; min-height: 42px; font-size: 13px; }
 #shItems button small, #shDecor button small, #trList button small { font-size: 11px; color: var(--muted, #b9a8b8); letter-spacing: .03em; }
 #trList button.lock, #shDecor button.lock, #shItems button.lock { opacity: .55; } #shDecor button.on, #trList button.on { border-color: var(--amber, #ffc34d); box-shadow: 0 0 16px rgba(255,195,77,.4); }
 #breakp h2 { color: var(--cyan); } #brBack:disabled { opacity: .5; }
 #sbList { max-height: 46vh; overflow-y: auto; }
-#sbTabs { grid-template-columns: 1fr 1fr 1fr; } #sbTabs button { min-height: 38px; padding: 6px; font-size: 12px; }
+#sbTabs { grid-template-columns: repeat(3, minmax(0, 1fr)); } #sbTabs button { min-height: 38px; padding: 6px; font-size: 12px; }
 #sbList button, #wdHats button, #wdPets button { text-align: left; display: flex; flex-direction: column; align-items: flex-start; gap: 3px; padding: 8px 10px; min-height: 42px; font-size: 13px; }
 #sbList button small, #wdHats button small, #wdPets button small { font-size: 11px; color: var(--muted, #b9a8b8); letter-spacing: .03em; }
 #sbList button.lock, #wdHats button.lock, #wdPets button.lock { opacity: .55; }
@@ -89,7 +103,7 @@ button.na:not(.navsel) { opacity: .45; border-style: dashed; filter: grayscale(.
 #jbList button.on::before { content: "♪ NOW PLAYING"; font-size: 10px; color: var(--amber, #ffc34d); }
 #jbList .jbHead { grid-column: 1 / -1; font: 700 14px/1.2 var(--body); letter-spacing: .12em; color: var(--amber, #ffc34d); padding: 14px 4px 4px; border-bottom: 1px solid rgba(255,195,77,.4); }
 #jbList .jbJump { grid-column: 1 / -1; }
-#jukebox .buttons:last-child { grid-template-columns: 1fr 1fr; }
+#jukebox .buttons:last-child { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); }
 /* the coin shop: each price as a little badge in the corner (v1.2.0) */
 #shItems button, #shDecor button { position: relative; padding-right: 50px; }
 #shItems .price, #shDecor .price { position: absolute; right: 8px; top: 7px; padding: 1px 7px; border-radius: 999px; font-size: 11px; font-weight: 800; color: var(--amber, #ffc34d); background: rgba(255,195,77,.14); white-space: nowrap; }
@@ -113,7 +127,7 @@ button.na:not(.navsel) { opacity: .45; border-style: dashed; filter: grayscale(.
 .langRow button.on { border-color: var(--amber, #ffc34d); box-shadow: 0 0 16px rgba(255,195,77,.4); color: var(--amber, #ffc34d); }
 #prof { max-height: 92vh; overflow-y: auto; }
 #keys { width: min(860px, 96vw); max-height: 94vh; overflow-y: auto; box-sizing: border-box; }
-#kmList { grid-template-columns: 1fr 1fr; }
+#kmList { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 #kmList .jbHead { grid-column: 1 / -1; font: 700 13px var(--body); letter-spacing: .1em; color: var(--amber); padding: 10px 2px 2px; }
 #kmList button { text-align: left; display: flex; flex-direction: column; gap: 3px; padding: 9px 14px; }
 #kmList button small { font-size: 12px; color: var(--cyan); letter-spacing: .04em; }
@@ -129,7 +143,7 @@ body.lefty #touch .grp { flex-direction: row-reverse; }
 #newsBody ul { margin: 0; padding-left: 18px; font-size: 14px; line-height: 1.45; }
 #newsBody .credit { margin: 6px 0; font-size: 13px; line-height: 1.4; color: var(--ink); }
 #newsBody .credit b { display: block; font-size: 11px; letter-spacing: .1em; color: var(--magenta); }
-#profList { grid-template-columns: 1fr 1fr; }
+#profList { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 #profList button { text-align: left; display: flex; flex-direction: column; gap: 3px; padding: 10px 14px; }
 #profList button small { font-size: 11px; color: var(--muted, #b9a8b8); letter-spacing: .04em; }
 #profList button.on { border-color: var(--amber, #ffc34d); box-shadow: 0 0 16px rgba(255,195,77,.35); }
@@ -142,7 +156,7 @@ body.lefty #touch .grp { flex-direction: row-reverse; }
 #gmCanvas { width: 100%; aspect-ratio: 16 / 8; display: block; border-radius: 12px; margin: 6px 0 12px; touch-action: none; }
 @media (max-aspect-ratio: 9/10) { #gmCanvas { aspect-ratio: 3 / 4; } }
 #cupCanvas { width: 100%; aspect-ratio: 16 / 6; display: block; border-radius: 12px; margin: 6px 0 12px; }
-#cupList { grid-template-columns: 1fr 1fr; }
+#cupList { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 #cupList input { font: 600 15px var(--body); padding: 9px 10px; border-radius: 8px; border: 1px solid var(--line); background: rgba(10,6,20,.7); color: var(--ink); min-width: 0; }
 #jbViz { width: 100%; height: 56px; display: block; border-radius: 10px; background: rgba(0,0,0,.35); }
 button b { color: var(--amber); font-weight: 700; }
@@ -198,17 +212,20 @@ body.retro .table { font-size: 10px; gap: 5px; }
 #crash h2 { margin: 0; color: var(--magenta, #ff5fa8); } #crash p { margin: 0; color: var(--ink, #fff3e2); } #crash small { color: #8a7a9a; font-size: 11px; word-break: break-word; }
 #topbtns { position: fixed; top: calc(10px + env(safe-area-inset-top, 0px)); right: 12px; display: flex; gap: 8px; }
 #topbtns button { min-height: 34px; padding: 6px 10px; font-size: 12px; background: rgba(12, 14, 32, .6); }
+/* (v1.4.77) a narrow phone held upright: smaller corner buttons - with Skip showing (a bonus round, a mini-game) the four
+   of them used to stretch right across the top and cover the score */
+@media (max-width: 480px) { #topbtns { right: 8px; gap: 5px; } #topbtns button { min-height: 32px; padding: 5px 7px; font-size: 11px; } }
 @media (max-width: 620px) { .controls { grid-template-columns: 1fr; } }
 @media (max-width: 520px) { .panel { padding: 16px 14px 14px; gap: 10px; width: calc(100% - 20px); max-height: calc(100% - 20px); } .keys { font-size: 12px; }
   .buttons { gap: 8px; } button, .add { font-size: 12px; padding: 9px 6px; min-height: 42px; letter-spacing: .03em; } button.primary { font-size: 19px; } kbd { display: none; }
-  .tag { font-size: 13px; } h2 { font-size: 30px; } .table li { gap: 5px; } }
+  .tag { font-size: 13px; } h2, .panel.side h2 { font-size: 30px; } .table li { gap: 5px; } }
 /* phones and tablets: the in-game card explains the touch controls, so the key list can go */
 @media (pointer: coarse) and (max-width: 900px) { .controls { display: none; } }
 /* held upright, the bartender picker sits along the bottom so the dancing bartender stays in view */
 @media (orientation: portrait) and (max-width: 900px) {
   .panel.side { left: 50%; top: auto; bottom: 10px; transform: translateX(-50%); width: calc(100% - 20px); max-height: 46%; }
-  #csList { grid-template-columns: 1fr 1fr 1fr; } #csList button small { display: none; }
-  #sbList, #wdHats, #wdPets { grid-template-columns: 1fr 1fr 1fr; } #sbList button small { display: none; }
+  #csList { grid-template-columns: repeat(3, minmax(0, 1fr)); } #csList button small { display: none; }
+  #sbList, #wdHats, #wdPets { grid-template-columns: repeat(3, minmax(0, 1fr)); } #sbList button small { display: none; }
 }
 @media (max-height: 520px) { .panel { top: 50%; gap: 9px; padding: 16px 20px; } .tag, .controls { display: none; } .logo { font-size: 40px; } }
 #boot { position: fixed; inset: 0; z-index: 9999; background: #07051a; display: flex; flex-direction: column; align-items: center;
@@ -3414,6 +3431,13 @@ const DICT_ROWS                             = [
   ],
   ["CATCH THE EMPTY GLASS!", "VANG DIE LEË GLAS!", "ZŁAP PUSTĄ SZKLANKĘ!"],
   ["STRAWBERRY", "AARBEI", "TRUSKAWKA"],
+  // (v1.4.78) what you caught by mistake in Cherry Catch
+  ["A STRAWBERRY", "'N AARBEI", "TRUSKAWKĘ"],
+  ["A SOCK", "'N SOKKIE", "SKARPETKĘ"],
+  ["A BANANA", "'N PIESANG", "BANANA"],
+  ["A STAR", "'N STER", "GWIAZDKĘ"],
+  ["A CHILLI", "'N RISSIE", "PAPRYCZKĘ CHILI"],
+  ["THE WRONG THING", "DIE VERKEERDE DING", "NIE TO, CO TRZEBA"],
   ["CHOCOLATE", "SJOKOLADE", "CZEKOLADA"],
   ["MINT", "MENT", "MIĘTA"],
   ["HALL OF FAME", "EREGALERY", "ALEJA SŁAWY"],
@@ -3859,6 +3883,8 @@ const DICT_ROWS                             = [
 ];
 // the texts that carry numbers or names: patterns
 const DICT_PAT                             = [
+  // (v1.4.78) a wrong catch in Cherry Catch
+  [/^OOPS - YOU CAUGHT (.+)!$/, "OEPS - JY HET $1 GEVANG!", "UPS - ZŁAPAŁEŚ: $1!"],
   // (v1.4.76) in a row, and the Time Attack ghost
   [/^(\d+) IN A ROW!$/, "$1 AGTER MEKAAR!", "$1 Z RZĘDU!"],
   [/^\+(\d+) COINS  ·  (\d+) IN A ROW$/, "+$1 MUNTE  ·  $2 AGTER MEKAAR", "+$1 MONET  ·  $2 Z RZĘDU"],
@@ -12916,7 +12942,9 @@ function miniFit() {
   if (!VERT || !((VS === "mini" && G.mini) || (VS === "bonus" && bonus))) return null;
   // (the play area's far edges - 50 each side - are only scenery: they may go off the screen, so it can be bigger)
   // (v1.4.74: the mini-games narrow their playing field on a tall screen - see MINI_TALL - so they can be shown bigger)
-  const s = Math.min((W - 8) / (PW - (VS === "mini" ? 300 : 100)), (H * 0.62) / PH);
+  // (v1.4.77: the bonus round's cloches only fill the middle of its stage - so on a tall screen it's shown bigger too,
+  // with a little of the curtains at the sides left off the edges)
+  const s = Math.min((W - 8) / (PW - (VS === "mini" ? 300 : 290)), (H * 0.62) / PH);
   return { s, x: (W - PW * s) / 2 - ox, y: H * (VS === "mini" ? 0.6 : 0.54) - (PH * s) / 2 - oy }; // (v1.4.74: the mini-games sit lower - open sky above, not a blank strip below)
 }
 // where a height in the fitted play area is on the screen (CSS pixels, for the words over it)
@@ -41121,6 +41149,17 @@ const todayStr = () => {
     String(d.getDate()).padStart(2, "0")
   );
 };
+// (v1.4.77) A PANEL'S TITLE WITH ITS COUNT: "STICKER BOOK" and, beside it in a small pill, "12 / 216" - all on one line
+// (the count used to drop onto a line of its own in the narrow side panels)
+function titleCount(id, title, count) {
+  const h = $k(id);
+  if (!h) return;
+  h.textContent = title;
+  const c = document.createElement("span");
+  c.className = "cnt";
+  c.textContent = count;
+  h.appendChild(c);
+}
 // ---- STARS ----
 function levelStars() {
   return store.get("stars", {});
@@ -42313,7 +42352,7 @@ function buildStickers() {
   const cats = stickerCats(),
     s = stk(),
     [a, b] = stickerCount();
-  $k("sbTitle").textContent = "STICKER BOOK  " + a + " / " + b;
+  titleCount("sbTitle", "STICKER BOOK", a + " / " + b);
   const tabs = $k("sbTabs");
   tabs.innerHTML = "";
   cats.forEach((c, i) => {
@@ -44416,10 +44455,11 @@ function nameTagsHud(g, s, sx, sy) {
         LY(c.lane, c.x) + 22 - (headH + (c.hurry ? 60 : 32)) * (VERT ? 1 : pS(c.lane, c.x)) // (v1.4.50: a little higher - it used to sit on hats and faces)
       ),
       txt = T(tagName(c)),
-      x = sx(px),
+      x0 = sx(px),
       y = sy(py);
     g.font = "800 " + Math.round(12 * Math.max(s, 0.8)) + "px " + FB;
     const w = g.measureText(txt).width + 14 * s;
+    const x = clamp(x0, w / 2 + 4, cssW - w / 2 - 4); // (v1.4.78: kept on the screen - near the edge of a narrow phone it poked off)
     if (used.some((r) => Math.abs(r[0] - x) < (r[2] + w) / 2 && Math.abs(r[1] - y) < 20 * s)) continue; // (never one on top of another)
     used.push([x, y, w]);
     const near = busy.some(([bx, by]) => Math.abs(bx - x) < w / 2 + 24 * s && Math.abs(by - y) < 26 * s),
@@ -44435,6 +44475,7 @@ function nameTagsHud(g, s, sx, sy) {
     g.fillStyle = "#fff3e2";
     g.fillText(txt, x, y);
     g.globalAlpha = 1;
+    if (!near) hudObs(x, y, w, 18 * s); // (v1.4.78: the floating words keep clear of it)
   }
 }
 function hurrySpawn(c, demo) {
@@ -53419,7 +53460,7 @@ const MINI_KINDS = ["cherry", "stork", "mixer"],
   MINI_NAMES = { cherry: "CHERRY CATCH", stork: "BOGDAN'S SPACE DELIVERY", mixer: "THE SHAKE MIXER" };
 const MINI_HELP = {
   cherry:
-    "Move the glass left and right. Catch ONLY the cherries! Anything else bounces off the glass - and catching it ends the round.",
+    "Move the glass left and right. Catch ONLY the cherries! Catch anything else and it lands in your glass - and the round is over.",
   stork: "Up and down to fly. Collect the stars - and don't hit an asteroid, or the delivery is over!",
   mixer: "Catch only what the recipe needs. Wrong thing? Start that shake again!",
 };
@@ -53515,7 +53556,7 @@ function funMiniUpdate(dt) {
       M.endIn = undefined;
       M.t = M.len;
     }
-  } // (a wrong catch: let it bounce away, then the round is over)
+  } // (a wrong catch: a moment to see it in the glass, then the round is over)
   if (M.t >= M.len) {
     M.phase = "done";
     M.t = 0;
@@ -53580,8 +53621,11 @@ function funMiniUpdate(dt) {
   } else {
     const L = inp.left || (M.ptr && M.px < M.x - 10),
       Rt = inp.right || (M.ptr && M.px > M.x + 10);
-    if (M.ptr && !inp.left && !inp.right) M.x += (M.px - M.x) * Math.min(1, dt * 12);
-    else M.x += ((Rt ? 1 : 0) - (L ? 1 : 0)) * 560 * dt;
+    // (v1.4.78: after a wrong catch in CHERRY CATCH the glass stands still, so you can see what landed in it)
+    if (!(M.kind === "cherry" && M.wrong)) {
+      if (M.ptr && !inp.left && !inp.right) M.x += (M.px - M.x) * Math.min(1, dt * 12);
+      else M.x += ((Rt ? 1 : 0) - (L ? 1 : 0)) * 560 * dt;
+    }
     M.x = clamp(M.x, MINI_TALL() ? 190 : 70, MINI_TALL() ? 770 : 890); // (v1.4.74: a narrower field on a tall screen)
     M.spawn -= dt;
     if (M.spawn <= 0 && M.endIn === undefined) {
@@ -53628,7 +53672,7 @@ function funMiniUpdate(dt) {
         const floorY = MINI_GY - 2 * MINI_S - 6 - pileTop(M);
         if (it.y >= floorY) {
           it.dead = true;
-          M.pile.push({ kind: it.kind, gx: it.gx0, rot: it.rot });
+          M.pile.push({ kind: it.kind, gx: it.gx0, rot: it.rot, bad: it.bad });
         }
         continue;
       } // (it rides along with the glass)
@@ -53637,10 +53681,26 @@ function funMiniUpdate(dt) {
         rim = MINI_GY - MINI_RIM;
       if (py < rim && it.y >= rim && Math.abs(dx) < MINI_HW + 11) {
         // IN!
-        if (
-          (M.kind === "cherry" && it.kind !== "cherry") ||
-          (M.kind === "mixer" && !(M.recipe.includes(it.kind) && !M.have.includes(it.kind)))
-        ) {
+        if (M.kind === "cherry" && M.wrong) continue; // (the round's over - nothing more goes in)
+        if (M.kind === "cherry" && it.kind !== "cherry") {
+          // (v1.4.78) THE WRONG THING CAUGHT - and you SEE it: it drops into the glass (it used to bounce straight back
+          // off, so it looked like a miss - and then the game said you'd caught it). It sinks in big, ringed in red, the
+          // glass flashes red and stops, "OOPS - A BANANA!" - and the cherry round is over.
+          it.inG = true;
+          it.bad = true;
+          it.gx = clamp(dx, -MINI_HW + 7, MINI_HW - 7);
+          it.gx0 = it.gx;
+          it.vy = 150;
+          M.wrong = it.kind;
+          M.endIn = 2.2;
+          M.hurt = 1.8;
+          M.splash = { t: 0.35, x: dx };
+          G.shake = Math.max(G.shake || 0, 6);
+          sfx("bonk");
+          sfx("aww");
+          continue;
+        }
+        if (M.kind === "mixer" && !(M.recipe.includes(it.kind) && !M.have.includes(it.kind))) {
           it.vx = (dx >= 0 ? 1 : -1) * rnd(160, 260);
           it.vy = -rnd(320, 420);
           it.spin = rnd(-9, 9);
@@ -53656,11 +53716,7 @@ function funMiniUpdate(dt) {
             M.pile = [];
             for (const o of M.items) if (o.inG) o.dead = true;
             sfx("aww");
-          } else if (M.endIn === undefined) {
-            M.wrong = it.kind;
-            M.endIn = 1.3;
-            sfx("aww");
-          } // the WRONG thing caught: it bounces off - and the cherry round is over
+          }
           continue;
         }
         it.inG = true;
@@ -53756,7 +53812,8 @@ function drawMiniGlassBig(M, t, inside) {
       row = Math.min(Math.floor(i / 3), 6),
       ly = gy - 2 * s - 6 - Math.min(row, 6) * 11,
       lx = gx + clamp(p.gx * 0.6 + ((i % 3) - 1) * 9, -6 * s + 6, 6 * s - 6);
-    drawIngredient(p.kind, lx, ly, 0.85, p.rot);
+    drawIngredient(p.kind, lx, ly, p.bad ? 1.15 : 0.85, p.rot);
+    if (p.bad) badMark(lx, ly, t); // (v1.4.78: the wrong thing, ringed in red)
   } // everything you caught, piled up
   inside(); // (and whatever is sinking in right now)
   quad4(
@@ -53787,6 +53844,18 @@ function drawMiniGlassBig(M, t, inside) {
       );
     }
   } // a little splash at the rim
+}
+// (v1.4.78) the wrong thing in the glass: a pulsing red ring round it, and a red cross over the top of the glass
+function badMark(x, y, t) {
+  const p = 0.5 + 0.5 * Math.sin(t * 9);
+  R.setAdd(true);
+  glow(x, y, 30, withA(col("#ff3b4f"), 0.35 + 0.25 * p));
+  R.setAdd(false);
+  arc(x, y, 17 + p * 2, 0, 6.283, 3, withA(col("#ff3b4f"), 0.95), 24);
+  const cx = G.mini ? G.mini.x : x,
+    cy = MINI_GY - MINI_RIM - 30;
+  line(cx - 13, cy - 13, cx + 13, cy + 13, 6, withA(col("#ff3b4f"), 0.95));
+  line(cx - 13, cy + 13, cx + 13, cy - 13, 6, withA(col("#ff3b4f"), 0.95));
 }
 function drawIngredient(kind, x, y, s, rot) {
   push();
@@ -53914,10 +53983,16 @@ function drawMini(t) {
   } else {
     // a diner counter at the bottom, the glass sliding along it, things falling from the stars
     // two neon signs floating in the dark - a cherry and a milkshake - and a long diner counter with a chrome edge
+    // (v1.4.77) on a tall screen the signs hang up in the open sky above the field, further in - at the sides they were
+    // cut in half by the screen's edges, and the cherry sat behind the recipe card
+    const tallS = MINI_TALL(),
+      sdy = tallS ? -390 : 46; // (and on a wide screen a little lower - clear of the recipe card above the cherry)
     for (const [nx, kind] of [
-      [150, "cherry"],
-      [810, "shake"],
+      [tallS ? 270 : 150, "cherry"],
+      [tallS ? 690 : 810, "shake"],
     ]         ) {
+      push();
+      translate(0, sdy);
       // (v1.4.46) the signs burn STEADY now - no more fast strobe-blink; just a slow, soft breathing of the glow
       const br = 0.5 + 0.5 * Math.sin(t * 1.3 + nx * 0.01),
         nc = col(kind === "cherry" ? "#ff3a5a" : "#5ff5c8"),
@@ -53936,6 +54011,7 @@ function drawMini(t) {
         polyline([nx + 4, 156, nx + 14, 128], 3, w(col("#ff5fa8")));
         arc(nx + 2, 148, 4, 0, 6.283, 2.4, w(col("#ff3a5a")), 10);
       }
+      pop();
     }
     quad4(L, 470, Rr, 470, Rr, B, L, B, col("#7a4a2a"), col("#7a4a2a"), col("#4a2a1a"), col("#4a2a1a"));
     for (let i = 0; i < 9; i++) {
@@ -53996,7 +54072,11 @@ function drawMini(t) {
     }
     for (const it of M.items) if (!it.inG) drawIngredient(it.kind, it.x, it.y, 1.3, it.rot);
     drawMiniGlassBig(M, t, () => {
-      for (const it of M.items) if (it.inG) drawIngredient(it.kind, it.x, it.y, 0.85, it.rot);
+      for (const it of M.items)
+        if (it.inG) {
+          drawIngredient(it.kind, it.x, it.y, it.bad ? 1.15 : 0.85, it.rot);
+          if (it.bad) badMark(it.x, it.y, t); // (v1.4.78)
+        }
     });
     if (M.hurt > 0) {
       R.setAdd(true);
@@ -54588,7 +54668,7 @@ function funHud(g, s, t, fD, sx, sy) {
     g.fillText(
       miniSkipText().replace(" (OR K)", "").replace("MINI-GAME", "BONUS ROUND"),
       cssW / 2,
-      cssH - 30 * s
+      cssH - (VERT ? 40 : 30) * s // (v1.4.78: an upright phone - clear of the song's name in the corner below)
     );
     g.restore();
   }
@@ -54598,7 +54678,7 @@ function funHud(g, s, t, fD, sx, sy) {
       g.save();
       g.font = "600 " + Math.round(12 * s * TXT()) + "px " + FB;
       g.fillStyle = M.phase === "intro" ? "rgba(255,243,226,.9)" : "rgba(255,243,226,.55)";
-      g.fillText(miniSkipText(), cssW / 2, cssH - 30 * s);
+      g.fillText(miniSkipText(), cssW / 2, cssH - (VERT ? 40 : 30) * s); // (v1.4.78: clear of the song's name)
       g.restore();
     }
     if (M.phase === "intro") {
@@ -54625,8 +54705,11 @@ function funHud(g, s, t, fD, sx, sy) {
         cssW / 2,
         VERT ? Math.max(70 * s, fitCssY(0) - 14 * s) : 64 * s // (tall screen: just above the play area, clear of the buttons)
       );
+      // (v1.4.78) where the messages go: on a tall screen in the middle of the play area - at 40% of the screen they
+      // landed on the CAUGHT / TIME line
+      const msgY = VERT ? fitCssY(250) : cssH * 0.4;
       if (M.yuck > 0) {
-        neon2(g, "YUCK! START AGAIN", cssW / 2, cssH * 0.4, 24 * s, "#ff5fa8");
+        neon2(g, "YUCK! START AGAIN", cssW / 2, msgY, (VERT ? 20 : 24) * s, "#ff5fa8");
         const yn =
           {
             strawberry: "A STRAWBERRY",
@@ -54640,10 +54723,22 @@ function funHud(g, s, t, fD, sx, sy) {
         if (yn) {
           g.font = fD(15);
           g.fillStyle = "#fff3e2";
-          g.fillText(yn + " IS NOT IN THIS RECIPE (OR YOU HAVE IT ALREADY)", cssW / 2, cssH * 0.4 + 30 * s);
+          g.fillText(yn + " IS NOT IN THIS RECIPE (OR YOU HAVE IT ALREADY)", cssW / 2, msgY + 30 * s);
         }
       } // (v1.4.71: and what it was)
-      if (M.made > 0) neon2(g, "SHAKE MADE!", cssW / 2, cssH * 0.4, 26 * s, "#5ff5c8");
+      if (M.made > 0) neon2(g, "SHAKE MADE!", cssW / 2, msgY, 26 * s, "#5ff5c8");
+      if (M.kind === "cherry" && M.wrong) {
+        // (v1.4.78) straight away, while you can still see it in the glass: what you caught
+        const wn =
+          {
+            strawberry: "A STRAWBERRY",
+            sock: "A SOCK",
+            banana: "A BANANA",
+            star: "A STAR",
+            chili: "A CHILLI",
+          }[M.wrong] || "THE WRONG THING";
+        neon2(g, "OOPS - YOU CAUGHT " + wn + "!", cssW / 2, msgY, (VERT ? 18 : 26) * s, "#ff5fa8");
+      }
     } else if (M.crashed) {
       neon2(g, "OUCH! AN ASTEROID!", cssW / 2, cssH * 0.26, 28 * s, "#ff9a5a");
       g.font = fD(15);
@@ -55064,7 +55159,7 @@ function buildTroph() {
     lv = bLevel(),
     xp = bXP(),
     next = Math.pow(lv, 2) * 30;
-  $k("trTitle").textContent = "TROPHY ROOM  " + Object.keys(got).length + " / " + TROPHIES.length;
+  titleCount("trTitle", "TROPHY ROOM", Object.keys(got).length + " / " + TROPHIES.length);
   $k("trTag").textContent =
     "BARTENDER LEVEL " +
     lv +
@@ -59894,6 +59989,7 @@ function stageHud(g, s, t, fD, sx, sy) {
   g.fillRect(cx - nw / 2, ny - 7 * s, nw, 14 * s);
   g.fillStyle = "#ffe8a0";
   g.fillText(nm, cx, ny);
+  hudObs(cx, ny, nw, 14 * s); // (v1.4.78: the floating words keep clear of the caption)
   if (S.kind === "shaolin") {
     const ph = (t % 9) / 9,
       k = Math.floor(t / 9);
@@ -62993,6 +63089,7 @@ function coachHud(g, s, t, fD, sx, sy) {
   g.stroke();
   g.fillStyle = "#fff3e2";
   g.fillText(tip.text, tx, ty - 4 * s);
+  hudObs(tx, ty - 10 * s, w, 24 * s); // (v1.4.78: the floating words keep clear of the tip)
   g.restore();
 }
 
@@ -65297,7 +65394,7 @@ function levelOfTour(of) {
     inTour = ((lv - 1) % LAST_LEVEL) + 1;
   return (tour > 1 ? "TOUR " + tour + "  ·  " : "") + "LEVEL " + inTour + of + LAST_LEVEL;
 }
-const GAME_VERSION = "v1.4.77",
+const GAME_VERSION = "v1.4.78",
   GAME_DATE = "20.10.2026",
   VERSION_TEXT = GAME_VERSION + "  ·  " + GAME_DATE;
 const FB = '"Chakra Petch", "Segoe UI", sans-serif';
@@ -65310,6 +65407,19 @@ const HUDHIT                                                                    
   cross: null,
   flav: null,
 };
+// (v1.4.78) the bottom of the HUD's top band this frame, and the floating words already placed this frame
+const HUD_TOP = { low: 0 },
+  WBOX                                                    = [];
+// (v1.4.78) OTHER WORDS ON THE SCREEN THE FLOATING WORDS STEER AROUND: name tags, the coach's tip bubble, the stage's
+// "LIVE:" caption, a sign over a customer. Each puts its box in here as it's drawn (hudObs), and the floating words keep
+// clear of last frame's boxes (they hardly move from one frame to the next, and some are drawn after the words)
+const HUD_OBS = {
+  prev: []                                                     ,
+  cur: []                                                     ,
+};
+function hudObs(x, y, w, h) {
+  HUD_OBS.cur.push({ x, y, hw: w / 2, h });
+}
 const HUDB = { w: 0, t: -9, l: 0, b: 0, right: 0, lives: 0, room: 0, under: false };
 let signX = 0,
   signY = 0; // (0: the usual place, at the top)
@@ -65396,6 +65506,9 @@ function tourMap(g, s, a) {
 }
 function drawHud(fps) {
   HUDHIT.holy = HUDHIT.cross = HUDHIT.flav = null; // (filled in again as they are drawn)
+  HUD_TOP.low = 0; // (v1.4.78: set again below if the level line and meters are drawn this frame)
+  HUD_OBS.prev = HUD_OBS.cur;
+  HUD_OBS.cur = [];
   const g = hg;
   g.setTransform(hdpr, 0, 0, hdpr, 0, 0);
   g.clearRect(0, 0, cssW, cssH);
@@ -65567,16 +65680,17 @@ function drawHud(fps) {
     const scoreW = (G.versus ? 172 : twoP() ? 104 : 92) * s; // (how much room the score block on the left takes)
     // (no room at all between the scores and the buttons - two players' scores on a phone: the sign drops to its own
     //  line just under the buttons)
-    const drop = btnL && btnL - scoreW < 110 && G.versus;
-    signX = drop ? (scoreW + cssW) / 2 : btnL ? (scoreW + btnL) / 2 : sx(PW / 2);
+    // (v1.4.77: the bonus round's long "BONUS · FIND THE ALIEN" too - with Skip showing there is hardly any room up there)
+    const drop = btnL && btnL - scoreW < 110 && (G.versus || G.state === "bonus");
+    signX = drop ? (scoreW + cssW - (G.versus ? 0 : 84 * s)) / 2 : btnL ? (scoreW + btnL) / 2 : sx(PW / 2);
     signY = drop ? HUDB.b + 4 * s : 0;
     const room = drop
-        ? cssW - scoreW - 16
+        ? cssW - scoreW - (G.versus ? 16 : 100 * s) // (beside the LIVES on that row, when it's one player)
         : btnL
           ? btnL - scoreW - 8
           : G.state === "menu"
             ? Math.max(140, cssW - 40)
-            : Math.max(140, 2 * Math.min(signX - 144 * s, HUDB.lives - signX)),
+            : Math.max(140, 2 * Math.min(signX - 160 * s, HUDB.lives - signX)), // (v1.4.78: a little more room for the score)
       wd = g.measureText(name).width;
     HUDB.room = room;
     if (wd > room) px *= room / wd;
@@ -65704,6 +65818,7 @@ function drawHud(fps) {
     const fv = G.fever > 0,
       fk = Math.min(1, fv ? G.fever / FEVER_LEN : (G.streak || 0) / FEVER_AT), // (v1.4.76: a fed fever can run past full)
       fy = by + 7 * s;
+    HUD_TOP.low = fy + (fv ? 18 : 6) * s; // (v1.4.78: where the top of the HUD ends - the floating words stay below it)
     g.fillStyle = "rgba(255,255,255,.1)";
     g.fillRect(bx, fy, bw, 3 * s);
     g.fillStyle = fv ? "hsl(" + ((t * 360) % 360) + " 95% 65%)" : "#ff5fd8";
@@ -65909,6 +66024,8 @@ function drawHud(fps) {
   }
   // call-outs
   let subY = 0;
+  WBOX.length = 0; // (v1.4.78: where this frame's floating words have gone - see below)
+  for (const o of HUD_OBS.prev) WBOX.push(o); // (and the other words on the screen - name tags, tips, captions)
   const headBig = G.callouts.find((c) => !c.world && !c.sub);
   // (v1.2.0: fewer words at once - only the three newest floating words over the bars, the two newest lines of a message)
   const liveW = new Set(G.callouts.filter((c) => c.world && c.life > 0).slice(-3)),
@@ -65936,7 +66053,25 @@ function drawHud(fps) {
       const half =
           Math.max(g.measureText(c.text).width, c.note ? g.measureText(c.note).width * 0.7 : 0) / 2 + 6 * s,
         cxw = clamp(sx(c.x), half, cssW - half),
-        cyw = sy(c.y - rise);
+        fh = 15 * s * big * Math.max(1, pop), // (as big as it is right now - a word popping in is a quarter bigger)
+        topY = (liveHud ? HUD_TOP.low : 0) + fh;
+      // (v1.4.78) ...and kept below the top of the HUD (a "thank you" over the far bar went off the top of the screen),
+      // and never on top of another floating word: one that would land on an earlier one moves up beside it (or below,
+      // if there's no room up there)
+      const tall = fh + (c.note ? 13 * u : 0),
+        hw = half * Math.max(1, pop),
+        want = Math.max(sy(c.y - rise), topY),
+        free = (y) =>
+          !WBOX.some(
+            (b) => Math.abs(b.x - cxw) < b.hw + hw - 4 * s && Math.abs(b.y - y) < (b.h + tall) / 2 + 1
+          );
+      // (the nearest free place: where it wants to be, then a step up, a step down, two up, two down...)
+      let cyw = want;
+      for (let k = 1; k <= 12 && !free(cyw); k++) {
+        const y = want + (k % 2 ? -1 : 1) * Math.ceil(k / 2) * (tall + 2 * s);
+        if (y >= topY) cyw = y;
+      }
+      WBOX.push({ x: cxw, y: cyw, hw, h: tall });
       g.save();
       g.translate(cxw, cyw);
       g.scale(pop, pop);
@@ -66265,6 +66400,7 @@ function drawSigns(g, s, t, sx, sy) {
       g.stroke();
       g.fillStyle = "#ff8ae6";
       g.fillText(lbl, sx(x), sy(y) + 1);
+      hudObs(sx(x), sy(y), lw, lh);
     } // how hungry is he still?
     if ((c.outlaw && c.hold) || (c.vip > 0 && !c.vipDone)) {
       const [x, y] = projL(c.lane, c.x + 12, LY(c.lane, c.x) - 128, VSIDE.c),
@@ -72054,6 +72190,19 @@ profWire();
 //  the game, and where the motion capture, the folk songs and the fonts come from. Both from the menu at any time.
 // =====================================================================================
 const NEWS = [
+  {
+    ver: "v1.4.78",
+    title: "TIDIER SCREENS",
+    items: [
+      "DONE BUTTONS ALWAYS IN REACH ON TALL PANELS",
+      "STICKER AND TROPHY COUNTS BESIDE THE TITLE",
+      "UPRIGHT PHONE: BIGGER BONUS ROUND, SCORE NO LONGER COVERED",
+      "MINI-GAME SIGNS NO LONGER CUT OFF",
+      "CHERRY CATCH: A WRONG CATCH LANDS IN THE GLASS, RINGED IN RED",
+      "FLOATING WORDS STACK NEATLY - NEVER ON TOP OF EACH OTHER",
+      "AFRIKAANS AND POLISH MENUS FIT A NARROW PHONE",
+    ],
+  },
   {
     ver: "v1.4.77",
     title: "SMOOTHER AND LIGHTER",

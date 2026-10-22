@@ -117,6 +117,38 @@ button.na:not(.navsel) { opacity: .45; border-style: dashed; filter: grayscale(.
 #overInfo:empty { display: none; }
 /* the menu's two big doors (v2026.10.05d), and the section headings inside SETTINGS and PLAY MORE */
 #menu button.big { min-height: 58px; font-size: 16px; letter-spacing: .1em; }
+/* (v1.4.81) PLAY MORE: a short line under each way to play and each part of your collection, saying what it is */
+#more button small.d { flex-basis: 100%; font-size: 10.5px; font-weight: 500; letter-spacing: .06em; color: var(--dim); line-height: 1.25; }
+/* (v1.4.81) THE MENU'S CHOICES: each one a little card - what it is (small, grey) over what it's set to (big, amber), and a
+   chevron that says "tap to change". They look different from the buttons that DO something (START, PLAY MORE...) */
+#menu .sec { display: flex; align-items: baseline; gap: 10px; }
+#menu .sec .hint { font-size: 10px; letter-spacing: .12em; color: var(--dim); opacity: .8; }
+#menu button.opt, #menu button.daily { flex-direction: column; align-items: flex-start; justify-content: center; gap: 2px; text-align: left;
+  padding: 8px 34px 8px 14px; min-height: 54px; position: relative; background: rgba(255, 255, 255, .04); border-color: rgba(255, 255, 255, .12); }
+#menu button.opt span, #menu button.daily span { font-size: 11px; font-weight: 600; letter-spacing: .12em; color: var(--dim); }
+#menu button.opt b { font-size: 15px; letter-spacing: .04em; color: #ffc34d; }
+#menu button.opt::after { content: "›"; position: absolute; right: 13px; top: 50%; transform: translateY(-52%); font-size: 26px; line-height: 1;
+  color: rgba(255, 195, 77, .75); }
+#menu button.opt kbd { position: absolute; right: 34px; top: 8px; }
+/* (today's challenge: a game of its own - so it's a PLAY button, in pink, with the goal under it) */
+#menu button.daily { border-color: rgba(255, 159, 224, .55); background: rgba(255, 95, 168, .1); padding-right: 14px; }
+#menu button.daily span { color: #ff9fe0; font-size: 13px; }
+#menu button.daily b { font-size: 13px; font-weight: 600; color: var(--ink); letter-spacing: .04em; }
+/* (the small extras, in a quieter row of their own at the bottom) */
+#menu .minor { grid-column: 1 / -1; display: flex; flex-wrap: wrap; gap: 8px; margin-top: 2px; }
+#menu .minor button { flex: 1 1 120px; }
+#menu .minor kbd { display: none; } /* (the keys are in HOW TO PLAY - here they only made the small buttons wrap) */
+#menu .minor button { min-height: 40px; padding: 8px 10px; font-size: 12px; letter-spacing: .08em; color: var(--dim);
+  background: rgba(20, 22, 50, .35); border-color: rgba(255, 255, 255, .1); }
+#menu .minor button.wide { grid-column: auto; }
+/* (a laptop screen - wide but not tall: the name goes on one line, so the whole menu fits without scrolling) */
+@media (min-width: 700px) and (max-height: 860px) {
+  #menu .logo { font-size: 50px; }
+  #menu .logo span { display: inline; margin-left: .22em; }
+  #menu .logo small { margin-top: .2em; }
+  #menu { gap: 10px; padding-top: 20px; padding-bottom: 18px; }
+  #menu .buttons { gap: 9px; }
+}
 .panel .buttons h3.sec { grid-column: 1 / -1; margin: 10px 2px 0; font-size: 12px; letter-spacing: .14em; color: var(--amber, #ffc34d); opacity: .9; text-align: left; }
 .panel .buttons h3.sec:first-child { margin-top: 0; }
 #settings, #more { max-height: calc(100% - 32px); overflow-y: auto; }
@@ -246,32 +278,37 @@ body.retro .table { font-size: 10px; gap: 5px; }
   <button id="tFull">Full screen</button>
   <button id="tSkip" hidden title="Skip the mini-game (Esc, or B on a controller)">Skip ▶▶</button>
   <button id="tPause">Pause</button>
-  <button id="tReset" title="Cold start: back to the demo, like switching it on (F8)">↻ Cold start</button>
+  <button id="tReset" title="Start over: back to the demo, like switching it on (F8)">↻ Start over</button>
 </div>
 <div id="padReset" hidden></div>
 <div id="bye" hidden><h1>THANKS FOR PLAYING!</h1><p>See you next time at Astro Café.<br>You can close this tab now.</p><button id="byeBack">BACK TO THE GAME</button></div>
-<div id="crash" hidden><div class="box"><h2>OOPS - THE GAME GOT STUCK</h2><p>Sorry! Something went wrong. Press COLD START to start again - your stars, stickers, coins and high scores are kept.</p><button id="crashReset" class="primary">↻ COLD START</button><button id="crashMenu">BACK TO THE MENU</button><small id="crashMsg"></small></div></div>
+<div id="crash" hidden><div class="box"><h2>OOPS - THE GAME GOT STUCK</h2><p>Sorry! Something went wrong. Press START OVER to start again - your stars, stickers, coins and high scores are kept.</p><button id="crashReset" class="primary">↻ START OVER</button><button id="crashMenu">BACK TO THE MENU</button><small id="crashMsg"></small></div></div>
 
 <section id="menu" class="panel" aria-label="Astro Café menu">
   <h1 class="logo">ASTRO<span>CAFÉ</span><small>COSMIC ARCADE</small></h1>
   <p class="tag">Four bars, one soda jerk, a galaxy of thirsty customers. Pour, slide, catch the empties, and never let a shake hit the floor.</p>
+  <!-- (v1.4.81) A CLEARER MENU: one big START; then YOUR GAME - the choices for the next game, each showing what it's set
+       to and that a tap changes it; then today's challenge, the two big doors (PLAY MORE, SETTINGS) and the small extras -->
   <div class="buttons">
-    <button id="bStart" class="primary">START <kbd>Enter</kbd></button>
+    <button id="bStart" class="primary">▶ START <kbd>Enter</kbd></button>
     <button id="bCont" class="wide" hidden>▶ CONTINUE: <b id="vCont"></b></button>
-    <button id="bProf" class="wide">WHO'S PLAYING: <b id="vProf"></b></button>
-    <button id="bPlayers" class="wide">PLAYERS: <b id="vPlayers">1 PLAYER</b> <kbd>2</kbd></button>
-    <button id="bDiff" class="wide">DIFFICULTY: <b id="vDiff">NORMAL</b></button>
-    <button id="bFrom" class="wide">START AT LEVEL: <b id="vFrom">1</b> <kbd>S</kbd></button>
-    <button id="bChar" class="wide">BARTENDER: <b id="vChar">JACK</b> <kbd>B</kbd></button>
-    <button id="bDaily" class="wide">DAILY CHALLENGE: <b id="vDaily"></b></button>
+    <h3 class="sec">YOUR GAME <small class="hint">TAP TO CHANGE</small></h3>
+    <button id="bProf" class="opt"><span>PLAYING AS</span><b id="vProf"></b></button>
+    <button id="bPlayers" class="opt"><span>PLAYERS</span><b id="vPlayers">1 PLAYER</b><kbd>2</kbd></button>
+    <button id="bDiff" class="opt"><span>DIFFICULTY</span><b id="vDiff">NORMAL</b></button>
+    <button id="bChar" class="opt"><span>BARTENDER</span><b id="vChar">JACK</b><kbd>B</kbd></button>
+    <button id="bFrom" class="opt wide"><span>START AT LEVEL</span><b id="vFrom">1</b><kbd>S</kbd></button>
+    <button id="bDaily" class="daily wide"><span>★ PLAY TODAY'S CHALLENGE</span><b id="vDaily"></b></button>
     <button id="bMore" class="big">★ PLAY MORE</button>
     <button id="bSettings" class="big">⚙ SETTINGS</button>
-    <button id="bSolar2" class="wide">☉ SOLAR SYSTEM TOUR <kbd>O</kbd></button>
-    <button id="bHow">? HOW TO PLAY</button>
-    <button id="bNews">WHAT'S NEW &amp; CREDITS <b id="vNews"></b></button>
-    <button id="bFull">FULL SCREEN <kbd>F</kbd></button>
-    <button id="bExit">EXIT GAME</button>
-    <button id="bCold" class="wide" title="Start again from the very beginning, like switching it on: back to the demo (F8). Your stars, coins and settings are kept.">↻ COLD START</button>
+    <div class="minor">
+      <button id="bHow">? HOW TO PLAY</button>
+      <button id="bSolar2">☉ SOLAR SYSTEM TOUR <kbd>O</kbd></button>
+      <button id="bNews">WHAT'S NEW <b id="vNews"></b></button>
+      <button id="bFull">FULL SCREEN <kbd>F</kbd></button>
+      <button id="bExit">EXIT GAME</button>
+      <button id="bCold" hidden title="Start again from the very beginning, like switching it on: back to the demo (F8). Your stars, coins and settings are kept.">↻ START OVER</button>
+    </div>
   </div>
   <input id="musicFiles" type="file" accept="audio/*,.mp3,.m4a,.ogg,.wav" multiple hidden>
 </section>
@@ -282,19 +319,19 @@ body.retro .table { font-size: 10px; gap: 5px; }
   <div class="buttons">
     <h3 class="sec">MORE WAYS TO PLAY</h3>
     <button id="bFree" class="wide">RELAX MODE <b>NO LOSING, NO HURRY</b></button>
-    <button id="bEndless" class="wide">ENDLESS MODE <b id="vEndless"></b></button>
-    <button id="bTa">TIME ATTACK <b id="vTa"></b></button>
-    <button id="bRush">BOSS RUSH <b id="vRush"></b></button>
-    <button id="bMap">GALAXY MAP <b id="vMap"></b></button>
-    <button id="bCup">CUP TOURNAMENT <b id="vCup"></b></button>
+    <button id="bEndless" class="wide">ENDLESS MODE <b id="vEndless"></b><small class="d">KEEP GOING - IT GETS FASTER AND FASTER</small></button>
+    <button id="bTa">TIME ATTACK <b id="vTa"></b><small class="d">SERVE 50 AS FAST AS YOU CAN</small></button>
+    <button id="bRush">BOSS RUSH <b id="vRush"></b><small class="d">ALL 14 BOSSES, ONE AFTER ANOTHER</small></button>
+    <button id="bMap">GALAXY MAP <b id="vMap"></b><small class="d">PICK A BAR TO PLAY</small></button>
+    <button id="bCup">CUP TOURNAMENT <b id="vCup"></b><small class="d">A KNOCKOUT CUP FOR 2 TO 8 PLAYERS</small></button>
     <button id="bSolar" class="wide">SOLAR SYSTEM TOUR <b>THE SUN TO PLUTO</b></button>
     <button id="bCast" class="wide">CASTAWAY ISLAND <b>KOOS VAN SCHOOR</b></button>
     <h3 class="sec">YOUR COLLECTION</h3>
-    <button id="bWard">HATS &amp; PETS <b id="vWard"></b></button>
-    <button id="bStickers">STICKER BOOK <b id="vStickers"></b></button>
-    <button id="bShop">COIN SHOP <b id="vShop"></b></button>
-    <button id="bTroph">TROPHIES <b id="vTroph"></b></button>
-    <button id="bJuke" class="wide">MUSIC BOX <kbd>J</kbd></button>
+    <button id="bWard">HATS &amp; PETS <b id="vWard"></b><small class="d">DRESS UP YOUR BARTENDER</small></button>
+    <button id="bStickers">STICKER BOOK <b id="vStickers"></b><small class="d">EVERYONE YOU'VE MET</small></button>
+    <button id="bShop">COIN SHOP <b id="vShop"></b><small class="d">SPEND YOUR COINS</small></button>
+    <button id="bTroph">TROPHIES <b id="vTroph"></b><small class="d">WHAT YOU'VE ACHIEVED</small></button>
+    <button id="bJuke" class="wide">MUSIC BOX <kbd>J</kbd><small class="d">LISTEN TO EVERY PLANET'S TUNE</small></button>
   </div>
   <div class="profRow"><button id="moreBack" class="primary">DONE <kbd>Esc</kbd></button></div>
 </section>
@@ -506,7 +543,7 @@ body.retro .table { font-size: 10px; gap: 5px; }
     <button id="pVolB">BACKGROUND SOUNDS <b class="vVolB"></b></button>
     <button id="pFull">FULL SCREEN <kbd>F</kbd></button>
     <button id="pQuit" class="wide">QUIT TO MENU</button>
-    <button id="pReset" class="wide">↻ COLD START (BACK TO THE DEMO)</button>
+    <button id="pReset" class="wide">↻ START OVER (BACK TO THE DEMO)</button>
   </div>
   <p class="info" id="gfxInfo2"></p>
   <p class="info">Keyboard: ↑ ↓ or 1-4 counters · ← → run · Space pour · T pour mode · P resume. Controller: D-pad or LB/RB · A pour · Start resume. Touch: tap or swipe the counters, POUR button.</p>
@@ -2367,12 +2404,8 @@ const DICT_ROWS                             = [
   ["Full screen", "Volskerm", "Pełny ekran"],
   ["Pause", "Pouse", "Pauza"],
   ["↻ Reset", "↻ Herbegin", "↻ Reset"],
-  ["↻ Cold start", "↻ Begin van voor af", "↻ Od nowa"],
-  [
-    "Tap again for a cold start",
-    "Tik weer om van voor af te begin",
-    "Stuknij jeszcze raz, by zacząć od nowa",
-  ],
+  ["↻ Start over", "↻ Begin van voor af", "↻ Od nowa"],
+  ["Tap again to start over", "Tik weer om van voor af te begin", "Stuknij jeszcze raz, by zacząć od nowa"],
   ["Skip ▶▶", "Slaan oor ▶▶", "Pomiń ▶▶"],
   [
     "Four bars, one soda jerk, a galaxy of thirsty customers. Pour, slide, catch the empties, and never let a shake hit the floor.",
@@ -3342,14 +3375,14 @@ const DICT_ROWS                             = [
     "↻ BEGIN HEELTEMAL OOR (LAAI WEER)",
     "↻ PEŁNY RESET (WCZYTAJ GRĘ OD NOWA)",
   ],
-  ["↻ COLD START", "↻ BEGIN VAN VOOR AF", "↻ OD NOWA"],
+  ["↻ START OVER", "↻ BEGIN VAN VOOR AF", "↻ OD NOWA"],
   [
-    "↻ COLD START (BACK TO THE DEMO)",
+    "↻ START OVER (BACK TO THE DEMO)",
     "↻ BEGIN VAN VOOR AF (TERUG NA DIE DEMO)",
     "↻ OD NOWA (Z POWROTEM DO DEMA)",
   ],
   [
-    "PRESS AGAIN FOR A COLD START",
+    "PRESS AGAIN TO START OVER",
     "DRUK WEER OM VAN VOOR AF TE BEGIN",
     "NACIŚNIJ JESZCZE RAZ, BY ZACZĄĆ OD NOWA",
   ],
@@ -6107,6 +6140,45 @@ const DICT_ROWS                             = [
   ["HOLO-SHOW", "HOLO-VERTONING", "HOLO-SHOW"],
   ["ENTER", "ENTER", "ENTER"],
   ["MEDIUM", "MEDIUM", "ŚREDNIA"],
+
+  // (v1.4.79) TRANSLATIONS, v1.4.81: the clearer menu
+  ["▶ START", "▶ BEGIN", "▶ START"],
+  ["YOUR GAME", "JOU SPEL", "TWOJA GRA"],
+  ["TAP TO CHANGE", "TIK OM TE VERANDER", "STUKNIJ, BY ZMIENIĆ"],
+  ["PLAYING AS", "SPEEL AS", "GRASZ JAKO"],
+  ["PLAYERS", "SPELERS", "GRACZE"],
+  ["BARTENDER", "KROEGMAN", "BARMAN"],
+  ["START AT LEVEL", "BEGIN BY VLAK", "START OD POZIOMU"],
+  ["★ PLAY TODAY'S CHALLENGE", "★ SPEEL VANDAG SE UITDAGING", "★ ZAGRAJ W DZISIEJSZE WYZWANIE"],
+  [
+    "Sorry! Something went wrong. Press START OVER to start again - your stars, stickers, coins and high scores are kept.",
+    "Jammer! Iets het skeefgeloop. Druk BEGIN VAN VOOR AF om weer te begin - jou sterre, plakkers, munte en hoogste tellings bly behoue.",
+    "Przepraszamy! Coś poszło nie tak. Naciśnij OD NOWA, by zacząć jeszcze raz - twoje gwiazdki, naklejki, monety i rekordy zostają.",
+  ],
+
+  // (v1.4.79) TRANSLATIONS, v1.4.81: play more descriptions
+  ["KEEP GOING - IT GETS FASTER AND FASTER", "HOU AAN - DIT WORD AL VINNIGER", "GRAJ DALEJ - CORAZ SZYBCIEJ"],
+  ["SERVE 50 AS FAST AS YOU CAN", "BEDIEN 50 SO VINNIG AS JY KAN", "OBSŁUŻ 50 JAK NAJSZYBCIEJ"],
+  [
+    "ALL 14 BOSSES, ONE AFTER ANOTHER",
+    "AL 14 BAASE, EEN NA DIE ANDER",
+    "WSZYSCY 14 BOSSOWIE, JEDEN PO DRUGIM",
+  ],
+  ["PICK A BAR TO PLAY", "KIES 'N KROEG OM TE SPEEL", "WYBIERZ BAR, W KTÓRYM ZAGRASZ"],
+  [
+    "A KNOCKOUT CUP FOR 2 TO 8 PLAYERS",
+    "'N UITKLOPBEKER VIR 2 TOT 8 SPELERS",
+    "TURNIEJ PUCHAROWY DLA 2-8 GRACZY",
+  ],
+  ["DRESS UP YOUR BARTENDER", "TREK JOU KROEGMAN AAN", "PRZEBIERZ SWOJEGO BARMANA"],
+  ["EVERYONE YOU'VE MET", "ALMAL WAT JY AL ONTMOET HET", "WSZYSCY, KTÓRYCH SPOTKAŁEŚ"],
+  ["SPEND YOUR COINS", "SPANDEER JOU MUNTE", "WYDAJ SWOJE MONETY"],
+  ["WHAT YOU'VE ACHIEVED", "WAT JY AL BEREIK HET", "TWOJE OSIĄGNIĘCIA"],
+  [
+    "LISTEN TO EVERY PLANET'S TUNE",
+    "LUISTER NA ELKE PLANEET SE DEUNTJIE",
+    "POSŁUCHAJ MELODII KAŻDEJ PLANETY",
+  ],
 ];
 // the texts that carry numbers or names: patterns
 const DICT_PAT                             = [
@@ -9929,6 +10001,13 @@ function update(dt) {
   readPads();
   if (G.state === "castaway") return castawayUpdate(dt); // (v1.4.10: CASTAWAY ISLAND - castaway.ts)
   if (G.state === "paused") return;
+  // (v1.4.81) just back from a pause: everything waits - READY? ... GO! (see pause() in menus.ts)
+  if (G.resumeT > 0) {
+    const was = G.resumeT;
+    G.resumeT = G.state === "play" ? G.resumeT - dt : 0;
+    if (was > 0.45 && G.resumeT <= 0.45) sfx("go");
+    if (G.resumeT > 0) return;
+  }
   updateBell(dt);
   // (v1.4.31) BACK IN THE GAME: in VERSUS, a player who's out comes back after the other one serves 8 customers - with
   // one life, so nobody sits on the sofa for the rest of the game
@@ -66352,7 +66431,7 @@ function modesServed() {
 }
 function modesUpdate(dt) {
   if (G.demo) return;
-  const playing = ["play", "lost", "clear", "bonus"].includes(G.state) && !(G.readyT > 0);
+  const playing = ["play", "lost", "clear", "bonus"].includes(G.state) && !(G.readyT > 0) && !(G.resumeT > 0); // (v1.4.81: and not while getting ready after a pause)
   if (G.ta && playing && !G.ta.endT) {
     G.ta.t += dt;
     ghostRecord(dt);
@@ -66996,7 +67075,8 @@ function drawAttract(g, s, t) {
     // the bartender on stage: name and motto
     const b = BARTENDERS[PL[CS.who].char],
       x = (stageX() + ox + CAM.x) * u,
-      y = (PH * 0.8 + oy) * u;
+      // (v1.4.81) the three lines end above the strip at the bottom - the tune's name and the version - not across it
+      y = Math.min((PH * 0.8 + oy) * u, cssH - 34 * s - 106 * s);
     g.textAlign = "center";
     g.textBaseline = "middle";
     g.font = Math.round(Math.min(26 * s, (cssW * 0.9) / Math.max(1, b.name.length) / 0.62)) + "px " + FD; // (a long name shrinks to fit)
@@ -67691,8 +67771,8 @@ function levelOfTour(of) {
     inTour = ((lv - 1) % LAST_LEVEL) + 1;
   return (tour > 1 ? "TOUR " + tour + "  ·  " : "") + "LEVEL " + inTour + of + LAST_LEVEL;
 }
-const GAME_VERSION = "v1.4.80",
-  GAME_DATE = "21.10.2026",
+const GAME_VERSION = "v1.4.81",
+  GAME_DATE = "22.10.2026",
   VERSION_TEXT = GAME_VERSION + "  ·  " + GAME_DATE;
 const FB = '"Chakra Petch", "Segoe UI", sans-serif';
 let FD = '"Bungee", "Impact", sans-serif';
@@ -68082,7 +68162,15 @@ function drawHud(fps) {
     g.globalAlpha = 1;
   };
   HUDB.signBot = 0;
-  if (readyNow) {
+  if (liveHud && G.state === "play" && G.resumeT > 0) {
+    // (v1.4.81) back from a pause
+    const go = G.resumeT < 0.45;
+    signText(
+      go ? "GO!" : "READY?",
+      go ? "#5ff5c8" : "#ffc34d",
+      go ? Math.min(1, (G.resumeT / 0.45) * 1.5) : 1
+    );
+  } else if (readyNow) {
     const go = G.readyT < 0.55;
     signText(
       go ? "GO!" : "READY?",
@@ -68568,7 +68656,10 @@ function drawHud(fps) {
   g.fillStyle = "rgba(185,168,184,.85)";
   const dev = R.kind === "GPU" ? "GPU · " + R.device : "CPU · software";
   // (only on the menu and in a game - not over the full-screen shows, the trips between planets or the mini-games)
-  const techLine = !ATTRACT.on && ["menu", "play", "lost", "clear", "paused", "over"].includes(G.state);
+  // (v1.4.81: and no longer while you play - the graphics card's name and the frame rate are for the curious, not for
+  //  the middle of a game; they're there when you pause)
+  //  (and only when paused - on the menu and the final score the panel covers that corner anyway)
+  const techLine = !ATTRACT.on && G.state === "paused";
   // (v1.4.52) THE TUNE'S NAME, ALWAYS: down in the bottom strip next to the version, where it covers nothing
   const songTxt =
     MY.mode === "mine" && MY.now
@@ -73563,6 +73654,12 @@ function pause(on) {
     G.state = G.prev || "play";
     G.pourLock = [true, true];
     lastInput = performance.now();
+    // (v1.4.81) BACK FROM A PAUSE, A MOMENT TO GET READY: the bar stays still for just over a second - READY? ... GO! -
+    // so nobody loses a shake in the instant their hands are getting back on the keys
+    if (G.state === "play" && !G.demo) {
+      G.resumeT = 1.2;
+      sfx("ready");
+    }
   }
   if (!on) $("pAfk").hidden = true;
   showPanels();
@@ -74037,8 +74134,18 @@ function refreshChars() {
     : "DONE <kbd>Esc</kbd>";
 }
 // START from the menu: everyone picks a bartender first (1 player: just you; 2 players: player 1, then player 2)
+// (v1.4.81) ...but only the FIRST time. Once you've picked, the menu shows your bartender (BARTENDER: ANNEKE - tap it to
+// change) and START goes straight into the game, instead of asking again before every single game
 function beginGame() {
   if (G.state !== "menu") {
+    startGame();
+    return;
+  }
+  const picked = store.get("char1", -1) >= 0 && (!playMode || store.get("char2", -1) >= 0);
+  if (picked) {
+    P1.char = myChar(0);
+    P2.char = myChar(1);
+    sfx("click");
     startGame();
     return;
   }
@@ -74582,6 +74689,17 @@ profWire();
 //  the game, and where the motion capture, the folk songs and the fonts come from. Both from the menu at any time.
 // =====================================================================================
 const NEWS = [
+  {
+    ver: "v1.4.81",
+    title: "A CLEARER, FRIENDLIER MENU",
+    items: [
+      "A SIMPLER MENU: START, THEN YOUR GAME - TAP A CARD TO CHANGE IT",
+      "START GOES STRAIGHT INTO THE GAME ONCE YOU'VE PICKED A BARTENDER",
+      "READY? GO! - A MOMENT TO GET READY AFTER A PAUSE",
+      "PLAY MORE SAYS WHAT EVERY MODE IS",
+      "COLD START IS NOW START OVER",
+    ],
+  },
   {
     ver: "v1.4.80",
     title: "THE SCREEN STAYS ON",
@@ -76065,15 +76183,15 @@ document.getElementById("tReset").onclick = (e) => {
     return;
   }
   b.dataset.sure = "1";
-  b.textContent = "Tap again for a cold start";
+  b.textContent = "Tap again to start over";
   setTimeout(() => {
     b.dataset.sure = "";
-    b.textContent = "↻ Cold start";
+    b.textContent = "↻ Start over";
   }, 2500);
 };
-pressTwice("pReset", "PRESS AGAIN FOR A COLD START", hardReset);
+pressTwice("pReset", "PRESS AGAIN TO START OVER", hardReset);
 // COLD START on the main menu (v2026.10.05b): back to the very beginning - the demo, quiet until you touch it - like
-// switching the cabinet on. (The same as F8, ↻ Cold start at the top during a game and COLD START in the pause menu;
+// switching the cabinet on. (The same as F8, ↻ Start over at the top during a game and COLD START in the pause menu;
 // progress and settings are kept.)
 pressTwice("bCold", "PRESS AGAIN: BACK TO THE DEMO", hardReset);
 window.addEventListener(

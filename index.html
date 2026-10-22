@@ -117,19 +117,28 @@ button.na:not(.navsel) { opacity: .45; border-style: dashed; filter: grayscale(.
 #overInfo:empty { display: none; }
 /* the menu's two big doors (v2026.10.05d), and the section headings inside SETTINGS and PLAY MORE */
 #menu button.big { min-height: 58px; font-size: 16px; letter-spacing: .1em; }
+/* (v1.4.82) HOW TO PLAY starts with the whole game in three steps */
+#howto .quick { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
+#howto .quick div { display: flex; flex-direction: column; align-items: center; gap: 3px; padding: 10px 6px; text-align: center;
+  border: 1px solid rgba(95, 245, 200, .35); border-radius: 14px; background: rgba(95, 245, 200, .06); }
+#howto .quick i { font-style: normal; width: 26px; height: 26px; line-height: 26px; border-radius: 50%; background: var(--cyan); color: #06140f;
+  font: 400 15px/26px var(--display); }
+#howto .quick b { font-family: var(--display); font-weight: 400; font-size: 17px; color: #ffc34d; letter-spacing: .04em; }
+#howto .quick small { font-size: 12px; color: var(--ink); opacity: .85; line-height: 1.25; }
+#howto .quickNo { margin: 0; font-size: 13px; color: #ff9fbf; text-align: center; }
 /* (v1.4.81) PLAY MORE: a short line under each way to play and each part of your collection, saying what it is */
 #more button small.d { flex-basis: 100%; font-size: 10.5px; font-weight: 500; letter-spacing: .06em; color: var(--dim); line-height: 1.25; }
 /* (v1.4.81) THE MENU'S CHOICES: each one a little card - what it is (small, grey) over what it's set to (big, amber), and a
    chevron that says "tap to change". They look different from the buttons that DO something (START, PLAY MORE...) */
 #menu .sec { display: flex; align-items: baseline; gap: 10px; }
 #menu .sec .hint { font-size: 10px; letter-spacing: .12em; color: var(--dim); opacity: .8; }
-#menu button.opt, #menu button.daily { flex-direction: column; align-items: flex-start; justify-content: center; gap: 2px; text-align: left;
+.panel button.opt, #menu button.daily { flex-direction: column; align-items: flex-start; justify-content: center; gap: 2px; text-align: left;
   padding: 8px 34px 8px 14px; min-height: 54px; position: relative; background: rgba(255, 255, 255, .04); border-color: rgba(255, 255, 255, .12); }
-#menu button.opt span, #menu button.daily span { font-size: 11px; font-weight: 600; letter-spacing: .12em; color: var(--dim); }
-#menu button.opt b { font-size: 15px; letter-spacing: .04em; color: #ffc34d; }
-#menu button.opt::after { content: "›"; position: absolute; right: 13px; top: 50%; transform: translateY(-52%); font-size: 26px; line-height: 1;
+.panel button.opt span, #menu button.daily span { font-size: 11px; font-weight: 600; letter-spacing: .12em; color: var(--dim); }
+.panel button.opt b { font-size: 15px; letter-spacing: .04em; color: #ffc34d; }
+.panel button.opt::after { content: "›"; position: absolute; right: 13px; top: 50%; transform: translateY(-52%); font-size: 26px; line-height: 1;
   color: rgba(255, 195, 77, .75); }
-#menu button.opt kbd { position: absolute; right: 34px; top: 8px; }
+.panel button.opt kbd { position: absolute; right: 34px; top: 8px; }
 /* (today's challenge: a game of its own - so it's a PLAY button, in pink, with the goal under it) */
 #menu button.daily { border-color: rgba(255, 159, 224, .55); background: rgba(255, 95, 168, .1); padding-right: 14px; }
 #menu button.daily span { color: #ff9fe0; font-size: 13px; }
@@ -340,35 +349,35 @@ body.retro .table { font-size: 10px; gap: 5px; }
   <h2>⚙ SETTINGS</h2>
   <div class="buttons">
     <h3 class="sec">SOUND AND MUSIC</h3>
-    <button id="bSound">SOUND: <b id="vSound"></b> <kbd>M</kbd></button>
-    <button id="bMusic">MUSIC: <b id="vMusic"></b> <kbd>N</kbd></button>
-    <button id="bVolM">MUSIC VOLUME <b class="vVolM"></b></button>
-    <button id="bVolF">EFFECTS VOLUME <b class="vVolF"></b></button>
-    <button id="bVolB">BACKGROUND SOUNDS <b class="vVolB"></b></button>
-    <button id="bVoice">VOICE: <b id="vVoice">OFF</b></button>
+    <button id="bSound" class="opt"><span>SOUND</span><b id="vSound"></b><kbd>M</kbd></button>
+    <button id="bMusic" class="opt"><span>MUSIC</span><b id="vMusic"></b><kbd>N</kbd></button>
+    <button id="bVolM" class="opt"><span>MUSIC VOLUME</span><b class="vVolM"></b></button>
+    <button id="bVolF" class="opt"><span>EFFECTS VOLUME</span><b class="vVolF"></b></button>
+    <button id="bVolB" class="opt"><span>BACKGROUND SOUNDS</span><b class="vVolB"></b></button>
+    <button id="bVoice" class="opt"><span>VOICE</span><b id="vVoice">OFF</b></button>
     <label class="add" for="musicFiles" tabindex="0">+ ADD YOUR MUSIC</label>
     <h3 class="sec">LANGUAGE</h3>
     <div id="langRow" class="langRow"><button data-lang="en" lang="en">ENGLISH</button><button data-lang="af" lang="af">AFRIKAANS</button><button data-lang="pl" lang="pl">POLSKI</button></div>
     <h3 class="sec">SCREEN</h3>
-    <button id="bLook" class="wide">LOOK: <b id="vLook"></b> <kbd>L</kbd></button>
-    <button id="bCrt" class="wide">SCREEN: <b id="vCrt"></b> <kbd>C</kbd></button>
-    <button id="bGfx" class="wide">GRAPHICS: <b id="vGfx"></b> <kbd>G</kbd></button>
-    <button id="bLayout">LAYOUT: <b id="vLayout">AUTO</b> <kbd>V</kbd></button>
-    <button id="bTxt">TEXT SIZE: <b id="vTxt">NORMAL</b></button>
+    <button id="bLook" class="opt"><span>LOOK</span><b id="vLook"></b><kbd>L</kbd></button>
+    <button id="bCrt" class="opt"><span>SCREEN</span><b id="vCrt"></b><kbd>C</kbd></button>
+    <button id="bGfx" class="opt wide"><span>GRAPHICS</span><b id="vGfx"></b><kbd>G</kbd></button>
+    <button id="bLayout" class="opt"><span>LAYOUT</span><b id="vLayout">AUTO</b><kbd>V</kbd></button>
+    <button id="bTxt" class="opt"><span>TEXT SIZE</span><b id="vTxt">NORMAL</b></button>
     <h3 class="sec">PLAYING</h3>
-    <button id="bPour">POUR: <b id="vPour">HOLD</b> <kbd>T</kbd></button>
-    <button id="bOneBtn">ONE-BUTTON: <b id="vOneBtn">OFF</b></button>
-    <button id="bLefty">LEFT-HANDED: <b id="vLefty">OFF</b></button>
-    <button id="bBuzz">VIBRATION: <b id="vBuzz">ON</b></button>
-    <button id="bContSet" class="wide">CONTINUE AFTER GAME OVER: <b id="vContSet">ON</b></button>
+    <button id="bPour" class="opt"><span>POUR</span><b id="vPour">HOLD</b><kbd>T</kbd></button>
+    <button id="bOneBtn" class="opt"><span>ONE-BUTTON</span><b id="vOneBtn">OFF</b></button>
+    <button id="bLefty" class="opt"><span>LEFT-HANDED</span><b id="vLefty">OFF</b></button>
+    <button id="bBuzz" class="opt"><span>VIBRATION</span><b id="vBuzz">ON</b></button>
+    <button id="bContSet" class="opt wide"><span>CONTINUE AFTER GAME OVER</span><b id="vContSet">ON</b></button>
     <button id="bKeys" class="wide">CONTROLS: CHOOSE YOUR KEYS</button>
     <h3 class="sec">COMFORT</h3>
-    <button id="bCalm">CALM MODE: <b id="vCalm">OFF</b></button>
-    <button id="bShapes">FLAVOUR SHAPES: <b id="vShapes">OFF</b></button>
-    <button id="bFlav">FLAVOUR ORDERS: <b id="vFlav">ON</b></button>
+    <button id="bCalm" class="opt"><span>CALM MODE</span><b id="vCalm">OFF</b></button>
+    <button id="bShapes" class="opt"><span>FLAVOUR SHAPES</span><b id="vShapes">OFF</b></button>
+    <button id="bFlav" class="opt"><span>FLAVOUR ORDERS</span><b id="vFlav">ON</b></button>
     <button id="bHow2">? HOW TO PLAY</button>
-    <button id="bBreak">BREAK REMINDER: <b id="vBreak">OFF</b></button>
-    <button id="bHoliday" >HOLIDAY: <b id="vHoliday">BY DATE</b></button>
+    <button id="bBreak" class="opt"><span>BREAK REMINDER</span><b id="vBreak">OFF</b></button>
+    <button id="bHoliday" class="opt"><span>HOLIDAY</span><b id="vHoliday">BY DATE</b></button>
   </div>
   <p class="info" id="musicInfo" style="min-height:0" hidden></p>
   <p class="info" id="gfxInfo"></p>
@@ -465,6 +474,13 @@ body.retro .table { font-size: 10px; gap: 5px; }
 
 <section id="howto" class="panel" hidden aria-label="How to play">
   <h2>HOW TO PLAY</h2>
+  <!-- (v1.4.82) THE GAME IN THREE STEPS, before the details -->
+  <div class="quick" aria-label="The game in three steps">
+    <div><i>1</i><b>POUR</b><small>Hold POUR at the taps</small></div>
+    <div><i>2</i><b>SLIDE</b><small>Let go - it slides to the customer</small></div>
+    <div><i>3</i><b>CATCH</b><small>Catch the empty glass coming back</small></div>
+  </div>
+  <p class="quickNo">Don't let a customer reach your end of the bar, and never drop a glass.</p>
   <div class="help">
     <h3>THE AIM</h3>
     <p>Customers walk down the four bars towards you. Pour a shake and slide it to them: when one catches it, they slide back up the bar, drink it - and slide the empty glass back down to you. Serve everyone in the queue and the level is done; then it's off to the next stop of the tour.</p>
@@ -531,19 +547,22 @@ body.retro .table { font-size: 10px; gap: 5px; }
   <p class="info" id="pAfk" hidden>STILL THERE? The game paused itself so you don't lose a life while you're away. Press FIRE or RESUME to carry on.</p>
   <div class="buttons">
     <button id="pResume" class="primary">RESUME</button>
-    <button id="pPour">POUR: <b id="vPour2">HOLD</b> <kbd>T</kbd></button>
-    <button id="pLayout">LAYOUT: <b id="vLayout2">AUTO</b> <kbd>V</kbd></button>
-    <button id="pLook" class="wide">LOOK: <b id="vLook2"></b> <kbd>L</kbd></button>
-    <button id="pCrt" class="wide">SCREEN: <b id="vCrt2"></b> <kbd>C</kbd></button>
-    <button id="pGfx" class="wide">GRAPHICS: <b id="vGfx2"></b> <kbd>G</kbd></button>
-    <button id="pSound">SOUND: <b id="vSound2"></b></button>
-    <button id="pMusic">MUSIC: <b id="vMusic2"></b></button>
-    <button id="pVolM">MUSIC VOLUME <b class="vVolM"></b></button>
-    <button id="pVolF">EFFECTS VOLUME <b class="vVolF"></b></button>
-    <button id="pVolB">BACKGROUND SOUNDS <b class="vVolB"></b></button>
-    <button id="pFull">FULL SCREEN <kbd>F</kbd></button>
-    <button id="pQuit" class="wide">QUIT TO MENU</button>
-    <button id="pReset" class="wide">↻ START OVER (BACK TO THE DEMO)</button>
+    <h3 class="sec">SOUND AND CONTROLS</h3>
+    <button id="pSound" class="opt"><span>SOUND</span><b id="vSound2"></b></button>
+    <button id="pMusic" class="opt"><span>MUSIC</span><b id="vMusic2"></b></button>
+    <button id="pVolM" class="opt"><span>MUSIC VOLUME</span><b class="vVolM"></b></button>
+    <button id="pVolF" class="opt"><span>EFFECTS VOLUME</span><b class="vVolF"></b></button>
+    <button id="pVolB" class="opt"><span>BACKGROUND SOUNDS</span><b class="vVolB"></b></button>
+    <button id="pPour" class="opt"><span>POUR</span><b id="vPour2">HOLD</b><kbd>T</kbd></button>
+    <h3 class="sec">PICTURE</h3>
+    <button id="pLook" class="opt"><span>LOOK</span><b id="vLook2"></b><kbd>L</kbd></button>
+    <button id="pLayout" class="opt"><span>LAYOUT</span><b id="vLayout2">AUTO</b><kbd>V</kbd></button>
+    <button id="pCrt" class="opt"><span>SCREEN</span><b id="vCrt2"></b><kbd>C</kbd></button>
+    <button id="pGfx" class="opt"><span>GRAPHICS</span><b id="vGfx2"></b><kbd>G</kbd></button>
+    <button id="pFull" class="wide">FULL SCREEN <kbd>F</kbd></button>
+    <h3 class="sec">LEAVE THE GAME</h3>
+    <button id="pQuit">QUIT TO MENU</button>
+    <button id="pReset">↻ START OVER</button>
   </div>
   <p class="info" id="gfxInfo2"></p>
   <p class="info">Keyboard: ↑ ↓ or 1-4 counters · ← → run · Space pour · T pour mode · P resume. Controller: D-pad or LB/RB · A pour · Start resume. Touch: tap or swipe the counters, POUR button.</p>
@@ -6178,6 +6197,38 @@ const DICT_ROWS                             = [
     "LISTEN TO EVERY PLANET'S TUNE",
     "LUISTER NA ELKE PLANEET SE DEUNTJIE",
     "POSŁUCHAJ MELODII KAŻDEJ PLANETY",
+  ],
+
+  // (v1.4.79) TRANSLATIONS, v1.4.82: setting cards
+  ["BREAK REMINDER", "POUSE-HERINNERING", "PRZYPOMNIENIE O PRZERWIE"],
+  ["CALM MODE", "RUSTIGE MODUS", "TRYB SPOKOJNY"],
+  ["CONTINUE AFTER GAME OVER", "GAAN VOORT NA SPEL VERBY", "KONTYNUACJA PO KOŃCU GRY"],
+  ["FLAVOUR ORDERS", "GEURBESTELLINGS", "ZAMÓWIENIA SMAKÓW"],
+  ["FLAVOUR SHAPES", "GEURVORMS", "KSZTAŁTY SMAKÓW"],
+  ["GRAPHICS", "GRAFIKA", "GRAFIKA"],
+  ["HOLIDAY", "VAKANSIEDAG", "ŚWIĘTO"],
+  ["LAYOUT", "UITLEG", "UKŁAD"],
+  ["LEFT-HANDED", "LINKSHANDIG", "DLA LEWORĘCZNYCH"],
+  ["LOOK", "VOORKOMS", "WYGLĄD"],
+  ["MUSIC", "MUSIEK", "MUZYKA"],
+  ["ONE-BUTTON", "EEN KNOPPIE", "JEDEN PRZYCISK"],
+  ["SOUND", "KLANK", "DŹWIĘK"],
+  ["TEXT SIZE", "TEKSGROOTTE", "ROZMIAR TEKSTU"],
+  ["VIBRATION", "VIBRASIE", "WIBRACJE"],
+  ["VOICE", "STEM", "GŁOS"],
+  ["SOUND AND CONTROLS", "KLANK EN KONTROLES", "DŹWIĘK I STEROWANIE"],
+  ["PICTURE", "BEELD", "OBRAZ"],
+  ["LEAVE THE GAME", "VERLAAT DIE SPEL", "WYJŚCIE Z GRY"],
+
+  // (v1.4.79) TRANSLATIONS, v1.4.82: how to play in three steps
+  ["CATCH", "VANG", "ŁAP"],
+  ["Hold POUR at the taps", "Hou SKINK by die krane", "Przytrzymaj NALEJ przy kranach"],
+  ["Let go - it slides to the customer", "Los - dit gly na die klant", "Puść - koktajl pojedzie do klienta"],
+  ["Catch the empty glass coming back", "Vang die leë glas wat terugkom", "Złap pustą szklankę, która wraca"],
+  [
+    "Don't let a customer reach your end of the bar, and never drop a glass.",
+    "Moenie dat 'n klant jou kant van die kroeg bereik nie, en laat nooit 'n glas val nie.",
+    "Nie pozwól, by klient doszedł do twojego końca baru, i nigdy nie upuść szklanki.",
   ],
 ];
 // the texts that carry numbers or names: patterns
@@ -67771,7 +67822,7 @@ function levelOfTour(of) {
     inTour = ((lv - 1) % LAST_LEVEL) + 1;
   return (tour > 1 ? "TOUR " + tour + "  ·  " : "") + "LEVEL " + inTour + of + LAST_LEVEL;
 }
-const GAME_VERSION = "v1.4.81",
+const GAME_VERSION = "v1.4.82",
   GAME_DATE = "22.10.2026",
   VERSION_TEXT = GAME_VERSION + "  ·  " + GAME_DATE;
 const FB = '"Chakra Petch", "Segoe UI", sans-serif';
@@ -74689,6 +74740,15 @@ profWire();
 //  the game, and where the motion capture, the folk songs and the fonts come from. Both from the menu at any time.
 // =====================================================================================
 const NEWS = [
+  {
+    ver: "v1.4.82",
+    title: "CLEARER SETTINGS, PAUSE AND HOW TO PLAY",
+    items: [
+      "SETTINGS AND PAUSE USE THE SAME CLEAR CARDS AS THE MENU",
+      "PAUSE: RESUME FIRST, QUIT AND START OVER SAFELY AT THE BOTTOM",
+      "HOW TO PLAY STARTS WITH THE GAME IN THREE STEPS",
+    ],
+  },
   {
     ver: "v1.4.81",
     title: "A CLEARER, FRIENDLIER MENU",

@@ -117,6 +117,13 @@ button.na:not(.navsel) { opacity: .45; border-style: dashed; filter: grayscale(.
 #overInfo:empty { display: none; }
 /* the menu's two big doors (v2026.10.05d), and the section headings inside SETTINGS and PLAY MORE */
 #menu button.big { min-height: 58px; font-size: 16px; letter-spacing: .1em; }
+/* (v1.4.84) GAME OVER: what took the last life, and a tip for next time */
+#overTip { display: flex; flex-direction: column; gap: 4px; padding: 10px 14px; border-radius: 14px; border: 1px solid rgba(255, 195, 77, .45);
+  background: rgba(255, 195, 77, .08); }
+#overTip[hidden] { display: none; }
+#overTip b { font-size: 13px; letter-spacing: .06em; color: #ff9fbf; }
+#overTip span { font-size: 13px; line-height: 1.35; color: var(--ink); }
+#overTip span::before { content: "\2605  "; color: #ffc34d; }
 /* (v1.4.82) HOW TO PLAY starts with the whole game in three steps */
 #howto .quick { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
 #howto .quick div { display: flex; flex-direction: column; align-items: center; gap: 3px; padding: 10px 6px; text-align: center;
@@ -572,6 +579,8 @@ body.retro .table { font-size: 10px; gap: 5px; }
   <h2>GAME OVER</h2>
   <p class="big" id="overScore"></p>
   <p class="info" id="overInfo"></p>
+  <!-- (v1.4.84) what took the last life, and a tip for next time -->
+  <div id="overTip" hidden><b id="overWhy"></b><span id="overHint"></span></div>
   <div class="stats" id="overStats"></div>
   <form class="name" id="nameForm" hidden>
     <label for="nameIn">Your initials for the high-score table</label>
@@ -6230,6 +6239,38 @@ const DICT_ROWS                             = [
     "Moenie dat 'n klant jou kant van die kroeg bereik nie, en laat nooit 'n glas val nie.",
     "Nie pozwól, by klient doszedł do twojego końca baru, i nigdy nie upuść szklanki.",
   ],
+
+  // (v1.4.79) TRANSLATIONS, v1.4.84: the game-over tip
+  [
+    "A CUSTOMER REACHED YOUR END OF THE BAR",
+    "'N KLANT HET JOU KANT VAN DIE KROEG BEREIK",
+    "KLIENT DOSZEDŁ DO TWOJEGO KOŃCA BARU",
+  ],
+  [
+    "Keep an eye on all four bars - serve the one where someone is closest to you first.",
+    "Hou al vier kroeë dop - bedien eerste die een waar iemand die naaste aan jou is.",
+    "Pilnuj wszystkich czterech barów - najpierw obsłuż ten, na którym ktoś jest najbliżej ciebie.",
+  ],
+  [
+    "A SHAKE SLID OFF THE END - NOBODY WAS THERE TO CATCH IT",
+    "'N SKOMMEL HET VAN DIE PUNT AFGEGLY - NIEMAND WAS DAAR OM DIT TE VANG NIE",
+    "KOKTAJL ZJECHAŁ Z KOŃCA - NIKT GO NIE ZŁAPAŁ",
+  ],
+  [
+    "Only slide a shake down a bar that has a customer waiting on it.",
+    "Gly net 'n skommel af in 'n kroeg waar 'n klant wag.",
+    "Przesuwaj koktajl tylko po barze, na którym czeka klient.",
+  ],
+  [
+    "AN EMPTY GLASS SMASHED AT YOUR END",
+    "'N LEË GLAS HET BY JOU KANT GEBREEK",
+    "PUSTA SZKLANKA ROZBIŁA SIĘ PRZY TOBIE",
+  ],
+  [
+    "After a customer drinks, the glass slides back to you - run along the bar to catch it.",
+    "Nadat 'n klant gedrink het, gly die glas terug na jou - hardloop langs die kroeg om dit te vang.",
+    "Gdy klient wypije, szklanka wraca do ciebie - biegnij wzdłuż baru, by ją złapać.",
+  ],
 ];
 // the texts that carry numbers or names: patterns
 const DICT_PAT                             = [
@@ -8821,6 +8862,7 @@ function resetGame(demo) {
   G.fever = 0;
   G.demo = demo;
   G.won = false;
+  G.lost = null; // (v1.4.84: no last life's cause carried over from the game before - the game-over tip reads it)
   G.end = null;
   G.servedAll = 0;
   G.score = 0;
@@ -14399,6 +14441,21 @@ function tourLoop(p) {
 function endFired() {
   if (G.state === "fired") gameOver();
 } // (the empty bar and the manager stay behind the GAME OVER panel)
+// (v1.4.84) the game-over card: what took the last life, and a tip
+const OVER_TIPS = {
+  grab: [
+    "A CUSTOMER REACHED YOUR END OF THE BAR",
+    "Keep an eye on all four bars - serve the one where someone is closest to you first.",
+  ],
+  shake: [
+    "A SHAKE SLID OFF THE END - NOBODY WAS THERE TO CATCH IT",
+    "Only slide a shake down a bar that has a customer waiting on it.",
+  ],
+  empty: [
+    "AN EMPTY GLASS SMASHED AT YOUR END",
+    "After a customer drinks, the glass slides back to you - run along the bar to catch it.",
+  ],
+};
 function gameOver() {
   G.state = "over";
   const cupM = cupResult(); // (a cup match: the result goes into the bracket)
@@ -14461,6 +14518,17 @@ function gameOver() {
   }
   const table = store.get("scores", []),
     makes = G.score > 0 && (table.length < 20 || G.score > table[table.length - 1].s);
+  // (v1.4.84) WHAT HAPPENED, AND HOW TO DO BETTER: the last life's cause, in plain words, with one tip for next time -
+  // so a new player learns the rule they just broke (not after a cup match, or a game that was won)
+  {
+    const why = G.lost && G.lost.why,
+      tip = OVER_TIPS[why];
+    $("overTip").hidden = !tip || G.won || !!cupM;
+    if (tip) {
+      $("overWhy").textContent = tip[0];
+      $("overHint").textContent = tip[1];
+    }
+  }
   $("nameForm").hidden = !makes;
   $("nameIn").value = store.get("name", "GL");
   fillTable($("overTable"), table, -1);
@@ -67830,7 +67898,7 @@ function levelOfTour(of) {
     inTour = ((lv - 1) % LAST_LEVEL) + 1;
   return (tour > 1 ? "TOUR " + tour + "  ·  " : "") + "LEVEL " + inTour + of + LAST_LEVEL;
 }
-const GAME_VERSION = "v1.4.83",
+const GAME_VERSION = "v1.4.84",
   GAME_DATE = "22.10.2026",
   VERSION_TEXT = GAME_VERSION + "  ·  " + GAME_DATE;
 const FB = '"Chakra Petch", "Segoe UI", sans-serif';
@@ -74752,6 +74820,11 @@ profWire();
 //  the game, and where the motion capture, the folk songs and the fonts come from. Both from the menu at any time.
 // =====================================================================================
 const NEWS = [
+  {
+    ver: "v1.4.84",
+    title: "WHAT WENT WRONG, AND A TIP",
+    items: ["GAME OVER SAYS WHAT TOOK YOUR LAST LIFE - AND HOW TO AVOID IT NEXT TIME"],
+  },
   {
     ver: "v1.4.83",
     title: "ONE MESSAGE AT A TIME",

@@ -10106,9 +10106,17 @@ function update(dt) {
     const big = G.callouts.filter((c) => !c.world && !c.sub);
     if (big.length > 3) for (const c of big.slice(1, big.length - 2)) c.life = 0;
     const head = big.find((c) => c.life > 0);
+    // (v1.4.83) THE SMALL ONES TAKE TURNS TOO: at the start of a level "NEW STICKER", the region's name and the fun fact
+    // all arrived at once, and only the newest one was shown - the others ran out unseen. Now they wait in line like the
+    // big ones: the first one shows and counts down, the rest wait their go (hurried along a little when there's a
+    // queue), and no more than four ever wait
+    const subs = G.callouts.filter((c) => c.sub && c.life > 0);
+    if (subs.length > 4) for (const c of subs.slice(1, subs.length - 3)) c.life = 0;
+    const subHead = subs.find((c) => c.life > 0);
     for (let i = G.callouts.length - 1; i >= 0; i--) {
       const c = G.callouts[i];
-      if (c.world || c.sub || c === head) c.life -= dt * (c === head && big.length > 1 ? 1.8 : 1);
+      if (c.world || c === head) c.life -= dt * (c === head && big.length > 1 ? 1.8 : 1);
+      else if (c.sub && c === subHead) c.life -= dt * (subs.length > 1 ? 1.4 : 1);
       if (c.life <= 0) G.callouts.splice(i, 1);
     }
   }
@@ -67822,7 +67830,7 @@ function levelOfTour(of) {
     inTour = ((lv - 1) % LAST_LEVEL) + 1;
   return (tour > 1 ? "TOUR " + tour + "  ·  " : "") + "LEVEL " + inTour + of + LAST_LEVEL;
 }
-const GAME_VERSION = "v1.4.82",
+const GAME_VERSION = "v1.4.83",
   GAME_DATE = "22.10.2026",
   VERSION_TEXT = GAME_VERSION + "  ·  " + GAME_DATE;
 const FB = '"Chakra Petch", "Segoe UI", sans-serif';
@@ -68262,7 +68270,7 @@ function drawHud(fps) {
       g.globalAlpha = a;
     };
   if (subNow.length) {
-    const c = subNow[subNow.length - 1],
+    const c = subNow[0], // (v1.4.83: the first in line - they take turns now, see update.ts)
       k = c.life / c.max,
       al = Math.min(1, k * 3, (1 - k) * 10),
       txt = T(c.text); // (translated first, so it is the Afrikaans or Polish that gets measured and wrapped)
@@ -68559,7 +68567,7 @@ function drawHud(fps) {
   const headBig = G.callouts.find((c) => !c.world && !c.sub);
   // (v1.2.0: fewer words at once - only the three newest floating words over the bars, the two newest lines of a message)
   const liveW = new Set(G.callouts.filter((c) => c.world && c.life > 0).slice(-3)),
-    liveS = new Set(G.callouts.filter((c) => c.sub && c.life > 0).slice(-2));
+    liveS = new Set(G.callouts.filter((c) => c.sub && c.life > 0).slice(0, 1)); // (v1.4.83: one at a time, in turn)
   drawDanger(g, s, t, sx, sy);
   for (const c of G.callouts) {
     if (!c.world && !c.sub && c !== headBig) continue; // (only one big announcement at a time)
@@ -68740,10 +68748,14 @@ function drawHud(fps) {
   const glW = g.measureText("GL").width;
   g.font = fB(12, 500);
   g.fillStyle = "rgba(185,168,184,.85)";
-  g.fillText(VERSION_TEXT, cssW - 20 - glW, cssH - 11 - lift);
+  // (v1.4.83) the version and date only where they're any use - on the menu, the pause screen and the final score - not
+  // over every game (in a phone held sideways they floated in the middle of the right-hand side); the tune's name stays
+  const showVer = !inGame || ["paused", "over"].includes(G.state),
+    verW = showVer ? g.measureText(VERSION_TEXT).width + 16 : 0;
+  if (showVer) g.fillText(VERSION_TEXT, cssW - 20 - glW, cssH - 11 - lift);
   if (songTxt && songW < cssW * 0.45) {
     g.fillStyle = "rgba(255,195,77,.85)";
-    g.fillText(songTxt, cssW - 20 - glW - g.measureText(VERSION_TEXT).width - 16, cssH - 11 - lift);
+    g.fillText(songTxt, cssW - 20 - glW - verW, cssH - 11 - lift);
   }
   kidHud(g, s, t, fD, sx, sy);
   gmClearHud(g, s); // (the galaxy map, after a level)
@@ -74740,6 +74752,11 @@ profWire();
 //  the game, and where the motion capture, the folk songs and the fonts come from. Both from the menu at any time.
 // =====================================================================================
 const NEWS = [
+  {
+    ver: "v1.4.83",
+    title: "ONE MESSAGE AT A TIME",
+    items: ["THE SMALL MESSAGES TAKE TURNS - NONE IS LOST", "NO VERSION NUMBER OVER THE GAME WHILE YOU PLAY"],
+  },
   {
     ver: "v1.4.82",
     title: "CLEARER SETTINGS, PAUSE AND HOW TO PLAY",

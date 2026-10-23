@@ -6274,6 +6274,11 @@ const DICT_ROWS                             = [
     "Nadat 'n klant gedrink het, gly die glas terug na jou - hardloop langs die kroeg om dit te vang.",
     "Gdy klient wypije, szklanka wraca do ciebie - biegnij wzdłuż baru, by ją złapać.",
   ],
+
+  // (v1.4.79) TRANSLATIONS, v1.4.86: going on in the story
+  ["TAP TO GO ON", "TIK OM AAN TE GAAN", "STUKNIJ, BY KONTYNUOWAĆ"],
+  ["PRESS A TO GO ON", "DRUK A OM AAN TE GAAN", "NACIŚNIJ A, BY KONTYNUOWAĆ"],
+  ["ESC TO SKIP", "ESC OM OOR TE SLAAN", "ESC, BY POMINĄĆ"],
 ];
 // the texts that carry numbers or names: patterns
 const DICT_PAT                             = [
@@ -57313,7 +57318,16 @@ function funHud(g, s, t, fD, sx, sy) {
     g.font = "600 " + Math.round(11 * s) + "px " + FB;
     g.fillStyle = "#8a7a9a";
     g.textAlign = "right";
-    g.fillText("PRESS POUR TO GO ON", bx + bw - 16 * s, by + bh - 12 * s);
+    // (v1.4.86) said the way THIS player goes on: a phone has no POUR button during the story
+    g.fillText(
+      lastDev === "touch" || (coarse && lastDev !== "pad")
+        ? "TAP TO GO ON"
+        : lastDev === "pad"
+          ? "PRESS A TO GO ON"
+          : "PRESS POUR TO GO ON  ·  ESC TO SKIP",
+      bx + bw - 16 * s,
+      by + bh - 12 * s
+    );
     g.globalAlpha = 1;
     g.textAlign = "center";
   }
@@ -67901,7 +67915,7 @@ function levelOfTour(of) {
     inTour = ((lv - 1) % LAST_LEVEL) + 1;
   return (tour > 1 ? "TOUR " + tour + "  ·  " : "") + "LEVEL " + inTour + of + LAST_LEVEL;
 }
-const GAME_VERSION = "v1.4.85",
+const GAME_VERSION = "v1.4.86",
   GAME_DATE = "23.10.2026",
   VERSION_TEXT = GAME_VERSION + "  ·  " + GAME_DATE;
 const FB = '"Chakra Petch", "Segoe UI", sans-serif';
@@ -74058,6 +74072,11 @@ $("byeBack").onclick = () => {
 $("tPause").onclick = () => pause(true);
 $("tSkip").onclick = (e) => {
   e.stopPropagation();
+  // (v1.4.86) in Bogdan's story it skips the rest of the story (the same as Esc)
+  if (G.state === "story" && G.story) {
+    G.story.skip = true;
+    return;
+  }
   skipMini();
 };
 window.addEventListener(
@@ -74823,6 +74842,11 @@ profWire();
 //  the game, and where the motion capture, the folk songs and the fonts come from. Both from the menu at any time.
 // =====================================================================================
 const NEWS = [
+  {
+    ver: "v1.4.86",
+    title: "SKIP THE STORY",
+    items: ["A SKIP BUTTON DURING BOGDAN'S STORY", "THE STORY SAYS HOW TO GO ON - TAP, A OR POUR"],
+  },
   {
     ver: "v1.4.85",
     title: "SMALL TIDY-UPS",
@@ -76155,8 +76179,8 @@ const PADRESET = { t: 0 };
 setInterval(() => {
   {
     const sk = $("tSkip");
-    if (sk) sk.hidden = G.state !== "mini" && G.state !== "bonus";
-  } // (the SKIP button only shows during a mini-game)
+    if (sk) sk.hidden = G.state !== "mini" && G.state !== "bonus" && G.state !== "story";
+  } // (the SKIP button only shows during a mini-game - and, v1.4.86, Bogdan's story)
   let held = false;
   try {
     for (const gp of navigator.getGamepads ? navigator.getGamepads() : [])

@@ -165,6 +165,17 @@ button.na:not(.navsel) { opacity: .45; border-style: dashed; filter: grayscale(.
   #menu { gap: 10px; padding-top: 20px; padding-bottom: 18px; }
   #menu .buttons { gap: 9px; }
 }
+/* (v1.4.87) a phone held sideways - very short: a smaller name, a slimmer START and slimmer cards, so most of the
+   menu shows at once (the rest scrolls) */
+@media (max-height: 520px) {
+  #menu .logo { font-size: 30px; }
+  #menu .logo small { font-size: .5em; margin-top: .1em; }
+  #menu { gap: 8px; padding-top: 14px; padding-bottom: 12px; }
+  #menu .buttons { gap: 7px; }
+  #menu button.primary { min-height: 42px; padding: 8px; font-size: 19px; }
+  .panel button.opt, #menu button.daily { min-height: 46px; padding-top: 6px; padding-bottom: 6px; }
+  #menu .sec { margin-top: 2px; }
+}
 .panel .buttons h3.sec { grid-column: 1 / -1; margin: 10px 2px 0; font-size: 12px; letter-spacing: .14em; color: var(--amber, #ffc34d); opacity: .9; text-align: left; }
 .panel .buttons h3.sec:first-child { margin-top: 0; }
 #settings, #more { max-height: calc(100% - 32px); overflow-y: auto; }
@@ -6279,6 +6290,10 @@ const DICT_ROWS                             = [
   ["TAP TO GO ON", "TIK OM AAN TE GAAN", "STUKNIJ, BY KONTYNUOWAĆ"],
   ["PRESS A TO GO ON", "DRUK A OM AAN TE GAAN", "NACIŚNIJ A, BY KONTYNUOWAĆ"],
   ["ESC TO SKIP", "ESC OM OOR TE SLAAN", "ESC, BY POMINĄĆ"],
+
+  // (v1.4.79) TRANSLATIONS, v1.4.87: starting after the flight
+  ["TAP TO START", "TIK OM TE BEGIN", "STUKNIJ, BY ZACZĄĆ"],
+  ["PRESS A TO START", "DRUK A OM TE BEGIN", "NACIŚNIJ A, BY ZACZĄĆ"],
 ];
 // the texts that carry numbers or names: patterns
 const DICT_PAT                             = [
@@ -57396,7 +57411,16 @@ function funHud(g, s, t, fD, sx, sy) {
     g.globalAlpha = Math.max(0, a) * 0.7;
     g.font = "600 " + Math.round(11 * s) + "px " + FB;
     g.fillStyle = "#b9a8b8";
-    g.fillText("PRESS POUR TO START", cssW / 2, cssH * 0.96);
+    // (v1.4.87) in the words of whatever you're playing with - a phone has no POUR button on this screen
+    g.fillText(
+      lastDev === "touch" || (coarse && lastDev !== "pad")
+        ? "TAP TO START"
+        : lastDev === "pad"
+          ? "PRESS A TO START"
+          : "PRESS POUR TO START",
+      cssW / 2,
+      cssH * 0.96
+    );
     g.globalAlpha = 1;
   }
   if (G.state === "play" && !G.demo) {
@@ -67915,7 +67939,7 @@ function levelOfTour(of) {
     inTour = ((lv - 1) % LAST_LEVEL) + 1;
   return (tour > 1 ? "TOUR " + tour + "  ·  " : "") + "LEVEL " + inTour + of + LAST_LEVEL;
 }
-const GAME_VERSION = "v1.4.86",
+const GAME_VERSION = "v1.4.87",
   GAME_DATE = "23.10.2026",
   VERSION_TEXT = GAME_VERSION + "  ·  " + GAME_DATE;
 const FB = '"Chakra Petch", "Segoe UI", sans-serif';
@@ -74842,6 +74866,11 @@ profWire();
 //  the game, and where the motion capture, the folk songs and the fonts come from. Both from the menu at any time.
 // =====================================================================================
 const NEWS = [
+  {
+    ver: "v1.4.87",
+    title: "THE RIGHT WORDS FOR YOUR DEVICE",
+    items: ["TAP TO START ON A PHONE AFTER THE FLIGHT", "A TIDIER MENU ON A PHONE HELD SIDEWAYS"],
+  },
   {
     ver: "v1.4.86",
     title: "SKIP THE STORY",

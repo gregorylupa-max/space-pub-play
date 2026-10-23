@@ -117,6 +117,20 @@ button.na:not(.navsel) { opacity: .45; border-style: dashed; filter: grayscale(.
 #overInfo:empty { display: none; }
 /* the menu's two big doors (v2026.10.05d), and the section headings inside SETTINGS and PLAY MORE */
 #menu button.big { min-height: 58px; font-size: 16px; letter-spacing: .1em; }
+/* (v1.4.88) GAME OVER: PLAY AGAIN and MENU always in reach - on a short screen (a phone held sideways) the score, the tip
+   and the results pushed them below the bottom edge; now they stay pinned to the bottom of the panel while it scrolls */
+#over > .buttons { position: sticky; bottom: 0; z-index: 2; }
+@media (max-height: 520px) {
+  /* (the dark fade behind them only where the panel scrolls - on a big screen it showed as a dark slab) */
+  #over > .buttons { bottom: -12px; padding: 10px 0 12px; margin-bottom: -12px;
+    background: linear-gradient(rgba(14, 8, 28, 0), rgba(14, 8, 28, .92) 26%); }
+  .panel h2 { font-size: 30px; }
+  #over p.big { margin: 0; font-size: 20px; }
+  #over .stats { margin: 0 0 4px; font-size: 11.5px; gap: 1px 12px; }
+  #overTip { padding: 6px 10px; gap: 2px; }
+  #over > .buttons button.primary { min-height: 42px; font-size: 18px; }
+  #over > .buttons button { min-height: 40px; }
+}
 /* (v1.4.84) GAME OVER: what took the last life, and a tip for next time */
 #overTip { display: flex; flex-direction: column; gap: 4px; padding: 10px 14px; border-radius: 14px; border: 1px solid rgba(255, 195, 77, .45);
   background: rgba(255, 195, 77, .08); }
@@ -67939,7 +67953,7 @@ function levelOfTour(of) {
     inTour = ((lv - 1) % LAST_LEVEL) + 1;
   return (tour > 1 ? "TOUR " + tour + "  ·  " : "") + "LEVEL " + inTour + of + LAST_LEVEL;
 }
-const GAME_VERSION = "v1.4.87",
+const GAME_VERSION = "v1.4.88",
   GAME_DATE = "23.10.2026",
   VERSION_TEXT = GAME_VERSION + "  ·  " + GAME_DATE;
 const FB = '"Chakra Petch", "Segoe UI", sans-serif';
@@ -74866,6 +74880,11 @@ profWire();
 //  the game, and where the motion capture, the folk songs and the fonts come from. Both from the menu at any time.
 // =====================================================================================
 const NEWS = [
+  {
+    ver: "v1.4.88",
+    title: "PLAY AGAIN, ALWAYS IN REACH",
+    items: ["GAME OVER: THE BUTTONS STAY ON SCREEN ON A PHONE HELD SIDEWAYS"],
+  },
   {
     ver: "v1.4.87",
     title: "THE RIGHT WORDS FOR YOUR DEVICE",

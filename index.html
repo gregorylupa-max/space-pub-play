@@ -6643,6 +6643,21 @@ const DICT_ROWS                             = [
     "VIND DIE RUIMTEWESE WORD MEER GELEIDELIK VINNIGER",
     "ZNAJDŹ KOSMITĘ PRZYSPIESZA ŁAGODNIEJ",
   ],
+
+  // (v1.4.79) TRANSLATIONS, galaxy stop count
+
+  // (v1.4.79) TRANSLATIONS, news v1.4.92
+  ["WHERE AM I?", "WAAR IS EK?", "GDZIE JESTEM?"],
+  [
+    "THE PLANET OR STAR YOU ARE ON IS ALWAYS ON SCREEN",
+    "DIE PLANEET OF STER WAAR JY IS, IS ALTYD OP DIE SKERM",
+    "PLANETA LUB GWIAZDA, NA KTÓREJ JESTEŚ, JEST ZAWSZE NA EKRANIE",
+  ],
+  [
+    "AND WHICH STOP: MILKY WAY 3 OF 20, ANDROMEDA 1 OF 20",
+    "EN WATTER STOPPLEK: MELKWEG 3 VAN 20, ANDROMEDA 1 VAN 20",
+    "I KTÓRY PRZYSTANEK: DROGA MLECZNA 3 Z 20, ANDROMEDA 1 Z 20",
+  ],
 ];
 // the texts that carry numbers or names: patterns
 const DICT_PAT                             = [
@@ -6885,6 +6900,9 @@ const DICT_PAT                             = [
   [/^CATCH CHAIN x(\d+)!$/, "VANGKETTING x$1!", "SERIA CHWYTÓW x$1!"],
   // (v1.4.79) v1.4.90: the locals
   [/^THE LOCALS HERE: (.+)$/, "DIE PLAASLIKE MENSE HIER: $1", "TUTEJSI: $1"],
+  // (v1.4.79) galaxy stop count
+  [/^MILKY WAY (\d+) OF (\d+)$/, "MELKWEG $1 VAN $2", "DROGA MLECZNA $1 Z $2"],
+  [/^ANDROMEDA (\d+) OF (\d+)$/, "ANDROMEDA $1 VAN $2", "ANDROMEDA $1 Z $2"],
 ];
 const DICT = new Map                ();
 const DICT_I = LANG === "af" ? 1 : 2;
@@ -70536,13 +70554,36 @@ function drawEggs(g, s) {
 // like v2026.10.05c.)
 // (v1.4.77) WHICH LEVEL, OF HOW MANY: "LEVEL 7 / 40" - and on the second tour and after, "TOUR 2  ·  LEVEL 7 / 40"
 // (it used to say "LEVEL 47 / 40")
+// (v1.4.92) WHERE YOU ARE, during play: the planet, moon or star - and which stop it is in its own galaxy:
+// "MARS  ·  MILKY WAY 4 OF 20", "EMBER  ·  ANDROMEDA 1 OF 20" (and "TOUR 2" in front, the second time round)
+function whereLine() {
+  const lv = Math.max(1, G.level),
+    tour = Math.floor((lv - 1) / LAST_LEVEL) + 1,
+    i = tourStop(),
+    v = VENUES[i],
+    gal = (v.region || "").startsWith("MILKY WAY") ? "MILKY WAY" : "ANDROMEDA",
+    inGal = VENUES.filter(
+      (u) => ((u.region || "").startsWith("MILKY WAY") ? "MILKY WAY" : "ANDROMEDA") === gal
+    ),
+    n = inGal.indexOf(v) + 1;
+  return (
+    (tour > 1 ? "TOUR " + tour + "   ·   " : "") +
+    (v.place || v.name) +
+    "   ·   " +
+    gal +
+    " " +
+    n +
+    " OF " +
+    inGal.length
+  );
+}
 function levelOfTour(of) {
   const lv = Math.max(1, G.level),
     tour = Math.floor((lv - 1) / LAST_LEVEL) + 1,
     inTour = ((lv - 1) % LAST_LEVEL) + 1;
   return (tour > 1 ? "TOUR " + tour + "  ·  " : "") + "LEVEL " + inTour + of + LAST_LEVEL;
 }
-const GAME_VERSION = "v1.4.91",
+const GAME_VERSION = "v1.4.92",
   GAME_DATE = "24.10.2026",
   VERSION_TEXT = GAME_VERSION + "  ·  " + GAME_DATE;
 const FB = '"Chakra Petch", "Segoe UI", sans-serif';
@@ -70933,10 +70974,6 @@ function drawHud(fps) {
     g.globalAlpha = 1;
   };
   HUDB.signBot = 0;
-  // (v1.4.91) THE NAME OF THE STOP, ALWAYS IN SIGHT: when an announcement (or READY / GO) takes the neon sign, the venue's
-  // name moves to the front of the level line under it - so you always know where you are playing
-  const signTaken =
-    (liveHud && G.state === "play" && (G.resumeT > 0 || G.readyT > 0)) || !!bigNow || G.state === "bonus";
   if (liveHud && G.state === "play" && G.resumeT > 0) {
     // (v1.4.81) back from a pause
     const go = G.resumeT < 0.45;
@@ -71042,10 +71079,20 @@ function drawHud(fps) {
     });
     g.globalAlpha = 1;
   }
+  // (v1.4.92) the line is longer now - on a narrow phone its letters shrink a little to fit, rather than run off the sides
+  // (and first the gaps round the dots close up, so the letters don't have to shrink as much)
+  const fitLine = (txt) => {
+    const room = cssW - 24 * s;
+    if (g.measureText(txt).width > room) txt = txt.replace(/\s+·\s+/g, " · ");
+    const wd = g.measureText(txt).width;
+    if (wd > room) g.font = fB(Math.max(8, (12 * room) / wd), 700);
+    return txt;
+  };
   if (inGame && G.state === "bonus" && !subNow.length && liveHud) {
-    // (v1.4.91: in the bonus round too - the stop's name in the level line's place)
+    // (v1.4.91: in the bonus round too - where you are, in the level line's place)
     g.font = fB(12, 700);
-    const lt = here().name + "   ·   " + levelOfTour(" / ");
+    g.font = fB(12, 700);
+    const lt = fitLine(whereLine());
     backing(lt, sx(PW / 2), lineY, 1);
     g.globalAlpha = 1;
     g.fillStyle = "rgba(255,243,226,.9)";
@@ -71054,10 +71101,13 @@ function drawHud(fps) {
   if (inGame && G.state !== "bonus") {
     g.font = fB(12, 700);
     if (!subNow.length) {
-      const lt0 = G.ta // (v1.4.76: Time Attack has no "of how many" - its customers keep coming, so just the count)
-          ? levelOfTour(" / ") + "   ·   SERVED " + G.served
-          : levelOfTour(" / ") + "   ·   SERVED " + G.served + " / " + G.total,
-        lt = signTaken && liveHud ? here().name + "   ·   " + lt0 : lt0;
+      // (v1.4.92) THE PLANET OR STAR YOU ARE ON, AND WHICH STOP OF ITS GALAXY - always in sight, under the neon sign
+      // (and under an announcement when one takes the sign)
+      const lt = fitLine(
+        G.ta // (v1.4.76: Time Attack has no "of how many" - its customers keep coming, so just the count)
+          ? whereLine() + "   ·   SERVED " + G.served
+          : whereLine() + "   ·   SERVED " + G.served + " / " + G.total
+      );
       backing(lt, sx(PW / 2), lineY, 1);
       g.globalAlpha = 1;
       g.fillStyle = "rgba(255,243,226,.9)";
@@ -77506,6 +77556,14 @@ profWire();
 //  the game, and where the motion capture, the folk songs and the fonts come from. Both from the menu at any time.
 // =====================================================================================
 const NEWS = [
+  {
+    ver: "v1.4.92",
+    title: "WHERE AM I?",
+    items: [
+      "THE PLANET OR STAR YOU ARE ON IS ALWAYS ON SCREEN",
+      "AND WHICH STOP: MILKY WAY 3 OF 20, ANDROMEDA 1 OF 20",
+    ],
+  },
   {
     ver: "v1.4.91",
     title: "WILD WEATHER, NIGHT VISITORS",

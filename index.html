@@ -38,6 +38,9 @@ h2 .cnt { display: inline-block; vertical-align: middle; margin-left: .45em; pad
 .panel > button.primary:last-child { position: sticky; bottom: 0; z-index: 2; box-shadow: 0 -10px 18px 6px rgba(14, 8, 28, .85); }
 .panel > .profRow:last-child:has(button.primary) { position: sticky; bottom: 0; z-index: 2; padding-top: 10px;
   background: linear-gradient(rgba(14, 8, 28, 0), rgba(14, 8, 28, .9) 40%); }
+/* (v1.4.89) moving through a panel with the keys or a controller, the chosen button scrolls into view ABOVE the DONE /
+   BACK button pinned to the bottom - MUSIC BOX, the last one in PLAY MORE, stayed hidden behind DONE */
+.panel { scroll-padding-bottom: 92px; scroll-padding-top: 12px; }
 .panel > * { flex-shrink: 0; } /* (v1.4.1: when a panel is taller than the screen it scrolls - its parts used to squash and overlap) */
 .logo { margin: 0; font-family: var(--display); font-weight: 400; font-size: clamp(34px, 8.4vw, 60px); line-height: .98; letter-spacing: .01em; text-wrap: balance;
   color: var(--magenta); text-shadow: 0 0 16px rgba(255, 95, 168, .7), 0 0 40px rgba(255, 95, 168, .35); }
@@ -14671,8 +14674,10 @@ function startBonus() {
     result: null,
     lift: 1,
   };
+  // (v1.4.89) TWICE AS FAST: the children found the alien too easily - every swap now takes half the time (and the
+  // pause between swaps is halved too, below). It still starts a little slower so you can get your eye in.
   const count = Math.min(24, 6 + G.level * 2),
-    dur = Math.max(0.24, 0.5 - G.level * 0.02);
+    dur = Math.max(0.12, 0.25 - G.level * 0.01);
   for (let i = 0; i < count; i++) {
     const a = Math.floor(Math.random() * n);
     let b = Math.floor(Math.random() * (n - 1));
@@ -14713,12 +14718,17 @@ function updateBonus(dt) {
       if (s.k >= 1) {
         b.pos[s.a] = s.pb;
         b.pos[s.b] = s.pa;
-        b.wait = 0.05;
+        b.wait = 0.025;
         b.cur = null;
         if (!b.swaps.length) {
           b.phase = "pick";
           b.t = 99;
           b.wait = 0;
+          // (v1.4.89) THE SPOTLIGHT STARTS IN THE MIDDLE OF THE TABLE - whichever cup is there now. It used to stay on
+          // the same CUP all through the shuffle, so a child who put it on the alien's cup while the alien was showing
+          // had it ride along with that cup - and it lit up the winning place when the shuffle was over
+          b.sel = Math.max(0, b.pos.indexOf(Math.floor(b.n / 2)));
+          b.spotX = undefined;
           callout("WHERE IS IT?", "#5ff5c8", 2.5);
         }
       }
@@ -14849,7 +14859,8 @@ function nextSwap() {
 // left / right move the spotlight to the next cup ALONG THE TABLE (not by the cups' original order - after the shuffle that jumped about)
 function bonusStep(d) {
   const b = bonus;
-  if (!b || (b.phase !== "pick" && b.phase !== "shuffle" && b.phase !== "show")) return;
+  // (v1.4.89: only once the shuffle is over - moving it before then let it follow the alien's cup, see updateBonus)
+  if (!b || b.phase !== "pick") return;
   const p = b.pos[b.sel],
     np = (p + d + b.n) % b.n,
     i = b.pos.indexOf(np);
@@ -67953,8 +67964,8 @@ function levelOfTour(of) {
     inTour = ((lv - 1) % LAST_LEVEL) + 1;
   return (tour > 1 ? "TOUR " + tour + "  ·  " : "") + "LEVEL " + inTour + of + LAST_LEVEL;
 }
-const GAME_VERSION = "v1.4.88",
-  GAME_DATE = "23.10.2026",
+const GAME_VERSION = "v1.4.89",
+  GAME_DATE = "24.10.2026",
   VERSION_TEXT = GAME_VERSION + "  ·  " + GAME_DATE;
 const FB = '"Chakra Petch", "Segoe UI", sans-serif';
 let FD = '"Bungee", "Impact", sans-serif';
@@ -74476,6 +74487,29 @@ function navDir(dx, dy) {
     return bs.filter((b) => Math.abs(ctr(b)[1] - y0) < Math.min(h0, ctr(b)[3]) / 2);
   };
   let n = null;
+  // (v1.4.89) INSIDE THE MUSIC BOX'S SONG LIST, up and down go song by song: the list scrolls in its own box, so the next
+  // song down was often still hidden below its edge - and the nearest button "below" was STOP or SHUFFLE under the list.
+  // The cursor jumped out of the list and back. Now it steps through the list (by its columns) and only leaves it at an end.
+  if (dy) {
+    const box = a.closest("#jbList");
+    if (box) {
+      const items = bs.filter((b) => box.contains(b) && b.matches("button[data-i]"));
+      const k = items.indexOf(a);
+      if (k >= 0 && items.length > 1) {
+        const top0 = items[0].getBoundingClientRect().top,
+          cols = Math.max(1, items.filter((b) => Math.abs(b.getBoundingClientRect().top - top0) < 4).length),
+          j = k + dy * cols;
+        if (j >= 0 && j < items.length) {
+          n = items[j];
+          n.focus();
+          navMark(n);
+          n.scrollIntoView({ block: "nearest" });
+          sfx("nav", undefined, j);
+          return;
+        }
+      }
+    }
+  }
   if (dy) {
     // (v1.4.51) UP AND DOWN GO ROW BY ROW: always to the very next row (it used to skip a row of two buttons when
     // coming from a wide one), landing on the LEFT button of it - or the RIGHT one if that's the side you last moved
@@ -74880,6 +74914,16 @@ profWire();
 //  the game, and where the motion capture, the folk songs and the fonts come from. Both from the menu at any time.
 // =====================================================================================
 const NEWS = [
+  {
+    ver: "v1.4.89",
+    title: "A HARDER CUPS ROUND, EASIER MENUS",
+    items: [
+      "FIND THE ALIEN: THE CUPS SWAP TWICE AS FAST",
+      "THE SPOTLIGHT NO LONGER GIVES THE ALIEN AWAY",
+      "MUSIC BOX NO LONGER HIDDEN BEHIND DONE",
+      "SMOOTHER MOVING THROUGH THE MUSIC BOX",
+    ],
+  },
   {
     ver: "v1.4.88",
     title: "PLAY AGAIN, ALWAYS IN REACH",

@@ -6736,6 +6736,19 @@ const DICT_ROWS                             = [
     "MINISPELETJIES: 'N GROOT 3, 2, 1... GAAN!",
     "MINIGRY: DUŻE 3, 2, 1... START!",
   ],
+
+  // (v1.4.79) TRANSLATIONS, v1.4.96
+  ["THE REAL EARTH AND MOON", "DIE REGTE AARDE EN MAAN", "PRAWDZIWA ZIEMIA I KSIĘŻYC"],
+  [
+    "THE EARTH HAS ITS REAL CONTINENTS AND DESERTS",
+    "DIE AARDE HET SY REGTE KONTINENTE EN WOESTYNE",
+    "ZIEMIA MA SWOJE PRAWDZIWE KONTYNENTY I PUSTYNIE",
+  ],
+  [
+    "THE MOON'S DARK SEAS IN THEIR TRUE PLACES",
+    "DIE MAAN SE DONKER SEË OP HUL REGTE PLEKKE",
+    "CIEMNE MORZA KSIĘŻYCA W ICH PRAWDZIWYCH MIEJSCACH",
+  ],
 ];
 // the texts that carry numbers or names: patterns
 const DICT_PAT                             = [
@@ -48550,6 +48563,61 @@ function kitFront(kind, lane, V, a, b) {
   }
 }
 // =====================================================================================
+//  THE REAL EARTH (v1.4.96): the continents as they really are - Africa, the Americas, Europe and Asia, Australia,
+//  Antarctica, Greenland, the big islands - from a world map of land and sea, one square every 2 degrees. Each row of
+//  land is drawn on the turning globe in short runs, coloured by what grows there: ice, tundra, forest, rainforest,
+//  grassland and the great deserts.
+// =====================================================================================
+const EARTH_MASK =
+  "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAD8D/7//wAAAAAAAAAAAAAAAAAAAAAA/w/4//8fAPADAAAAAAAAAAAAAAAAgP8fAP///wEABgAAAADwAAAAAAAAAAD+fwAA//8PAAAAABwA/D8AAAAAAAAAAHjgAMD//wAAAABgAPz/PwAAAAAAAAD45/kH+P8HAAAAAAP///9//gEAAP//n////4D/PwAA/APg+P///////zH4//////8/+B8AAOD/8///////////j////////wM/wAcAz////////////w/4/////wEY4AEAAHz///////////9/AP////8HcAAcAADw4////////////wDgA/7/f4A/AAAAAH/8/////////8EAAASA//8P+AcAAIBB8/////////8ABwAAAPD//4f/AAAAPAz/////////BzAAAAAA/v//+B8AAGD3//////////8AAQAAAMD/////AwAAuP//////////DwAAAAAA+P///x8AAAD+//////////8AAAAAAAD/////AAAA4P//////////DwAAAAAA8P///wMAAAD+/+Dz/////z8AAAAAAAD///8HAAAA/tgPPP//////MQAAAAAA8P//fwAAAOAD8s7n/////wcBAAAAAAD///8BAAAAPgD7f/7///8jEAAAAAAA4P//DwAAAMBhAP/n////f8IAAAAAAAD8//8AAAAA+AcA//////8BDwAAAAAAgP//BwAAAMB/APj/////PwgAAAAAAADw/x8AAAAA/n////////8DAAAAAAAAAP0fAwAAAPD////7////fwAAAAAAAADgHyAAAACA//9/f/7///8DAAAAAAAAAPgBAgAAAPz///cn/v//XwAAAAAAAAAAHgAAAADA/////gP///8EAAAAAAAAAOADCAAAAP7//89/4B//AQAAAAAAAAAAOAMGAADA/////QP84AcAAAAAAAAAAAA+AAAAAPz//58fwAd+QAAAAAAAAAAAAA8AAADg////ewA4gA8EAAAAAAAAAADAAAAAAPz///8AgAP4wAAAAAAAAAAAAAgfAADA////fwAwgA4YAAAAAAAAAAAA+QcAAPj///8HAAUIgAEAAAAAAAAAAID/AQAA////fwBAgAAYAAAAAAAAAAAA+P8AAMDh//8DAAAQEAAAAAAAAAAAAID/HwAAAPj/HwAAgMMBAAAAAAAAAAAA/P8BAACA//8AAAAQnwAAAAAAAAAAAMD/PwAAAPj/BwAAAOOFAQAAAAAAAAAA/P8/AACA/z8AAABgTtABAAAAAAAAAOD//w8AAPD/AwAAAAQAeAAAAAAAAAAA/P//AAAA/x8AAACAA4AHAAAAAAAAAID//w8AAOD/AwAAAAAAkAAAAAAAAAAA+P//AAAA/j8AAAAAAAAAAAAAAAAAAAD//wcAAPD/cwAAAACAIwAAAAAAAAAA4P8/AAAA/z8HAAAAAD8GAAAAAAAAAAD8/wMAAPD/cQAAAAD4ZwAAAAAAAAAAgP8/AAAA/w8HAAAAwP8HAAAAAAAAAAD4/wMAAOD/MAAAAAD//wAAAAAAAAAAgP8fAAAA/g8DAAAA+P8fAAAAAAAAAAD4PwAAAOB/EAAAAID//wMAAAAAAAAAgP8DAAAA/AMAAAAA+P9/AAAAAAAAAAD4HwAAAMA/AAAAAID//wcAAAAAAAAAwP8AAAAA+AEAAAAA+P8/AAAAAAAAAAD8BwAAAIAPAAAAAIAP/gMAAAAAAAAAwB8AAAAAAAAAAAAAAMAfAAAAAAAAAAD+AQAAAAAAAAAAAAAA8AEgAAAAAAAA4AcAAAAAAAAAAAAAAAAAAAYAAAAAAAA+AAAAAAAAAAAAAAAAAAAQAAAAAAAA4AEAAAAAAAAAAAAAAAAAgAEAAAAAAAAeAAAAAAAAAAAAAAAAAAAEAAAAAAAA4AEAAAAAAAAAAAAAAAAAAAAAAAAAAAAOAAAAAAAAAAAAAAAAAAAAAAAAAAAA4AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAGAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA8P//AQCAAQAAAAAAAAAAAAAAAAAAAPz///8HABwAAMD///8fAAAAAAAAAAD//////wfgAADw//////////8fAAAA////////3wcA/P//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////";
+const EARTH_STEP = 2; // (degrees per square of the map)
+// what the land looks like at (lon, lat) - in degrees
+function earthBiome(lon, lat) {
+  const inB = (a, b, c, d) => lon >= a && lon <= b && lat >= c && lat <= d;
+  if (lat < -60 || (inB(-75, -10, 59, 90) && lon < -12) || lat > 76) return 0; // ice: Antarctica, Greenland, the far north
+  if (
+    inB(-17, 33, 15, 31) || // the Sahara
+    inB(34, 60, 13, 32) || // Arabia
+    inB(56, 72, 25, 37) || // Iran and the Thar
+    inB(76, 112, 37, 46) || // the Taklamakan and the Gobi
+    inB(117, 142, -31, -20) || // the Australian outback
+    inB(13, 24, -28, -19) || // the Namib and the Kalahari
+    inB(-74, -68, -27, -16) || // the Atacama
+    inB(-116, -104, 29, 37) // the deserts of the American south-west
+  )
+    return 4;
+  if (lat > 60 || (lat > 50 && lon > 60)) return 1; // tundra and taiga
+  if (Math.abs(lat) < 10 || inB(95, 155, -10, 20)) return 3; // rainforest
+  return 2; // grassland and forest
+}
+const EARTH_COLS = ["#eef4fa", "#7a8a5a", "#3e8a3a", "#23642a", "#d2b06a"];
+// the runs of land, built once from the map: [middle longitude, latitude, how many squares long, what it is] (radians)
+const EARTH_RUNS             = (() => {
+  const raw = atob(EARTH_MASK),
+    W = 360 / EARTH_STEP,
+    H = 180 / EARTH_STEP,
+    bit = (i, j) => (raw.charCodeAt((j * W + i) >> 3) >> ((j * W + i) & 7)) & 1,
+    out             = [],
+    d2r = Math.PI / 180;
+  for (let j = 0; j < H; j++) {
+    const lat = 90 - (j + 0.5) * EARTH_STEP;
+    let i = 0;
+    while (i < W) {
+      if (!bit(i, j)) {
+        i++;
+        continue;
+      }
+      const lon0 = -180 + (i + 0.5) * EARTH_STEP,
+        b = earthBiome(lon0, lat);
+      let n = 1;
+      while (i + n < W && n < 3 && bit(i + n, j) && earthBiome(lon0 + n * EARTH_STEP, lat) === b) n++;
+      out.push([(lon0 + ((n - 1) * EARTH_STEP) / 2) * d2r, lat * d2r, n, b]);
+      i += n;
+    }
+  }
+  return out;
+})();
+// =====================================================================================
 //  THE PLANET TOUR (v1.4.1): in the full-screen show, the Sun and the worlds of the Solar System drift by one at a time,
 //  big and slowly turning - each with its own look (storms, ice caps, rings, moons) and true facts as captions along the
 //  bottom (WORLD_CAPS, shown by attract.ts like the star events' captions). All drawn here from plain shapes:
@@ -48985,28 +49053,7 @@ function wVenus(r, t) {
   atmosphere(r, col("#ffe8b0"), 0.5);
   nightSide(r, 0.25, 0.85);
 }
-function continentsOn(r, rot, c, pts) {
-  for (const [lon, lat, s] of pts) onSphere(r, rot, lon, lat, r * s, c);
-}
-const EARTH_LAND = [
-  // (made-up continents: a big one, a long one, an island chain and a hot desert land)
-  [0.2, 0.5, 0.2],
-  [0.45, 0.35, 0.22],
-  [0.1, 0.25, 0.16],
-  [0.6, 0.6, 0.15],
-  [0.3, 0.75, 0.14],
-  [1.9, 0.2, 0.17],
-  [2.05, -0.1, 0.16],
-  [2.15, -0.4, 0.13],
-  [1.8, 0.5, 0.12],
-  [3.4, -0.3, 0.1],
-  [3.6, -0.2, 0.08],
-  [3.8, -0.35, 0.07],
-  [4.6, 0.3, 0.18],
-  [4.8, 0.1, 0.17],
-  [4.9, -0.15, 0.14],
-  [5.5, -0.5, 0.15],
-];
+// (v1.4.96: the made-up continents are gone - the real ones are in earthmap.ts)
 function wEarth(r, t, moon = true) {
   // (v1.4.59) THE OCEANS: one smooth sweep of blue - a deep navy at the rim, brightening to a clear azure where the
   // Sun stands overhead (the upper left) - instead of a flat blue ball
@@ -49018,37 +49065,26 @@ function wEarth(r, t, moon = true) {
     disc(-r * 0.2 * k, -r * 0.17 * k, r * (1 - k * 0.78), mix(OC[j2], OC[j2 + 1], x - j2));
   }
   const rot = t * 0.09;
-  // (v1.4.59) THE LAND, ORGANIC: every continent built of several overlapping lumps, so the coasts are ragged, not
-  // round - with turquoise shallows round them, and patches of deep forest scattered over the green
-  const lumps = (fn) => {
-    EARTH_LAND.forEach(([lon, lat, sz], i) => {
-      for (let k = 0; k < 4; k++)
-        fn(
-          lon + (hash(i * 5.1 + k) - 0.5) * sz * 1.6,
-          lat + (hash(i * 3.3 + k * 2) - 0.5) * sz * 1.2,
-          sz * (0.55 + 0.3 * hash(i + k * 7)),
-          i,
-          k
-        );
-    });
-  };
-  lumps((lon, lat, sz) => onSphere(r, rot, lon, lat, r * sz * 1.3, withA(col("#2ab0c0"), 0.4)));
-  lumps((lon, lat, sz) => onSphere(r, rot, lon, lat, r * sz * 1.14, withA(col("#4ac8c8"), 0.35))); // shallow seas
-  lumps((lon, lat, sz) => onSphere(r, rot, lon, lat, r * sz, col("#3a8a3a"))); // the land
-  lumps((lon, lat, sz, i, k) => {
-    if ((i + k) % 2 === 0)
-      onSphere(r, rot, lon + sz * 0.15, lat - sz * 0.1, r * sz * 0.45, withA(col("#245e2a"), 0.7));
-  }); // forests
-  continentsOn(
-    r,
-    rot,
-    col("#c8a860"),
-    EARTH_LAND.filter((p, i) => i % 4 === 1).map(([a, b, s]) => [a + 0.04, b - 0.03, s * 0.55])
-  ); // deserts
-  for (const [lon, lat, sz] of EARTH_LAND.filter((p, i) => i % 3 === 0))
-    onSphere(r, rot, lon - 0.03, lat + 0.06, r * sz * 0.18, withA(col("#8a7a6a"), 0.7), 1.8, 0.6); // (mountain ranges)
-  polarCap(r, 1.02, col("#f4f8ff"));
-  polarCap(r, -1.05, col("#f4f8ff")); // the ice caps
+  // (v1.4.96) THE REAL CONTINENTS (earthmap.ts): every row of land on the map, in short runs round the turning globe -
+  // first a turquoise rim of shallow sea, then the land in the colour of what grows there; a few lumps of mountains
+  const sq = (EARTH_STEP * Math.PI) / 180,
+    cols = EARTH_COLS.map((h) => col(h)),
+    shallow = withA(col("#3ab8c8"), 0.3);
+  for (const [lon, lat, n] of EARTH_RUNS)
+    onSphere(r, rot, lon, lat, r * sq * 1.05, shallow, n * 0.62 + 0.5, 1); // (the shallow sea round every coast - which softens it too)
+  for (const [lon, lat, n, b] of EARTH_RUNS) {
+    const c = b === 2 && hash(lon * 7 + lat * 3) < 0.25 ? cols[3] : cols[b];
+    onSphere(r, rot, lon, lat, r * sq * 0.82, c, n * 0.68 + 0.45, 1);
+  }
+  for (const [lon, lat, s] of [
+    [-1.88, 0.75, 0.05], // the Rockies
+    [-1.22, -0.3, 0.05], // the Andes
+    [1.5, 0.5, 0.07], // the Himalayas and Tibet
+    [0.17, 0.81, 0.03], // the Alps
+  ])
+    onSphere(r, rot, lon, lat, r * s, withA(col("#8a7a6a"), 0.55), 1.6, 0.7); // (mountains)
+  polarCap(r, 1.3, col("#eef6ff")); // (v1.4.96: the frozen Arctic Ocean - the land round it shows now)
+  polarCap(r, -1.25, col("#f4f8ff")); // the ice caps
   // a glint of the Sun on the water, up to the upper left
   R.setAdd(true);
   disc(-r * 0.38, -r * 0.3, r * 0.16, withA(col("#cfe8ff"), 0.22), r * 0.11);
@@ -49094,14 +49130,17 @@ function wEarth(r, t, moon = true) {
   nightSide(r, 0.3, 0.9);
   // city lights on the night side
   R.setAdd(true);
-  for (const [lon, lat, s] of EARTH_LAND) {
+  for (let q = 0; q < EARTH_RUNS.length; q += 7) {
+    const [lon, lat, , bio] = EARTH_RUNS[q],
+      s = 0.05;
+    if (bio === 0 || bio === 4) continue; // (nobody lives out on the ice or deep in the desert)
     const d = lon - rot,
       cz = Math.cos(lat) * Math.cos(d),
       x = r * Math.cos(lat) * Math.sin(d),
       y = -r * Math.sin(lat),
       hw = r * Math.sqrt(Math.max(0, 1 - (y / r) ** 2));
     if (cz > 0.1 && x > hw * 0.62)
-      for (let k = 0; k < 5; k++)
+      for (let k = 0; k < 2; k++)
         disc(
           x + (hash(k + lon * 9) - 0.5) * r * s,
           y + (hash(k * 3 + lat * 7) - 0.5) * r * s * 0.7,
@@ -49124,42 +49163,93 @@ function wEarth(r, t, moon = true) {
     }
   }
 }
+// (v1.4.96) THE MOON'S REAL FACE: its dark "seas" (maria - old floods of lava) where they really are on the side that
+// always faces us, each built of overlapping lumps so the shores are ragged - [longitude, latitude, size] in degrees,
+// east to the right, north at the top; and its brightest young craters, with rays
+const MOON_MARIA                             = [
+  // Oceanus Procellarum, the Ocean of Storms - the biggest, a great dark sweep down the left
+  [-57, 18, 15],
+  [-52, 5, 12],
+  [-62, 30, 10],
+  [-45, 28, 9],
+  [-60, -2, 9],
+  [-40, 12, 8],
+  [-68, 12, 7],
+  [-16, 34, 11],
+  [-26, 38, 7],
+  [-5, 30, 6], // Mare Imbrium, the Sea of Rains
+  [-40, 56, 5],
+  [-20, 57, 6],
+  [0, 57, 6],
+  [20, 57, 5], // Mare Frigoris, the Sea of Cold - a thin band in the north
+  [17, 28, 7],
+  [21, 22, 4], // Mare Serenitatis, the Sea of Serenity
+  [31, 9, 7],
+  [24, 4, 5],
+  [37, 14, 4], // Mare Tranquillitatis, the Sea of Tranquility (where Apollo 11 landed)
+  [59, 17, 5], // Mare Crisium, the Sea of Crises - a dark oval near the right edge
+  [51, -7, 6],
+  [55, -2, 4], // Mare Fecunditatis, the Sea of Fertility
+  [35, -15, 4], // Mare Nectaris, the Sea of Nectar
+  [4, 13, 3.5],
+  [1, 2, 3], // Mare Vaporum, Sinus Medii
+  [-17, -21, 7],
+  [-22, -12, 5], // Mare Nubium and Mare Cognitum
+  [-39, -24, 4.5], // Mare Humorum, the Sea of Moisture
+  [86, 3, 4],
+  [-90, -18, 4], // Mare Smythii and Mare Orientale, on the very edges
+];
+const MOON_CRATERS                                     = [
+  // [lon, lat, size, rays] - Tycho with its great rays, Copernicus, Kepler, Aristarchus (the brightest spot of all)
+  [-11, -43, 3, 1],
+  [-20, 10, 3.2, 0.6],
+  [-38, 8, 1.8, 0.4],
+  [-47, 24, 1.6, 0.2],
+];
 function wMoonBall(r, t) {
-  worldBall(r, col("#c8c8c0"), col("#8a8a84"));
-  const rot = 0.4; // (it always shows us the same face)
-  for (const [lon, lat, s] of [
-    [0.1, 0.45, 0.26],
-    [0.45, 0.3, 0.2],
-    [-0.25, 0.25, 0.22],
-    [0.3, -0.05, 0.16],
-    [-0.1, -0.1, 0.12],
-    [0.6, 0.6, 0.12],
-  ])
-    for (const [k, al] of [
-      [1.25, 0.3],
-      [1, 0.5],
-      [0.7, 0.6],
-    ]         )
-      onSphere(r, rot, lon + 0.4 + (k - 1) * 0.04, lat, r * s * k, withA(col("#6e6e6a"), al)); // the seas of old lava (v1.4.60: soft-edged)
-  for (let i = 0; i < 26; i++) {
-    const lon = hash(i * 3.7) * 2.6 - 1.3 + 0.4,
-      lat = (hash(i * 6.1) - 0.5) * 2.4,
-      s = r * (0.02 + hash(i * 2.2) ** 2 * 0.07);
-    onSphere(r, rot, lon, lat, s, col("#e0e0d8"));
-    onSphere(r, rot, lon + 0.01, lat - 0.01, s * 0.75, col("#9a9a94"));
+  worldBall(r, col("#d2d0c8"), col("#8e8c86"));
+  const rot = 0, // (it always shows us the same face)
+    D = Math.PI / 180;
+  // the bright, cratered highlands everywhere first: a speckle of old craters
+  for (let i = 0; i < 24; i++) {
+    const lon = (hash(i * 3.7) - 0.5) * 3,
+      lat = (hash(i * 6.1) - 0.5) * 2.8,
+      sz = r * (0.012 + hash(i * 2.2) ** 2 * 0.05);
+    onSphere(r, rot, lon, lat, sz, withA(col("#e2e0d8"), 0.5));
+    onSphere(r, rot, lon + 0.008, lat - 0.008, sz * 0.72, withA(col("#bab8b0"), 0.45));
   }
+  // the seas: each one many overlapping lumps of ONE solid grey (so they melt into a single shape with a ragged shore),
+  // over a faint soft halo - smooth dark plains, like the real ones
+  const lumps             = [];
+  MOON_MARIA.forEach(([lo, la, sz], m) => {
+    for (let k = 0; k < 6; k++)
+      lumps.push([
+        (lo + (hash(m * 5.1 + k) - 0.5) * sz * 0.9) * D,
+        (la + (hash(m * 3.3 + k * 2) - 0.5) * sz * 0.8) * D,
+        r * sz * D * (0.75 + 0.3 * hash(m + k * 7)),
+      ]);
+  });
+  for (const [lon, lat, ss] of lumps) onSphere(r, rot, lon, lat, ss * 1.3, withA(col("#8c8a84"), 0.12));
+  for (const [lon, lat, ss] of lumps) onSphere(r, rot, lon, lat, ss, col("#7c7a74"));
+  for (const [lon, lat, ss] of lumps)
+    onSphere(r, rot, lon + 0.01, lat - 0.01, ss * 0.55, withA(col("#6c6a64"), 0.35)); // (darker in the middle)
+  // the young bright craters on top, and their rays
   R.setAdd(true);
-  for (let i = 0; i < 8; i++) {
-    const a = (i / 8) * 6.283;
-    line(
-      r * 0.1,
-      r * 0.55,
-      r * 0.1 + Math.cos(a) * r * 0.35,
-      r * 0.55 + Math.sin(a) * r * 0.25,
-      r * 0.012,
-      withA(C.white, 0.18)
-    );
-  } // a young crater's bright rays
+  for (const [lo, la, sz, rays] of MOON_CRATERS) {
+    onSphere(r, rot, lo * D, la * D, r * sz * D, withA(C.white, 0.45));
+    if (rays > 0.3) {
+      const d = lo * D,
+        x = r * Math.cos(la * D) * Math.sin(d),
+        y = -r * Math.sin(la * D);
+      for (let i = 0; i < 12; i++) {
+        const a = (i / 12) * 6.283 + hash(i + lo);
+        let L = r * (0.25 + hash(i * 3 + la) * 0.35) * rays;
+        for (let q = 0; q < 6 && Math.hypot(x + Math.cos(a) * L, y + Math.sin(a) * L * 0.8) > r * 0.96; q++)
+          L *= 0.75; // (the rays stay on the Moon)
+        line(x, y, x + Math.cos(a) * L, y + Math.sin(a) * L * 0.8, r * 0.016, withA(C.white, 0.05));
+      }
+    }
+  }
   R.setAdd(false);
   sunSheen(r, 0.1);
   nightSide(r, 0.15, 0.92);
@@ -55149,14 +55239,27 @@ function cwDrawNightScenes(t, b, dark) {
     glow(mx, my, mr * 1.5, withA(col("#c8d8ff"), 0.25 * a));
     R.setAdd(false);
     disc(mx, my, mr, withA(col("#d8dce6"), a));
-    for (const [dx, dy, rx, ry] of [
-      [-0.3, -0.25, 0.32, 0.26],
-      [0.22, -0.34, 0.24, 0.18],
-      [0.3, 0.12, 0.26, 0.2],
-      [-0.12, 0.3, 0.2, 0.15],
-      [-0.52, 0.04, 0.13, 0.2],
-    ])
-      disc(mx + dx * mr, my + dy * mr, rx * mr, withA(col("#8f97aa"), 0.8 * a), ry * mr); // (the dark seas)
+    // (v1.4.96) THE REAL SEAS OF THE MOON, where they really are (MOON_MARIA, planets.ts) - one solid grey, so the lumps
+    // of each sea melt into one ragged shape
+    {
+      const D = Math.PI / 180,
+        sea = withA(col("#8f97aa"), a);
+      MOON_MARIA.forEach(([lo, la, sz], m2) => {
+        for (let k2 = 0; k2 < 5; k2++) {
+          const lon = (lo + (hash(m2 * 5.1 + k2) - 0.5) * sz * 0.9) * D,
+            lat = (la + (hash(m2 * 3.3 + k2 * 2) - 0.5) * sz * 0.8) * D,
+            ss = mr * sz * D * (0.75 + 0.3 * hash(m2 + k2 * 7));
+          if (Math.cos(lon) < 0.05) continue;
+          disc(
+            mx + mr * Math.cos(lat) * Math.sin(lon),
+            my - mr * Math.sin(lat),
+            ss * Math.max(0.3, Math.cos(lon)),
+            sea,
+            ss * Math.max(0.3, Math.cos(lat))
+          );
+        }
+      });
+    }
     for (let i = 0; i < 26; i++) {
       const an = hash(i * 7.1) * 6.283,
         rr = Math.sqrt(hash(i * 3.9)) * 0.88 * mr,
@@ -70899,7 +71002,7 @@ function levelOfTour(of) {
     inTour = ((lv - 1) % LAST_LEVEL) + 1;
   return (tour > 1 ? "TOUR " + tour + "  ·  " : "") + "LEVEL " + inTour + of + LAST_LEVEL;
 }
-const GAME_VERSION = "v1.4.95",
+const GAME_VERSION = "v1.4.96",
   GAME_DATE = "26.10.2026",
   VERSION_TEXT = GAME_VERSION + "  ·  " + GAME_DATE;
 const FB = '"Chakra Petch", "Segoe UI", sans-serif';
@@ -77879,6 +77982,11 @@ profWire();
 //  the game, and where the motion capture, the folk songs and the fonts come from. Both from the menu at any time.
 // =====================================================================================
 const NEWS = [
+  {
+    ver: "v1.4.96",
+    title: "THE REAL EARTH AND MOON",
+    items: ["THE EARTH HAS ITS REAL CONTINENTS AND DESERTS", "THE MOON'S DARK SEAS IN THEIR TRUE PLACES"],
+  },
   {
     ver: "v1.4.95",
     title: "A TIDIER DEMO",

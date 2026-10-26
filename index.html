@@ -6658,6 +6658,33 @@ const DICT_ROWS                             = [
     "EN WATTER STOPPLEK: MELKWEG 3 VAN 20, ANDROMEDA 1 VAN 20",
     "I KTÓRY PRZYSTANEK: DROGA MLECZNA 3 Z 20, ANDROMEDA 1 Z 20",
   ],
+
+  // (v1.4.79) TRANSLATIONS, news v1.4.93
+  [
+    "QUIET DEMO, CLEAR WORDS, MORE MOONS",
+    "STIL DEMO, DUIDELIKE WOORDE, MEER MANE",
+    "CICHE DEMO, WYRAŹNE NAPISY, WIĘCEJ KSIĘŻYCÓW",
+  ],
+  [
+    "THE DEMO PLAYS ONLY MUSIC - NO MORE SHORT SOUNDS",
+    "DIE DEMO SPEEL NET MUSIEK - GEEN KORT GELUIDJIES MEER NIE",
+    "DEMO GRA TYLKO MUZYKĘ - KONIEC Z KRÓTKIMI DŹWIĘKAMI",
+  ],
+  [
+    "CLEARER WORDS OVER BRIGHT PLANETS",
+    "DUIDELIKER WOORDE OOR HELDER PLANETE",
+    "WYRAŹNIEJSZE NAPISY NA TLE JASNYCH PLANET",
+  ],
+  [
+    "PRESS ANY KEY NO LONGER BLINKS AWAY",
+    "DRUK ENIGE SLEUTEL FLIKKER NIE MEER WEG NIE",
+    "NACIŚNIJ DOWOLNY KLAWISZ JUŻ NIE ZNIKA",
+  ],
+  [
+    "MORE MOONS ROUND JUPITER, SATURN, URANUS AND NEPTUNE",
+    "MEER MANE OM JUPITER, SATURNUS, URANUS EN NEPTUNUS",
+    "WIĘCEJ KSIĘŻYCÓW WOKÓŁ JOWISZA, SATURNA, URANA I NEPTUNA",
+  ],
 ];
 // the texts that carry numbers or names: patterns
 const DICT_PAT                             = [
@@ -19640,6 +19667,8 @@ function sideScene(type, edge, dir, py, pr, wAt, y0, y1, t) {
     for (const [ox2, oy2, r, c] of [
       [0.3, -80, 18, "#ffe8c0"],
       [0.55, -30, 10, "#c0f0ff"],
+      [0.72, -110, 7, "#ffd0a0"], // (v1.4.93: more moons out of the window)
+      [0.18, 10, 5, "#e0e0f0"],
     ]         ) {
       const x = edge + dir * wAt(py + oy2) * ox2;
       if (!ins(x, py + oy2, r)) continue;
@@ -49162,6 +49191,36 @@ function wJupiter(r, t) {
     disc(mx, my, r * s, col(c));
     disc(mx + r * s * 0.35, my, r * s * 0.8, withA(col("#02030c"), 0.6));
   }
+  // (v1.4.93) and some of its many small ones: little red Amalthea close in, Thebe, Himalia far out - and a scatter of
+  // tiny captured moonlets further still (Jupiter has about 95 moons)
+  giantMoon(r, t, 1.22, 0.9, 0.022, "#c8704a", 0.4);
+  giantMoon(r, t, 1.32, 0.75, 0.014, "#a8807a", 2.6);
+  giantMoon(r, t, 3.7, 0.07, 0.022, "#9a9088", 1.1, 0.14);
+  for (let i = 0; i < 6; i++)
+    giantMoon(
+      r,
+      t,
+      3.9 + hash(i * 3.1) * 0.9,
+      0.04 + hash(i) * 0.03,
+      0.01,
+      "#8a8278",
+      i * 1.9,
+      0.2 + hash(i * 7) * 0.2
+    );
+}
+// (v1.4.93) MORE MOONS FOR THE GIANT PLANETS: a moon going round a world of radius r - out to d times its radius, its
+// orbit seen nearly edge-on (flat), tipped by tilt; sz is its size (of r), c its colour, two = a two-toned moon like
+// Iapetus. It hides when it passes behind the planet, and has its own sunlit side and shadowed side.
+function giantMoon(r, t, d, sp, sz, c, ph, flat = 0.08, tilt = 0, two = false) {
+  const a = t * sp + ph,
+    mx = Math.cos(a) * r * d,
+    my = Math.sin(a) * r * d * flat + mx * tilt;
+  if (Math.sin(a) < 0 && mx * mx + my * my < r * r * 1.02) return; // (behind the planet)
+  const mr = Math.max(0.8, r * sz);
+  disc(mx, my, mr, col(c));
+  if (two) disc(mx - mr * 0.3, my, mr * 0.7, col("#3a2a22")); // (its dark half)
+  disc(mx - mr * 0.3, my - mr * 0.3, mr * 0.35, withA(C.white, 0.3)); // (the sunlit side)
+  disc(mx + mr * 0.35, my, mr * 0.8, withA(col("#02030c"), 0.55)); // (and its night side)
 }
 function wSaturn(r, t) {
   drawSaturn(0, 0, r * 0.78, 0.3, col("#ecd29a"), col("#a8824e"), -0.12);
@@ -49173,6 +49232,14 @@ function wSaturn(r, t) {
     disc(mx, my, r * 0.075, col("#d8963a"));
     disc(mx + r * 0.025, my + r * 0.01, r * 0.06, withA(col("#02030c"), 0.4));
   }
+  // (v1.4.93) and its other moons, out in the plane of the rings: little Mimas with its giant crater, icy Enceladus
+  // (the brightest thing in the Solar System), Tethys, Dione, Rhea - and two-toned Iapetus, far out
+  giantMoon(r, t, 2.0, 0.42, 0.024, "#c8c4bc", 0.3, 0.3, -0.12);
+  giantMoon(r, t, 2.15, 0.36, 0.026, "#ffffff", 1.9, 0.3, -0.12);
+  giantMoon(r, t, 2.35, 0.3, 0.034, "#e0dcd4", 3.3, 0.3, -0.12);
+  giantMoon(r, t, 2.6, 0.24, 0.036, "#d4d0c8", 4.6, 0.3, -0.12);
+  giantMoon(r, t, 3.0, 0.17, 0.045, "#c8c0b4", 5.5, 0.3, -0.12);
+  giantMoon(r, t, 3.6, 0.08, 0.04, "#e8e0d0", 0.9, 0.42, -0.2, true);
 }
 function wUranus(r, t) {
   const tilt = 1.48; // (on its side: the rings stand up and down)
@@ -49199,12 +49266,21 @@ function wUranus(r, t) {
   ])
     ringBand(0, 0, r * r0, r * r1, 0.2, 0, Math.PI, withA(col("#9ab4c4"), 0.6), 40);
   pop();
-  for (let i = 0; i < 3; i++) {
-    const a = t * (0.2 - i * 0.05) + i * 2.1,
+  // (v1.4.93: its five big moons now - Miranda, Ariel, Umbriel, Titania and Oberon - going round its tipped-over
+  //  middle, up and down)
+  for (const [i, d, sz, c] of [
+    [0, 1.3, 0.03, "#c8c4bc"],
+    [1, 1.55, 0.04, "#d4d0c8"],
+    [2, 1.85, 0.04, "#8a8680"],
+    [3, 2.2, 0.05, "#c8bcb0"],
+    [4, 2.55, 0.048, "#b0a49a"],
+  ]         ) {
+    const a = t * (0.24 - i * 0.04) + i * 2.1,
       mx = Math.sin(a) * r * 0.3,
-      my = Math.cos(a) * r * (1.4 + i * 0.35); // (its moons go round its tipped-over middle - up and down)
+      my = Math.cos(a) * r * d;
     if (Math.sin(a) < 0 && Math.abs(my) < r) continue;
-    disc(mx, my, r * 0.045, col("#b8b4ac"));
+    disc(mx, my, r * sz, col(c));
+    disc(mx + r * sz * 0.35, my, r * sz * 0.8, withA(col("#02030c"), 0.5));
   }
 }
 function wNeptune(r, t) {
@@ -49235,6 +49311,9 @@ function wNeptune(r, t) {
     disc(mx, my, r * 0.08, col("#e0c8c0"));
     disc(mx + r * 0.03, my, r * 0.065, withA(col("#02030c"), 0.45));
   }
+  // (v1.4.93) and little dark Proteus close in, and Nereid on its long stretched-out orbit far away
+  giantMoon(r, t, 1.3, 0.5, 0.025, "#6a6660", 1.2, 0.1);
+  giantMoon(r, t, 3.2, 0.06, 0.02, "#a8a49c", 2.4, 0.35, 0.1);
 }
 function wPluto(r, t) {
   // PLUTO and CHARON circle a point between them
@@ -58409,19 +58488,22 @@ function funHud(g, s, t, fD, sx, sy) {
       g.fillStyle = "#fff3e2";
       ls.forEach((ln, j) => g.fillText(ln, cssW / 2, by + 30 * s + j * lh + lh / 2));
     }
-    g.globalAlpha = Math.max(0, a) * 0.7;
-    g.font = "600 " + Math.round(11 * s) + "px " + FB;
-    g.fillStyle = "#b9a8b8";
     // (v1.4.87) in the words of whatever you're playing with - a phone has no POUR button on this screen
-    g.fillText(
+    // (v1.4.93: brighter, bigger and with a dark edge - it was a faint grey that disappeared over a bright planet)
+    const st =
       lastDev === "touch" || (coarse && lastDev !== "pad")
         ? "TAP TO START"
         : lastDev === "pad"
           ? "PRESS A TO START"
-          : "PRESS POUR TO START",
-      cssW / 2,
-      cssH * 0.96
-    );
+          : "PRESS POUR TO START";
+    g.globalAlpha = Math.max(0, a) * (0.8 + 0.2 * Math.sin(performance.now() / 260));
+    g.font = "700 " + Math.round(13 * s) + "px " + FB;
+    g.lineJoin = "round";
+    g.lineWidth = 3.5 * s;
+    g.strokeStyle = "rgba(6,4,14,.9)";
+    g.strokeText(st, cssW / 2, cssH * 0.955);
+    g.fillStyle = "#fff3e2";
+    g.fillText(st, cssW / 2, cssH * 0.955);
     g.globalAlpha = 1;
   }
   if (G.state === "play" && !G.demo) {
@@ -69851,6 +69933,13 @@ const pressText = () =>
 // the attract screens' text and boxes, drawn on top of the game picture
 function neon2(g, txt, x, y, px, c) {
   g.font = Math.round(px) + "px " + FD;
+  g.textAlign = "center";
+  g.textBaseline = "middle";
+  // (v1.4.93) a dark edge round the letters first, so they stand out over a bright planet or a white flash
+  g.lineJoin = "round";
+  g.lineWidth = Math.max(2.5, px * 0.16);
+  g.strokeStyle = "rgba(6,4,14,.88)";
+  g.strokeText(txt, x, y);
   g.fillStyle = c;
   g.shadowColor = c;
   g.shadowBlur = px * 0.8;
@@ -69902,12 +69991,25 @@ function drawAttract(g, s, t) {
     g.font = fD(px);
     const tw = g.measureText(txt).width;
     if (tw > cssW - 24) g.font = Math.floor((px * s * (cssW - 24)) / tw) + "px " + FD;
+    // (v1.4.93) CLEARER LETTERS: a dark edge round them first, then the glowing colour - so the words read over
+    // anything, a bright planet, a supernova's flash, the white of the Moon
+    g.lineJoin = "round";
+    g.lineWidth = Math.max(2.5 * s, parseFloat(g.font) * 0.16);
+    g.strokeStyle = "rgba(6,4,14,.88)";
+    g.strokeText(txt, cx, y);
     g.fillStyle = c;
     g.shadowColor = c;
-    g.shadowBlur = blur * s;
+    g.shadowBlur = Math.min(blur, 10) * s;
     g.fillText(txt, cx, y);
     g.shadowBlur = 0;
   }; // (shrinks to fit narrow screens)
+  // (v1.4.93) "PRESS ANY KEY" no longer blinks out of sight half the time: it gently pulses, on its own dark strip
+  const prompt = (y, px) => {
+    band(pressText(), y, px, 0.6);
+    g.globalAlpha = 0.7 + 0.3 * Math.sin(t * 4);
+    neon(pressText(), y, px, "#ffffff", 8);
+    g.globalAlpha = 1;
+  };
   // a soft dark band behind a caption, so it reads over anything - a planet, a supernova (v1.2.0)
   const band = (txt, y, px, a = 0.55) => {
     g.font = fD(px);
@@ -69941,7 +70043,7 @@ function drawAttract(g, s, t) {
     neon("COSMIC ARCADE", cssH * 0.3 + 138 * s, 20, "#ffc34d", 10);
     neon("A SPACE MILKSHAKE BAR ARCADE GAME", cssH * 0.3 + 168 * s, 11, "#bfe4ff", 6);
     g.globalAlpha = 1;
-    if (blink) neon(pressText(), cssH * 0.68, 22, "#ffffff", 12);
+    prompt(cssH * 0.68, 22);
     neon("1 OR 2 PLAYERS  ·  CO-OP OR VERSUS", cssH * 0.68 + 40 * s, 11, "#b9a8ff", 4);
     neon("© 2026 GL   ·   FREE PLAY", cssH * 0.86, 12, "#ff8fbf", 4);
   } else if (ph === "demo") {
@@ -69993,7 +70095,7 @@ function drawAttract(g, s, t) {
       if (!VERT) g.fillText(here().sub, cx, lY + 22 * s);
       g.globalAlpha = 1;
     }
-    if (!blink) neon(pressText(), cssH * 0.86, 16, "#ffffff", 10);
+    prompt(cssH * 0.86, 16);
     neon("FREE PLAY", cssH * 0.92, 10, "#ff8fbf", 4);
   } else if (ph === "scores") {
     g.fillStyle = "rgba(4,2,10,.84)";
@@ -70076,7 +70178,7 @@ function drawAttract(g, s, t) {
       g.fillText(r.sec || "", L0 + Wd.wR + Wd.gap + Wd.wN + Wd.gap + Wd.wS + Wd.gap, y);
       g.textAlign = "center";
     });
-    if (blink) neon(pressText(), cssH * 0.9, 16, "#ffffff", 10);
+    prompt(cssH * 0.9, 16);
   } else if (ph === "cast") {
     neon("MEET THE REGULARS", cssH * 0.12, 26, "#5ff5c8", 16);
     for (const c of ATTRACT.cast) {
@@ -70272,11 +70374,7 @@ function drawAttract(g, s, t) {
         g.globalAlpha = 1;
       }
     }
-    if (blink) {
-      g.globalAlpha = 0.35;
-      neon(pressText(), cssH * 0.95, 11, "#ffffff", 6);
-      g.globalAlpha = 1;
-    }
+    prompt(cssH * 0.95, 14);
   }
   g.textBaseline = "top";
 }
@@ -70554,6 +70652,33 @@ function drawEggs(g, s) {
 // like v2026.10.05c.)
 // (v1.4.77) WHICH LEVEL, OF HOW MANY: "LEVEL 7 / 40" - and on the second tour and after, "TOUR 2  ·  LEVEL 7 / 40"
 // (it used to say "LEVEL 47 / 40")
+// (v1.4.93) EVERY WORD OF THE DEMO, THE SHOWS AND THE STORY GETS A DARK EDGE: while fn draws, each line of text is
+// outlined before it is filled - so the captions and "PRESS ANY KEY" stay clear over a bright planet, a flash, the Moon
+function outlinedText(g, fn) {
+  const fill0 = g.fillText;
+  g.fillText = function (txt, x, y, w ) {
+    const lw = this.lineWidth,
+      ss = this.strokeStyle,
+      lj = this.lineJoin,
+      sb = this.shadowBlur;
+    this.lineJoin = "round";
+    this.lineWidth = Math.max(2, +((/(\d+(?:\.\d+)?)px/.exec(String(this.font)) || [])[1] || 12) * 0.2);
+    this.strokeStyle = "rgba(6,4,14,.85)";
+    this.shadowBlur = 0;
+    if (w === undefined) this.strokeText(txt, x, y);
+    else this.strokeText(txt, x, y, w);
+    this.lineWidth = lw;
+    this.strokeStyle = ss;
+    this.lineJoin = lj;
+    this.shadowBlur = sb;
+    return w === undefined ? fill0.call(this, txt, x, y) : fill0.call(this, txt, x, y, w);
+  };
+  try {
+    fn();
+  } finally {
+    delete g.fillText;
+  }
+}
 // (v1.4.92) WHERE YOU ARE, during play: the planet, moon or star - and which stop it is in its own galaxy:
 // "MARS  ·  MILKY WAY 4 OF 20", "EMBER  ·  ANDROMEDA 1 OF 20" (and "TOUR 2" in front, the second time round)
 function whereLine() {
@@ -70583,8 +70708,8 @@ function levelOfTour(of) {
     inTour = ((lv - 1) % LAST_LEVEL) + 1;
   return (tour > 1 ? "TOUR " + tour + "  ·  " : "") + "LEVEL " + inTour + of + LAST_LEVEL;
 }
-const GAME_VERSION = "v1.4.92",
-  GAME_DATE = "24.10.2026",
+const GAME_VERSION = "v1.4.93",
+  GAME_DATE = "26.10.2026",
   VERSION_TEXT = GAME_VERSION + "  ·  " + GAME_DATE;
 const FB = '"Chakra Petch", "Segoe UI", sans-serif';
 let FD = '"Bungee", "Impact", sans-serif';
@@ -70732,7 +70857,7 @@ function drawHud(fps) {
   }
   if (["approach", "story", "mini"].includes(G.state)) {
     g.textBaseline = "top";
-    funHud(g, s, t, fD, sx, sy);
+    outlinedText(g, () => funHud(g, s, t, fD, sx, sy)); // (v1.4.93: the story's words with a dark edge too)
     drawEggs(g, s);
     if (G.fadeT > 0) {
       g.fillStyle = "rgba(4,2,10," + Math.min(1, G.fadeT / 0.45).toFixed(3) + ")";
@@ -71535,9 +71660,11 @@ function drawHud(fps) {
   }
   kidHud(g, s, t, fD, sx, sy);
   gmClearHud(g, s); // (the galaxy map, after a level)
-  funHud(g, s, t, fD, sx, sy);
   coachHud(g, s, t, fD, sx, sy);
-  drawAttract(g, s, t);
+  outlinedText(g, () => {
+    funHud(g, s, t, fD, sx, sy); // (the story, the flight and its captions - "TAP TO START")
+    drawAttract(g, s, t);
+  });
   drawEggs(g, s);
   if (G.fadeT > 0) {
     g.fillStyle = "rgba(4,2,10," + Math.min(1, G.fadeT / 0.45).toFixed(3) + ")";
@@ -72538,11 +72665,16 @@ function glass(out, when, vol = 0.06, base = 2600) {
       when + Math.random() * 0.01
     );
 }
+// (v1.4.93) THE DEMO IS MUSIC ONLY: the short sounds you kept hearing in the demo - a boom from the fireworks, the bell,
+// the power-ups, the glasses and the till of the demo bartender, the space show's little noises - are gone. While the
+// demo runs (and on Castaway Island, the screensaver) only the music plays; a click on a button still sounds.
+const demoHush = () => (typeof ATTRACT !== "undefined" && ATTRACT.on) || !!G.demo || G.state === "castaway";
 function sfx(name, x , kind ) {
   if (
     !AC ||
     AC.state !== "running" ||
-    (G.state === "menu" && name !== "click" && name !== "nav" && !SHOW_SFX.on)
+    (G.state === "menu" && name !== "click" && name !== "nav" && !SHOW_SFX.on) ||
+    (name !== "click" && name !== "nav" && demoHush())
   )
     return;
   const now = AC.currentTime + SOON,
@@ -77556,6 +77688,16 @@ profWire();
 //  the game, and where the motion capture, the folk songs and the fonts come from. Both from the menu at any time.
 // =====================================================================================
 const NEWS = [
+  {
+    ver: "v1.4.93",
+    title: "QUIET DEMO, CLEAR WORDS, MORE MOONS",
+    items: [
+      "THE DEMO PLAYS ONLY MUSIC - NO MORE SHORT SOUNDS",
+      "CLEARER WORDS OVER BRIGHT PLANETS",
+      "PRESS ANY KEY NO LONGER BLINKS AWAY",
+      "MORE MOONS ROUND JUPITER, SATURN, URANUS AND NEPTUNE",
+    ],
+  },
   {
     ver: "v1.4.92",
     title: "WHERE AM I?",

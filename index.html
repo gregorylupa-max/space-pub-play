@@ -6685,6 +6685,39 @@ const DICT_ROWS                             = [
     "MEER MANE OM JUPITER, SATURNUS, URANUS EN NEPTUNUS",
     "WIĘCEJ KSIĘŻYCÓW WOKÓŁ JOWISZA, SATURNA, URANA I NEPTUNA",
   ],
+
+  // (v1.4.79) TRANSLATIONS, mini-game stars
+  ["BRILLIANT!", "BRILJANT!", "ŚWIETNIE!"],
+  ["GREAT JOB!", "PRAGTIG GEDOEN!", "SUPER ROBOTA!"],
+  ["+1 SHAKE", "+1 MELKSKOMMEL", "+1 KOKTAJL"],
+
+  // (v1.4.79) TRANSLATIONS, v1.4.94
+  [
+    "AFTER THE RAIN, A RAINBOW OVER THE SEA",
+    "NA DIE REËN, 'N RENBOOG OOR DIE SEE",
+    "PO DESZCZU TĘCZA NAD MORZEM",
+  ],
+  ["STARS FOR THE MINI-GAMES", "STERRE VIR DIE MINISPELETJIES", "GWIAZDKI ZA MINIGRY"],
+  [
+    "MINI-GAMES: A TIME BAR, +1 FOR EVERY CATCH",
+    "MINISPELETJIES: 'N TYDSTAAF, +1 VIR ELKE VANG",
+    "MINIGRY: PASEK CZASU, +1 ZA KAŻDY CHWYT",
+  ],
+  [
+    "EARN UP TO THREE STARS - AND BEAT YOUR BEST",
+    "VERDIEN TOT DRIE STERRE - EN KLOP JOU BESTE",
+    "ZDOBĄDŹ DO TRZECH GWIAZDEK - I POBIJ SWÓJ REKORD",
+  ],
+  [
+    "THE HYPERSPACE JUMP SAYS WHERE YOU'RE GOING",
+    "DIE HIPERRUIMTE-SPRONG SÊ WAARHEEN JY GAAN",
+    "SKOK W NADPRZESTRZEŃ MÓWI, DOKĄD LECISZ",
+  ],
+  [
+    "CASTAWAY: A RAINBOW AFTER THE RAIN",
+    "SKIPBREUKELING: 'N RENBOOG NA DIE REËN",
+    "ROZBITEK: TĘCZA PO DESZCZU",
+  ],
 ];
 // the texts that carry numbers or names: patterns
 const DICT_PAT                             = [
@@ -6930,6 +6963,16 @@ const DICT_PAT                             = [
   // (v1.4.79) galaxy stop count
   [/^MILKY WAY (\d+) OF (\d+)$/, "MELKWEG $1 VAN $2", "DROGA MLECZNA $1 Z $2"],
   [/^ANDROMEDA (\d+) OF (\d+)$/, "ANDROMEDA $1 VAN $2", "ANDROMEDA $1 Z $2"],
+  // (v1.4.79) mini-game stars
+  [/^(\d+) CHERRIES$/, "$1 KERSIES", "WIŚNIE: $1"],
+  [/^(\d+) CHERRY$/, "$1 KERSIE", "WIŚNIE: $1"],
+  [/^(\d+) STARS$/, "$1 STERRE", "GWIAZDKI: $1"],
+  [/^(\d+) STAR$/, "$1 STER", "GWIAZDKI: $1"],
+  [/^(\d+) SHAKES$/, "$1 MELKSKOMMELS", "KOKTAJLE: $1"],
+  [/^(\d+) SHAKE$/, "$1 MELKSKOMMEL", "KOKTAJLE: $1"],
+  [/^\+(\d+) COINS$/, "+$1 MUNTE", "+$1 MONET"],
+  [/^NEW BEST: (\d+)!$/, "NUWE REKORD: $1!", "NOWY REKORD: $1!"],
+  [/^YOUR BEST: (\d+)$/, "JOU BESTE: $1", "TWÓJ REKORD: $1"],
 ];
 const DICT = new Map                ();
 const DICT_I = LANG === "af" ? 1 : 2;
@@ -51202,6 +51245,7 @@ const CW
                
                
                    
+                                            
                  
               
                   
@@ -52200,6 +52244,7 @@ function drawCastaway(t) {
           R.setAdd(false);
         }
       }
+  cwDrawRainbow(b, dark);
   cwDrawWeather(t, b, dark, "sea"); // (v1.4.39: a giant wave coming in, a waterspout out at sea)
   // ---- THE ISLAND ----
   cwDrawIsland(t, b, dark);
@@ -53338,11 +53383,33 @@ function cwWeatherUpdate(dt) {
     }
     if (CW.wx.t >= CW.wx.len) {
       const W = CW_WX.find((w) => w[0] === CW.wx.kind);
-      if (W) cwSay(W[3], 3.5);
+      // (v1.4.94) after the rain, the storm, the typhoon or the hurricane: A RAINBOW over the sea
+      if (["rain", "storm", "typhoon", "hurricane"].includes(CW.wx.kind) && !cwNight()) {
+        CW.rainbow = { t: 0, x: 0.3 + Math.random() * 0.4 };
+        cwSay("AFTER THE RAIN, A RAINBOW OVER THE SEA", 5);
+      } else if (W) cwSay(W[3], 3.5);
       CW.wx = null;
       CW.wxT = 70 + Math.random() * 70;
     }
   }
+}
+// (v1.4.94) THE RAINBOW after the rain: seven soft bands arching up out of the sea, fading in and slowly away again
+function cwDrawRainbow(b, dark) {
+  const R0 = CW.rainbow;
+  if (!R0) return;
+  R0.t += 1 / 60; // (drawn once a frame)
+  const len = 22,
+    a = clamp(Math.min(R0.t / 3, (len - R0.t) / 5), 0, 1) * (1 - dark) * 0.5;
+  if (R0.t > len) {
+    CW.rainbow = null;
+    return;
+  }
+  const { L, w, hz, ks } = b,
+    x = L + w * R0.x,
+    r0 = w * 0.3;
+  ["#ff5a5a", "#ff9a4a", "#ffe066", "#6ae86a", "#5ab4ff", "#6a6aff", "#b06aff"].forEach((c, i) =>
+    arc(x, hz + 6 * ks, r0 - i * 7 * ks, Math.PI, Math.PI * 2, 7.5 * ks, withA(col(c), a), 60)
+  );
 }
 // (v1.4.91) ONE WATERSPOUT funnel at fx: the dark cloud above (cloud = false for the extra twisters), a twisting grey
 // funnel down to the sea, a ring of spray at its foot; sz scales it (the twisters come in different sizes)
@@ -57129,10 +57196,22 @@ function newRecipe(M) {
   M.recipe = pool.sort(() => Math.random() - 0.5).slice(0, 3);
   M.have = [];
 }
+// (v1.4.94) A LITTLE "+1" floats up from every catch - so you see each point land
+function miniPop(M, x, y, txt) {
+  (M.pops = M.pops || []).push({ x, y, txt, t: 0 });
+}
+// (v1.4.94) HOW WELL YOU DID: one to three stars for the score (gentle - a child who tries gets a star), and the best
+// score you ever had at this mini-game, kept on the device
+const MINI_STARS = { cherry: [1, 6, 11], stork: [1, 6, 11], mixer: [1, 2, 3] };
+function miniStars(M) {
+  const th = MINI_STARS[M.kind] || [1, 5, 10];
+  return M.score >= th[2] ? 3 : M.score >= th[1] ? 2 : M.score >= th[0] ? 1 : 0;
+}
 function funMiniUpdate(dt) {
   const M = G.mini;
   if (!M) return;
   M.t += dt;
+  if (M.pops) M.pops = M.pops.filter((p) => (p.t += dt) < 1);
   M.hurt = Math.max(0, M.hurt - dt);
   const inp = playerInput(0),
     go = M.phase === "go";
@@ -57162,6 +57241,13 @@ function funMiniUpdate(dt) {
     const reward = M.kind === "cherry" ? M.score : M.kind === "stork" ? M.score * 2 : M.score * 4;
     M.reward = Math.max(3, reward);
     addCoins(M.reward);
+    // (v1.4.94) the stars for it, and a new best?
+    M.stars = miniStars(M);
+    const bk = "miniBest_" + M.kind,
+      was = store.get(bk, 0) | 0;
+    M.best = Math.max(was, M.score);
+    M.newBest = M.score > was && M.score > 0;
+    if (M.newBest) store.set(bk, M.score);
     fStat("minis");
     if (M.wrong) sfx("aww");
     else {
@@ -57203,6 +57289,7 @@ function funMiniUpdate(dt) {
           M.score++;
           sfx("chime", 200, M.score % 4);
           M.fx.push({ kind: "star", x: it.x, y: it.y, t: 0 });
+          miniPop(M, it.x, it.y, "+1");
         } // a burst of little stars
         // (an asteroid ends the delivery on every difficulty, kid mode too - v2026.10.04ar)
         else {
@@ -57327,6 +57414,7 @@ function funMiniUpdate(dt) {
         if (M.kind === "cherry") {
           M.score += it.kind === "star" ? 3 : 1;
           sfx("chime", it.x, M.score % 4);
+          miniPop(M, it.x, it.y - 30, it.kind === "star" ? "+3" : "+1");
         } else {
           M.have.push(it.kind);
           sfx("chime", it.x, M.have.length);
@@ -57334,6 +57422,7 @@ function funMiniUpdate(dt) {
             M.score++;
             sfx("tip");
             M.made = 1;
+            miniPop(M, it.x, it.y - 40, "+1 SHAKE");
             newRecipe(M);
             it.dead = true;
             M.pile = [];
@@ -58304,6 +58393,32 @@ function funHud(g, s, t, fD, sx, sy) {
         cssW / 2,
         VERT ? Math.max(70 * s, fitCssY(0) - 14 * s) : 64 * s // (tall screen: just above the play area, clear of the buttons)
       );
+      // (v1.4.94) THE TIME LEFT AS A BAR under the score - green, then orange, then red for the last few seconds
+      {
+        const ty = (VERT ? Math.max(70 * s, fitCssY(0) - 14 * s) : 64 * s) + 18 * s,
+          bw = Math.min(260 * s, cssW * 0.6),
+          f = clamp(1 - M.t / M.len, 0, 1),
+          left = M.len - M.t;
+        g.fillStyle = "rgba(10,6,20,.7)";
+        g.beginPath();
+        g.roundRect
+          ? g.roundRect(cssW / 2 - bw / 2 - 2 * s, ty - 5 * s, bw + 4 * s, 10 * s, 5 * s)
+          : g.rect(cssW / 2 - bw / 2, ty - 5 * s, bw, 10 * s);
+        g.fill();
+        g.fillStyle =
+          left < 5 ? (Math.floor(M.t * 4) % 2 ? "#ff5f5f" : "#ff9a5a") : left < 10 ? "#ffc34d" : "#5ff5c8";
+        g.beginPath();
+        g.roundRect
+          ? g.roundRect(cssW / 2 - bw / 2, ty - 3 * s, bw * f, 6 * s, 3 * s)
+          : g.rect(cssW / 2 - bw / 2, ty - 3 * s, bw * f, 6 * s);
+        g.fill();
+      }
+      // (v1.4.94) and the "+1"s floating up from the catches
+      for (const p of M.pops || []) {
+        g.globalAlpha = Math.min(1, (1 - p.t) * 3);
+        neon2(g, p.txt, sx(p.x), sy(p.y) - p.t * 46 * s, (16 + 8 * Math.min(1, p.t * 6)) * s, "#ffe066");
+        g.globalAlpha = 1;
+      }
       // (v1.4.78) where the messages go: on a tall screen in the middle of the play area - at 40% of the screen they
       // landed on the CAUGHT / TIME line
       const msgY = VERT ? fitCssY(250) : cssH * 0.4;
@@ -58375,10 +58490,42 @@ function funHud(g, s, t, fD, sx, sy) {
         cssH * 0.42
       );
     } else {
-      neon2(g, "WELL DONE!", cssW / 2, cssH * 0.3, 32 * s, "#5ff5c8");
+      neon2(
+        g,
+        M.stars >= 3 ? "BRILLIANT!" : M.stars >= 2 ? "GREAT JOB!" : "WELL DONE!",
+        cssW / 2,
+        cssH * 0.26,
+        32 * s,
+        "#5ff5c8"
+      );
       g.font = fD(18);
       g.fillStyle = "#ffd24d";
-      g.fillText("+" + (M.reward || 0) + " COINS", cssW / 2, cssH * 0.42);
+      g.fillText(
+        (M.kind === "mixer"
+          ? M.score + (M.score === 1 ? " SHAKE" : " SHAKES")
+          : M.kind === "stork"
+            ? M.score + (M.score === 1 ? " STAR" : " STARS")
+            : M.score + (M.score === 1 ? " CHERRY" : " CHERRIES")) +
+          "  ·  +" +
+          (M.reward || 0) +
+          " COINS",
+        cssW / 2,
+        cssH * 0.42
+      );
+    }
+    if (M.phase === "done" && M.stars !== undefined) {
+      // (v1.4.94) the stars you earned, popping in one by one - and your best
+      for (let i = 0; i < 3; i++) {
+        const on = i < M.stars,
+          pop = clamp((M.t - 0.3 - i * 0.25) * 4, 0, 1),
+          sz = (on ? 34 : 26) * s * (on ? 0.6 + 0.4 * pop + 0.15 * Math.sin(Math.min(1, pop) * Math.PI) : 1);
+        g.globalAlpha = on ? pop : 0.5;
+        neon2(g, on ? "★" : "☆", cssW / 2 + (i - 1) * 46 * s, cssH * 0.52, sz, on ? "#ffd24d" : "#8a7aa8");
+      }
+      g.globalAlpha = 1;
+      g.font = fD(14);
+      g.fillStyle = M.newBest ? "#5ff5c8" : "rgba(255,243,226,.8)";
+      g.fillText(M.newBest ? "NEW BEST: " + M.best + "!" : "YOUR BEST: " + M.best, cssW / 2, cssH * 0.61);
     }
   }
   if (G.state === "story" && G.story) {
@@ -70657,6 +70804,15 @@ function drawEggs(g, s) {
 function outlinedText(g, fn) {
   const fill0 = g.fillText;
   g.fillText = function (txt, x, y, w ) {
+    // (dark letters - the story's words in Bogdan's speech bubble - need no dark edge: they sit on a light card)
+    const fs = String(this.fillStyle),
+      m = /^#([0-9a-f]{2})([0-9a-f]{2})([0-9a-f]{2})/i.exec(fs) || /rgba?\((\d+),\s*(\d+),\s*(\d+)/.exec(fs),
+      lum = m
+        ? (m[0][0] === "#"
+            ? 0.3 * parseInt(m[1], 16) + 0.59 * parseInt(m[2], 16) + 0.11 * parseInt(m[3], 16)
+            : 0.3 * +m[1] + 0.59 * +m[2] + 0.11 * +m[3]) / 255
+        : 1;
+    if (lum < 0.4) return w === undefined ? fill0.call(this, txt, x, y) : fill0.call(this, txt, x, y, w);
     const lw = this.lineWidth,
       ss = this.strokeStyle,
       lj = this.lineJoin,
@@ -70708,7 +70864,7 @@ function levelOfTour(of) {
     inTour = ((lv - 1) % LAST_LEVEL) + 1;
   return (tour > 1 ? "TOUR " + tour + "  ·  " : "") + "LEVEL " + inTour + of + LAST_LEVEL;
 }
-const GAME_VERSION = "v1.4.93",
+const GAME_VERSION = "v1.4.94",
   GAME_DATE = "26.10.2026",
   VERSION_TEXT = GAME_VERSION + "  ·  " + GAME_DATE;
 const FB = '"Chakra Petch", "Segoe UI", sans-serif';
@@ -70918,7 +71074,7 @@ function drawHud(fps) {
       neon2(g, "ON OUR WAY...", cx, cssH * 0.1, 24 * s, "#9fd0ff");
       g.font = "600 " + Math.round(12 * s) + "px " + FB;
       g.fillStyle = "#fff3e2";
-      g.fillText("TO STOP " + (tourStop() + 1) + " OF " + VENUES.length, cx, cssH * 0.1 + 30 * s);
+      g.fillText(whereLine(), cx, cssH * 0.1 + 30 * s); // (v1.4.94: where we're going - "MARS  ·  MILKY WAY 4 OF 20")
       g.globalAlpha = 1;
     }
     if (j > 4.4 && j < 7) {
@@ -77688,6 +77844,16 @@ profWire();
 //  the game, and where the motion capture, the folk songs and the fonts come from. Both from the menu at any time.
 // =====================================================================================
 const NEWS = [
+  {
+    ver: "v1.4.94",
+    title: "STARS FOR THE MINI-GAMES",
+    items: [
+      "MINI-GAMES: A TIME BAR, +1 FOR EVERY CATCH",
+      "EARN UP TO THREE STARS - AND BEAT YOUR BEST",
+      "THE HYPERSPACE JUMP SAYS WHERE YOU'RE GOING",
+      "CASTAWAY: A RAINBOW AFTER THE RAIN",
+    ],
+  },
   {
     ver: "v1.4.93",
     title: "QUIET DEMO, CLEAR WORDS, MORE MOONS",

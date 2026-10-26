@@ -6718,6 +6718,24 @@ const DICT_ROWS                             = [
     "SKIPBREUKELING: 'N RENBOOG NA DIE REËN",
     "ROZBITEK: TĘCZA PO DESZCZU",
   ],
+
+  // (v1.4.79) TRANSLATIONS, v1.4.95
+  ["A TIDIER DEMO", "'N NETTER DEMO", "STARANNIEJSZE DEMO"],
+  [
+    "THE DEMO'S WORDS ON ONE NEAT CARD",
+    "DIE DEMO SE WOORDE OP EEN NETJIESE KAART",
+    "NAPISY DEMA NA JEDNEJ PRZEJRZYSTEJ KARCIE",
+  ],
+  [
+    "THE DEMO VISITS STOPS ALL OVER THE TOUR",
+    "DIE DEMO BESOEK STOPPLEKKE OOR DIE HELE TOER",
+    "DEMO ODWIEDZA PRZYSTANKI Z CAŁEJ TRASY",
+  ],
+  [
+    "MINI-GAMES: A BIG 3, 2, 1... GO!",
+    "MINISPELETJIES: 'N GROOT 3, 2, 1... GAAN!",
+    "MINIGRY: DUŻE 3, 2, 1... START!",
+  ],
 ];
 // the texts that carry numbers or names: patterns
 const DICT_PAT                             = [
@@ -10683,7 +10701,11 @@ function update(dt) {
         return;
       } // (boss rush: straight on to the next boss)
       if (G.demo) {
-        G.level = (G.level % 4) + 1;
+        // (v1.4.95) after a cleared level the demo flies on to ANOTHER STOP anywhere on the tour - it used to fall back
+        // to the first four (Mercury to Mars) every time, so the demo never showed the stars or Andromeda after that
+        const was = G.level;
+        do G.level = 1 + Math.floor(Math.random() * LAST_LEVEL);
+        while (G.level === was);
         startLevel();
         G.state = "menu";
       } else if (G.level % 3 === 0) afterLevelNoCups();
@@ -58377,12 +58399,22 @@ function funHud(g, s, t, fD, sx, sy) {
       wrapLines(g, T(MINI_HELP[M.kind]), cssW * (VERT ? 0.86 : 0.56)).forEach((ln, i, a) =>
         g.fillText(ln, cssW / 2, cssH * 0.42 + (i - (a.length - 1) / 2) * 19 * s * TXT())
       ); // (wrapped to fit the screen)
-      g.fillText(
-        Math.ceil(3.2 - M.t) > 0 ? "GET READY... " + Math.ceil(3.2 - M.t) : "",
-        cssW / 2,
-        cssH * 0.5
-      );
+      // (v1.4.95) the countdown, big and bouncing: 3... 2... 1...
+      const cd = Math.ceil(3.2 - M.t),
+        fr = 1 - (3.2 - M.t - (cd - 1)); // (0 as each number appears, up to 1)
+      if (cd > 0) {
+        g.fillText("GET READY...", cssW / 2, cssH * 0.5);
+        g.globalAlpha = Math.min(1, (1 - fr) * 4);
+        neon2(g, String(cd), cssW / 2, cssH * 0.62, (46 + 26 * Math.max(0, 1 - fr * 4)) * s, "#ffe066");
+        g.globalAlpha = 1;
+      }
     } else if (M.phase === "go") {
+      if (M.t < 0.9) {
+        // (v1.4.95) and GO! as it starts
+        g.globalAlpha = Math.min(1, (0.9 - M.t) * 3);
+        neon2(g, "GO!", cssW / 2, cssH * 0.4, (40 + M.t * 40) * s, "#5ff5c8");
+        g.globalAlpha = 1;
+      }
       g.font = fD(18);
       g.fillStyle = "#ffc34d";
       g.fillText(
@@ -70129,7 +70161,6 @@ function drawAttract(g, s, t) {
   }
   if (!ATTRACT.on) return;
   const ph = ATTRACT.phase,
-    blink = Math.floor(t * 2.5) % 2 === 0,
     cx = cssW / 2;
   const fD = (px) => Math.round(px * s) + "px " + FD;
   g.textAlign = "center";
@@ -70197,26 +70228,39 @@ function drawAttract(g, s, t) {
     // (tall view, v1.2.0: just two short lines under the planet's sign - the demo and who's playing on one, the level on
     //  the other - so nothing is squeezed)
     const dY = VERT ? 66 * s : cssH * 0.2,
-      lY = VERT ? 86 * s : cssH * 0.27;
+      lY = VERT ? 86 * s : cssH * 0.2 + 26 * s;
     const who = ATTRACT.mode
       ? barShort(P1.char) + (ATTRACT.mode === 2 ? "  VS  " : "  &  ") + barShort(P2.char)
       : barShort(P1.char);
-    if (VERT) {
-      if (blink)
-        neon(["DEMO", "DEMO · CO-OP", "DEMO · VERSUS"][ATTRACT.mode] + "  ·  " + who, dY, 11, "#ffc34d", 8);
-    } else {
-      if (blink)
-        neon(
-          ["DEMO · 1 PLAYER", "DEMO · 2 PLAYERS · CO-OP", "DEMO · 2 PLAYERS · VERSUS"][ATTRACT.mode],
-          dY,
-          18,
-          "#ffc34d",
-          10
-        );
-      g.font = "700 " + Math.round(13 * s) + "px " + FB;
-      g.fillStyle = "rgba(255,243,226,.85)";
-      g.fillText(who, cx, dY + 26 * s);
+    // (v1.4.95) A TIDIER DEMO HEADER: two short lines on one dark card instead of five loose ones over the stage show -
+    // "DEMO · 1 PLAYER · BONGANI" and, under it, where the demo is: "MARS · MILKY WAY 4 OF 20" (the neon sign above
+    // already gives the cafe's name). No blinking - it gently glows.
+    const head =
+        (VERT
+          ? ["DEMO", "DEMO · CO-OP", "DEMO · VERSUS"]
+          : ["DEMO · 1 PLAYER", "DEMO · CO-OP", "DEMO · VERSUS"])[ATTRACT.mode] +
+        "  ·  " +
+        who,
+      hpx = VERT ? 11 : 16;
+    {
+      g.font = fD(hpx);
+      const w1 = g.measureText(head).width;
+      g.font = fD(VERT ? 10 : 13);
+      const w2 = g.measureText(whereLine()).width,
+        cw2 = Math.min(cssW - 16 * s, Math.max(w1, w2) + 34 * s),
+        top = dY - hpx * s * 0.95,
+        hh = lY - dY + (hpx + 14) * s;
+      g.save();
+      g.fillStyle = "rgba(8,4,18,.62)";
+      g.beginPath();
+      if (g.roundRect) g.roundRect(cx - cw2 / 2, top, cw2, hh, 12 * s);
+      else g.rect(cx - cw2 / 2, top, cw2, hh);
+      g.fill();
+      g.restore();
     }
+    g.globalAlpha = 0.85 + 0.15 * Math.sin(t * 2);
+    neon(head, dY, hpx, "#ffc34d", 8);
+    g.globalAlpha = 1;
     const ia = Math.min(1, G.demoT * 2, (DEMO_STAY - G.demoT) * 2); // which planet we're on
     {
       const sn = typeof sceneNow === "function" && sceneNow(G.time);
@@ -70230,16 +70274,7 @@ function drawAttract(g, s, t) {
     } // what's going on outside
     if (ia > 0) {
       g.globalAlpha = ia;
-      neon(
-        VERT ? "LEVEL " + G.level : "LEVEL " + G.level + " · " + here().name,
-        lY,
-        VERT ? 10 : 13,
-        "#5ff5c8",
-        8
-      ); // (tall: the sign above already says where)
-      g.font = "600 " + Math.round(12 * s) + "px " + FB;
-      g.fillStyle = "rgba(255,243,226,.8)";
-      if (!VERT) g.fillText(here().sub, cx, lY + 22 * s);
+      neon(whereLine(), lY, VERT ? 10 : 13, "#5ff5c8", 8); // (v1.4.95: the planet or star, and which stop of its galaxy)
       g.globalAlpha = 1;
     }
     prompt(cssH * 0.86, 16);
@@ -70377,7 +70412,7 @@ function drawAttract(g, s, t) {
           ph === "demo"
             ? VERT
               ? cssH * 0.72 // (tall: down in the open, clear of the sign and the level)
-              : cssH * 0.27 + 40 * s // (in the demo: under the planet's sign and the level line, not on top of them)
+              : cssH * 0.2 + 58 * s // (in the demo: under the demo's card, not on top of it)
             : 10 * s + (cssW < 700 ? 60 * s : 0),
         mw = g.measureText(msg).width + 18 * s;
       g.fillStyle = "rgba(10,4,20,.62)"; // (a soft dark backing, so it reads over anything)
@@ -70864,7 +70899,7 @@ function levelOfTour(of) {
     inTour = ((lv - 1) % LAST_LEVEL) + 1;
   return (tour > 1 ? "TOUR " + tour + "  ·  " : "") + "LEVEL " + inTour + of + LAST_LEVEL;
 }
-const GAME_VERSION = "v1.4.94",
+const GAME_VERSION = "v1.4.95",
   GAME_DATE = "26.10.2026",
   VERSION_TEXT = GAME_VERSION + "  ·  " + GAME_DATE;
 const FB = '"Chakra Petch", "Segoe UI", sans-serif';
@@ -77844,6 +77879,15 @@ profWire();
 //  the game, and where the motion capture, the folk songs and the fonts come from. Both from the menu at any time.
 // =====================================================================================
 const NEWS = [
+  {
+    ver: "v1.4.95",
+    title: "A TIDIER DEMO",
+    items: [
+      "THE DEMO'S WORDS ON ONE NEAT CARD",
+      "THE DEMO VISITS STOPS ALL OVER THE TOUR",
+      "MINI-GAMES: A BIG 3, 2, 1... GO!",
+    ],
+  },
   {
     ver: "v1.4.94",
     title: "STARS FOR THE MINI-GAMES",

@@ -64540,6 +64540,8 @@ function stageHud(g, s, t, fD, sx, sy) {
   }
   const S = showNow(),
     cx = sx((STAGE.x0 + STAGE.x1) / 2);
+  // (v1.5.1) while the level's stars are up, the stage's little "LIVE:" caption keeps out from under their card
+  if (G.state === "clear" && !G.demo && G.starsT >= 0) return;
   g.textAlign = "center";
   g.textBaseline = "middle";
   g.font = fD(8);
@@ -70989,7 +70991,7 @@ function drawAttract(g, s, t) {
     // (tall view, v1.2.0: just two short lines under the planet's sign - the demo and who's playing on one, the level on
     //  the other - so nothing is squeezed)
     const dY = VERT ? 66 * s : cssH * 0.2,
-      lY = VERT ? 86 * s : cssH * 0.2 + 26 * s;
+      lY = VERT ? 90 * s : cssH * 0.2 + 26 * s;
     const who = ATTRACT.mode
       ? barShort(P1.char) + (ATTRACT.mode === 2 ? "  VS  " : "  &  ") + barShort(P2.char)
       : barShort(P1.char);
@@ -71002,11 +71004,11 @@ function drawAttract(g, s, t) {
           : ["DEMO · 1 PLAYER", "DEMO · CO-OP", "DEMO · VERSUS"])[ATTRACT.mode] +
         "  ·  " +
         who,
-      hpx = VERT ? 11 : 16;
+      hpx = VERT ? 13 : 16;
     {
       g.font = fD(hpx);
       const w1 = g.measureText(head).width;
-      g.font = fD(VERT ? 10 : 13);
+      g.font = fD(VERT ? 12 : 13);
       const w2 = g.measureText(whereLine()).width,
         cw2 = Math.min(cssW - 16 * s, Math.max(w1, w2) + 34 * s),
         top = dY - hpx * s * 0.95,
@@ -71035,7 +71037,7 @@ function drawAttract(g, s, t) {
     } // what's going on outside
     if (ia > 0) {
       g.globalAlpha = ia;
-      neon(whereLine(), lY, VERT ? 10 : 13, "#5ff5c8", 8); // (v1.4.95: the planet or star, and which stop of its galaxy)
+      neon(whereLine(), lY, VERT ? 12 : 13, "#5ff5c8", 8); // (v1.4.95: the planet or star, and which stop of its galaxy)
       g.globalAlpha = 1;
     }
     prompt(cssH * 0.86, 16);
@@ -71660,8 +71662,8 @@ function levelOfTour(of) {
     inTour = ((lv - 1) % LAST_LEVEL) + 1;
   return (tour > 1 ? "TOUR " + tour + "  ·  " : "") + "LEVEL " + inTour + of + LAST_LEVEL;
 }
-const GAME_VERSION = "v1.5.0",
-  GAME_DATE = "27.10.2026",
+const GAME_VERSION = "v1.5.1",
+  GAME_DATE = "28.10.2026",
   VERSION_TEXT = GAME_VERSION + "  ·  " + GAME_DATE;
 const FB = '"Chakra Petch", "Segoe UI", sans-serif';
 let FD = '"Bungee", "Impact", sans-serif';

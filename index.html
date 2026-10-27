@@ -289,7 +289,7 @@ body.retro .table { font-size: 10px; gap: 5px; }
 #crash[hidden] { display: none; }
 #crash .box { max-width: 520px; margin: 16px; padding: 24px; display: flex; flex-direction: column; gap: 12px; background: var(--panel, #120c24); border: 1px solid var(--line, #5ff5c8); border-radius: 14px; }
 #crash h2 { margin: 0; color: var(--magenta, #ff5fa8); } #crash p { margin: 0; color: var(--ink, #fff3e2); } #crash small { color: #8a7a9a; font-size: 11px; word-break: break-word; }
-#topbtns { position: fixed; top: calc(10px + env(safe-area-inset-top, 0px)); right: 12px; display: flex; gap: 8px; }
+#topbtns { position: fixed; top: calc(10px + env(safe-area-inset-top, 0px)); right: 12px; display: flex; gap: 8px; z-index: 55; }
 #topbtns button { min-height: 34px; padding: 6px 10px; font-size: 12px; background: rgba(12, 14, 32, .6); }
 /* (v1.4.77) a narrow phone held upright: smaller corner buttons - with Skip showing (a bonus round, a mini-game) the four
    of them used to stretch right across the top and cover the score */
@@ -6761,6 +6761,14 @@ const DICT_ROWS                             = [
     "CASTAWAY: SOFT, NATURAL CUMULUS CLOUDS",
     "SKIPBREUKELING: SAGTE, NATUURLIKE STAPELWOLKE",
     "ROZBITEK: MIĘKKIE, NATURALNE CHMURY CUMULUS",
+  ],
+
+  // (v1.4.79) TRANSLATIONS, v1.4.98
+  ["START OVER, ALWAYS THERE", "BEGIN OOR, ALTYD DAAR", "ZACZNIJ OD NOWA - ZAWSZE POD RĘKĄ"],
+  [
+    "THE START OVER BUTTON IS IN THE TOP CORNER ON EVERY SCREEN",
+    "DIE BEGIN-OOR-KNOPPIE IS IN DIE BOONSTE HOEK OP ELKE SKERM",
+    "PRZYCISK ZACZNIJ OD NOWA JEST W GÓRNYM ROGU NA KAŻDYM EKRANIE",
   ],
 ];
 // the texts that carry numbers or names: patterns
@@ -71077,7 +71085,7 @@ function levelOfTour(of) {
     inTour = ((lv - 1) % LAST_LEVEL) + 1;
   return (tour > 1 ? "TOUR " + tour + "  ·  " : "") + "LEVEL " + inTour + of + LAST_LEVEL;
 }
-const GAME_VERSION = "v1.4.97",
+const GAME_VERSION = "v1.4.98",
   GAME_DATE = "27.10.2026",
   VERSION_TEXT = GAME_VERSION + "  ·  " + GAME_DATE;
 const FB = '"Chakra Petch", "Segoe UI", sans-serif';
@@ -76978,7 +76986,10 @@ function showPanels() {
   layoutText();
   $("tLeftL").textContent = $("tRightL").textContent = VERT ? "BAR" : "RUN";
   $("tUpL").textContent = $("tDownL").textContent = VERT ? "RUN" : "";
-  $("topbtns").hidden = !["play", "lost", "clear", "bonus", "mini", "story", "approach", "jump"].includes(
+  // (v1.4.98) ↻ START OVER IS ALWAYS THERE: the corner buttons stay up everywhere now - on the menu, in the demo, on
+  // Castaway Island, behind every panel - not just during a game; PAUSE only shows while there's a game to pause
+  $("topbtns").hidden = false;
+  $("tPause").hidden = !["play", "lost", "clear", "bonus", "mini", "story", "approach", "jump"].includes(
     G.state
   );
   fillTable($("hiTable"), store.get("scores", []), -1);
@@ -78057,6 +78068,11 @@ profWire();
 //  the game, and where the motion capture, the folk songs and the fonts come from. Both from the menu at any time.
 // =====================================================================================
 const NEWS = [
+  {
+    ver: "v1.4.98",
+    title: "START OVER, ALWAYS THERE",
+    items: ["THE START OVER BUTTON IS IN THE TOP CORNER ON EVERY SCREEN"],
+  },
   {
     ver: "v1.4.97",
     title: "REAL CLOUDS",

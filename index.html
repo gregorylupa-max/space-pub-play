@@ -6872,6 +6872,38 @@ const DICT_ROWS                             = [
     "'N LEWENDIGER SEE: DEINING, SKITTERENDE VLAKTES, NAT SAND",
     "ŻYWSZE MORZE: FALA, MIENIĄCA SIĘ PŁYCIZNA, MOKRY PIASEK",
   ],
+
+  // (v1.4.79) TRANSLATIONS, v1.5.2
+  [
+    "S.O.S. IN THE SAND... A PLANE! WAVE! ...IT FLIES ON",
+    "S.O.S. IN DIE SAND... 'N VLIEGTUIG! WAAI! ...DIT VLIEG VERBY",
+    "S.O.S. NA PIASKU... SAMOLOT! MACHAJ! ...LECI DALEJ",
+  ],
+  [
+    "THE GLOW ON THE SEA IS BIOLUMINESCENCE",
+    "DIE GLOED OP DIE SEE IS BIOLUMINESSENSIE",
+    "TA POŚWIATA NA MORZU TO BIOLUMINESCENCJA",
+  ],
+  [
+    "TINY LIVING CREATURES MAKING THEIR OWN BLUE-GREEN LIGHT",
+    "KLEIN LEWENDE WESENTJIES WAT HUL EIE BLOUGROEN LIG MAAK",
+    "MALEŃKIE ŻYWE STWORZENIA, KTÓRE WYTWARZAJĄ WŁASNE NIEBIESKOZIELONE ŚWIATŁO",
+  ],
+  [
+    "THE GLOW ON THE SEA IS BIOLUMINESCENCE\nTINY LIVING CREATURES MAKING THEIR OWN BLUE-GREEN LIGHT",
+    "DIE GLOED OP DIE SEE IS BIOLUMINESSENSIE\nKLEIN LEWENDE WESENTJIES WAT HUL EIE BLOUGROEN LIG MAAK",
+    "TA POŚWIATA NA MORZU TO BIOLUMINESCENCJA\nMALEŃKIE ŻYWE STWORZENIA, KTÓRE WYTWARZAJĄ WŁASNE NIEBIESKOZIELONE ŚWIATŁO",
+  ],
+
+  // (v1.4.79) TRANSLATIONS, v1.5.2 news
+  ["BUG HUNT", "GOGGAJAG", "POLOWANIE NA BŁĘDY"],
+  [
+    "THE WHOLE TOUR PLAYED THROUGH, EVERY MODE - BUGS FIXED",
+    "DIE HELE TOER DEURGESPEEL, ELKE SPELSOORT - FOUTE REGGEMAAK",
+    "CAŁA TRASA PRZEGRANA W KAŻDYM TRYBIE - BŁĘDY POPRAWIONE",
+  ],
+  ["A NEW TOUR NOW SAYS TOUR 2", "'N NUWE TOER SÊ NOU TOER 2", "NOWA TRASA POKAZUJE TERAZ TRASA 2"],
+  ["A NEW GAME ALWAYS STARTS FRESH", "'N NUWE SPEL BEGIN ALTYD VARS", "NOWA GRA ZAWSZE ZACZYNA SIĘ OD NOWA"],
 ];
 // the texts that carry numbers or names: patterns
 const DICT_PAT                             = [
@@ -7133,6 +7165,8 @@ const DICT_PAT                             = [
   [/^A FREE (.+)!$/, "'N GRATIS $1!", "$1 ZA DARMO!"],
   [/^SAVING UP FOR: (.+)$/, "SPAAR VIR: $1", "ODKŁADASZ NA: $1"],
   [/^(\d+) COINS TO GO$/, "NOG $1 MUNTE", "BRAKUJE $1 MONET"],
+  // (v1.4.79) v1.5.2
+  [/^([A-Z][A-Z\- ]{2,})!$/, "$1!", "$1!"],
 ];
 const DICT = new Map                ();
 const DICT_I = LANG === "af" ? 1 : 2;
@@ -9484,6 +9518,12 @@ function resetGame(demo) {
   G.fever = 0;
   G.demo = demo;
   G.won = false;
+  // (v1.5.2 fix: a new game starts on the FIRST tour again - after finishing the whole tour and playing on, the next new
+  //  game kept the faster speeds of tour 2, 3... and said so, and Andromeda counted as already reached)
+  G.loop = 0;
+  G.mwDone = false;
+  G.coreShown = false;
+  G.localSeen = 0; // (and the "THE LOCALS HERE" note shows again on the first level)
   G.lost = null; // (v1.4.84: no last life's cause carried over from the game before - the game-over tip reads it)
   G.end = null;
   G.servedAll = 0;
@@ -71637,7 +71677,7 @@ function outlinedText(g, fn) {
 // "MARS  ·  MILKY WAY 4 OF 20", "EMBER  ·  ANDROMEDA 1 OF 20" (and "TOUR 2" in front, the second time round)
 function whereLine() {
   const lv = Math.max(1, G.level),
-    tour = Math.floor((lv - 1) / LAST_LEVEL) + 1,
+    tour = (G.loop || 0) + Math.floor((lv - 1) / LAST_LEVEL) + 1,
     i = tourStop(),
     v = VENUES[i],
     gal = (v.region || "").startsWith("MILKY WAY") ? "MILKY WAY" : "ANDROMEDA",
@@ -71658,11 +71698,13 @@ function whereLine() {
 }
 function levelOfTour(of) {
   const lv = Math.max(1, G.level),
-    tour = Math.floor((lv - 1) / LAST_LEVEL) + 1,
+    // (v1.5.2 fix: a new tour starts the levels again from 1 and counts the tours in G.loop - the HUD never said
+    //  "TOUR 2", it read as if you were back at the very start)
+    tour = (G.loop || 0) + Math.floor((lv - 1) / LAST_LEVEL) + 1,
     inTour = ((lv - 1) % LAST_LEVEL) + 1;
   return (tour > 1 ? "TOUR " + tour + "  ·  " : "") + "LEVEL " + inTour + of + LAST_LEVEL;
 }
-const GAME_VERSION = "v1.5.1",
+const GAME_VERSION = "v1.5.2",
   GAME_DATE = "28.10.2026",
   VERSION_TEXT = GAME_VERSION + "  ·  " + GAME_DATE;
 const FB = '"Chakra Petch", "Segoe UI", sans-serif';
@@ -78665,6 +78707,15 @@ profWire();
 //  the game, and where the motion capture, the folk songs and the fonts come from. Both from the menu at any time.
 // =====================================================================================
 const NEWS = [
+  {
+    ver: "v1.5.2",
+    title: "BUG HUNT",
+    items: [
+      "THE WHOLE TOUR PLAYED THROUGH, EVERY MODE - BUGS FIXED",
+      "A NEW TOUR NOW SAYS TOUR 2",
+      "A NEW GAME ALWAYS STARTS FRESH",
+    ],
+  },
   {
     ver: "v1.5.0",
     title: "SURPRISE GIFTS, A LIVELIER ISLAND",

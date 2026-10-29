@@ -6904,6 +6904,42 @@ const DICT_ROWS                             = [
   ],
   ["A NEW TOUR NOW SAYS TOUR 2", "'N NUWE TOER SÊ NOU TOER 2", "NOWA TRASA POKAZUJE TERAZ TRASA 2"],
   ["A NEW GAME ALWAYS STARTS FRESH", "'N NUWE SPEL BEGIN ALTYD VARS", "NOWA GRA ZAWSZE ZACZYNA SIĘ OD NOWA"],
+
+  // (v1.4.79) TRANSLATIONS, v1.5.3
+  ["IRISH", "IERSE", "IRLANDZCY"],
+  ["COME ON YOU BOYS IN GREEN!", "KOM NOU, MANNE IN GROEN!", "NAPRZÓD, CHŁOPCY W ZIELONYM!"],
+  ["ÉIRE!", "ÉIRE!", "ÉIRE!"],
+  ["SLÁINTE!", "SLÁINTE!", "SLÁINTE!"],
+  ["BEGONE!", "WEG IS JY!", "PRECZ!"],
+  ["BANISHED!", "VERBAN!", "WYGNANY!"],
+  ["BE GONE, FOUL FIEND!", "WEG, BOSE GEES!", "PRECZ, NIKCZEMNY DIABLE!"],
+  ["AND STAY OUT!", "EN BLY UIT!", "I NIE WRACAJ!"],
+  ["OUT, DEMON!", "UIT, DEMOON!", "WON, DEMONIE!"],
+  ["HALLELUJAH!", "HALLELUJA!", "ALLELUJA!"],
+
+  // (v1.4.79) TRANSLATIONS, v1.5.3 news
+  [
+    "IRISH VISITORS, A SPECTACULAR SEND-OFF",
+    "IERSE BESOEKERS, 'N SKOUSPELAGTIGE AFSKEID",
+    "GOŚCIE Z IRLANDII, WIDOWISKOWE POŻEGNANIE",
+  ],
+  [
+    "IRISH FANS: GREEN JERSEYS, ARAN JUMPERS, A TWEED CAP",
+    "IERSE ONDERSTEUNERS: GROEN TRUIE, ARAN-TRUIE, 'N TWEEDPET",
+    "IRLANDZCY KIBICE: ZIELONE KOSZULKI, SWETRY ARAN, TWEEDOWY KASZKIET",
+  ],
+  [
+    "BANISH A DEVIL: SHOCKWAVES, LIGHT - AND OFF THEY TUMBLE",
+    "VERBAN 'N DUIWEL: SKOKGOLWE, LIG - EN WEG TUIMEL HULLE",
+    "WYGOŃ DIABŁA: FALE UDERZENIOWE, ŚWIATŁO - I WYLATUJE KOZIOŁKUJĄC",
+  ],
+  ["HOLY WATER: A PILLAR OF LIGHT", "WYWATER: 'N LIGPILAAR", "WODA ŚWIĘCONA: SŁUP ŚWIATŁA"],
+  [
+    "FIND THE ALIEN: A LITTLE FASTER",
+    "VIND DIE RUIMTEWESE: 'N BIETJIE VINNIGER",
+    "ZNAJDŹ KOSMITĘ: TROCHĘ SZYBCIEJ",
+  ],
+  ["E AND R ONLY CHANGE FLAVOUR NOW", "E EN R VERANDER NOU NET DIE GEUR", "E I R ZMIENIAJĄ TERAZ TYLKO SMAK"],
 ];
 // the texts that carry numbers or names: patterns
 const DICT_PAT                             = [
@@ -8885,6 +8921,9 @@ const FAN_LOOKS = {
   // (v1.4.68) RUSSIAN and UKRAINIAN visitors in traditional dress
   ru: ["rus", "rus2"], // a man in an embroidered kosovorotka shirt and a fur ushanka, a lady in a sarafan and kokoshnik
   ua: ["ukr", "ukr2"], // a man in an embroidered vyshyvanka shirt, a lady in a vyshyvanka with a vinok flower crown
+  // (v1.5.3) IRISH visitors: a fan in the green jersey and a bobble hat, a lady in a cream Aran jumper, a man in a tweed
+  // flat cap
+  ie: ["irl", "irl2", "irl3"],
 };
 const FAN_SLOGANS = {
   pl: ["POLSKA!", "BIALO-CZERWONI!", "POLSKA, GOL!"],
@@ -8905,6 +8944,7 @@ const FAN_SLOGANS = {
   de: ["DEUTSCHLAND!", "AUF GEHT'S!", "TOR! TOR! TOR!"],
   ru: ["PRIVET!", "DAVAI, DAVAI!", "ROSSIYA!"],
   ua: ["DOBRYI DEN!", "UKRAINA!", "VPERED!"],
+  ie: ["ÉIRE!", "COME ON YOU BOYS IN GREEN!", "SLÁINTE!"],
 };
 const FAN_NAMES = {
   pl: ["POLISH FOOTBALL", "#ff5f6f"],
@@ -8917,6 +8957,7 @@ const FAN_NAMES = {
   de: ["GERMAN", "#ffce00"],
   ru: ["RUSSIAN", "#7fa8ff"],
   ua: ["UKRAINIAN", "#ffd500"],
+  ie: ["IRISH", "#3fcf7a"],
 };
 const FAN_ORDER = [
   "za",
@@ -8937,6 +8978,7 @@ const FAN_ORDER = [
   "ru",
   "pl",
   "ua",
+  "ie",
 ]; // South Africans and Poles come most often
 const pickNation = () => {
   const r = Math.random();
@@ -8944,7 +8986,7 @@ const pickNation = () => {
     ? "za"
     : r < 0.66
       ? "pl"
-      : ["sc", "gb", "fr", "in", "at", "de", "ru", "ua"][Math.floor(Math.random() * 8)];
+      : ["sc", "gb", "fr", "in", "at", "de", "ru", "ua", "ie"][Math.floor(Math.random() * 9)];
 };
 const fanGear = (look, i) => ({
   flag: i % 2 === 0,
@@ -9911,9 +9953,11 @@ window.addEventListener("keydown", (e) => {
     cycleLayout();
     return;
   }
-  if (G.state === "play" && (k === "KeyH" || (k === "KeyE" && !two))) pressedEdge.holy = true; // send holy water (player 1)
+  // (v1.5.3 fix: E and R used to send holy water and show the cross too - but E and R change the flavour, so changing
+  //  flavour at the tap quietly wasted a bottle of holy water or the cross. Holy water is H, the cross is Q.)
+  if (G.state === "play" && k === "KeyH") pressedEdge.holy = true; // send holy water (player 1)
   if (G.state === "play" && two && (k === "Period" || k === "NumpadDecimal")) pressedEdge2.holy = true; // (player 2)
-  if (G.state === "play" && (k === "KeyQ" || (k === "KeyR" && !two))) pressedEdge.cross = true; // show the cross (player 1)
+  if (G.state === "play" && k === "KeyQ") pressedEdge.cross = true; // show the cross (player 1)
   if (G.state === "play" && two && (k === "Comma" || k === "Numpad1")) pressedEdge2.cross = true; // (player 2)
   if (k === "Digit2" && G.state === "menu") {
     cyclePlayers();
@@ -10736,6 +10780,11 @@ const FLY_SAY = {
   prop: ["whoosh", "UP, UP AND AWAY - SPECIAL DELIVERY!", "#9fd0ff"],
 };
 function update(dt) {
+  // (v1.5.3) HIT-STOP: for a split second after a big hit (a demon banished) everything moves in slow motion
+  if (G.hitStop > 0) {
+    G.hitStop -= dt;
+    dt *= 0.25;
+  }
   dangerUpdate(dt); // (the music feels the danger)
   musxUpdate(dt); // (v1.4.7) ...and how well you are doing
   voiceUpdate();
@@ -12508,7 +12557,7 @@ function update(dt) {
     if (catcher && s.holy) {
       // TSSSS! the devil (or demon, or vampire) is banished - and the water flows on to the next one
       s.hits = (s.hits || 0) + 1;
-      if (!redeem(catcher, demo)) refuse(catcher, demo);
+      if (!redeem(catcher, demo)) refuse(catcher, demo, "holy");
       sfx("sizzle", catcher.x);
       sparkle(catcher.x + 10, LY(s.lane, catcher.x) - 50, [0.5, 0.85, 1, 1], 18, s.lane);
       const [hx, hy] = projL(s.lane, catcher.x + 20, LY(s.lane, catcher.x) - 60);
@@ -14547,6 +14596,7 @@ function redeem(c, demo) {
   c.catchT = 0;
   transformPuff(c);
   sfx("bless", c.x);
+  banishFx(c, "redeem", demo); // (v1.5.3: a pillar of golden light)
   if (!demo) {
     SCORER = P;
     addScore(to === "angel" ? 500 : 400, c.x + 20, LY(c.lane, c.x) - 80);
@@ -14560,7 +14610,8 @@ function redeem(c, demo) {
   }
   return true;
 }
-function refuse(c, demo) {
+function refuse(c, demo, how = "kick") {
+  banishFx(c, how, demo); // (v1.5.3: the spectacular send-off)
   c.state = "pushed";
   c.left = 9999;
   c.refused = true;
@@ -15315,7 +15366,8 @@ function startBonus() {
   // speeds up gently - a few more swaps and a touch quicker each time, never as frantic as before
   const first = Math.max(0, G.level - 1), // (rounds since the first, after level 1)
     count = Math.min(18, 8 + first),
-    dur = Math.max(0.17, 0.24 - first * 0.004);
+    // (v1.5.3) 10% FASTER from the very first round - the same gentle climb after it (every swap takes 1/1.1 the time)
+    dur = Math.max(0.17, 0.24 - first * 0.004) / 1.1;
   for (let i = 0; i < count; i++) {
     const a = Math.floor(Math.random() * n);
     let b = Math.floor(Math.random() * (n - 1));
@@ -15356,7 +15408,7 @@ function updateBonus(dt) {
       if (s.k >= 1) {
         b.pos[s.a] = s.pb;
         b.pos[s.b] = s.pa;
-        b.wait = 0.025;
+        b.wait = 0.025 / 1.1; // (v1.5.3: the pause between swaps 10% shorter too)
         b.cur = null;
         if (!b.swaps.length) {
           b.phase = "pick";
@@ -15848,6 +15900,125 @@ function updateBell(dt) {
   }
   if (B0.t > B0.n * 0.42 + 2.5) G.bell = null;
 }
+// (v1.5.3) A SPECTACULAR SEND-OFF for an unwanted customer - run up and shown the door, or hit by holy water:
+//   "kick"  - a fiery burst (an evil one) or a puff of dust, two shockwave rings, stars flying, the screen jolts,
+//             a split second of slow motion... and they go tumbling head over heels out of the door;
+//   "holy"  - the same, but a PILLAR OF BLUE-WHITE LIGHT from above, steam and sparkling droplets;
+//   "redeem"- the pillar of light in gold, a ring of halos and feathers - a devil turned angel, a vampire made human.
+function banishFx(c, mode, demo) {
+  const y = LY(c.lane, c.x),
+    evil = !!(c.type && c.type.evil),
+    col0 =
+      mode === "redeem"
+        ? [1, 0.9, 0.5, 1]
+        : mode === "holy"
+          ? [0.55, 0.85, 1, 1]
+          : evil
+            ? [1, 0.45, 0.15, 1]
+            : [1, 0.85, 0.5, 1],
+    [px, py] = at(c.lane, c.x + 20, y - 40),
+    [, top] = at(c.lane, c.x + 20, y - 260);
+  // two shockwaves, a big flash of light
+  rings.push({ x: px, y: py, r: 90, life: 0.45, max: 0.45 });
+  rings.push({ x: px, y: py, r: 160, life: 0.7, max: 0.7 });
+  lightFx(px, py, mode === "kick" ? 240 : 320, col0, 0.5);
+  if (!demo) {
+    G.flash = Math.max(G.flash || 0, mode === "kick" ? 0.18 : 0.3);
+    G.flashC = col0;
+    G.hitStop = Math.max(G.hitStop || 0, 0.16); // (a split second of slow motion, to feel the hit)
+    G.shake = Math.max(G.shake, 9 * MOTION());
+  }
+  // the burst: stars and sparks flying out in a ring
+  for (let i = 0; i < 26; i++) {
+    const a = (i / 26) * 6.283 + rnd(-0.1, 0.1),
+      s = rnd(160, 320);
+    emit({
+      kind: "spark",
+      x: px,
+      y: py,
+      vx: Math.cos(a) * s,
+      vy: Math.sin(a) * s * 0.7 - 60,
+      life: rnd(0.5, 0.9),
+      max: 0.9,
+      size: rnd(3, 6),
+      c: i % 3 ? col0 : [1, 1, 1, 1],
+      grav: 260,
+      drag: 1.8,
+      light: i % 4 ? 0 : 20,
+    });
+  }
+  if (mode === "holy" || mode === "redeem") {
+    // THE PILLAR OF LIGHT: a column of glowing motes streaming up out of the bar into the sky
+    for (let i = 0; i < 30; i++)
+      emit({
+        kind: "spark",
+        x: px + rnd(-16, 16),
+        y: py + rnd(-10, 40),
+        vx: rnd(-8, 8),
+        vy: -rnd(260, 520),
+        life: rnd(0.6, 1.1),
+        max: 1.1,
+        size: rnd(2.5, 5),
+        c: i % 2 ? col0 : [1, 1, 1, 1],
+        drag: 0.6,
+        light: i % 3 ? 0 : 26,
+      });
+    lightFx(px, (py + top) / 2, 220, col0, 0.7);
+  }
+  if (mode === "kick" && evil) {
+    // fire and brimstone: embers and dark smoke curling up
+    for (let i = 0; i < 16; i++)
+      emit({
+        kind: "puff",
+        x: px + rnd(-20, 20),
+        y: py + rnd(-10, 30),
+        vx: rnd(-40, 40),
+        vy: rnd(-120, -40),
+        life: rnd(0.6, 1.1),
+        max: 1.1,
+        size: 5,
+        grow: 12,
+        drag: 1.4,
+        c: i % 2 ? [0.25, 0.15, 0.15, 0.55] : [1, 0.5, 0.15, 0.6],
+      });
+  }
+  if (mode === "redeem")
+    for (let i = 0; i < 10; i++)
+      emit({
+        kind: "confetti",
+        x: px + rnd(-30, 30),
+        y: py - rnd(0, 40),
+        vx: rnd(-60, 60),
+        vy: rnd(-180, -60),
+        life: rnd(1, 1.6),
+        max: 1.6,
+        size: 4,
+        c: [1, 1, 1, 1],
+        grav: 120,
+        drag: 1,
+        seed: rnd(0, 9),
+        rot: 0,
+        spin: rnd(-6, 6),
+      }); // (white feathers drifting)
+  if (mode !== "redeem") c.blast = G.time; // (and off they go, head over heels - see drawCustomer)
+  if (!demo)
+    G.callouts.push({
+      text:
+        mode === "redeem"
+          ? "HALLELUJAH!"
+          : mode === "holy"
+            ? ["BEGONE!", "BANISHED!", "BE GONE, FOUL FIEND!"][Math.floor(Math.random() * 3)]
+            : evil
+              ? ["BEGONE!", "AND STAY OUT!", "OUT, DEMON!"][Math.floor(Math.random() * 3)]
+              : ["OUT YOU GO!", "ON YOUR WAY!", "NEXT, PLEASE!", "SHOO!"][Math.floor(Math.random() * 4)],
+      x: px,
+      y: top + 60,
+      world: true,
+      c: mode === "redeem" ? "#ffe070" : mode === "holy" ? "#9fe8ff" : evil ? "#ff9a4a" : "#ffc34d",
+      life: 1.3,
+      max: 1.3,
+    });
+}
 function kickOut(c) {
   c.state = "pushed";
   c.left = 9999;
@@ -15863,13 +16034,7 @@ function kickOut(c) {
   G.shake = Math.max(G.shake, 5 * MOTION());
   sfx("kick", c.x);
   dust(c.lane, c.x + 20, LY(c.lane, c.x) + 24, 5, true);
-  const [px, py] = at(c.lane, c.x + 22, LY(c.lane, c.x) - 40);
-  rings.push({ x: px, y: py, r: 50, life: 0.3, max: 0.3 });
-  worldText(
-    ["OUT YOU GO!", "ON YOUR WAY!", "NEXT, PLEASE!", "SHOO!"][Math.floor(Math.random() * 4)],
-    c,
-    "#ffc34d"
-  );
+  banishFx(c, "kick", G.demo); // (v1.5.3: the spectacular send-off - and its words)
   if (!G.kickIntro) {
     G.kickIntro = true;
     G.callouts.push({
@@ -21389,6 +21554,9 @@ const FAN_WEAR = {
   rus2: ["#1e4fa8", "#c8202a", "#3a2410"], // a blue sarafan over a red skirt
   ukr: ["#f6f2ea", "#2a3a8a", "#3a2410"], // a white embroidered vyshyvanka, blue sharovary trousers
   ukr2: ["#f6f2ea", "#b0202a", "#3a2410"], // a white vyshyvanka, a red skirt
+  irl: ["#169b62", "#f4f4f4", "#202020"], // (v1.5.3) Ireland's green jersey, white shorts
+  irl2: ["#efe6d2", "#169b62", "#3a2410"], // a cream Aran jumper, a green skirt
+  irl3: ["#efe6d2", "#3a3a40", "#3a2410"], // an Aran jumper, dark trousers
 };
 const CARTOON_BUILD = new Set([
   "golem",
@@ -21419,6 +21587,23 @@ const IDLE_ACTS = ["tap", "look", "drum", "wave", "scratch", "stretch"];
 
 function drawCustomer(c, t) {
   if (c.state === "pushed" && !OUT && c.alpha > 0.5) pushedFx(c, t);
+  // (v1.5.3) SENT FLYING: shown the door (or hit by holy water) they go tumbling head over heels, up and away
+  const age = c.blast !== undefined ? G.time - c.blast : -1;
+  if (age >= 0 && age < 1.4) {
+    const fy = c.fy !== undefined ? c.fy : LY(c.lane, c.x) + 22,
+      cx2 = c.x + 14,
+      cy2 = fy - 40;
+    push();
+    translate(cx2, cy2 - 150 * age + 120 * age * age);
+    rotate(-age * 9);
+    const sc2 = Math.max(0.35, 1 - age * 0.45);
+    scaleXY(sc2, sc2);
+    translate(-cx2, -cy2);
+    safeDraw(c.type.kind, () => drawCustomerRaw(c, t));
+    pop();
+    return;
+  }
+  if (age >= 1.4) return; // (gone - out of sight, over the rooftops)
   safeDraw(c.type.kind, () => drawCustomerRaw(c, t));
 }
 // (v1.4.32) SHOVED BACK BY A SHAKE: speed lines streak out behind them, and a little puff of air, so the push reads
@@ -24213,6 +24398,22 @@ function drawTorsoBase(kind, c, t, A, tw, th, body, L, angry, step) {
         for (let i = 0; i < 6; i++) disc(0, top + 6 + i * 3, 0.8, A(col("#ffd24d")));
         rect(-tw / 2, top + 22, tw, 1.6, A(col("#ffd24d")));
       }
+      if (lk === "irl") {
+        rect(-tw / 2 + 1, top, tw - 2, 2.6, A(col("#f4f4f4"))); // (the white collar)
+        rect(-tw / 2 + 1, top + 2.6, tw - 2, 1.2, A(col("#ff883e"))); // (an orange trim)
+        disc(-3.5, top + 7, 1.6, A(col("#f4f4f4"))); // (the crest)
+      }
+      if (lk === "irl2" || lk === "irl3") {
+        // THE ARAN JUMPER: cream wool, knitted in cables and diamonds down the front
+        const kn = col("#cfc4ac");
+        for (const cx2 of [-tw / 4, 0, tw / 4])
+          for (let i = 0; i < 6; i++) {
+            const yy = top + 2 + i * 3.4;
+            line(cx2 - 1.4, yy, cx2 + 1.4, yy + 1.7, 0.8, A(kn));
+            line(cx2 + 1.4, yy + 1.7, cx2 - 1.4, yy + 3.4, 0.8, A(kn));
+          } // (the cables)
+        rect(-tw / 2 + 1, top + 21, tw - 2, 1.6, A(kn)); // (the ribbed hem)
+      }
       if (lk === "ukr" || lk === "ukr2") {
         // THE VYSHYVANKA: a white linen shirt with red and black cross-stitch embroidery down the chest and at the collar
         const em = [col("#c8202a"), col("#1a1a1a")];
@@ -25587,6 +25788,40 @@ function drawHead(kind, x, hy, t, c, A, angry, look, L, mouth = "flat", eyes = "
         disc(x + Math.cos(a) * 10.5, hy - 10 + Math.sin(a) * 8.5, 0.9, A(col("#f8f4e8")));
       } // (pearls round its edge)
       disc(x, hy - 14, 2.2, A(col("#ffd24d"))); // (a gold medallion)
+    } else if (lk === "irl") {
+      // (v1.5.3) an Ireland fan: a green bobble hat with a white band, a shamrock on it, the tricolour on the cheek
+      disc(x - 1, hy - 6, 10, A(col(["#c85a20", "#6a4a2a", "#2a1a10"][Math.floor(c.seed * 3) % 3])), 5);
+      face();
+      if (c.seed > 0.55) disc(x + 2, hy + 7.5, 6, A(col(c.seed > 0.75 ? "#c85a20" : "#6a4a2a")), 4.5); // (a beard for some)
+      disc(x, hy - 9, 11.5, A(col("#169b62")), 5.5);
+      rect(x - 10, hy - 7, 20, 2.4, A(col("#f4f4f4")));
+      disc(x, hy - 14.5, 3, A(col("#f4f4f4"))); // (the bobble)
+      for (let i = 0; i < 3; i++) {
+        const a = -Math.PI / 2 + i * 2.094;
+        disc(x - 5 + Math.cos(a) * 1.4, hy - 10 + Math.sin(a) * 1.4, 1.2, A(col("#0f7a48")));
+      } // (a shamrock)
+      rect(x + 3.5, hy + 0.5, 2, 4, A(col("#169b62")));
+      rect(x + 5.5, hy + 0.5, 2, 4, A(C.white));
+      rect(x + 7.5, hy + 0.5, 2, 4, A(col("#ff883e")));
+    } else if (lk === "irl2") {
+      // an Irish lady: long curly red-gold hair, and a little shamrock clip
+      const hc = col(["#b8501a", "#c87a30", "#6a3a1a"][Math.floor(c.seed * 3) % 3]);
+      disc(x - 1, hy - 5, 10.5, A(hc), 6);
+      for (let i = 0; i < 6; i++) disc(x - 9 + (i % 2) * 2, hy - 2 + i * 3.4, 3, A(hc)); // (the curls, down her back)
+      face();
+      for (let i = 0; i < 3; i++) {
+        const a = -Math.PI / 2 + i * 2.094;
+        disc(x + 6 + Math.cos(a) * 1.3, hy - 8 + Math.sin(a) * 1.3, 1.1, A(col("#169b62")));
+      }
+      for (let i = 0; i < 4; i++) disc(x + 2 + i * 1.6, hy + 1.5 + (i % 2) * 0.8, 0.45, A(col("#b8703a"))); // (freckles)
+    } else if (lk === "irl3") {
+      // an Irishman in a TWEED FLAT CAP, with a short grey-or-brown beard
+      disc(x - 1, hy - 5, 10, A(col(c.seed > 0.5 ? "#8a8a8a" : "#5a3a20")), 5);
+      face();
+      disc(x + 3, hy + 6, 4.6, A(col(c.seed > 0.5 ? "#9a9a9a" : "#6a4a2a")), 3);
+      disc(x - 1, hy - 9, 11, A(col("#6a6050")), 4); // (the cap)
+      quad4(x + 4, hy - 9, x + 13, hy - 7.5, x + 12, hy - 6, x + 3, hy - 6.5, A(col("#5a5040"))); // (its peak)
+      for (let i = 0; i < 5; i++) line(x - 9 + i * 4, hy - 12, x - 8 + i * 4, hy - 6, 0.5, A(col("#7a7060"))); // (the tweed)
     } else if (lk === "ukr") {
       // (v1.4.68) a Ukrainian visitor: short hair and a fine moustache
       disc(x - 1, hy - 6, 10, A(col(["#6a4a2a", "#c8a060", "#2a1a10"][Math.floor(c.seed * 3) % 3])), 5);
@@ -28622,6 +28857,8 @@ function drawFlag(nation, x, y, w, h, t, ph, A) {
       band(0, 0.5, "#f4f4f4");
       band(0.5, 1, "#dc143c");
     } else if (nation === "fr") band(0, 1, um < 1 / 3 ? "#0055a4" : um < 2 / 3 ? "#ffffff" : "#ef4135");
+    else if (nation === "ie")
+      band(0, 1, um < 1 / 3 ? "#169b62" : um < 2 / 3 ? "#ffffff" : "#ff883e"); // (v1.5.3: green, white and orange)
     else if (nation === "in") {
       band(0, 1 / 3, "#ff9933");
       band(1 / 3, 2 / 3, "#ffffff");
@@ -71704,8 +71941,8 @@ function levelOfTour(of) {
     inTour = ((lv - 1) % LAST_LEVEL) + 1;
   return (tour > 1 ? "TOUR " + tour + "  ·  " : "") + "LEVEL " + inTour + of + LAST_LEVEL;
 }
-const GAME_VERSION = "v1.5.2",
-  GAME_DATE = "28.10.2026",
+const GAME_VERSION = "v1.5.3",
+  GAME_DATE = "29.10.2026",
   VERSION_TEXT = GAME_VERSION + "  ·  " + GAME_DATE;
 const FB = '"Chakra Petch", "Segoe UI", sans-serif';
 let FD = '"Bungee", "Impact", sans-serif';
@@ -78707,6 +78944,17 @@ profWire();
 //  the game, and where the motion capture, the folk songs and the fonts come from. Both from the menu at any time.
 // =====================================================================================
 const NEWS = [
+  {
+    ver: "v1.5.3",
+    title: "IRISH VISITORS, A SPECTACULAR SEND-OFF",
+    items: [
+      "IRISH FANS: GREEN JERSEYS, ARAN JUMPERS, A TWEED CAP",
+      "BANISH A DEVIL: SHOCKWAVES, LIGHT - AND OFF THEY TUMBLE",
+      "HOLY WATER: A PILLAR OF LIGHT",
+      "FIND THE ALIEN: A LITTLE FASTER",
+      "E AND R ONLY CHANGE FLAVOUR NOW",
+    ],
+  },
   {
     ver: "v1.5.2",
     title: "BUG HUNT",

@@ -7048,6 +7048,50 @@ const DICT_ROWS                             = [
     "TERUGGESTOOT DEUR 'N SKOMMELDRANKIE: SPOEDLYNE EN 'N STOFWOLK",
     "ODEPCHNIĘTY SZEJKIEM: LINIE PRĘDKOŚCI I CHMURA KURZU",
   ],
+  // TRANSLATIONS, v1.5.8 news
+  ["ASTRO CAFE RECORDS", "ASTRO CAFÉ-PLATE", "PŁYTY ASTRO CAFÉ"],
+  [
+    "24 RECORDS: SPY THEMES, SPACE BLIPS AND 16-BIT ARCADE SYNTH",
+    "24 PLATE: SPIOENTEMAS, RUIMTE-BLIEPS EN 16-BIS ARKADESINTH",
+    "24 PŁYTY: SZPIEGOWSKIE MOTYWY, KOSMICZNE BLIPY I 16-BITOWY SYNTH Z SALONÓW GIER",
+  ],
+  [
+    "FROM THE FIRST STOP, EVERY OTHER STOP PLAYS A RECORD",
+    "VANAF DIE EERSTE HALTE SPEEL ELKE TWEEDE HALTE 'N PLAAT",
+    "OD PIERWSZEGO PRZYSTANKU CO DRUGI GRA PŁYTA",
+  ],
+  [
+    "EACH RECORD LOOPS ROUND AND ROUND WITHOUT A SEAM",
+    "ELKE PLAAT SPEEL OOR EN OOR SONDER 'N NAAT",
+    "KAŻDA PŁYTA GRA W KÓŁKO BEZ ŻADNEGO SZWU",
+  ],
+  [
+    "EVERY RECORD IS IN THE MUSIC BOX",
+    "ELKE PLAAT IS IN DIE MUSIEKKAS",
+    "KAŻDA PŁYTA JEST W SZAFIE GRAJĄCEJ",
+  ],
+  // TRANSLATIONS, v1.5.7 news
+  ["SHINE AND SPARKLE", "GLANS EN GLINSTER", "BLASK I ISKRY"],
+  [
+    "A PERFECT POUR: LITTLE HEARTS FLOAT UP FROM A HAPPY CUSTOMER",
+    "'N PERFEKTE SKINK: KLEIN HARTJIES DRYF OP UIT 'N GELUKKIGE KLANT",
+    "IDEALNIE NALANY: Z ZADOWOLONEGO KLIENTA ULATUJĄ SERDUSZKA",
+  ],
+  [
+    "PICK UP A TIP: A RING OF GOLD AND A BURST OF SPARKLES",
+    "TEL 'N FOOITJIE OP: 'N RING VAN GOUD EN 'N GEFLONKER",
+    "PODNIEŚ NAPIWEK: ZŁOTY PIERŚCIEŃ I DESZCZ ISKIER",
+  ],
+  [
+    "A BROKEN GLASS FLASHES WHERE IT SMASHES",
+    "'N GEBREEKTE GLAS FLITS WAAR DIT STUKKEND SLAAN",
+    "STŁUCZONA SZKLANKA BŁYSKA TAM, GDZIE SIĘ ROZBIJA",
+  ],
+  [
+    "STOP CLEARED: A WAVE OF LIGHT DOWN EVERY COUNTER AND A GOLDEN GLOW",
+    "HALTE KLAAR: 'N GOLF LIG OOR ELKE TOONBANK EN 'N GOUE GLOED",
+    "PRZYSTANEK ZALICZONY: FALA ŚWIATŁA WZDŁUŻ KAŻDEJ LADY I ZŁOTY BLASK",
+  ],
 
   // (v1.4.79) TRANSLATIONS, v1.5.5 news
   ["A LIVELIER BAR", "'N LEWENDIGER KROEG", "ŻYWSZY BAR"],
@@ -13369,6 +13413,7 @@ function update(dt) {
         if (big) sparkle(catcher.x + 14, y0, [1, 0.95, 0.75, 1], Math.round(n / 2), s.lane);
         const [rx, ry] = at(s.lane, catcher.x + 16, y0 + 6);
         rings.push({ x: rx, y: ry, r: big ? 70 : 42, life: 0.32, max: 0.32 });
+        if (s.perfect) catchHearts(s.lane, catcher.x + 14, y0 - 20); // (v1.5.7: a happy customer - juice.ts)
       }
       G.nbCatch = { lane: s.lane, x: catcher.x, t: G.time, c: catcher }; // (v1.4.20: the neighbours turn to look - characters.ts)
       if (catcher.type.holy)
@@ -13472,6 +13517,7 @@ function update(dt) {
       addScore(t.v || 1500, t.x, LY(t.lane, t.x) - 50);
       SCORER = null;
       sfx("tip");
+      tipFx(t.lane, t.x); // (v1.5.7: a ring of gold - juice.ts)
       kidTip(demo);
       coachTip(demo);
       if (!demo) funTip();
@@ -13496,6 +13542,7 @@ function update(dt) {
     shakes = [];
     empties = [];
     fireworks(demo ? 2 : 6);
+    clearStart(); // (v1.5.7: the wave of light and the golden bloom - juice.ts)
     ringBell(3, demo); // the pub bell: ding-ding-ding, LAST ORDERS!
     if (!demo) {
       kidLevelClear();
@@ -16317,6 +16364,7 @@ function smash(x, y, lane) {
   }
   const [px, py] = at(lane, x, y),
     fl = at(lane, x, LY(lane, x) + 46)[1];
+  smashFx(px, py); // (v1.5.7: a flash and a cold ring where it breaks - juice.ts)
   for (let i = 0; i < 26; i++)
     emit({
       kind: "shard",
@@ -16680,6 +16728,7 @@ function draw() {
       drawCounter(lane, V, t);
       counterDim(lane); // (v1.4.57)
       heatBar(lane, t); // (v1.5.5: the bars warm up with a run of serves - juice.ts)
+      clearSweep(lane, t); // (v1.5.7: a wave of light down the counter when the stop is cleared)
       drawDrips(lane);
       drawWet(lane); // (v1.4.28: the wet trail a sliding shake leaves on the bar)
       for (const cr of CRITS) if (cr.lane === lane) drawCritter(cr, t); // (a caterpillar or a worm on the bar top)
@@ -28070,6 +28119,8 @@ function drawParts() {
     const k = Math.max(0, p.life / p.max);
     if (p.kind === "swoosh")
       drawSwoosh(p, k); // (v1.5.5: the fling - juice.ts)
+    else if (p.kind === "heart")
+      drawHeartP(p, k); // (v1.5.7: a happy customer - juice.ts)
     else if (p.kind === "spark" || p.kind === "rocket") {
       line(
         p.x - p.vx * 0.025,
@@ -28112,7 +28163,7 @@ function drawParts() {
   }
   for (const r of rings) {
     const k = 1 - r.life / r.max;
-    ring(r.x, r.y, r.r * Math.sqrt(k), 3 * (1 - k) + 1, withA([1, 0.8, 0.9, 1], 0.8 * (1 - k)));
+    ring(r.x, r.y, r.r * Math.sqrt(k), 3 * (1 - k) + 1, withA(r.c || [1, 0.8, 0.9, 1], 0.8 * (1 - k))); // (v1.5.7: rings can have their own colour)
   }
   R.setAdd(false);
 }
@@ -71309,6 +71360,139 @@ function playerCheer(pl, t) {
   glow(x, y, 30 * k, withA(CHEER_C[0], 0.25 * k));
   R.setAdd(false);
 }
+
+// =====================================================================================
+//  EVEN MORE JUICE (v1.5.7):
+//   * A HAPPY CUSTOMER: a perfect pour makes them light up - little hearts float up out of the sparkle
+//   * TIPS: picking up a tip rings out in gold - a ring of light and a burst of golden sparkles
+//   * A BROKEN GLASS: a flash and a cold ring of light where it smashes, so you see exactly where it went
+//   * LEVEL CLEAR: a wave of light runs down every counter, and a golden bloom washes down the screen
+// =====================================================================================
+const HEART_C = [col("#ff3f8f"), col("#ff5fb0"), col("#ff4f6a")];
+function catchHearts(lane, x, y) {
+  if (COMFORT.calm && Math.random() < 0.5) return;
+  const [px, py] = at(lane, x, y);
+  for (let i = 0; i < 3; i++)
+    emit({
+      kind: "heart",
+      add: true,
+      x: px + rnd(-14, 14),
+      y: py - rnd(0, 10),
+      vx: rnd(-26, 26),
+      vy: rnd(-150, -100),
+      drag: 1.6,
+      life: 1.1 + i * 0.15,
+      max: 1.1 + i * 0.15,
+      size: rnd(5, 7.5),
+      seed: rnd(0, 6.28),
+      c: HEART_C[i % 3],
+    });
+}
+// (drawn with the other glowing particles - player.ts drawParts): it pops in, sways and fades as it rises
+function drawHeartP(p, k) {
+  const pop = Math.min(1, (1 - k) * 8),
+    r = p.size * (0.4 + 0.6 * pop) * (0.8 + 0.2 * k),
+    sx = Math.sin(p.life * 6 + p.seed) * 3;
+  glow(p.x + sx, p.y, r * 2.4, withA(p.c, 0.3 * k));
+  R.setAdd(false); // (the heart itself solid, so it reads as pink and not a white blob)
+  drawHeart(p.x + sx, p.y, r, withA(p.c, Math.min(1, k * 2)));
+  disc(p.x + sx - r * 0.45, p.y - r * 0.35, r * 0.22, withA(C.white, 0.7 * k)); // (a shine)
+  R.setAdd(true);
+}
+const GOLD_RING = [1, 0.82, 0.3, 1],
+  ICE_RING = [0.7, 0.9, 1, 1];
+function tipFx(lane, x) {
+  const y = LY(lane, x) - 12,
+    [px, py] = at(lane, x, y);
+  rings.push({ x: px, y: py, r: 64, life: 0.45, max: 0.45, c: GOLD_RING });
+  rings.push({ x: px, y: py, r: 34, life: 0.3, max: 0.3, c: [1, 1, 0.85, 1] });
+  sparkle(x, y - 8, [1, 0.85, 0.35, 1], COMFORT.calm ? 5 : 10, lane);
+  lightFx(px, py, 90, [1, 0.8, 0.35, 1], 0.35);
+}
+// (px, py: already on the screen)
+function smashFx(px, py) {
+  rings.push({ x: px, y: py, r: 80, life: 0.4, max: 0.4, c: ICE_RING });
+  lightFx(px, py, 110, [0.75, 0.9, 1, 1], 0.25);
+}
+function clearStart() {
+  G.clearAt = G.time;
+}
+// the wave of light along a counter when the stop is cleared (each bar a moment after the one above)
+const CLEAR_C = col("#fff2b8");
+function clearSweep(lane, t) {
+  if (OUT || QUAL < 1 || G.state !== "clear" || G.clearAt === undefined) return;
+  const e = (G.time - G.clearAt - lane * 0.12) / 0.9;
+  if (e < 0 || e > 1.3) return;
+  const a = X0 - 14,
+    b = X1 + 18,
+    u = Math.min(1, e),
+    hx = a + (b - a) * u,
+    fade = e > 1 ? 1 - (e - 1) / 0.3 : 1,
+    w = 70,
+    tl = Math.max(a, hx - 260); // (the tail it leaves behind)
+  R.setAdd(true);
+  // the lit counter behind the head, fading back towards the tail
+  quad4(
+    tl,
+    LY(lane, tl) - 1,
+    hx,
+    LY(lane, hx) - 1,
+    hx,
+    LY(lane, hx) + 30,
+    tl,
+    LY(lane, tl) + 30,
+    withA(CLEAR_C, 0),
+    withA(CLEAR_C, 0.32 * fade),
+    withA(CLEAR_C, 0),
+    withA(CLEAR_C, 0)
+  );
+  line(tl, LY(lane, tl), hx, LY(lane, hx), 2.6, withA(CLEAR_C, 0.7 * fade));
+  // the bright head
+  quad4(
+    hx - w,
+    LY(lane, hx - w) - 16,
+    hx + 10,
+    LY(lane, hx + 10) - 16,
+    hx + 10,
+    LY(lane, hx + 10) + 2,
+    hx - w,
+    LY(lane, hx - w) + 2,
+    withA(CLEAR_C, 0),
+    withA(CLEAR_C, 0.55 * fade),
+    withA(CLEAR_C, 0.55 * fade),
+    withA(CLEAR_C, 0)
+  );
+  glowE(hx, LY(lane, hx) - 4, 34, 14, withA(CLEAR_C, 0.6 * fade));
+  glint4(hx, LY(lane, hx) - 6, 10 * fade, withA(C.white, 0.9 * fade));
+  R.setAdd(false);
+  void t;
+}
+// the golden bloom washing down the screen as the stop is cleared
+function clearBloom(g, w, h, s) {
+  if (G.state !== "clear" || G.clearAt === undefined || G.demo) return;
+  const e = (G.time - G.clearAt) / 1.3;
+  if (e < 0 || e > 1) return;
+  const a = 0.34 * Math.sin(e * Math.PI) * FLASH() * (COMFORT.calm ? 0.5 : 1),
+    cy = -h * 0.2 + e * h * 0.5,
+    gr = g.createRadialGradient(w / 2, cy, 0, w / 2, cy, Math.max(w, h) * 0.75);
+  gr.addColorStop(0, "rgba(255,226,140," + a + ")");
+  gr.addColorStop(0.5, "rgba(255,190,90," + a * 0.35 + ")");
+  gr.addColorStop(1, "rgba(255,170,80,0)");
+  g.fillStyle = gr;
+  g.fillRect(0, 0, w, h);
+  // a slanted sheen sweeping across, left to right
+  const sx = -w * 0.3 + e * w * 1.6,
+    band = 120 * s,
+    lg = g.createLinearGradient(sx - band, 0, sx + band, 0);
+  lg.addColorStop(0, "rgba(255,250,220,0)");
+  lg.addColorStop(0.5, "rgba(255,250,220," + a * 0.5 + ")");
+  lg.addColorStop(1, "rgba(255,250,220,0)");
+  g.save();
+  g.transform(1, 0, -0.35, 1, h * 0.17, 0);
+  g.fillStyle = lg;
+  g.fillRect(sx - band, 0, band * 2, h);
+  g.restore();
+}
 // =====================================================================================
 //  ATTRACT MODE  -  what an arcade cabinet does when nobody is playing:
 //  TITLE -> DEMO PLAY -> HALL OF FAME -> MEET THE REGULARS -> TITLE ...   Any input brings the menu back.
@@ -72552,7 +72736,7 @@ function levelOfTour(of) {
     inTour = ((lv - 1) % LAST_LEVEL) + 1;
   return (tour > 1 ? "TOUR " + tour + "  ·  " : "") + "LEVEL " + inTour + of + LAST_LEVEL;
 }
-const GAME_VERSION = "v1.5.6",
+const GAME_VERSION = "v1.5.8",
   GAME_DATE = "30.10.2026",
   VERSION_TEXT = GAME_VERSION + "  ·  " + GAME_DATE;
 const FB = '"Chakra Petch", "Segoe UI", sans-serif';
@@ -73139,6 +73323,7 @@ function drawHud(fps) {
     g.restore();
   }
   if (inGame) juiceHud(g, cssW, cssH, s, t); // (v1.5.5: the warm glow of a hot run, the red pulse of a life lost)
+  if (inGame) clearBloom(g, cssW, cssH, s); // (v1.5.7: the golden bloom of a cleared stop)
   if (inGame) {
     const pad = 14 * s;
     // (v1.4.54) a soft dark shade in the top corners, behind the score and the lives - so they read clearly over any
@@ -78124,7 +78309,7 @@ function musicWanted() {
   if (G.state === "over" && G.won) return VICTORY_TRACK;
   if (G.state === "story") return DEEP_TRACK; // Bogdan's story: the mysterious deep-space tune
   if (["play", "lost", "clear", "bonus", "paused", "jump", "approach", "mini"].includes(G.state))
-    return G.folk ?? here().trk ?? tourStop(); // (now and then the band plays a folk song instead)
+    return recInGame() ?? G.folk ?? here().trk ?? tourStop(); // (v1.5.8: from the first stop, every other stop plays a record - records.ts; on the others, now and then the band plays a folk song instead)
   if (ATTRACT.on && ATTRACT.phase === "demo") return here().trk ?? tourStop();
   return 0;
 }
@@ -78172,7 +78357,7 @@ function musRamp(from, to, start, dur) {
 const MRAMP = { end: 0 }; // (when the last volume ramp finishes - for the watchdog)
 // each tune gets its own echo: timed to its beat, as wet as its style wants
 function setEchoFor(want, now) {
-  if (!leadEcho || want < 0) return;
+  if (!leadEcho || want < 0 || !TRACKS[want] || TRACKS[want].rec) return; // (a record brings its own echo)
   const tr = TRACKS[want],
     div = tr.div || (tr.steps === 12 ? 6 : 4),
     st = want === 0 ? STEP : 60 / tr.bpm / div;
@@ -78210,6 +78395,7 @@ function schedule() {
     // switch tunes: start the new one from its top, swelling in
     MFADE.to = null;
     curTrack = want;
+    recSwitch(want); // (v1.5.8: a record stops or starts - records.ts)
     mus.sec = 0;
     mus.bar = 0;
     mus.step = 0;
@@ -78245,6 +78431,7 @@ function schedule() {
   )
     musRamp(musicBus.gain.value, musTarget(curTrack), now, 1.2);
   const play = curTrack; // (while a change is fading, the old tune plays on)
+  recPrefetch(); // (v1.5.8: the next stop's record unpacked ahead of time)
   if (play < 0) return;
   // (v1.4.14) NO CRACKLE WHEN THE SCREEN IS BUSY: the band is booked further ahead (0.3 s), so a slow frame can't make
   // it late - and a note that would still be late is quietly skipped (keeping the beat) instead of being started in
@@ -78257,6 +78444,8 @@ function schedule() {
       if (mus.next >= LATE) playStep(mus.next);
       advance();
     }
+  } else if (TRACKS[play].rec) {
+    recTick(play); // (a record plays itself - records.ts)
   } else {
     const tr = TRACKS[play];
     if (SEQ2.next < now - 0.25) SEQ2.next = now + 0.05;
@@ -78905,7 +79094,7 @@ const volksIdx = () =>
   TRACKS.map((t, i) => (t.group === "AFRIKAANSE VOLKSLIEDJIES" ? i : -1)).filter((i) => i >= 0);
 function jbTuneSecs(i) {
   const tr = TRACKS[i];
-  return tr && tr.folk ? (tr.len * 60) / tr.bpm / 4 + 1.2 : 60;
+  return tr && tr.folk ? (tr.len * 60) / tr.bpm / 4 + 1.2 : tr && tr.rec ? tr.rec.loop[1] + 2 : 60; // (a record: through once)
 }
 function jbNextAuto() {
   let i;
@@ -79556,6 +79745,26 @@ profWire();
 //  the game, and where the motion capture, the folk songs and the fonts come from. Both from the menu at any time.
 // =====================================================================================
 const NEWS = [
+  {
+    ver: "v1.5.8",
+    title: "ASTRO CAFE RECORDS",
+    items: [
+      "24 RECORDS: SPY THEMES, SPACE BLIPS AND 16-BIT ARCADE SYNTH",
+      "FROM THE FIRST STOP, EVERY OTHER STOP PLAYS A RECORD",
+      "EACH RECORD LOOPS ROUND AND ROUND WITHOUT A SEAM",
+      "EVERY RECORD IS IN THE MUSIC BOX",
+    ],
+  },
+  {
+    ver: "v1.5.7",
+    title: "SHINE AND SPARKLE",
+    items: [
+      "A PERFECT POUR: LITTLE HEARTS FLOAT UP FROM A HAPPY CUSTOMER",
+      "PICK UP A TIP: A RING OF GOLD AND A BURST OF SPARKLES",
+      "A BROKEN GLASS FLASHES WHERE IT SMASHES",
+      "STOP CLEARED: A WAVE OF LIGHT DOWN EVERY COUNTER AND A GOLDEN GLOW",
+    ],
+  },
   {
     ver: "v1.5.6",
     title: "THE BARTENDER CHEERS",
@@ -80652,6 +80861,10 @@ const CREDITS = [
     "NUS mocap · MocapFlow (CC BY) · CMU Graphics Lab Motion Capture Database (mocap.cs.cmu.edu), subject 7 - created with funding from NSF EIA-0196217",
   ],
   ["MUSIC", "All the planet tunes are our own. The folk songs are traditional and free for all to play"],
+  [
+    "ASTRO CAFÉ RECORDS",
+    "24 records - spy themes, exploring blips and 16-bit arcade synth - by GL (made with Suno). Midnight Cipher and Signal from Orbit: written for the game in the same style",
+  ],
   [
     "FOLK SONGS",
     'Polish: Sto lat, Hej sokoły, Szła dzieweczka, Płynie Wisła, Krakowiaczek. South African: Sarie Marais, Shosholoza - and 56 Afrikaanse volksliedjies (traditional tunes, and old tunes by G.F. Root, S.C. Foster, W. Kittredge, A. Owen and C.M. von Weber), from the songbook "Afrikaanse Volksliedjies" - the melodies only',
@@ -82307,6 +82520,365 @@ function folkStep(tr, t0) {
       drum("h", t, B2, 0.45);
     }
   }
+}
+// =====================================================================================
+//  ASTRO CAFÉ RECORDS (v1.5.8): real recorded songs on the café's sound system, taking turns with the band's own
+//  planet tunes - from the first stop, every other stop plays a record (the "game" ones, in turn). EVERY record is in the music box, in its
+//  own ASTRO CAFÉ RECORDS section, whether it plays at the stops or not. They're GL's own (made with Suno) - spy themes,
+//  exploring blips and 16-bit arcade synth - and two written for the game in the same style. Each one is built to LOOP
+//  FOREVER WITHOUT A SEAM: its intro plays once, then it goes round and round between two bar lines picked by beat
+//  tracking so the beat carries straight on across the join (the file itself is cut there and cross-faded, with a
+//  little of the loop's start copied after the end, so the join sounds right whatever the decoder does).
+//  The songs are MP3 files in the music/ folder next to the game, fetched only when they're wanted and unpacked at most
+//  two at a time (easy on a phone's memory). They play through the music's own channel, so the volume slider, MUTE,
+//  the fades between tunes and the muffle when a life is lost all apply. (Opened straight from a folder on the disk -
+//  file:// - the browser won't let a page unpack its own files, so there a plain audio player plays them instead, its
+//  volume following the music's, jumping back to the loop's start by itself.)
+// =====================================================================================
+                   
+             
+                
+               
+                                                                                                    
+             
+                                                                                
+                
+ 
+const RECORDS            = [
+  {
+    id: "galactic",
+    title: "GALACTIC DEFENSE",
+    mood: "space shooter",
+    loop: [52.1868, 151.3911],
+    by: "GL",
+    game: true,
+  },
+  {
+    id: "airlock",
+    title: "AGENT IN THE AIRLOCK",
+    mood: "spy theme",
+    loop: [32.7285, 86.8092],
+    by: "GL",
+    game: true,
+  },
+  {
+    id: "race",
+    title: "DIGITAL RACE",
+    mood: "racing synth (デジタルレース)",
+    loop: [55.577, 178.4127],
+    by: "GL",
+    game: true,
+  },
+  {
+    id: "orbit",
+    title: "SIGNAL FROM ORBIT",
+    mood: "exploratory blips",
+    loop: [10.4348, 104.3477],
+    by: "new",
+    game: true,
+  },
+  {
+    id: "brigade",
+    title: "MARCH OF THE BYTE BRIGADE",
+    mood: "heroic march",
+    loop: [20.4568, 144.8575],
+    by: "GL",
+    game: true,
+  },
+  {
+    id: "dossier",
+    title: "THE MOON BASE DOSSIER",
+    mood: "slow-burn spy",
+    loop: [14.7563, 79.4012],
+    by: "GL",
+    game: true,
+  },
+  {
+    id: "quest",
+    title: "BIT HERO'S QUEST",
+    mood: "16-bit quest",
+    loop: [19.3538, 153.0457],
+    by: "GL",
+    game: true,
+  },
+  {
+    id: "comet",
+    title: "COMET CARTOGRAPHER",
+    mood: "exploratory blips",
+    loop: [37.2796, 116.4951],
+    by: "GL",
+    game: true,
+  },
+  {
+    id: "pulse",
+    title: "BRISK ARCADE PULSE",
+    mood: "arcade pulse",
+    loop: [16.8229, 110.6688],
+    by: "GL",
+    game: true,
+  },
+  { id: "cipher", title: "MIDNIGHT CIPHER", mood: "spy theme", loop: [9.6, 96.0], by: "new", game: true },
+  {
+    id: "darkgroove",
+    title: "DARK CHIPTUNE GROOVE",
+    mood: "dark chiptune",
+    loop: [55.1706, 149.6072],
+    by: "GL",
+    game: true,
+  },
+  {
+    id: "probe",
+    title: "PROBE ON THE DARK SIDE",
+    mood: "deep-space blips",
+    loop: [18.4018, 111.6208],
+    by: "GL",
+    game: true,
+  },
+  {
+    id: "homecoming",
+    title: "HERO'S HOMECOMING",
+    mood: "hero's fanfare",
+    loop: [24.0791, 121.9857],
+    by: "GL",
+    game: true,
+  },
+  {
+    id: "finalround",
+    title: "FINAL ROUND FEVER",
+    mood: "boss fight",
+    loop: [43.1195, 128.4322],
+    by: "GL",
+    game: true,
+  },
+  { id: "march", title: "DIGITAL HERO'S MARCH", mood: "heroic march", loop: [34.6442, 163.815], by: "GL" },
+  { id: "fanfara", title: "FANFARA EROE", mood: "hero's fanfare", loop: [22.3376, 151.1011], by: "GL" },
+  { id: "showdown", title: "TOURNAMENT SHOWDOWN", mood: "boss fight", loop: [26.7958, 117.2843], by: "GL" },
+  {
+    id: "cartridge",
+    title: "QUEST FOR THE GOLDEN CARTRIDGE",
+    mood: "16-bit quest",
+    loop: [19.3538, 153.0457],
+    by: "GL",
+  },
+  { id: "heartbeat", title: "NEON HEARTBEAT", mood: "arcade pulse", loop: [18.8546, 127.0713], by: "GL" },
+  { id: "rush", title: "ARCADE RUSH", mood: "arcade rush", loop: [11.4474, 52.9891], by: "GL" },
+  { id: "countdown", title: "COIN-OP COUNTDOWN", mood: "arcade rush", loop: [8.9861, 58.5607], by: "GL" },
+  { id: "blitz", title: "BLITZKAMPF", mood: "battle theme", loop: [18.6456, 80.3317], by: "GL" },
+  {
+    id: "explore",
+    title: "EXPLORATION BEGINS",
+    mood: "chiptune adventure",
+    loop: [26.5752, 101.1102],
+    by: "GL",
+  },
+  {
+    id: "adventure",
+    title: "SONG OF ADVENTURE",
+    mood: "adventure theme (冒険の調べ)",
+    loop: [31.672, 181.2115],
+    by: "GL",
+  },
+];
+const REC_FIRST = TRACKS.length;
+for (const r of RECORDS)
+  TRACKS.push({
+    title: r.title,
+    where: r.game ? "Astro Café Records · plays at the stops" : "Astro Café Records",
+    mood: r.mood,
+    group: "ASTRO CAFÉ RECORDS",
+    rec: r,
+  });
+const REC_GAME = RECORDS.filter((r) => r.game); // (the stops' rotation, in this order)
+const REC_GAIN = 3.0; // (the records are mastered loud; this brings them level with the band through the music channel)
+const REC_FILE = location.protocol === "file:"; // (opened from the disk: the plain audio player)
+const REC = {
+  bufs: new Map                     (), // (unpacked songs, the most recent last)
+  busy: {}                           ,
+  bad: {}                           ,
+  playing: -1, // (the TRACKS index sounding now)
+  src: null                                ,
+  gain: null                   ,
+  el: null                           , // (the plain player, from the disk)
+};
+const recUrl = (r         ) => "music/" + r.id + ".mp3";
+const recHere = (r         ) => !REC.bad[r.id];
+// fetch and unpack a song (once) - then keep at most two
+function recLoad(r         , then             ) {
+  if (!AC || REC.bad[r.id]) return;
+  if (REC_FILE) {
+    if (then) then(); // (the plain player streams it itself)
+    return;
+  }
+  if (REC.bufs.has(r.id)) {
+    const b = REC.bufs.get(r.id);
+    REC.bufs.delete(r.id);
+    REC.bufs.set(r.id, b); // (most recently used)
+    if (then) then();
+    return;
+  }
+  if (REC.busy[r.id]) return;
+  REC.busy[r.id] = true;
+  const fail = () => {
+    REC.busy[r.id] = false;
+    REC.bad[r.id] = true; // (not there, or a browser that can't play it: that stop just keeps the band's tune)
+  };
+  const ok = (buf) => {
+    REC.busy[r.id] = false;
+    if (!buf) return fail();
+    REC.bufs.set(r.id, buf);
+    // (go easy on memory: forget the oldest, but never the one playing)
+    const playingId = REC.playing >= 0 && TRACKS[REC.playing] ? TRACKS[REC.playing].rec.id : "";
+    for (const k of [...REC.bufs.keys()]) {
+      if (REC.bufs.size <= 2) break;
+      if (k !== playingId && k !== r.id) REC.bufs.delete(k);
+    }
+    if (then) then();
+  };
+  try {
+    fetch(recUrl(r))
+      .then((res) => (res.ok ? res.arrayBuffer() : Promise.reject(res.status)))
+      .then((ab) => {
+        try {
+          const p = AC.decodeAudioData(ab, ok, fail); // (the callback form - older Safari has no promise)
+          if (p && p.catch) p.catch(fail);
+        } catch (e) {
+          fail();
+        }
+      })
+      .catch(fail);
+  } catch (e) {
+    fail();
+  }
+}
+function recStop() {
+  if (REC.src) {
+    const s = REC.src,
+      g = REC.gain;
+    try {
+      const now = AC.currentTime;
+      g.gain.cancelScheduledValues(now);
+      g.gain.setValueAtTime(g.gain.value, now);
+      g.gain.linearRampToValueAtTime(0.0001, now + 0.06);
+      s.stop(now + 0.08);
+    } catch (e) {}
+    s.onended = () => {
+      try {
+        g.disconnect();
+      } catch (e) {}
+    };
+  }
+  if (REC.el) {
+    try {
+      REC.el.pause();
+    } catch (e) {}
+  }
+  REC.src = null;
+  REC.gain = null;
+  REC.playing = -1;
+}
+// start a record from its top: the intro once, then round and round its loop
+function recBegin(i) {
+  const r = TRACKS[i].rec;
+  if (REC_FILE) return recElBegin(i);
+  const buf = REC.bufs.get(r.id);
+  if (!buf || !musicBus) return;
+  recStop();
+  const now = AC.currentTime,
+    src = AC.createBufferSource(),
+    g = AC.createGain();
+  src.buffer = buf;
+  src.loop = true;
+  src.loopStart = r.loop[0];
+  src.loopEnd = Math.min(r.loop[1], buf.duration - 0.05);
+  g.gain.setValueAtTime(0.0001, now);
+  g.gain.linearRampToValueAtTime(REC_GAIN * (r.trim || 1), now + 0.35); // (a quick swell, in case it starts late)
+  src.connect(g);
+  g.connect(musicBus);
+  src.start(now + 0.03);
+  REC.src = src;
+  REC.gain = g;
+  REC.playing = i;
+}
+// (from the disk) the plain audio player
+function recElBegin(i) {
+  const r = TRACKS[i].rec;
+  recStop();
+  if (!REC.el) {
+    REC.el = new Audio();
+    REC.el.preload = "auto";
+  }
+  const el = REC.el;
+  el.onerror = () => {
+    REC.bad[r.id] = true;
+    if (REC.playing === i) REC.playing = -1;
+  };
+  el.onended = () => {
+    // (in case it ran off the end between two checks)
+    if (REC.playing !== i) return;
+    try {
+      el.currentTime = r.loop[0];
+      const p = el.play();
+      if (p && p.catch) p.catch(() => {});
+    } catch (e) {}
+  };
+  el.volume = 0;
+  el.src = recUrl(r);
+  try {
+    const p = el.play();
+    if (p && p.catch) p.catch(() => {});
+  } catch (e) {}
+  REC.playing = i;
+}
+function recElTick(i) {
+  const el = REC.el,
+    r = TRACKS[i].rec;
+  if (!el || REC.playing !== i) return;
+  // loop: past the loop's end, back to its start (carrying the overshoot, so the beat stays even)
+  if (el.currentTime >= r.loop[1]) el.currentTime = r.loop[0] + (el.currentTime - r.loop[1]);
+  // its volume follows the music channel: the fades, the slider, MUTE
+  const lvl = musicBus ? musicBus.gain.value / 0.3 : 1;
+  el.volume = muted ? 0 : clamp(lvl * VOL.music * 0.5 * (r.trim || 1), 0, 1);
+}
+// the music changed tune (music.ts schedule): the old record, now faded right down, stops; a new one starts
+function recSwitch(want) {
+  if (REC.playing >= 0 && REC.playing !== want) recStop();
+  if (want >= 0 && TRACKS[want] && TRACKS[want].rec) {
+    const r = TRACKS[want].rec;
+    recLoad(r, () => {
+      if (curTrack === want && REC.playing !== want) recBegin(want);
+    });
+  }
+}
+// every scheduler tick while a record is the tune: start it if it was still being fetched; keep the plain player in step
+function recTick(i) {
+  if (REC.playing !== i) recSwitch(i);
+  else if (REC_FILE) recElTick(i);
+}
+// which record a stop plays - from the very first stop, every other stop (1, 3, 5...), taking the game's records in
+// turn (none in the demo)
+function recForLevel(lv) {
+  if (!(lv > 0) || lv % 2 !== 1) return null;
+  const n = REC_GAME.length;
+  for (let k = 0; k < n; k++) {
+    const r = REC_GAME[((lv - 1) / 2 + k) % n];
+    if (recHere(r)) return REC_FIRST + RECORDS.indexOf(r);
+  }
+  return null;
+}
+function recInGame() {
+  if (G.demo || (ATTRACT && ATTRACT.on)) return null;
+  return recForLevel(G.level);
+}
+// fetch and unpack the next stop's record while this stop's band tune plays (or, before a game, the first stop's - while
+// you're still in the menu), so it's ready the moment it's wanted
+let recPrefT = 0;
+function recPrefetch() {
+  if (!AC || REC_FILE || performance.now() < recPrefT) return;
+  recPrefT = performance.now() + 2000;
+  if (G.demo && G.state === "play") return;
+  const inGame = ["play", "clear", "bonus", "jump", "approach", "lost", "paused", "mini"].includes(G.state),
+    nx = recForLevel(inGame ? G.level + 1 : 1); // (in the menu: the first stop's)
+  if (nx !== null && curTrack !== nx) recLoad(TRACKS[nx].rec);
 }
 </script>
 </body></html>

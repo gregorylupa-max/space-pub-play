@@ -5501,6 +5501,16 @@ const DICT_ROWS                             = [
     "PEŁNIA!  WILKOŁAKI!  KOKTAJL JE USPOKAJA",
   ],
   [
+    "FULL MOON!  WEREWOLVES!  DON'T SERVE THEM",
+    "VOLMAAN!  WEERWOLWE!  MOENIE HULLE BEDIEN NIE",
+    "PEŁNIA!  WILKOŁAKI!  NIE OBSŁUGUJ ICH",
+  ],
+  [
+    "DON'T SERVE WEREWOLVES! REFUSE THEM OR SEND HOLY WATER",
+    "MOENIE WEERWOLWE BEDIEN NIE! WEIER HULLE OF STUUR WYWATER",
+    "NIE OBSŁUGUJ WILKOŁAKÓW! ODMÓW IM ALBO WYŚLIJ WODĘ ŚWIĘCONĄ",
+  ],
+  [
     "TIME PORTAL!  DINOSAURS!  THE T-REX NEEDS SHAKE AFTER SHAKE",
     "TYDPORTAAL!  DINOSOURUSSE!  DIE T-REX WIL SKOMMEL NA SKOMMEL HÊ",
     "PORTAL CZASU!  DINOZAURY!  T-REX POTRZEBUJE KOKTAJLU ZA KOKTAJLEM",
@@ -7050,6 +7060,38 @@ const DICT_ROWS                             = [
   ],
   // TRANSLATIONS, v1.5.8 news
   ["ASTRO CAFE RECORDS", "ASTRO CAFÉ-PLATE", "PŁYTY ASTRO CAFÉ"],
+  ["THE WHOLE SONG", "DIE HELE LIEDJIE", "CAŁA PIOSENKA"],
+  [
+    "LONGER STOPS: HALF AS MANY CUSTOMERS AGAIN",
+    "LANGER STOPS: DE HELFTE MEER KLANTE",
+    "DŁUŻSZE PRZYSTANKI: O POŁOWĘ WIĘCEJ KLIENTÓW",
+  ],
+  [
+    "A RECORD PLAYS RIGHT THROUGH, OVER AS MANY STOPS AS IT TAKES",
+    "'N PLAAT SPEEL HEELPAD DEUR, OOR SOVEEL STOPS AS WAT NODIG IS",
+    "PŁYTA GRA DO KOŃCA, PRZEZ TYLE PRZYSTANKÓW, ILE TRZEBA",
+  ],
+  [
+    "WEREWOLVES ARE UNWANTED GUESTS NOW - DON'T SERVE THEM!",
+    "WEERWOLWE IS NOU ONWELKOME GASTE - MOENIE HULLE BEDIEN NIE!",
+    "WILKOŁAKI SĄ TERAZ NIEPROSZONYMI GOŚĆMI - NIE OBSŁUGUJ ICH!",
+  ],
+  ["EASY MODE GETS HARDER MORE SLOWLY", "MAKLIK WORD STADIGER MOEILIKER", "TRYB ŁATWY TRUDNIEJE WOLNIEJ"],
+  [
+    "CALM SONGS AT THE FIRST STOPS, LIVELIER ONES LATER",
+    "KALM LIEDJIES BY DIE EERSTE STOPS, LEWENDIGER EENS LATER",
+    "SPOKOJNE PIOSENKI NA PIERWSZYCH PRZYSTANKACH, ŻYWSZE PÓŹNIEJ",
+  ],
+  [
+    "THE MUSIC BOX PLAYS ON BEHIND THE DEMO, SONG AFTER SONG",
+    "DIE MUSIEKBOKS SPEEL AAN AGTER DIE DEMO, LIEDJIE NA LIEDJIE",
+    "SZAFA GRAJĄCA GRA DALEJ W TLE DEMA, PIOSENKA PO PIOSENCE",
+  ],
+  [
+    "TWO NEW PIRATE-ADVENTURE RECORDS: CORAL COVE CALYPSO AND THE SMUGGLERS' LANTERN",
+    "TWEE NUWE SEEROWER-AVONTUURPLATE: CORAL COVE CALYPSO EN THE SMUGGLERS' LANTERN",
+    "DWIE NOWE PIRACKIE PŁYTY PRZYGODOWE: CORAL COVE CALYPSO I THE SMUGGLERS' LANTERN",
+  ],
   [
     "24 RECORDS: SPY THEMES, SPACE BLIPS AND 16-BIT ARCADE SYNTH",
     "24 PLATE: SPIOENTEMAS, RUIMTE-BLIEPS EN 16-BIS ARKADESINTH",
@@ -8823,10 +8865,11 @@ const TYPES = [
   // a vampire (from level 3) - evil like the devils: refuse him, splash him or show him the cross. Now and then he turns into a
   //   bat and flutters a long way up the bar at once.
   // a werewolf (from level 4) - a hairy chap who is no trouble... until the FULL MOON rises: then he's a wolf, fast and cross.
-  //   He isn't evil, so the cross does nothing - serve him a shake and he's himself again ("GOOD BOY!").
+  //   (v1.5.9) He's an UNWANTED GUEST now, like the devils and the vampire: he wears the "don't serve me" sign - refuse
+  //   him, splash him with holy water or show him the cross. (Before, a shake turned him back: "GOOD BOY!")
   // dinosaurs (from level 5) come through a TIME PORTAL: a T-rex (slow, stomps, needs shake after shake) and quick raptors.
   { kind: "vampire", speed: 0.85, push: 130, w: 1.0, evil: true, bat: true },
-  { kind: "werewolf", speed: 0.9, push: 135, w: 1.12, wolf: true },
+  { kind: "werewolf", speed: 0.9, push: 135, w: 1.12, wolf: true, evil: true },
   { kind: "rex", speed: 0.5, push: 55, w: 1.0, dino: true },
   { kind: "raptor", speed: 1.3, push: 170, w: 1.0, dino: true, sprints: true },
   // a skeleton (from level 2): rattles in, jaw clacking - a shake is just what he needs ("CALCIUM!")
@@ -9652,8 +9695,12 @@ const params = () => {
   K[5] = k5;
   K[6] = k6;
   K[7] = !!G.free;
-  return (PRM_C.p = assisted(calmer(relaxed(paramsRaw()))));
+  return (PRM_C.p = longer(assisted(calmer(relaxed(paramsRaw())))));
 };
+// (v1.5.9) LONGER STOPS: half as many customers again at every stop, so a stop lasts long enough to enjoy the music
+// (about 45 seconds to a minute and more, from about 30-45) - not in the demo, which moves on by the clock anyway
+const STOP_LONGER = 1.5;
+const longer = (p) => (G.demo ? p : { ...p, total: Math.round(p.total * STOP_LONGER) });
 // (v1.4.12) A CALMER GAME FOR EVERYONE: even the normal mode is a touch gentler now - customers walk in a little
 // slower and come a little less often, in smaller groups (the later stages still get busy, just never frantic)
 const calmer = (p) =>
@@ -9678,9 +9725,10 @@ const paramsRaw = () => {
   const L0 = G.endless ? Math.min(20, G.endLvl || 1) : G.level,
     k2 = G.players === 2 ? 1.35 : 1,
     D = DF(); // two bartenders get a busier bar
-  const L = D.kid ? 1 + (L0 - 1) * 0.4 : D.easy ? 1 + (L0 - 1) * 0.45 : L0; // KID MODE: the stages get harder much more slowly (v1.4.42: EASY a good deal more slowly too)
+  // (v1.5.9) EASY, GENTLER STILL: the stops count for 30% now (was 45%), so Easy climbs more slowly again
+  const L = D.kid ? 1 + (L0 - 1) * 0.4 : D.easy ? 1 + (L0 - 1) * 0.3 : L0; // KID MODE: the stages get harder much more slowly (v1.4.42: EASY a good deal more slowly too)
   // a curve for the 20-stop tour: it climbs quickly through the solar system, then keeps tightening gently out in the galaxy
-  const e0 = 1 - Math.exp(-(L - 1) / 7); // 0 at level 1, 0.73 at 10, 0.93 at 20 (kept for EASY and KID MODE)
+  const e0 = 1 - Math.exp(-(L - 1) / (D.easy ? 10 : 7)); // 0 at level 1, 0.73 at 10, 0.93 at 20 (kept for EASY and KID MODE) (v1.5.9: EASY on a longer, flatter curve)
   // (v1.4.57) NORMAL and HARD climb GRADUALLY over the whole 40-stop tour now - before, nearly all of it came in the first
   // ten stops and the rest hardly changed: 0 at level 1, 0.45 at 10, 0.72 at 20, 0.86 at 30, 0.93 at 40
   const e = D.kid || D.easy ? e0 : 1 - Math.exp(-(L - 1) / 15);
@@ -9706,7 +9754,7 @@ const paramsRaw = () => {
   // (v1.4.57) EASY, FLATTER STILL: the stops count for less (45%), and the climb levels off at about three-quarters of
   // the way (the last stops of the tour no longer keep getting harder) - fewer people at once, a gentler speed-up
   if (D.easy) {
-    const eE = Math.min(e, 0.78);
+    const eE = Math.min(e, 0.6); // (v1.5.9: levels off at 0.6 - was 0.78)
     return tourLoop({
       total: Math.round(Math.min(38, 9 + L * 2.4) * k2),
       maxOn: Math.round(Math.min(9, 3 + L * 0.55) * k2) + rush * 2,
@@ -9919,6 +9967,8 @@ function startGame() {
   G.spillHints = 0;
   G.evilIntro = G.holyIntro = false;
   G.evilHints = 0;
+  G.recRun = null; // (v1.5.9: a new game starts the records from the top - records.ts)
+  JB.radio = null; // (v1.5.9: the music box's song stops - the game's music takes over)
   audio();
   resetGame(false);
   kidGameStart();
@@ -11555,7 +11605,7 @@ function update(dt) {
               ? SPIRITS.bishop
               : G.level >= 2 && rs < 0.37
                 ? TYPE_OF[REGULARS2[Math.floor(Math.random() * REGULARS2.length)]]
-                : G.level >= 4 && rs < 0.41
+                : G.level >= 4 && rs < 0.41 && !DF().kid // (v1.5.9: unwanted now - so, like the devils, not in KID MODE)
                   ? TYPE_OF.werewolf
                   : G.level >= 6 && rs < 0.43
                     ? TYPE_OF.raptor
@@ -11908,9 +11958,9 @@ function update(dt) {
       G.moon = 15;
       G.moonT = rnd(65, 90);
       sfx("howl", X0);
-      if (!demo) callout("FULL MOON!  WEREWOLVES!  A SHAKE CALMS THEM", "#c8d8ff", 2.6);
+      if (!demo) callout("FULL MOON!  WEREWOLVES!  DON'T SERVE THEM", "#c8d8ff", 2.6);
       const free = G.total - G.served - customers.filter((c) => c.state !== "out").length;
-      if (free >= 1 && !customers.some((c) => c.type.wolf && c.state !== "out")) {
+      if (free >= 1 && !DF().kid && !customers.some((c) => c.type.wolf && c.state !== "out")) {
         const counts = [0, 0, 0, 0];
         for (const c of customers) counts[c.lane]++;
         const lane = counts.indexOf(Math.min(...counts));
@@ -12813,7 +12863,13 @@ function update(dt) {
         addScore(-300, catcher.x + 20, LY(s.lane, catcher.x) - 80);
         SCORER = null;
         if ((G.evilHints = (G.evilHints || 0) + 1) <= 3)
-          callout("DON'T SERVE DEVILS! REFUSE THEM OR SEND HOLY WATER", "#ff3b4f", 2);
+          callout(
+            catcher.type.kind === "werewolf"
+              ? "DON'T SERVE WEREWOLVES! REFUSE THEM OR SEND HOLY WATER"
+              : "DON'T SERVE DEVILS! REFUSE THEM OR SEND HOLY WATER",
+            "#ff3b4f",
+            2
+          );
         buzz("shield");
       }
       sfx("cackle", catcher.x, catcher.type.kind);
@@ -14760,10 +14816,7 @@ function showCross(p, demo) {
         c.bat = 0;
         back++;
       }
-    } else if (c.wolf && !demo && !G.wolfHint) {
-      G.wolfHint = true;
-      callout("A WEREWOLF ISN'T EVIL - SERVE HIM A SHAKE!", "#c8d8ff", 2.2);
-    }
+    } // (v1.5.9: the werewolf is unwanted now, so the cross sends him off like the rest - no "serve him" hint any more)
   }
   if (!demo) {
     if (gone >= 2) {
@@ -72736,7 +72789,7 @@ function levelOfTour(of) {
     inTour = ((lv - 1) % LAST_LEVEL) + 1;
   return (tour > 1 ? "TOUR " + tour + "  ·  " : "") + "LEVEL " + inTour + of + LAST_LEVEL;
 }
-const GAME_VERSION = "v1.5.8",
+const GAME_VERSION = "v1.5.9",
   GAME_DATE = "30.10.2026",
   VERSION_TEXT = GAME_VERSION + "  ·  " + GAME_DATE;
 const FB = '"Chakra Petch", "Segoe UI", sans-serif';
@@ -78288,13 +78341,24 @@ function advance2(tr) {
   }
 }
 // which tune should be playing right now
-const JB                                                                                        = {
+// (v1.5.9: radio - a tune still playing after the music box is closed, on in the menu and the demo; since - when the
+// tune now playing was picked)
+const JB   
+                
+              
+                  
+                       
+                 
+                                              
+                 
+  = {
   open: false,
   sel: 0,
   playing: -1,
 };
 function musicWanted() {
   if (JB.open) return JB.playing;
+  if (JB.radio && G.state === "menu") return JB.radio.i; // (v1.5.9: the music box's song plays on behind the demo)
   if (G.state === "ending") return VICTORY_TRACK;
   if (ATTRACT.on && ATTRACT.phase === "space") {
     const cur = spaceNow();
@@ -78309,7 +78373,7 @@ function musicWanted() {
   if (G.state === "over" && G.won) return VICTORY_TRACK;
   if (G.state === "story") return DEEP_TRACK; // Bogdan's story: the mysterious deep-space tune
   if (["play", "lost", "clear", "bonus", "paused", "jump", "approach", "mini"].includes(G.state))
-    return recInGame() ?? G.folk ?? here().trk ?? tourStop(); // (v1.5.8: from the first stop, every other stop plays a record - records.ts; on the others, now and then the band plays a folk song instead)
+    return recInGame() ?? G.folk ?? here().trk ?? tourStop(); // (v1.5.8: from the first stop, every other stop plays a record - records.ts (v1.5.9: records all the way now, each carrying on over the next stops until it has played right through); on the others, now and then the band plays a folk song instead)
   if (ATTRACT.on && ATTRACT.phase === "demo") return here().trk ?? tourStop();
   return 0;
 }
@@ -78372,7 +78436,8 @@ function setEchoFor(want, now) {
 function schedule() {
   if (!AC) return;
   const now = AC.currentTime,
-    on = (MY.mode === "original" || JB.open) && !muted && JB.playing !== -2;
+    on =
+      (MY.mode === "original" || JB.open || (JB.radio && G.state === "menu")) && !muted && JB.playing !== -2;
   const want = on ? musicWanted() : -1;
   if (want !== curTrack && curTrack >= 0 && want !== MFADE.to) {
     // start fading the old tune out - it carries on playing meanwhile
@@ -79035,6 +79100,8 @@ function openJukebox() {
   audio();
   if (G.state !== "menu") return;
   JB.open = true;
+  if (JB.radio) JB.playing = JB.radio.i; // (v1.5.9: the song still playing from before carries on, highlighted)
+  JB.radio = null;
   if (JB.playing < 0) JB.playing = 0;
   if (AC && myBus) myBus.gain.setTargetAtTime(0, AC.currentTime, 0.1); // your own music pauses while the music box plays
   if (AC && !jbAnalyser) {
@@ -79053,6 +79120,12 @@ function openJukebox() {
 }
 function closeJukebox() {
   JB.open = false;
+  // (v1.5.9) THE MUSIC PLAYS ON: close the music box with a song playing and it keeps playing behind the menu and the
+  // demo - once through to its end, then the next song in the music box's list, and so on - until a game starts
+  JB.radio =
+    JB.playing >= 0 && G.state === "menu"
+      ? { i: JB.playing, until: (JB.since || performance.now()) + jbTuneSecs(JB.playing) * 1000 }
+      : null;
   JB.playing = -1;
   if (AC && myBus) myBus.gain.setTargetAtTime(0.9, AC.currentTime, 0.1);
   showPanels();
@@ -79060,6 +79133,7 @@ function closeJukebox() {
 }
 function jbPlay(i) {
   audio();
+  if (i !== JB.playing) JB.since = performance.now(); // (v1.5.9: when this song started, for the radio)
   JB.playing = i;
   jbRefresh();
 }
@@ -79113,8 +79187,21 @@ function jbNextAuto() {
   if (b) b.scrollIntoView({ block: "nearest" });
 }
 function jbAutoTick() {
+  jbRadioTick();
   if (!JB.open || !JB.auto || performance.now() < (JB.until || 0)) return;
   jbNextAuto();
+}
+// (v1.5.9) the music box's radio, behind the menu and the demo: when a song has played through, the next one in the list
+function jbRadioTick() {
+  const R = JB.radio;
+  if (!R) return;
+  if (G.state !== "menu") {
+    JB.radio = null; // (a game started: its own music takes over)
+    return;
+  }
+  if (performance.now() < R.until) return;
+  R.i = (R.i + 1) % TRACKS.length;
+  R.until = performance.now() + jbTuneSecs(R.i) * 1000;
 }
 $("jbShuffle").onclick = () => {
   JB.auto = "shuffle";
@@ -79745,6 +79832,19 @@ profWire();
 //  the game, and where the motion capture, the folk songs and the fonts come from. Both from the menu at any time.
 // =====================================================================================
 const NEWS = [
+  {
+    ver: "v1.5.9",
+    title: "THE WHOLE SONG",
+    items: [
+      "LONGER STOPS: HALF AS MANY CUSTOMERS AGAIN",
+      "A RECORD PLAYS RIGHT THROUGH, OVER AS MANY STOPS AS IT TAKES",
+      "WEREWOLVES ARE UNWANTED GUESTS NOW - DON'T SERVE THEM!",
+      "EASY MODE GETS HARDER MORE SLOWLY",
+      "CALM SONGS AT THE FIRST STOPS, LIVELIER ONES LATER",
+      "THE MUSIC BOX PLAYS ON BEHIND THE DEMO, SONG AFTER SONG",
+      "TWO NEW PIRATE-ADVENTURE RECORDS: CORAL COVE CALYPSO AND THE SMUGGLERS' LANTERN",
+    ],
+  },
   {
     ver: "v1.5.8",
     title: "ASTRO CAFE RECORDS",
@@ -80863,7 +80963,7 @@ const CREDITS = [
   ["MUSIC", "All the planet tunes are our own. The folk songs are traditional and free for all to play"],
   [
     "ASTRO CAFÉ RECORDS",
-    "24 records - spy themes, exploring blips and 16-bit arcade synth - by GL (made with Suno). Midnight Cipher and Signal from Orbit: written for the game in the same style",
+    "26 records - spy themes, exploring blips and 16-bit arcade synth - by GL (made with Suno). Midnight Cipher and Signal from Orbit: written for the game in the same style. Coral Cove Calypso and The Smugglers' Lantern: written for the game in the spirit of the 16-bit pirate adventures",
   ],
   [
     "FOLK SONGS",
@@ -82670,6 +82770,7 @@ const RECORDS            = [
     mood: "chiptune adventure",
     loop: [26.5752, 101.1102],
     by: "GL",
+    game: true, // (v1.5.9: in the stops' rotation now - a middling one, between the calm and the lively)
   },
   {
     id: "adventure",
@@ -82677,6 +82778,25 @@ const RECORDS            = [
     mood: "adventure theme (冒険の調べ)",
     loop: [31.672, 181.2115],
     by: "GL",
+    game: true, // (v1.5.9: in the rotation now too)
+  },
+  // (v1.5.9) two more written for the game, in the spirit of the 16-bit pirate adventure games: a sunny calypso with a
+  // steel drum, and a moody 6/8 tavern tune with an ocarina and a sea-shanty accordion
+  {
+    id: "calypso",
+    title: "CORAL COVE CALYPSO",
+    mood: "island calypso",
+    loop: [8.8889, 115.556],
+    by: "new",
+    game: true,
+  },
+  {
+    id: "lantern",
+    title: "THE SMUGGLERS' LANTERN",
+    mood: "pirate tavern",
+    loop: [14.5455, 145.4546],
+    by: "new",
+    game: true,
   },
 ];
 const REC_FIRST = TRACKS.length;
@@ -82688,7 +82808,31 @@ for (const r of RECORDS)
     group: "ASTRO CAFÉ RECORDS",
     rec: r,
   });
-const REC_GAME = RECORDS.filter((r) => r.game); // (the stops' rotation, in this order)
+// (v1.5.9) CALM FIRST, LIVELIER LATER: the stops' records, from the calmest to the most energetic - measured from the
+// songs themselves (tempo, how busy the beat is, how bright the sound is), the slow spy themes and space blips first
+// (GL's pick: AGENT IN THE AIRLOCK opens the game, THE MOON BASE DOSSIER comes second, COMET CARTOGRAPHER third,
+// PROBE ON THE DARK SIDE fourth - see REC_OPENERS)
+const REC_CALM_FIRST = [
+  "airlock",
+  "dossier",
+  "comet",
+  "probe",
+  "lantern",
+  "cipher",
+  "orbit",
+  "calypso",
+  "adventure",
+  "explore",
+  "homecoming",
+  "race",
+  "darkgroove",
+  "galactic",
+  "brigade",
+  "finalround",
+  "quest",
+  "pulse",
+];
+const REC_GAME = REC_CALM_FIRST.map((id) => RECORDS.find((r) => r.id === id)).filter((r) => r && r.game);
 const REC_GAIN = 3.0; // (the records are mastered loud; this brings them level with the band through the music channel)
 const REC_FILE = location.protocol === "file:"; // (opened from the disk: the plain audio player)
 const REC = {
@@ -82699,6 +82843,8 @@ const REC = {
   src: null                                ,
   gain: null                   ,
   el: null                           , // (the plain player, from the disk)
+  t0: 0, // (when the record playing now started at its top, on the audio clock)
+  elLaps: 0, // (the plain player: how many times it has gone round its loop)
 };
 const recUrl = (r         ) => "music/" + r.id + ".mp3";
 const recHere = (r         ) => !REC.bad[r.id];
@@ -82795,6 +82941,7 @@ function recBegin(i) {
   src.connect(g);
   g.connect(musicBus);
   src.start(now + 0.03);
+  REC.t0 = now + 0.03;
   REC.src = src;
   REC.gain = g;
   REC.playing = i;
@@ -82816,12 +82963,14 @@ function recElBegin(i) {
     // (in case it ran off the end between two checks)
     if (REC.playing !== i) return;
     try {
+      REC.elLaps++;
       el.currentTime = r.loop[0];
       const p = el.play();
       if (p && p.catch) p.catch(() => {});
     } catch (e) {}
   };
   el.volume = 0;
+  REC.elLaps = 0;
   el.src = recUrl(r);
   try {
     const p = el.play();
@@ -82834,7 +82983,10 @@ function recElTick(i) {
     r = TRACKS[i].rec;
   if (!el || REC.playing !== i) return;
   // loop: past the loop's end, back to its start (carrying the overshoot, so the beat stays even)
-  if (el.currentTime >= r.loop[1]) el.currentTime = r.loop[0] + (el.currentTime - r.loop[1]);
+  if (el.currentTime >= r.loop[1]) {
+    el.currentTime = r.loop[0] + (el.currentTime - r.loop[1]);
+    REC.elLaps++;
+  }
   // its volume follows the music channel: the fades, the slider, MUTE
   const lvl = musicBus ? musicBus.gain.value / 0.3 : 1;
   el.volume = muted ? 0 : clamp(lvl * VOL.music * 0.5 * (r.trim || 1), 0, 1);
@@ -82853,31 +83005,94 @@ function recSwitch(want) {
 function recTick(i) {
   if (REC.playing !== i) recSwitch(i);
   else if (REC_FILE) recElTick(i);
+  recHeard(i); // (v1.5.9: once it has played right through, the next stop is the band's)
 }
-// which record a stop plays - from the very first stop, every other stop (1, 3, 5...), taking the game's records in
-// turn (none in the demo)
-function recForLevel(lv) {
-  if (!(lv > 0) || lv % 2 !== 1) return null;
-  const n = REC_GAME.length;
-  for (let k = 0; k < n; k++) {
-    const r = REC_GAME[((lv - 1) / 2 + k) % n];
-    if (recHere(r)) return REC_FIRST + RECORDS.indexOf(r);
-  }
+// (v1.5.9) the record for a stop: one that suits how far into the tour it is - calm at the first stops, the most
+// energetic at the last - and not one already played this game (until they all have been); none that can't be played
+const REC_OPENERS = 4; // (a game from the first stop always opens with the first four of the list, in order)
+function recPick(lv, played           ) {
+  const n = REC_GAME.length,
+    f = clamp(((lv || 1) - 1) / Math.max(1, LAST_LEVEL - 1), 0, 1),
+    opener = played && played.length < REC_OPENERS && (G.recRun ? G.recRun.from : lv) <= 1,
+    want = opener ? played.length : Math.round(f * (n - 1)),
+    ok = (r) => recHere(r) && !(played && played.includes(r.id));
+  if (played && !REC_GAME.some(ok)) played.length = 0; // (every one has played: start round again)
+  for (let d = 0; d < n; d++)
+    for (const j of [want + d, want - d]) {
+      const r = REC_GAME[j];
+      if (r && ok(r)) return REC_FIRST + RECORDS.indexOf(r);
+    } // (the nearest fresh one, a livelier one first)
   return null;
+}
+// which record a game starting at this stop opens with (the first stop: the calmest)
+function recForLevel(lv) {
+  if (!(lv > 0)) return null;
+  return recPick(lv);
+}
+// (v1.5.9) THE WHOLE SONG: a record no longer stops when the stop ends - it carries on through the next stop (and the
+// next) until it has played right through once, intro and all. At the next stop after that, the next record starts. (Before, every other stop had a record, cut off when the stop was cleared - a stop is shorter than a song.)
+//   G.recRun = { cur: the record's TRACKS index (null on a band stop), lv: the stop this was decided for, done: it has
+//   played right through, played: the records heard this game }
+function recRunNow() {
+  let R = G.recRun;
+  const take = (R) => {
+    R.cur = recPick(G.level, R.played);
+    R.done = false;
+    if (R.cur !== null) R.played.push(TRACKS[R.cur].rec.id);
+  };
+  if (!R) {
+    R = G.recRun = { cur: null, lv: G.level, done: false, played: [], from: G.level };
+    take(R);
+  } else if (R.lv !== G.level) {
+    // a new stop: keep the record going until it's done; then straight on to the next record (GL: "keep going with
+    // the mp3 music" - there's no band stop in between any more; the band only steps in if a record can't be played)
+    if (R.cur === null || R.done) take(R);
+    R.lv = G.level;
+  }
+  return R;
 }
 function recInGame() {
   if (G.demo || (ATTRACT && ATTRACT.on)) return null;
-  return recForLevel(G.level);
+  const R = recRunNow();
+  if (R.cur !== null && !recHere(TRACKS[R.cur].rec)) R.cur = null; // (it couldn't be played: the band takes over)
+  return R.cur;
 }
-// fetch and unpack the next stop's record while this stop's band tune plays (or, before a game, the first stop's - while
-// you're still in the menu), so it's ready the moment it's wanted
+// has the record playing now played right through once? (counted from when it started at its top)
+function recHeard(i) {
+  const R = G.recRun;
+  if (!R || R.cur !== i || REC.playing !== i || R.done) return;
+  const r = TRACKS[i].rec;
+  // (the plain player: once it has gone round its loop; otherwise by the audio clock)
+  if (REC_FILE ? REC.elLaps > 0 : AC.currentTime - REC.t0 >= r.loop[1]) R.done = true;
+}
+// fetch and unpack the next record while the band plays (or, before a game, the first stop's - while you're still in
+// the menu), so it's ready the moment it's wanted
 let recPrefT = 0;
+// (the record playing now is in its last 40 seconds, or done: time to get the next one ready)
+const recNearEnd = (R) =>
+  R.done ||
+  (!REC_FILE &&
+    REC.playing === R.cur &&
+    R.cur !== null &&
+    AC.currentTime - REC.t0 > TRACKS[R.cur].rec.loop[1] - 40);
 function recPrefetch() {
   if (!AC || REC_FILE || performance.now() < recPrefT) return;
   recPrefT = performance.now() + 2000;
+  if (JB.radio && G.state === "menu") {
+    // (v1.5.9: the music box's radio - the next song in its list, if it's a record)
+    const n = TRACKS[(JB.radio.i + 1) % TRACKS.length];
+    if (n && n.rec && JB.radio.until - performance.now() < 30000) recLoad(n.rec);
+    return;
+  }
   if (G.demo && G.state === "play") return;
   const inGame = ["play", "clear", "bonus", "jump", "approach", "lost", "paused", "mini"].includes(G.state),
-    nx = recForLevel(inGame ? G.level + 1 : 1); // (in the menu: the first stop's)
+    R = G.recRun,
+    nx =
+      !inGame || !R
+        ? recForLevel(inGame ? G.level : fromLevel || 1)
+        : R.cur === null || recNearEnd(R)
+          ? recPick(G.level + 1, [...R.played]) // (the next record - asked on a copy, so nothing is marked played yet)
+          : R.cur;
   if (nx !== null && curTrack !== nx) recLoad(TRACKS[nx].rec);
 }
 </script>

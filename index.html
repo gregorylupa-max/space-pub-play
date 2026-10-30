@@ -7030,6 +7030,29 @@ const DICT_ROWS                             = [
     "DIE VERLOSTES VERTEL HUL STORIE - EN KOM TERUG OM DANKIE TE SÊ",
     "ODKUPIENI OPOWIADAJĄ SWOJĄ HISTORIĘ - I WRACAJĄ PODZIĘKOWAĆ",
   ],
+
+  // (v1.4.79) TRANSLATIONS, v1.5.5 news
+  ["A LIVELIER BAR", "'N LEWENDIGER KROEG", "ŻYWSZY BAR"],
+  [
+    "A RUN OF SERVES WARMS THE CAFE UP: GLOWING BARS, RISING EMBERS",
+    "'N REEKS BEDIENINGS VERWARM DIE KAFEE: GLOEIENDE TOONBANKE, OPSTYGENDE VONKE",
+    "SERIA PODANYCH SZEJKÓW ROZGRZEWA KAWIARNIĘ: ŚWIECĄCE LADY, UNOSZĄCE SIĘ ISKRY",
+  ],
+  [
+    "SHAKES STREAM A RIBBON OF THEIR OWN COLOUR",
+    "SKOMMELDRANKIE TREK 'N LINT IN HUL EIE KLEUR AGTER HULLE AAN",
+    "SZEJKI CIĄGNĄ ZA SOBĄ WSTĘGĘ WŁASNEGO KOLORU",
+  ],
+  [
+    "EMPTY GLASSES CATCH THE LIGHT - EASIER TO SPOT",
+    "LEË GLASE VANG DIE LIG - MAKLIKER OM TE SIEN",
+    "PUSTE SZKLANKI ŁAPIĄ ŚWIATŁO - ŁATWIEJ JE ZAUWAŻYĆ",
+  ],
+  [
+    "A SWOOSH AS YOU FLING, A MOMENT OF SLOW MOTION WHEN A GLASS IS LOST",
+    "'N SWIESJ AS JY GOOI, 'N OOMBLIK STADIGE AKSIE AS 'N GLAS VERLORE GAAN",
+    "ŚWIST PRZY RZUCIE, CHWILA ZWOLNIONEGO TEMPA, GDY SZKLANKA PRZEPADA",
+  ],
 ];
 // the texts that carry numbers or names: patterns
 const DICT_PAT                             = [
@@ -10888,6 +10911,7 @@ function update(dt) {
   }
   dangerUpdate(dt); // (the music feels the danger)
   redeemTick(dt); // (v1.5.4: the redeemed one's words)
+  heatTick(dt); // (v1.5.5: how hot the café is - juice.ts)
   musxUpdate(dt); // (v1.4.7) ...and how well you are doing
   voiceUpdate();
   modesUpdate(dt);
@@ -11385,6 +11409,7 @@ function update(dt) {
         if (onBeat() && G.tw && G.tw.kind === "beat")
           sparkle(TAPX, LY(P.lane, TAPX) - 30, [0.6, 0.8, 1, 1], 10, P.lane);
         sfx("slide", TAPX);
+        throwFx(P.lane, fl, perfect); // (v1.5.5: the swoosh of the fling - juice.ts)
         P.arm = 1;
         coachSlid(P, demo);
       } else {
@@ -14920,6 +14945,7 @@ function lose(why, lane, x) {
   G.shake = 10;
   G.flash = 0.35;
   G.flashC = [1, 0.4, 0.5, 1];
+  if (!G.demo) G.hitStop = Math.max(G.hitStop || 0, 0.22); // (v1.5.5: a moment of slow motion, to feel it)
   for (const p of PL) {
     p.pouring = false;
     p.pour = 0;
@@ -16630,6 +16656,7 @@ function draw() {
       }
       drawCounter(lane, V, t);
       counterDim(lane); // (v1.4.57)
+      heatBar(lane, t); // (v1.5.5: the bars warm up with a run of serves - juice.ts)
       drawDrips(lane);
       drawWet(lane); // (v1.4.28: the wet trail a sliding shake leaves on the bar)
       for (const cr of CRITS) if (cr.lane === lane) drawCritter(cr, t); // (a caterpillar or a worm on the bar top)
@@ -16639,8 +16666,10 @@ function draw() {
         if (m.lane === lane) {
           if (!OUT) glowE(m.x, LY(lane, m.x) - 2, 9, 2.2, withA(C.black, 0.32)); // (v1.4.61: a soft shadow under it, on the bar)
           barReflect(m.x, LY(lane, m.x) - 3, null, 0, m.spin, t);
+          emptyTrail(m, LY(lane, m.x) - 3, t); // (v1.5.5)
           glassGhosts(m, LY(lane, m.x) - 3, null, 0, m.spin, 0, col("#cfe8ff"));
           drawGlass(m.x, LY(lane, m.x) - 3, null, 0, m.spin);
+          emptyGlint(m, LY(lane, m.x) - 3, t); // (v1.5.5: now and then it catches the light)
         }
       for (const s of shakes)
         if (s.lane === lane) {
@@ -16667,6 +16696,7 @@ function draw() {
                 withA(C.cream, 0.85 * (1 - f))
               );
             }
+          shakeRibbon(s, gy, t); // (v1.5.5: a ribbon of its own colour streaming out behind it - juice.ts)
           glassGhosts(s, gy, s.flavor, 1, 0, glassTilt(s), FLAVORS[s.flavor][0]);
           drawGlass(s.x, gy, s.flavor, 1, 0, glassTilt(s));
           R.setAdd(true);
@@ -28008,7 +28038,9 @@ function drawParts() {
   for (const p of parts) {
     if (p.wait > 0) continue;
     const k = Math.max(0, p.life / p.max);
-    if (p.kind === "spark" || p.kind === "rocket") {
+    if (p.kind === "swoosh")
+      drawSwoosh(p, k); // (v1.5.5: the fling - juice.ts)
+    else if (p.kind === "spark" || p.kind === "rocket") {
       line(
         p.x - p.vx * 0.025,
         p.y - p.vy * 0.025,
@@ -28829,7 +28861,12 @@ function drawVert(V, t) {
   for (const m of empties)
     list.push({
       x: m.x,
-      f: () => vAt(m.lane, m.x, 0, () => bigGlass(m.lane, m.x, null, 0, m.spin)),
+      f: () =>
+        vAt(m.lane, m.x, 0, () => {
+          emptyTrail(m, LY(m.lane, m.x) - 3, t); // (v1.5.5)
+          bigGlass(m.lane, m.x, null, 0, m.spin);
+          emptyGlint(m, LY(m.lane, m.x) - 3, t);
+        }),
     });
   for (const sh of shakes)
     list.push({
@@ -28838,7 +28875,8 @@ function drawVert(V, t) {
         vAt(sh.lane, sh.x, 0, () =>
           sh.holy
             ? drawHoly(sh.x, LY(sh.lane, sh.x) - 3, t)
-            : bigGlass(
+            : (shakeRibbon(sh, LY(sh.lane, sh.x) - 3, t), // (v1.5.5)
+              bigGlass(
                 sh.lane,
                 sh.x,
                 sh.flavor,
@@ -28851,7 +28889,7 @@ function drawVert(V, t) {
                       R.setAdd(false);
                     }
                   : null
-              )
+              ))
         ),
     });
   {
@@ -70906,6 +70944,254 @@ function modesMenuText() {
   if (b) b.textContent = ru ? "BEST " + fmtTime(ru) : "";
 }
 // =====================================================================================
+//  JUICE (v1.5.5) - livelier play at the bar:
+//   * HEAT: a run of serves warms the whole café up - the bars glow pink, then gold, embers drift up off the counters
+//     and a warm light rises from the bottom of the screen (shake fever = full heat)
+//   * SHAKE RIBBONS: a sliding shake streams a ribbon of its own colour behind it, with a few motes of light in it
+//   * EMPTY GLINTS: an empty glass coming back catches the light now and then - easier to spot
+//   * THE FLING: sending a shake off draws a swoosh in the air and flicks a few drops off the top
+//   * A LIFE LOST: a moment of slow motion and a red pulse round the edge of the screen
+//  All of it is skipped in the outline pass, turned down in calm mode and left out on a struggling machine.
+// =====================================================================================
+
+// how hot the café is right now (0..1): it follows the combo up quickly and cools down slowly
+function heatTick(dt) {
+  const h = G.heat || 0,
+    want =
+      G.state !== "play"
+        ? 0
+        : G.fever > 0
+          ? 1
+          : G.combo >= 2 && G.time - (G.lastCatch ?? -9) < 2.2
+            ? Math.min(1, (G.combo - 1) / 3)
+            : 0;
+  G.heat = h + (want - h) * Math.min(1, dt * (want > h ? 5 : 0.8));
+  if (G.heat < 0.004) G.heat = 0;
+}
+const HEAT_LO = col("#ff5fa8"),
+  HEAT_HI = col("#ffc34d");
+const heatCol = (h) => mix(HEAT_LO, HEAT_HI, clamp(h, 0, 1));
+
+// the bar itself warming up: a glow on the floor in front of it, warm light along its top, embers rising off it
+function heatBar(lane, t) {
+  const h = G.heat || 0;
+  if (OUT || h < 0.02 || QUAL < 1) return;
+  const a = X0 - 14,
+    b = X1 + 18,
+    ya = LY(lane, a),
+    yb = LY(lane, b),
+    c = [...heatCol(h)],
+    br = h * (0.34 + 0.08 * Math.sin(t * 9 + lane * 1.3));
+  R.setAdd(true);
+  quad4(
+    a + 4,
+    ya + 30,
+    b,
+    yb + 30,
+    b + 10,
+    yb + 48,
+    a + 12,
+    ya + 48,
+    withA(c, br),
+    withA(c, br),
+    withA(c, 0),
+    withA(c, 0)
+  );
+  quad4(
+    a - 10,
+    ya - 12,
+    b - 10,
+    yb - 12,
+    b,
+    yb - 1,
+    a,
+    ya - 1,
+    withA(c, 0),
+    withA(c, 0),
+    withA(c, br * 0.55),
+    withA(c, br * 0.55)
+  );
+  line(a, ya, b, yb, 2.2, withA(c, br * 1.4)); // (the bar's edge, glowing)
+  // embers: each one drifts up from its own spot on the bar, wavers, and fades out (worked out from the clock - no
+  // particles to keep track of)
+  const n = Math.round(18 * h * (COMFORT.calm ? 0.35 : 1));
+  for (let i = 0; i < n; i++) {
+    const x = a + hash(i * 3.1 + lane * 17) * (b - a),
+      f = (t * (0.32 + hash(i + lane * 5) * 0.3) + hash(i * 7.3 + lane)) % 1,
+      y = LY(lane, x) - 6 - f * 64 * Math.max(0.3, MOTION()),
+      wx = Math.sin(f * 9 + i) * 5;
+    glow(x + wx, y, 3.5 + 4 * (1 - f), withA(c, 0.85 * Math.sin(f * Math.PI) * h));
+    glow(x + wx, y, 1.6, withA(C.white, 0.7 * Math.sin(f * Math.PI) * h));
+  }
+  R.setAdd(false);
+}
+
+// a ribbon of light streaming out behind a sliding glass (dir: which way "behind" is: +1 for a shake, -1 for an empty)
+function glassRibbon(x, gy, dir, len, c, a, t) {
+  if (OUT || QUAL < 1 || MOTION() < 0.5 || VERT) return; // (the tall view draws each glass upright on its own - no ribbon)
+  const x0 = x + dir * 7,
+    x1 = x0 + dir * len,
+    d = (x1 - x0) * SLANT;
+  R.setAdd(true);
+  quad4(
+    x0,
+    gy - 22,
+    x1,
+    gy - 12 + d,
+    x1,
+    gy - 10 + d,
+    x0,
+    gy - 2,
+    withA(c, a),
+    withA(c, 0),
+    withA(c, 0),
+    withA(c, a)
+  );
+  quad4(
+    x0,
+    gy - 14,
+    x0 + dir * len * 0.6,
+    gy - 11 + d * 0.6,
+    x0 + dir * len * 0.6,
+    gy - 10 + d * 0.6,
+    x0,
+    gy - 8,
+    withA(C.white, a * 0.6),
+    withA(C.white, 0),
+    withA(C.white, 0),
+    withA(C.white, a * 0.6)
+  );
+  for (let j = 0; j < 3; j++) {
+    const f = (t * 2.2 + j / 3 + x * 0.01) % 1;
+    glow(
+      x0 + dir * f * len,
+      gy - 12 + Math.sin(f * 7 + j) * 3 + d * f,
+      3 * (1 - f) + 0.6,
+      withA(c, a * 1.5 * (1 - f))
+    );
+  }
+  R.setAdd(false);
+}
+function shakeRibbon(s, gy, t) {
+  const fl = FLAVORS[s.flavor];
+  if (!fl) return;
+  glassRibbon(
+    s.x,
+    gy,
+    1,
+    s.perfect ? 92 : 66,
+    s.perfect ? col("#ffd860") : fl[0],
+    s.perfect ? 0.55 : 0.48,
+    t
+  );
+}
+const GLINT_C = col("#cfeaff");
+// a four-pointed glint of light
+function glint4(x, y, r, c) {
+  tri(x - r, y, x, y - r * 0.16, x + r, y, c);
+  tri(x - r, y, x, y + r * 0.16, x + r, y, c);
+  tri(x, y - r, x - r * 0.16, y, x, y + r, c);
+  tri(x, y - r, x + r * 0.16, y, x, y + r, c);
+}
+const emptyTrail = (m, gy, t) => glassRibbon(m.x, gy, -1, 40, GLINT_C, 0.22, t);
+function emptyGlint(m, gy, t) {
+  if (OUT) return;
+  const f = (t * 0.9 + m.x * 0.003 + m.lane * 0.37) % 1;
+  if (f > 0.2) return;
+  const k = Math.sin((f / 0.2) * Math.PI);
+  R.setAdd(true);
+  glow(m.x + 5, gy - 28, 13 * k, withA(GLINT_C, 0.45 * k));
+  glint4(m.x + 5, gy - 28, 12 * k, withA(C.white, 0.9 * k));
+  R.setAdd(false);
+}
+
+// THE FLING: a swoosh where the arm went and a few drops flicked off the top of the shake
+function throwFx(lane, flavor, perfect) {
+  const s = LS(lane),
+    [px, py] = at(lane, TAPX - 18, LY(lane, TAPX) - 40),
+    bar = at(lane, TAPX - 40, LY(lane, TAPX) - 4)[1],
+    fc = FLAVORS[flavor] ? FLAVORS[flavor][0] : C.white;
+  emit({
+    kind: "swoosh",
+    add: true,
+    x: px,
+    y: py,
+    vx: -40,
+    vy: 0,
+    life: 0.26,
+    max: 0.26,
+    size: 30 * s,
+    c: perfect ? [1, 0.88, 0.45, 1] : [1, 1, 1, 0.85],
+  });
+  if (COMFORT.calm) return;
+  for (let i = 0; i < 4; i++)
+    emit({
+      kind: "drop",
+      x: px - 14 * s,
+      y: py + 6 * s,
+      vx: rnd(-30, 110) * s,
+      vy: rnd(-220, -90) * s,
+      life: 1,
+      max: 1,
+      size: rnd(1.6, 2.8) * s,
+      c: fc,
+      grav: 900,
+      floor: bar,
+      lane,
+      flavor,
+    });
+  emit({
+    kind: "puff",
+    x: px - 10 * s,
+    y: py + 14 * s,
+    vx: 60,
+    vy: -10,
+    life: 0.35,
+    max: 0.35,
+    size: 3 * s,
+    grow: 22,
+    drag: 4,
+    c: [1, 1, 1, 0.35],
+  });
+}
+// (drawn with the other glowing particles - player.ts drawParts)
+function drawSwoosh(p, k) {
+  const e = 1 - k,
+    r = p.size * (0.85 + e * 0.45),
+    a0 = -3.55 + e * 0.5,
+    a1 = -1.5 + e * 0.2;
+  for (let j = 0; j < 3; j++)
+    arc(p.x, p.y, r - j * 3, a0, a1, 3.2 - j, withA(p.c, p.c[3] * k * (0.6 - j * 0.17)), 14);
+  glow(p.x + Math.cos(a0) * r, p.y + Math.sin(a0) * r, 6 * k, withA(p.c, 0.5 * k));
+}
+
+// the screen itself: warm light rising from the bottom while the café is hot, a red pulse round the edge when a life is lost
+function juiceHud(g, w, h, s, t) {
+  const hh = G.heat || 0;
+  if (hh > 0.03 && G.state === "play" && !(G.fever > 0)) {
+    const tall = 150 * s,
+      a = hh * (0.28 + 0.06 * Math.sin(t * 8)),
+      gr = g.createLinearGradient(0, h, 0, h - tall);
+    gr.addColorStop(
+      0,
+      "rgba(255," + Math.round(95 + 100 * hh) + "," + Math.round(168 - 90 * hh) + "," + a + ")"
+    );
+    gr.addColorStop(1, "rgba(255,150,80,0)");
+    g.fillStyle = gr;
+    g.fillRect(0, h - tall, w, tall);
+  }
+  if (G.state === "lost" && G.lostT > 0) {
+    const kid = !!DF().kid,
+      k = clamp(G.lostT / (kid ? 1.4 : 2.3), 0, 1),
+      a = (kid ? 0.22 : 0.42) * k * (0.75 + 0.25 * Math.sin(t * 12)) * FLASH(),
+      gr = g.createRadialGradient(w / 2, h / 2, Math.min(w, h) * 0.32, w / 2, h / 2, Math.hypot(w, h) / 2);
+    gr.addColorStop(0, "rgba(255,40,80,0)");
+    gr.addColorStop(1, "rgba(255,40,80," + a + ")");
+    g.fillStyle = gr;
+    g.fillRect(0, 0, w, h);
+  }
+}
+// =====================================================================================
 //  ATTRACT MODE  -  what an arcade cabinet does when nobody is playing:
 //  TITLE -> DEMO PLAY -> HALL OF FAME -> MEET THE REGULARS -> TITLE ...   Any input brings the menu back.
 // =====================================================================================
@@ -72148,8 +72434,8 @@ function levelOfTour(of) {
     inTour = ((lv - 1) % LAST_LEVEL) + 1;
   return (tour > 1 ? "TOUR " + tour + "  ·  " : "") + "LEVEL " + inTour + of + LAST_LEVEL;
 }
-const GAME_VERSION = "v1.5.4",
-  GAME_DATE = "29.10.2026",
+const GAME_VERSION = "v1.5.5",
+  GAME_DATE = "30.10.2026",
   VERSION_TEXT = GAME_VERSION + "  ·  " + GAME_DATE;
 const FB = '"Chakra Petch", "Segoe UI", sans-serif';
 let FD = '"Bungee", "Impact", sans-serif';
@@ -72734,6 +73020,7 @@ function drawHud(fps) {
     g.strokeRect(3, 3, cssW - 6, cssH - 6);
     g.restore();
   }
+  if (inGame) juiceHud(g, cssW, cssH, s, t); // (v1.5.5: the warm glow of a hot run, the red pulse of a life lost)
   if (inGame) {
     const pad = 14 * s;
     // (v1.4.54) a soft dark shade in the top corners, behind the score and the lives - so they read clearly over any
@@ -79151,6 +79438,16 @@ profWire();
 //  the game, and where the motion capture, the folk songs and the fonts come from. Both from the menu at any time.
 // =====================================================================================
 const NEWS = [
+  {
+    ver: "v1.5.5",
+    title: "A LIVELIER BAR",
+    items: [
+      "A RUN OF SERVES WARMS THE CAFE UP: GLOWING BARS, RISING EMBERS",
+      "SHAKES STREAM A RIBBON OF THEIR OWN COLOUR",
+      "EMPTY GLASSES CATCH THE LIGHT - EASIER TO SPOT",
+      "A SWOOSH AS YOU FLING, A MOMENT OF SLOW MOTION WHEN A GLASS IS LOST",
+    ],
+  },
   {
     ver: "v1.5.4",
     title: "REDEMPTION STORIES",

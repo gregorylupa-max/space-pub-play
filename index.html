@@ -7031,6 +7031,24 @@ const DICT_ROWS                             = [
     "ODKUPIENI OPOWIADAJĄ SWOJĄ HISTORIĘ - I WRACAJĄ PODZIĘKOWAĆ",
   ],
 
+  // (v1.4.79) TRANSLATIONS, v1.5.6 news
+  ["THE BARTENDER CHEERS", "DIE KROEGMAN JUIG", "BARMAN SIĘ CIESZY"],
+  [
+    "A HOT COMBO OR THREE PERFECT POURS: A JUMP FOR JOY AND A CROWN OF STARS",
+    "'N WARM KOMBO OF DRIE PERFEKTE SKINKBEURTE: 'N SPRONG VAN VREUGDE EN 'N KROON VAN STERRE",
+    "GORĄCE COMBO ALBO TRZY PERFEKCYJNE NALEWANIA: SKOK Z RADOŚCI I KORONA Z GWIAZD",
+  ],
+  [
+    "WARM LIGHT SPILLS OUT OF THE DOOR AS SOMEONE WALKS IN",
+    "WARM LIG STROOM BY DIE DEUR UIT AS IEMAND INSTAP",
+    "CIEPŁE ŚWIATŁO WYLEWA SIĘ Z DRZWI, GDY KTOŚ WCHODZI",
+  ],
+  [
+    "SHOVED BACK BY A SHAKE: SPEED LINES AND A CLOUD OF DUST",
+    "TERUGGESTOOT DEUR 'N SKOMMELDRANKIE: SPOEDLYNE EN 'N STOFWOLK",
+    "ODEPCHNIĘTY SZEJKIEM: LINIE PRĘDKOŚCI I CHMURA KURZU",
+  ],
+
   // (v1.4.79) TRANSLATIONS, v1.5.5 news
   ["A LIVELIER BAR", "'N LEWENDIGER KROEG", "ŻYWSZY BAR"],
   [
@@ -11398,6 +11416,7 @@ function update(dt) {
           kidPerfect(demo);
           funPerfect();
           P.perfects = (P.perfects || 0) + 1;
+          if (P.perfects >= 3) cheerStart(P); // (v1.5.6)
           G.runPerf = Math.max(G.runPerf || 0, P.perfects);
           worldText(
             (afBartender(P) ? "PERFEK" : "PERFECT") + (P.perfects >= 3 ? " x" + P.perfects + "!" : "!"),
@@ -12532,7 +12551,8 @@ function update(dt) {
           });
         }
       }
-      if (!c.fly) c.x -= PUSH_SPEED * dt; // (a flyer takes off and drifts away up high, rather than sliding back)
+      if (!c.fly) c.x -= PUSH_SPEED * dt;
+      pushDust(c, dt); // (v1.5.6: scuffing up dust as they slide back - juice.ts) // (a flyer takes off and drifts away up high, rather than sliding back)
       c.left -= PUSH_SPEED * dt;
       c.walk = (c.walk || 0) + PUSH_SPEED * dt * 0.25;
       if (c.type.glutton && (c.fed || 0) < (c.type.need || GLUTTON_FED) && c.x <= X0 + 30) {
@@ -13321,6 +13341,7 @@ function update(dt) {
       }
       G.combo = G.time - G.lastCatch < 1.2 ? G.combo + 1 : 1;
       G.lastCatch = G.time;
+      if (G.combo === 3 || G.combo === 5 || G.combo >= 8) cheerStart(PL[s.owner || 0]); // (v1.5.6: the bartender cheers)
       if (!demo) G.runCombo = Math.max(G.runCombo || 0, G.combo);
       feverAdd(1, demo);
       chainServe(catcher, s, demo); // (v1.4.76: longer fevers, and "10 IN A ROW!")
@@ -16643,10 +16664,12 @@ function draw() {
       laneT(lane); // everything on this bar is drawn at its depth
       drawDoor(lane, t, V);
       doorLight(lane); // (v1.4.32)
+      doorEntry(lane, t); // (v1.5.6: light spilling out as someone walks in - juice.ts)
       // (v1.4.65: a boss is drawn first, behind everybody else on its bar, so its huge body never hides them)
       for (const c of customers
         .filter((c) => c.lane === lane)
         .sort((a, b) => (b.type.boss ? 1 : 0) - (a.type.boss ? 1 : 0) || a.x - b.x)) {
+        pushLines(c, t); // (v1.5.6: speed lines behind someone shoved back)
         drawCustomer(c, t);
         if (c.gold) kidDrawVip(c, t);
         if (c.hurry) drawHurry(c, t);
@@ -16733,6 +16756,7 @@ function draw() {
           funPerks(pl, t);
           P = pl;
           drawPlayer(t);
+          playerCheer(pl, t); // (v1.5.6: a crown of stars on a hot streak)
         } // the Flash trail goes down first, so it's always behind
       for (const b of G.bananas || []) if (b.lane === lane) drawBanana(b);
       if (G.eagle && G.eagle.lane === lane) drawBarEagle(G.eagle, t);
@@ -26889,6 +26913,12 @@ function drawPlayer(t) {
     sqX = 1 + 0.08 * k;
     sqY = 1 - 0.08 * k;
   } // (a squash as he lands)
+  {
+    const ch = flying ? 0 : cheerHop(P); // (v1.5.6: a little jump of joy on a hot streak)
+    y -= ch * 10;
+    sqY *= 1 + ch * 0.06;
+    sqX *= 1 - ch * 0.04;
+  }
   if (P.turnT > 0 && !flying) sqX *= 0.8 + 0.2 * Math.abs(Math.cos((1 - P.turnT / 0.1) * Math.PI)); // TURNING ROUND: a quick turn instead of an instant flip (v1.4.41: never squeezed flat - a little narrowing, then he faces the other way)
   disc(x, y + 2, 15, withA(C.black, 0.35), 4);
   // streaks from the lane you just jumped from
@@ -28909,6 +28939,7 @@ function drawVert(V, t) {
           funPerks(pl, t);
           P = pl;
           drawPlayer(t);
+          playerCheer(pl, t); // (v1.5.6)
           P = P1;
         });
         if (G.fire && clouded(pl)) vAt(pl.lane, pl.x, VSIDE.p, () => drawCloud(pl, t));
@@ -71191,6 +71222,93 @@ function juiceHud(g, w, h, s, t) {
     g.fillRect(0, 0, w, h);
   }
 }
+
+// =====================================================================================
+//  MORE JUICE (v1.5.6):
+//   * DOOR ENTRANCES: a customer walking in lets a wedge of warm light spill out of the doorway across the floor
+//   * SHOVED BACK: a customer sent sliding by a shake trails speed lines and scuffs up dust
+//   * THE BARTENDER CHEERS: a hot combo or a run of perfect pours - a little jump and a crown of stars bursting up
+// =====================================================================================
+const DOOR_LIGHT = col("#fff0c8");
+function doorEntry(lane, t) {
+  if (OUT || QUAL < 1) return;
+  for (const c of customers) {
+    if (c.lane !== lane || c.state !== "walk" || (c.age || 0) > 0.8 || c.x > X0 + 30) continue;
+    const k = Math.sin(Math.min(1, (c.age || 0) / 0.8) * Math.PI) * (c.alpha ?? 1),
+      x = X0 - 42,
+      y = LY(lane, X0);
+    R.setAdd(true);
+    quad4(
+      x - 24,
+      y - 58,
+      x + 28,
+      y - 58,
+      x + 96,
+      y + 28,
+      x - 6,
+      y + 28,
+      withA(DOOR_LIGHT, 0.34 * k),
+      withA(DOOR_LIGHT, 0.34 * k),
+      withA(DOOR_LIGHT, 0),
+      withA(DOOR_LIGHT, 0)
+    );
+    glowE(x + 34, y + 16, 56, 11, withA(DOOR_LIGHT, 0.32 * k));
+    R.setAdd(false);
+    return; // (one spill of light per door is plenty)
+  }
+}
+function pushLines(c, t) {
+  if (OUT || VERT || c.state !== "pushed" || c.fly || MOTION() < 0.5 || c.x < X0) return;
+  const y = LY(c.lane, c.x);
+  R.setAdd(true);
+  for (let j = 0; j < 3; j++) {
+    const f = (t * 3.2 + j / 3 + (c.seed || 0)) % 1,
+      x0 = c.x + 42 + f * 14,
+      yy = y - 22 - j * 20 + (x0 - c.x) * SLANT,
+      len = 30 * (1 - f);
+    line(x0, yy, x0 + len, yy + len * SLANT, 2.6, withA(C.white, 0.6 * (1 - f)));
+  }
+  R.setAdd(false);
+}
+// (called from update while a customer slides back)
+function pushDust(c, dt) {
+  if (!c.fly && c.x > X0 && Math.random() < dt * 10 && !COMFORT.calm)
+    dust(c.lane, c.x + 18, LY(c.lane, c.x) + 28, 1);
+}
+// the bartender's moment of glory
+function cheerStart(pl) {
+  if (!pl) return;
+  G.cheer = { t: G.time, who: pl };
+}
+function cheerHop(pl) {
+  const ch = G.cheer;
+  if (!ch || ch.who !== pl) return 0;
+  const e = G.time - ch.t;
+  return e >= 0 && e < 0.36 ? Math.sin((e / 0.36) * Math.PI) * MOTION() : 0;
+}
+const CHEER_C = [col("#ffe060"), col("#ff9fe0"), col("#7dffc8")];
+function playerCheer(pl, t) {
+  const ch = G.cheer;
+  if (OUT || !ch || ch.who !== pl) return;
+  const e = G.time - ch.t;
+  if (e < 0 || e > 1) return;
+  const k = 1 - e,
+    x = pl.x + 8,
+    y = LY(pl.lane, pl.x) + 30 - 92 - cheerHop(pl) * 10,
+    d = 14 + Math.sqrt(e) * 38;
+  R.setAdd(true);
+  for (let i = 0; i < 7; i++) {
+    const an = -Math.PI * (0.12 + (0.76 * i) / 6);
+    star(
+      x + Math.cos(an) * d,
+      y + Math.sin(an) * d * 0.8,
+      7 * Math.min(1, e * 8) * (0.4 + 0.6 * k),
+      withA(CHEER_C[i % 3], 0.95 * k)
+    );
+  }
+  glow(x, y, 30 * k, withA(CHEER_C[0], 0.25 * k));
+  R.setAdd(false);
+}
 // =====================================================================================
 //  ATTRACT MODE  -  what an arcade cabinet does when nobody is playing:
 //  TITLE -> DEMO PLAY -> HALL OF FAME -> MEET THE REGULARS -> TITLE ...   Any input brings the menu back.
@@ -72434,7 +72552,7 @@ function levelOfTour(of) {
     inTour = ((lv - 1) % LAST_LEVEL) + 1;
   return (tour > 1 ? "TOUR " + tour + "  ·  " : "") + "LEVEL " + inTour + of + LAST_LEVEL;
 }
-const GAME_VERSION = "v1.5.5",
+const GAME_VERSION = "v1.5.6",
   GAME_DATE = "30.10.2026",
   VERSION_TEXT = GAME_VERSION + "  ·  " + GAME_DATE;
 const FB = '"Chakra Petch", "Segoe UI", sans-serif';
@@ -79438,6 +79556,15 @@ profWire();
 //  the game, and where the motion capture, the folk songs and the fonts come from. Both from the menu at any time.
 // =====================================================================================
 const NEWS = [
+  {
+    ver: "v1.5.6",
+    title: "THE BARTENDER CHEERS",
+    items: [
+      "A HOT COMBO OR THREE PERFECT POURS: A JUMP FOR JOY AND A CROWN OF STARS",
+      "WARM LIGHT SPILLS OUT OF THE DOOR AS SOMEONE WALKS IN",
+      "SHOVED BACK BY A SHAKE: SPEED LINES AND A CLOUD OF DUST",
+    ],
+  },
   {
     ver: "v1.5.5",
     title: "A LIVELIER BAR",

@@ -7062,6 +7062,22 @@ const DICT_ROWS                             = [
   ["ASTRO CAFE RECORDS", "ASTRO CAFÉ-PLATE", "PŁYTY ASTRO CAFÉ"],
   ["THE WHOLE SONG", "DIE HELE LIEDJIE", "CAŁA PIOSENKA"],
   ["FIND THE ALIEN, GENTLER", "VIND DIE RUIMTEWESE, SAGTER", "ZNAJDŹ KOSMITĘ, ŁAGODNIEJ"],
+  ["SEE IT COMING", "SIEN DIT KOM", "ZOBACZ, CO NADCHODZI"],
+  [
+    "A LAMP OVER THE DOOR BLINKS JUST BEFORE SOMEONE WALKS IN",
+    "'N LAMP BO DIE DEUR KNIP NET VOOR IEMAND INSTAP",
+    "LAMPKA NAD DRZWIAMI MRUGA, ZANIM KTOŚ WEJDZIE",
+  ],
+  [
+    "YOUR BAR GLOWS: A NEON LINE ALONG IT, LIGHT RUNNING TOWARDS THE DOOR",
+    "JOU KROEG GLOEI: 'N NEONLYN DAARLANGS, LIG WAT NA DIE DEUR TOE HARDLOOP",
+    "TWÓJ BAR ŚWIECI: NEONOWA LINIA, ŚWIATŁO BIEGNIE KU DRZWIOM",
+  ],
+  [
+    "TWO PLAYERS: CYAN FOR ONE, PINK FOR THE OTHER",
+    "TWEE SPELERS: SIAAN VIR EEN, PIENK VIR DIE ANDER",
+    "DWÓCH GRACZY: JEDEN CYJAN, DRUGI RÓŻ",
+  ],
   [
     "THE BONUS ROUND GETS HARDER MUCH MORE SLOWLY",
     "DIE BONUSRONDE WORD BAIE STADIGER MOEILIKER",
@@ -9913,6 +9929,7 @@ function startLevel() {
   G.served = 0;
   G.total = params().total;
   G.spawnT = 1.2;
+  G.nextLane = null; // (v1.5.11: whose door lights up next - update.ts)
   G.showT = 0;
   G.perfect = true;
   G.combo = 0;
@@ -11599,11 +11616,19 @@ function update(dt) {
   // ---- customers come in ----
   if (!(G.breather > 0)) G.spawnT -= dt;
   const remaining = G.total - G.served - customers.filter((c) => c.state !== "out").length;
-  if (G.spawnT <= 0 && remaining > 0 && customers.filter((c) => c.state !== "out").length < prm.maxOn) {
+  // (v1.5.11) A KNOCK AT THE DOOR: the next customer's bar is chosen a moment early, so that door can light up and
+  // swing a little before they walk in (doorWarn, juice.ts) - you see where they'll come from instead of being surprised
+  const pickLane = () => {
     const counts = [0, 0, 0, 0];
     for (const c of customers) counts[c.lane]++;
-    let lane = Math.floor(Math.random() * LANES);
-    if (Math.random() < 0.6) lane = counts.indexOf(Math.min(...counts));
+    let l = Math.floor(Math.random() * LANES);
+    if (Math.random() < 0.6) l = counts.indexOf(Math.min(...counts));
+    return l;
+  };
+  if (G.nextLane == null && G.spawnT < DOOR_WARN && remaining > 0) G.nextLane = pickLane();
+  if (G.spawnT <= 0 && remaining > 0 && customers.filter((c) => c.state !== "out").length < prm.maxOn) {
+    const lane = G.nextLane ?? pickLane();
+    G.nextLane = null;
     const mix = !here().sol ? GALAXY_MIX : VENUE_MIX[venue()],
       rs = Math.random();
     const re = Math.random(),
@@ -16927,6 +16952,7 @@ function draw() {
       drawDoor(lane, t, V);
       doorLight(lane); // (v1.4.32)
       doorEntry(lane, t); // (v1.5.6: light spilling out as someone walks in - juice.ts)
+      doorWarn(lane, t); // (v1.5.11: the next one's door lights up first)
       // (v1.4.65: a boss is drawn first, behind everybody else on its bar, so its huge body never hides them)
       for (const c of customers
         .filter((c) => c.lane === lane)
@@ -16941,6 +16967,7 @@ function draw() {
         if (c.thief) funThiefFx(c, t);
       }
       drawCounter(lane, V, t);
+      myBarGlow(lane, t); // (v1.5.11: a soft light along your bar - juice.ts)
       counterDim(lane); // (v1.4.57)
       heatBar(lane, t); // (v1.5.5: the bars warm up with a run of serves - juice.ts)
       clearSweep(lane, t); // (v1.5.7: a wave of light down the counter when the stop is cleared)
@@ -29110,7 +29137,14 @@ function drawVert(V, t) {
   if (G.geyser)
     list.push({ x: G.geyser.x, f: () => vAt(G.geyser.lane, G.geyser.x, 0, () => drawGeyser(G.geyser, t)) });
   for (let l = 0; l < LANES; l++) {
-    list.push({ x: X0 - 40, f: () => vAt(l, X0 - 40, 48, () => drawDoor(l, t, V)) });
+    list.push({
+      x: X0 - 40,
+      f: () =>
+        vAt(l, X0 - 40, 48, () => {
+          drawDoor(l, t, V);
+          doorWarn(l, t); // (v1.5.11: the next one's door lights up first)
+        }),
+    });
     list.push({
       x: -1e6 + l,
       f: () =>
@@ -71761,6 +71795,107 @@ function drawRedeemFx(c, t) {
   }
   R.setAdd(false);
 }
+
+// (v1.5.11) A KNOCK AT THE DOOR: for a moment before a customer walks in, a lamp over their door blinks and the doorway
+// glows - so you can see which bar they'll come in at
+const DOOR_WARN = 0.8, // (seconds of warning)
+  DOOR_LAMP = col("#7dffb0");
+function doorWarn(lane, t) {
+  if (OUT || G.nextLane !== lane || G.state !== "play" || !(G.spawnT < DOOR_WARN) || G.spawnT < -0.6) return;
+  const k = clamp(1 - G.spawnT / DOOR_WARN, 0, 1),
+    on = Math.sin(t * 22) > -0.2 ? 1 : 0.35, // (blink, blink)
+    x = X0 - 42,
+    y = LY(lane, X0),
+    ly = y - 82;
+  R.setAdd(true);
+  glowE(x + 2, y - 36, 40, 48, withA(DOOR_LIGHT, 0.4 * k)); // (light round the doorway)
+  glowE(x + 34, y + 18, 64, 11, withA(DOOR_LIGHT, 0.5 * k)); // (and spilling under the door, onto the floor)
+  glow(x + 2, ly, 44 * (0.7 + 0.3 * on), withA(DOOR_LAMP, 0.6 * on * Math.min(1, k * 2)));
+  R.setAdd(false);
+  // the lamp itself, over the door
+  disc(x + 2, ly, 10, col("#1a2420"));
+  disc(x + 2, ly, 8, on > 0.5 ? DOOR_LAMP : withA(DOOR_LAMP, 0.45));
+  disc(x - 0.5, ly - 2.5, 2.6, withA(C.white, 0.85 * on));
+}
+// (v1.5.11) YOUR BAR: a coloured neon line along the front edge of the counter you're standing at (your partner's in
+// a colour of their own), with pulses of light running down it towards the door - the way your shakes go - easing from
+// bar to bar as you move, so you always know which bar a shake will go down
+const BAR_HL = [0, 0, 0, 0],
+  BAR_HL_C = [col("#5ff4ff"), col("#ff6ad8")]; // (cool cyan for you, pink for your partner - they stand out against the warm brass of the bars)
+let barHlT = 0;
+function myBarGlow(lane, t) {
+  if (lane === 0) {
+    const dt = clamp(t - barHlT, 0, 0.1);
+    barHlT = t;
+    for (let l = 0; l < LANES; l++) {
+      const on = G.state === "play" && active().some((p) => p.lane === l) ? 1 : 0;
+      BAR_HL[l] += (on - BAR_HL[l]) * Math.min(1, dt * 10);
+    }
+  }
+  const k = BAR_HL[lane];
+  if (OUT || k < 0.02) return;
+  const who = active().find((p) => p.lane === lane),
+    c = BAR_HL_C[who && who.id ? 1 : 0],
+    a0 = X0 - 6,
+    b0 = X1 + 10,
+    yAt = (x) => LY(lane, x) + 7, // (along the front of the bar, just under the top)
+    br = (0.8 + 0.15 * Math.sin(t * 3)) * k;
+  // the neon tube: a soft wide glow, then the bright solid core
+  R.setAdd(true);
+  quad4(
+    a0,
+    yAt(a0) - 8,
+    b0,
+    yAt(b0) - 8,
+    b0,
+    yAt(b0) + 8,
+    a0,
+    yAt(a0) + 8,
+    withA(c, br * 0.08),
+    withA(c, br * 0.3),
+    withA(c, br * 0.3),
+    withA(c, br * 0.08)
+  );
+  R.setAdd(false);
+  quad4(
+    a0,
+    yAt(a0) - 1.6,
+    b0,
+    yAt(b0) - 1.6,
+    b0,
+    yAt(b0) + 1.6,
+    a0,
+    yAt(a0) + 1.6,
+    withA(c, br * 0.35),
+    withA(c, br),
+    withA(c, br),
+    withA(c, br * 0.35)
+  );
+  quad4(
+    a0,
+    yAt(a0) - 0.6,
+    b0,
+    yAt(b0) - 0.6,
+    b0,
+    yAt(b0) + 0.6,
+    a0,
+    yAt(a0) + 0.6,
+    withA(C.white, br * 0.3),
+    withA(C.white, br * 0.85),
+    withA(C.white, br * 0.85),
+    withA(C.white, br * 0.3)
+  );
+  R.setAdd(true);
+  // pulses running from your end towards the door
+  for (let i = 0; i < 3; i++) {
+    const f = (t * 0.55 + i / 3) % 1,
+      x = b0 - (b0 - a0) * f,
+      fa = Math.sin(f * Math.PI) * k;
+    glowE(x, yAt(x), 26, 5, withA(c, 0.5 * fa));
+    glowE(x, yAt(x), 10, 2.2, withA(C.white, 0.7 * fa));
+  }
+  R.setAdd(false);
+}
 // =====================================================================================
 //  ATTRACT MODE  -  what an arcade cabinet does when nobody is playing:
 //  TITLE -> DEMO PLAY -> HALL OF FAME -> MEET THE REGULARS -> TITLE ...   Any input brings the menu back.
@@ -73004,7 +73139,7 @@ function levelOfTour(of) {
     inTour = ((lv - 1) % LAST_LEVEL) + 1;
   return (tour > 1 ? "TOUR " + tour + "  ·  " : "") + "LEVEL " + inTour + of + LAST_LEVEL;
 }
-const GAME_VERSION = "v1.5.10",
+const GAME_VERSION = "v1.5.11",
   GAME_DATE = "30.10.2026",
   VERSION_TEXT = GAME_VERSION + "  ·  " + GAME_DATE;
 const FB = '"Chakra Petch", "Segoe UI", sans-serif';
@@ -80047,6 +80182,15 @@ profWire();
 //  the game, and where the motion capture, the folk songs and the fonts come from. Both from the menu at any time.
 // =====================================================================================
 const NEWS = [
+  {
+    ver: "v1.5.11",
+    title: "SEE IT COMING",
+    items: [
+      "A LAMP OVER THE DOOR BLINKS JUST BEFORE SOMEONE WALKS IN",
+      "YOUR BAR GLOWS: A NEON LINE ALONG IT, LIGHT RUNNING TOWARDS THE DOOR",
+      "TWO PLAYERS: CYAN FOR ONE, PINK FOR THE OTHER",
+    ],
+  },
   {
     ver: "v1.5.10",
     title: "FIND THE ALIEN, GENTLER",

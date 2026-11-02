@@ -7062,6 +7062,22 @@ const DICT_ROWS                             = [
   ["ASTRO CAFE RECORDS", "ASTRO CAFÉ-PLATE", "PŁYTY ASTRO CAFÉ"],
   ["THE WHOLE SONG", "DIE HELE LIEDJIE", "CAŁA PIOSENKA"],
   ["FIND THE ALIEN, GENTLER", "VIND DIE RUIMTEWESE, SAGTER", "ZNAJDŹ KOSMITĘ, ŁAGODNIEJ"],
+  ["SHINE", "GLANS", "BLASK"],
+  [
+    "NEWS AT THE TOP NOW SITS ON A GLASS PLATE WITH A NEON EDGE - EASY TO READ OVER THE SHOW",
+    "NUUS BO-AAN STAAN NOU OP 'N GLASPLAAT MET 'N NEONRAND - MAKLIK OM OOR DIE VERTONING TE LEES",
+    "KOMUNIKATY U GÓRY SĄ TERAZ NA SZKLANEJ TABLICZCE Z NEONOWĄ RAMKĄ - ŁATWO JE PRZECZYTAĆ NAD PRZEDSTAWIENIEM",
+  ],
+  [
+    "A GLINT OF LIGHT GLIDES ALONG THE POLISHED BARS NOW AND THEN",
+    "'N GLINSTERING LIG GLY SO NOU EN DAN OOR DIE BLINKGEPOLEERDE TOONBANKE",
+    "CO JAKIŚ CZAS PO WYPOLEROWANYCH BARACH PRZESUWA SIĘ BŁYSK ŚWIATŁA",
+  ],
+  [
+    "THE MUSIC BOX LISTS THE RECORDS IN THE ORDER THE GAME PLAYS THEM",
+    "DIE MUSIEKKAS WYS DIE PLATE IN DIE VOLGORDE WAARIN DIE SPELETJIE HULLE SPEEL",
+    "SZAFA GRAJĄCA POKAZUJE PŁYTY W KOLEJNOŚCI, W JAKIEJ GRA JE ODTWARZA",
+  ],
   ["SEE IT COMING", "SIEN DIT KOM", "ZOBACZ, CO NADCHODZI"],
   [
     "A LAMP OVER THE DOOR BLINKS JUST BEFORE SOMEONE WALKS IN",
@@ -16968,6 +16984,7 @@ function draw() {
       }
       drawCounter(lane, V, t);
       myBarGlow(lane, t); // (v1.5.11: a soft light along your bar - juice.ts)
+      barShine(lane, t); // (v1.5.12: a glint of light gliding along the polished bar top - juice.ts)
       counterDim(lane); // (v1.4.57)
       heatBar(lane, t); // (v1.5.5: the bars warm up with a run of serves - juice.ts)
       clearSweep(lane, t); // (v1.5.7: a wave of light down the counter when the stop is cleared)
@@ -71896,6 +71913,70 @@ function myBarGlow(lane, t) {
   }
   R.setAdd(false);
 }
+// (v1.5.12) POLISHED BARS: now and then a slow glint of light glides along each bar top, the way a lamp's reflection
+// slides over varnished wood when you walk past - each bar in its own time, so they never flash together (and not in
+// the low-quality look, or with motion turned down)
+function barShine(lane, t) {
+  if (OUT || VERT || QUAL < 1 || MOTION() < 0.5 || G.state !== "play") return;
+  const per = 9,
+    run = 2.2,
+    ph = (t + lane * 2.3 + hash(lane * 7.1) * 3) % per;
+  if (ph > run) return;
+  const f = ph / run,
+    x = X0 + (X1 - X0) * (f * 1.15 - 0.08),
+    fa = Math.sin(Math.min(1, Math.max(0, f)) * Math.PI),
+    w = 46,
+    lean = 9, // (the glint leans, like light across a curved edge)
+    top = (xx) => LY(lane, xx) - 7,
+    bot = (xx) => LY(lane, xx) + 1.5,
+    tint = col("#fff2d6");
+  R.setAdd(true);
+  quad4(
+    x - w + lean,
+    top(x - w),
+    x + lean,
+    top(x),
+    x,
+    bot(x),
+    x - w,
+    bot(x - w),
+    withA(tint, 0),
+    withA(tint, 0.42 * fa),
+    withA(tint, 0.42 * fa),
+    withA(tint, 0)
+  );
+  quad4(
+    x + lean,
+    top(x),
+    x + w * 0.35 + lean,
+    top(x + w * 0.35),
+    x + w * 0.35,
+    bot(x + w * 0.35),
+    x,
+    bot(x),
+    withA(tint, 0.42 * fa),
+    withA(tint, 0),
+    withA(tint, 0),
+    withA(tint, 0.42 * fa)
+  );
+  // (the bright streak at its leading edge - a thin slanted line of white, then the hot spot)
+  quad4(
+    x - 3 + lean,
+    top(x - 3),
+    x + 3 + lean,
+    top(x + 3),
+    x + 3,
+    bot(x + 3),
+    x - 3,
+    bot(x - 3),
+    withA(C.white, 0.75 * fa),
+    withA(C.white, 0.75 * fa),
+    withA(C.white, 0.75 * fa),
+    withA(C.white, 0.75 * fa)
+  );
+  glowE(x + lean * 0.5, (top(x) + bot(x)) / 2, 16, 4, withA(C.white, 0.8 * fa)); // (the hot spot)
+  R.setAdd(false);
+}
 // =====================================================================================
 //  ATTRACT MODE  -  what an arcade cabinet does when nobody is playing:
 //  TITLE -> DEMO PLAY -> HALL OF FAME -> MEET THE REGULARS -> TITLE ...   Any input brings the menu back.
@@ -73139,7 +73220,7 @@ function levelOfTour(of) {
     inTour = ((lv - 1) % LAST_LEVEL) + 1;
   return (tour > 1 ? "TOUR " + tour + "  ·  " : "") + "LEVEL " + inTour + of + LAST_LEVEL;
 }
-const GAME_VERSION = "v1.5.11",
+const GAME_VERSION = "v1.5.12",
   GAME_DATE = "30.10.2026",
   VERSION_TEXT = GAME_VERSION + "  ·  " + GAME_DATE;
 const FB = '"Chakra Petch", "Segoe UI", sans-serif';
@@ -73479,7 +73560,7 @@ function drawHud(fps) {
   const bigNow = liveHud ? G.callouts.find((c) => !c.world && !c.sub && c.life > 0) : null,
     subNow = liveHud ? G.callouts.filter((c) => c.sub && c.life > 0) : [];
   const readyNow = liveHud && G.state === "play" && G.readyT > 0;
-  const signText = (txt0, colr, a) => {
+  const signText = (txt0, colr, a, plate = false) => {
     // (v1.4.78) translated as a WHOLE first, then broken into lines - split first, each half was a piece of English
     // the dictionary had never seen, so a two-line announcement never came out in Afrikaans or Polish
     const txt = T(txt0);
@@ -73512,8 +73593,14 @@ function drawHud(fps) {
     g.shadowColor = colr;
     g.shadowBlur = 16 * s;
     g.globalAlpha = a;
-    const y0 = signY || sy(10),
-      lh = parseFloat(g.font) * 1.05;
+    const lh = parseFloat(g.font) * 1.05,
+      // (v1.5.12: a plate is kept wholly on the screen - a two-line announcement at the very top had its glass cut off)
+      y0 = plate
+        ? Math.max(
+            signY ? signY + ((lines.length - 1) / 2) * lh : sy(10), // (on a tall screen it grows down, clear of the buttons)
+            (lines.length * lh + 8 * s) / 2 + lh * 0.06 + 4 * s
+          )
+        : signY || sy(10);
     // (v1.4.79) a two-line announcement is wider than the venue name it replaces - keep it clear of the score on the left
     // and on the screen ("NUWE GESIG: 'N GORILLA!" ran into the score in Boss Rush)
     const wNow = Math.max(...lines.map((l) => g.measureText(l).width)) / 2 + 6 * s,
@@ -73524,6 +73611,43 @@ function drawHud(fps) {
           : HUDB.scoreW || 0,
       rightEdge = signY || HUDB.under || !HUDB.lives ? cssW : HUDB.lives, // (v1.4.80: and of the LIVES on the right)
       cx = Math.max(signY ? wNow : leftEdge + wNow, Math.min(rightEdge - wNow, signX));
+    // (v1.5.12) AN ANNOUNCEMENT ON ITS OWN GLASS PLATE: a dark see-through panel with a thin neon edge in the
+    // announcement's colour, so it stands clear of the stage show, the dancers and the speech bubbles behind it (the
+    // venue's own name keeps the bare neon look)
+    if (plate) {
+      const pw = Math.max(...lines.map((l) => g.measureText(l).width)) + 30 * s,
+        ph = lines.length * lh + 8 * s,
+        px0 = cx - pw / 2,
+        py0 = y0 - ph / 2 - lh * 0.06,
+        rr = Math.min(ph / 2, 12 * s);
+      g.save();
+      g.shadowBlur = 0;
+      g.globalAlpha = a * 0.78;
+      g.fillStyle = "rgba(10,6,20,.82)";
+      g.beginPath();
+      g.roundRect ? g.roundRect(px0, py0, pw, ph, rr) : g.rect(px0, py0, pw, ph);
+      g.fill();
+      g.globalAlpha = a * 0.9;
+      g.strokeStyle = colr;
+      g.lineWidth = 1.6 * s;
+      g.shadowColor = colr;
+      g.shadowBlur = 12 * s;
+      g.stroke();
+      // (a glint of light along the top edge of the glass)
+      g.shadowBlur = 0;
+      g.globalAlpha = a * 0.35;
+      g.strokeStyle = "#ffffff";
+      g.lineWidth = 1 * s;
+      g.beginPath();
+      g.moveTo(px0 + rr, py0 + 2.5 * s);
+      g.lineTo(px0 + pw - rr, py0 + 2.5 * s);
+      g.stroke();
+      g.restore();
+      g.fillStyle = colr;
+      g.shadowColor = colr;
+      g.shadowBlur = 16 * s;
+      g.globalAlpha = a;
+    }
     // (v1.4.99) A DARK EDGE round the announcement's letters, so it reads over the bright stage show behind it
     g.save();
     g.shadowBlur = 0;
@@ -73534,7 +73658,7 @@ function drawHud(fps) {
     lines.forEach((l, i) => g.strokeText(l, cx, y0 + (i - (lines.length - 1) / 2) * lh));
     g.restore();
     lines.forEach((l, i) => g.fillText(l, cx, y0 + (i - (lines.length - 1) / 2) * lh));
-    HUDB.signBot = y0 + ((lines.length - 1) / 2) * lh + lh / 2; // (where it ends - the line under it keeps clear)
+    HUDB.signBot = y0 + ((lines.length - 1) / 2) * lh + lh / 2 + (plate ? 5 * s : 0); // (where it ends - the line under it keeps clear)
     g.shadowBlur = 0;
     g.globalAlpha = 1;
   };
@@ -73556,7 +73680,7 @@ function drawHud(fps) {
     );
   } else if (bigNow) {
     const k = bigNow.life / bigNow.max;
-    signText(bigNow.text, bigNow.c, Math.min(1, k * 3, (1 - k) * 10));
+    signText(bigNow.text, bigNow.c, Math.min(1, k * 3, (1 - k) * 10), true);
   } else {
     g.fillStyle = neon;
     g.shadowColor = neon;
@@ -80183,6 +80307,15 @@ profWire();
 // =====================================================================================
 const NEWS = [
   {
+    ver: "v1.5.12",
+    title: "SHINE",
+    items: [
+      "NEWS AT THE TOP NOW SITS ON A GLASS PLATE WITH A NEON EDGE - EASY TO READ OVER THE SHOW",
+      "A GLINT OF LIGHT GLIDES ALONG THE POLISHED BARS NOW AND THEN",
+      "THE MUSIC BOX LISTS THE RECORDS IN THE ORDER THE GAME PLAYS THEM",
+    ],
+  },
+  {
     ver: "v1.5.11",
     title: "SEE IT COMING",
     items: [
@@ -83170,15 +83303,6 @@ const RECORDS            = [
     game: true,
   },
 ];
-const REC_FIRST = TRACKS.length;
-for (const r of RECORDS)
-  TRACKS.push({
-    title: r.title,
-    where: r.game ? "Astro Café Records · plays at the stops" : "Astro Café Records",
-    mood: r.mood,
-    group: "ASTRO CAFÉ RECORDS",
-    rec: r,
-  });
 // (v1.5.9) CALM FIRST, LIVELIER LATER: the stops' records, from the calmest to the most energetic - measured from the
 // songs themselves (tempo, how busy the beat is, how bright the sound is), the slow spy themes and space blips first
 // (GL's pick: AGENT IN THE AIRLOCK opens the game, THE MOON BASE DOSSIER comes second, COMET CARTOGRAPHER third,
@@ -83203,6 +83327,22 @@ const REC_CALM_FIRST = [
   "quest",
   "pulse",
 ];
+// (v1.5.12) THE MUSIC BOX IN PLAYING ORDER: the records are listed in the music box in the order the game plays them
+// (the stops' records from the calmest to the liveliest, then the music-box-only ones, in their own order)
+RECORDS.sort((a, b) => {
+  const ia = a.game ? REC_CALM_FIRST.indexOf(a.id) : -1,
+    ib = b.game ? REC_CALM_FIRST.indexOf(b.id) : -1;
+  return (ia < 0 ? 999 : ia) - (ib < 0 ? 999 : ib);
+});
+const REC_FIRST = TRACKS.length;
+for (const r of RECORDS)
+  TRACKS.push({
+    title: r.title,
+    where: r.game ? "Astro Café Records · plays at the stops" : "Astro Café Records",
+    mood: r.mood,
+    group: "ASTRO CAFÉ RECORDS",
+    rec: r,
+  });
 const REC_GAME = REC_CALM_FIRST.map((id) => RECORDS.find((r) => r.id === id)).filter((r) => r && r.game);
 // (the records are mastered loud; this brings them level with the band through the music channel)
 // (v1.5.10) HEAR THE GAME OVER THE MUSIC: the calm records stay as loud as they were (3.0), but the livelier a record

@@ -7094,6 +7094,22 @@ const DICT_ROWS                             = [
   ],
   ["THE VISITORS SAY THANK YOU!  +1000", "DIE BESOEKERS SÊ DANKIE!  +1000", "GOŚCIE DZIĘKUJĄ!  +1000"],
   ["COSMIC TIP! +500", "KOSMIESE FOOITJIE! +500", "KOSMICZNY NAPIWEK! +500"],
+  ["RECORDS IN THE DEMO", "PLATE IN DIE DEMO", "PŁYTY W DEMIE"],
+  [
+    "WHILE THE GAME PLAYS ITSELF, THE CAFE PLAYS ITS RECORDS TOO - A NEW ONE EACH TIME",
+    "TERWYL DIE SPELETJIE HOMSELF SPEEL, SPEEL DIE KAFEE OOK SY PLATE - ELKE KEER 'N NUWE EEN",
+    "GDY GRA TOCZY SIĘ SAMA, KAWIARNIA TEŻ PUSZCZA SWOJE PŁYTY - ZA KAŻDYM RAZEM INNĄ",
+  ],
+  [
+    "A SLIDING SHAKE LIGHTS UP THE BAR IN ITS OWN COLOUR",
+    "'N GLYENDE SKUD VERLIG DIE TOONBANK IN SY EIE KLEUR",
+    "SUNĄCY SHAKE OŚWIETLA BAR SWOIM KOLOREM",
+  ],
+  [
+    "A RING OF COLOUR POPS OUT WHEN SOMEONE CATCHES A SHAKE",
+    "'N KRING KLEUR SPRING UIT WANNEER IEMAND 'N SKUD VANG",
+    "GDY KTOŚ ŁAPIE SHAKE'A, WYSKAKUJE KOLOROWY PIERŚCIEŃ",
+  ],
   ["VISITORS", "BESOEKERS", "GOŚCIE"],
   [
     "NOW AND THEN A UFO SWOOPS DOWN OVER A BAR AND BEAMS DOWN TWO LITTLE GREEN VISITORS",
@@ -16598,6 +16614,7 @@ function sparkle(x, y, c, n, lane) {
 }
 function splash(lane, x, y, flavor) {
   // a shake lands in a customer's hand
+  catchFx(lane, x, y, flavor); // (v1.5.17: and a ring of its colour pops out - juice.ts)
   const [px, py] = at(lane, x, y),
     s = LS(lane),
     c = FLAVORS[flavor][0],
@@ -17307,6 +17324,7 @@ function draw() {
       clearSweep(lane, t); // (v1.5.7: a wave of light down the counter when the stop is cleared)
       drawDrips(lane);
       drawWet(lane); // (v1.4.28: the wet trail a sliding shake leaves on the bar)
+      drawCatchFx(lane); // (v1.5.17: the ring that pops out when someone catches a shake - juice.ts)
       for (const cr of CRITS) if (cr.lane === lane) drawCritter(cr, t); // (a caterpillar or a worm on the bar top)
       for (const tp of tips) if (tp.lane === lane) drawTip(tp, t);
       for (const u of powerups) if (u.lane === lane) drawPowerup(u, t);
@@ -17330,6 +17348,7 @@ function draw() {
           }
           if (!OUT) glowE(s.x, gb + 1, 10, 2.4, withA(C.black, 0.34)); // (v1.4.61: a soft contact shadow on the bar)
           barReflect(s.x, gb, s.flavor, 1, 0, t);
+          shakeLight(s, gb, t); // (v1.5.17: its colour lights up the bar round it - juice.ts)
           if (!OUT && Math.abs(s.x - (s._wx ?? s.x + 99)) > 13) {
             s._wx = s.x;
             WET.push({ lane, x: s.x + 4, t: G.time, f: s.flavor });
@@ -72512,6 +72531,49 @@ function drawUfoVisit(t) {
     R.setAdd(false);
   }
 }
+// (v1.5.17) A SHAKE LIGHTS UP THE BAR: a full glass sliding down the bar throws a soft pool of its own colour on the bar
+// top round it and a fainter wash down the front of the bar - so a strawberry shake glides along in a pink glow, a mint
+// one in green (on the wide screen; not in the low-quality look)
+function shakeLight(s, gb, t) {
+  if (OUT || VERT || QUAL < 1 || s.holy) return;
+  const c = FLAVORS[s.flavor][0],
+    fl = 0.85 + 0.15 * Math.sin(t * 9 + s.x * 0.05);
+  R.setAdd(true);
+  glowE(s.x, gb + 1, 38, 7, withA(c, 0.45 * fl)); // (on the bar top)
+  glowE(s.x + 6, gb + 16, 44, 11, withA(c, 0.2 * fl)); // (down the front)
+  glowE(s.x + 22, gb, 50, 4, withA(c, 0.12)); // (trailing behind it)
+  R.setAdd(false);
+}
+// (v1.5.17) THE CATCH: when a customer catches a shake, a ring of its colour pops out round their hand and a quick flash
+// lights them up - on top of the splash of drops
+const CATCH_FX                                                                  = [];
+function catchFx(lane, x, y, flavor) {
+  CATCH_FX.push({ lane, x, y, t0: G.time, f: flavor });
+  if (CATCH_FX.length > 24) CATCH_FX.shift();
+}
+function drawCatchFx(lane) {
+  if (OUT || VERT) return;
+  for (const e of CATCH_FX) {
+    if (e.lane !== lane) continue;
+    const age = G.time - e.t0;
+    if (age < 0 || age > 0.45) continue;
+    const k = age / 0.45,
+      ease = 1 - (1 - k) * (1 - k),
+      r = 8 + ease * 40,
+      c = FLAVORS[e.f][0],
+      a = 1 - k;
+    const pts = [];
+    for (let i = 0; i <= 28; i++) {
+      const an = (i / 28) * Math.PI * 2;
+      pts.push(e.x + Math.cos(an) * r, e.y + Math.sin(an) * r * 0.45);
+    }
+    R.setAdd(true);
+    polyline(pts, 3.2 * (1 - k) + 0.6, withA(c, 0.8 * a));
+    polyline(pts, 1.2, withA(C.white, 0.6 * a));
+    if (age < 0.15) glow(e.x, e.y - 10, 46, withA(c, 0.5 * (1 - age / 0.15)));
+    R.setAdd(false);
+  }
+}
 // =====================================================================================
 //  ATTRACT MODE  -  what an arcade cabinet does when nobody is playing:
 //  TITLE -> DEMO PLAY -> HALL OF FAME -> MEET THE REGULARS -> TITLE ...   Any input brings the menu back.
@@ -73755,7 +73817,7 @@ function levelOfTour(of) {
     inTour = ((lv - 1) % LAST_LEVEL) + 1;
   return (tour > 1 ? "TOUR " + tour + "  ·  " : "") + "LEVEL " + inTour + of + LAST_LEVEL;
 }
-const GAME_VERSION = "v1.5.16",
+const GAME_VERSION = "v1.5.17",
   GAME_DATE = "30.10.2026",
   VERSION_TEXT = GAME_VERSION + "  ·  " + GAME_DATE;
 const FB = '"Chakra Petch", "Segoe UI", sans-serif';
@@ -79387,8 +79449,8 @@ function musicWanted() {
   if (G.state === "over" && G.won) return VICTORY_TRACK;
   if (G.state === "story") return DEEP_TRACK; // Bogdan's story: the mysterious deep-space tune
   if (["play", "lost", "clear", "bonus", "paused", "jump", "approach", "mini"].includes(G.state))
-    return recInGame() ?? G.folk ?? here().trk ?? tourStop(); // (v1.5.8: from the first stop, every other stop plays a record - records.ts (v1.5.9: records all the way now, each carrying on over the next stops until it has played right through); on the others, now and then the band plays a folk song instead)
-  if (ATTRACT.on && ATTRACT.phase === "demo") return here().trk ?? tourStop();
+    return recInGame() ?? recInDemo() ?? G.folk ?? here().trk ?? tourStop(); // (v1.5.8: from the first stop, every other stop plays a record - records.ts (v1.5.9: records all the way now, each carrying on over the next stops until it has played right through); on the others, now and then the band plays a folk song instead)
+  if (ATTRACT.on && ATTRACT.phase === "demo") return recInDemo() ?? here().trk ?? tourStop(); // (v1.5.17: a record, in the demo too)
   return 0;
 }
 
@@ -80846,6 +80908,15 @@ profWire();
 //  the game, and where the motion capture, the folk songs and the fonts come from. Both from the menu at any time.
 // =====================================================================================
 const NEWS = [
+  {
+    ver: "v1.5.17",
+    title: "RECORDS IN THE DEMO",
+    items: [
+      "WHILE THE GAME PLAYS ITSELF, THE CAFE PLAYS ITS RECORDS TOO - A NEW ONE EACH TIME",
+      "A SLIDING SHAKE LIGHTS UP THE BAR IN ITS OWN COLOUR",
+      "A RING OF COLOUR POPS OUT WHEN SOMEONE CATCHES A SHAKE",
+    ],
+  },
   {
     ver: "v1.5.16",
     title: "VISITORS",
@@ -84179,6 +84250,26 @@ function recInGame() {
   const R = recRunNow();
   if (R.cur !== null && !recHere(TRACKS[R.cur].rec)) R.cur = null; // (it couldn't be played: the band takes over)
   return R.cur;
+}
+// (v1.5.17) THE DEMO PLAYS RECORDS TOO: while the game plays itself between the space shows, the café's sound system
+// plays the records as well - each time the demo comes round, the next one on the list (calm ones first, the same
+// order as in a game), and if one plays right through during a demo, straight on to the next. (If a record can't be
+// played, the band plays the stop's own tune, as before.)
+const DEMO_REC = { k: -1, seen: 0 };
+function recInDemo() {
+  if (!G.demo || !REC_GAME.length) return null;
+  const now = performance.now(),
+    n = REC_GAME.length;
+  if (now - DEMO_REC.seen > 3000 || DEMO_REC.k < 0) DEMO_REC.k = (DEMO_REC.k + 1) % n; // (a new demo: the next record)
+  DEMO_REC.seen = now;
+  let r = REC_GAME[DEMO_REC.k],
+    i = REC_FIRST + RECORDS.indexOf(r);
+  if (AC && REC.playing === i && (REC_FILE ? REC.elLaps > 0 : AC.currentTime - REC.t0 >= r.loop[1])) {
+    DEMO_REC.k = (DEMO_REC.k + 1) % n; // (played right through: the next one)
+    r = REC_GAME[DEMO_REC.k];
+    i = REC_FIRST + RECORDS.indexOf(r);
+  }
+  return recHere(r) ? i : null;
 }
 // has the record playing now played right through once? (counted from when it started at its top)
 function recHeard(i) {

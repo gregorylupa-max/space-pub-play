@@ -7094,6 +7094,27 @@ const DICT_ROWS                             = [
   ],
   ["THE VISITORS SAY THANK YOU!  +1000", "DIE BESOEKERS SÊ DANKIE!  +1000", "GOŚCIE DZIĘKUJĄ!  +1000"],
   ["COSMIC TIP! +500", "KOSMIESE FOOITJIE! +500", "KOSMICZNY NAPIWEK! +500"],
+  ["SAVED!", "GERED!", "URATOWANY!"],
+  [
+    "HOLY WATER LIFTS THEM OFF THE FLOOR, TREMBLING, BEFORE THE CHANGE",
+    "WYWATER LIG HULLE BEWEND VAN DIE VLOER AF VOOR DIE VERANDERING",
+    "WODA ŚWIĘCONA UNOSI ICH DRŻĄCYCH NAD PODŁOGĘ PRZED PRZEMIANĄ",
+  ],
+  [
+    "THE CHANGE IN SLOW MOTION, WITH A BURST OF GOLDEN RAYS",
+    "DIE VERANDERING IN STADIGE AKSIE, MET 'N UITBARSTING VAN GOUE STRALE",
+    "PRZEMIANA W ZWOLNIONYM TEMPIE, Z WYBUCHEM ZŁOTYCH PROMIENI",
+  ],
+  [
+    "THE DARKNESS THAT WAS IN THEM FLEES SHRIEKING UP THROUGH THE ROOF",
+    "DIE DUISTERNIS WAT IN HULLE WAS, VLUG GILLEND DEUR DIE DAK",
+    "CIEMNOŚĆ, KTÓRA W NICH BYŁA, UCIEKA Z WRZASKIEM PRZEZ DACH",
+  ],
+  [
+    "SAVE ANOTHER WITHIN 8 SECONDS FOR A GROWING BONUS",
+    "RED NOG EEN BINNE 8 SEKONDES VIR 'N GROEIENDE BONUS",
+    "URATUJ KOLEJNEGO W CIĄGU 8 SEKUND, A BONUS ROŚNIE",
+  ],
   ["RECORDS IN THE DEMO", "PLATE IN DIE DEMO", "PŁYTY W DEMIE"],
   [
     "WHILE THE GAME PLAYS ITSELF, THE CAFE PLAYS ITS RECORDS TOO - A NEW ONE EACH TIME",
@@ -7613,6 +7634,7 @@ const DICT_PAT                             = [
     "'N DANKIE-GESKENK!  +$1 MUNTE",
     "PREZENT Z PODZIĘKOWANIEM!  +$1 MONET",
   ],
+  [/^(\d+) SAVED IN A ROW!  \+(\d+)$/, "$1 GERED NA MEKAAR!  +$2", "$1 URATOWANYCH Z RZĘDU!  +$2"],
   [/^\+1 HOLY WATER$/, "+1 WYWATER", "+1 WODA ŚWIĘCONA"],
 ];
 const DICT = new Map                ();
@@ -15404,6 +15426,35 @@ function redeemStep(c, dt, demo) {
     c.tone = undefined;
     sfx("bless", c.x);
     banishFx(c, "redeem", demo); // (v1.5.3: a pillar of golden light, the halos and the feathers)
+    // (v1.5.18) the moment itself in slow motion, and the darkness that was in them flees - see drawRedeemFx
+    if (!demo) G.hitStop = Math.max(G.hitStop || 0, 0.4);
+    sfx("howl", c.x); // (its last, far-off wail as it goes)
+    for (let i = 0; i < 18; i++) {
+      const [ex, ey] = at(c.lane, c.x + 12 + rnd(-20, 20), y - rnd(10, 90));
+      emit({
+        kind: "spark",
+        x: ex,
+        y: ey,
+        vx: rnd(-140, 140),
+        vy: rnd(40, 220),
+        life: rnd(0.4, 0.8),
+        max: 0.8,
+        size: rnd(2, 3.5),
+        c: Math.random() < 0.6 ? [1, 0.25, 0.15, 1] : [0.5, 0.1, 0.6, 1],
+        drag: 1.2,
+      }); // (red and purple embers, falling away)
+    }
+    // (v1.5.18) SAVED IN A ROW: save another within 8 seconds for a growing bonus
+    if (!demo) {
+      G.rdChain = G.time - (G.rdLast ?? -99) < 8 ? (G.rdChain || 1) + 1 : 1;
+      G.rdLast = G.time;
+      if (G.rdChain > 1) {
+        SCORER = P;
+        addScore(250 * G.rdChain, c.x + 20, y - 160);
+        SCORER = null;
+        callout(G.rdChain + " SAVED IN A ROW!  +" + 250 * G.rdChain, "#ffe070", 2);
+      }
+    }
     const [px, py] = at(c.lane, c.x + 20, y - 60);
     rings.push({ x: px, y: py, r: 240, life: 1.0, max: 1.0, c: [1, 0.92, 0.55, 1] });
     rings.push({ x: px, y: py, r: 130, life: 0.7, max: 0.7, c: [1, 1, 1, 1] });
@@ -22565,7 +22616,8 @@ function drawCustomerRaw(c, t) {
   } // a spy sneaking: now you see him, now you don't
   const floorY =
     (c.fy !== undefined ? c.fy : LY(c.lane, c.x) + 22) -
-    (c.joy > 0 ? Math.abs(Math.sin(c.joy * 11)) * 9 * Math.min(1, c.joy * 1.5) : 0); // (a happy hop when served)
+    (c.joy > 0 ? Math.abs(Math.sin(c.joy * 11)) * 9 * Math.min(1, c.joy * 1.5) : 0) - // (a happy hop when served)
+    redeemLift(c); // (v1.5.18: lifted off the floor by the holy light while being saved - juice.ts)
   if (!OUT) {
     c.__f0 = TY(c.x, floorY);
     c.__f1 = TY(c.x, floorY - 100);
@@ -72203,6 +72255,55 @@ function clearBloom(g, w, h, s) {
 // change the light fades, a warm glow lingers round them and a halo settles over their head, then fades as they go
 const RD_GOLD = col("#ffe08a"),
   RD_WHITE = col("#ffffff");
+// (v1.5.18) LIFTED UP: while the holy light works on them they rise slowly off the floor (a hand's breadth or so),
+// trembling more and more - and after the change they float gently back down
+function redeemLift(c) {
+  const D = c.rd;
+  if (!D) return 0;
+  const k = D.t;
+  if (k < RD_BURST) {
+    const e = Math.min(1, k / RD_BURST);
+    return e * e * 26 + Math.sin(G.time * 40) * 2.2 * e; // (rising, and shaking harder and harder)
+  }
+  const u = Math.min(1, (k - RD_BURST) / 0.7);
+  return 26 * (1 - u * u * (3 - 2 * u));
+}
+// (v1.5.18) THE DARKNESS LEAVES: at the change a dark shadow of what they were - a smoky shape with two red eyes -
+// tears out of them and flees shrieking up and away through the roof, trailing smoke
+function drawShadowFlee(c, D, t, cx, fy) {
+  const u = (D.t - RD_BURST) / 0.9;
+  if (u < 0 || u > 1) return;
+  const e = u * u,
+    x = cx - 70 * u + Math.sin(u * 14) * 10,
+    y = fy - 100 - e * 260, // (up, and away through the roof)
+    s = 1.6 * (1 - u * 0.5),
+    a = Math.min(1, u * 8) * (1 - u) * 0.9,
+    dark = col(D.was === "werewolf" ? "#2a2a3a" : D.was === "vampire" ? "#2a0a1a" : "#2a0612");
+  // the trail of smoke behind it
+  for (let i = 1; i <= 5; i++) {
+    const v = Math.max(0, u - i * 0.06),
+      tx = cx - 70 * v + Math.sin(v * 14) * 10,
+      ty = fy - 100 - v * v * 260;
+    disc(tx, ty, (16 - i * 2) * s, withA(dark, a * (0.5 - i * 0.08)), 8);
+  }
+  // the shape: a smoky head and a ragged body, horns for a devil or a demon, ears for a werewolf
+  disc(x, y + 14 * s, 18 * s, withA(dark, a), 8 * s);
+  disc(x, y - 6 * s, 14 * s, withA(dark, a), 5 * s);
+  if (D.was === "werewolf") {
+    tri(x - 11 * s, y - 14 * s, x - 4 * s, y - 16 * s, x - 9 * s, y - 28 * s, withA(dark, a));
+    tri(x + 11 * s, y - 14 * s, x + 4 * s, y - 16 * s, x + 9 * s, y - 28 * s, withA(dark, a));
+  } else if (D.was !== "vampire") {
+    tri(x - 10 * s, y - 14 * s, x - 5 * s, y - 16 * s, x - 14 * s, y - 30 * s, withA(dark, a));
+    tri(x + 10 * s, y - 14 * s, x + 5 * s, y - 16 * s, x + 14 * s, y - 30 * s, withA(dark, a));
+  }
+  R.setAdd(true);
+  const red = col("#ff2a1a");
+  for (const ex of [-5, 5]) {
+    glow(x + ex * s, y - 7 * s, 7 * s, withA(red, 0.8 * a));
+    disc(x + ex * s, y - 7 * s, 2 * s, withA(col("#ffd0c0"), a));
+  }
+  R.setAdd(false);
+}
 function drawRedeemFx(c, t) {
   const D = c.rd;
   if (!D || D.t > RD_END + 0.8 || OUT) return;
@@ -72217,6 +72318,31 @@ function drawRedeemFx(c, t) {
     for (let i = 0; i < 9; i++) glowE(cx, fy - 30 - i * 50, w * (1 + i * 0.07), 44, withA(RD_GOLD, 0.2 * a));
     rect(cx - 2.5, fy - 470, 5, 460, withA(RD_WHITE, 0.3 * a));
     glowE(cx - 6, fy + 2, 54, 13, withA(RD_GOLD, 0.5 * a)); // (the ring of light at their feet)
+  }
+  if (k >= RD_BURST - 0.05 && k < RD_BURST + 0.9) {
+    // (v1.5.18) RAYS OF GLORY: at the change, a burst of golden rays fans out from behind them, turning, then fading
+    const u = Math.max(0, k - RD_BURST + 0.05) / 0.95,
+      ra = Math.sin(Math.min(1, u * 3) * Math.PI * 0.5) * (1 - u),
+      cy = fy - 70,
+      len = 140 + u * 120;
+    for (let i = 0; i < 14; i++) {
+      const an = (i / 14) * 6.283 + t * 0.6,
+        wd = 0.07;
+      quad4(
+        cx,
+        cy,
+        cx,
+        cy,
+        cx + Math.cos(an + wd) * len,
+        cy + Math.sin(an + wd) * len * 0.8,
+        cx + Math.cos(an - wd) * len,
+        cy + Math.sin(an - wd) * len * 0.8,
+        withA(i % 2 ? RD_WHITE : RD_GOLD, 0.45 * ra),
+        withA(i % 2 ? RD_WHITE : RD_GOLD, 0.45 * ra),
+        withA(RD_GOLD, 0),
+        withA(RD_GOLD, 0)
+      );
+    }
   }
   if (k < RD_BURST) {
     // sparkles spiralling up round them
@@ -72248,6 +72374,7 @@ function drawRedeemFx(c, t) {
     }
   }
   R.setAdd(false);
+  drawShadowFlee(c, D, t, cx, fy); // (v1.5.18)
 }
 
 // (v1.5.11) A KNOCK AT THE DOOR: for a moment before a customer walks in, a lamp over their door blinks and the doorway
@@ -73817,7 +73944,7 @@ function levelOfTour(of) {
     inTour = ((lv - 1) % LAST_LEVEL) + 1;
   return (tour > 1 ? "TOUR " + tour + "  ·  " : "") + "LEVEL " + inTour + of + LAST_LEVEL;
 }
-const GAME_VERSION = "v1.5.17",
+const GAME_VERSION = "v1.5.18",
   GAME_DATE = "30.10.2026",
   VERSION_TEXT = GAME_VERSION + "  ·  " + GAME_DATE;
 const FB = '"Chakra Petch", "Segoe UI", sans-serif';
@@ -80908,6 +81035,16 @@ profWire();
 //  the game, and where the motion capture, the folk songs and the fonts come from. Both from the menu at any time.
 // =====================================================================================
 const NEWS = [
+  {
+    ver: "v1.5.18",
+    title: "SAVED!",
+    items: [
+      "HOLY WATER LIFTS THEM OFF THE FLOOR, TREMBLING, BEFORE THE CHANGE",
+      "THE CHANGE IN SLOW MOTION, WITH A BURST OF GOLDEN RAYS",
+      "THE DARKNESS THAT WAS IN THEM FLEES SHRIEKING UP THROUGH THE ROOF",
+      "SAVE ANOTHER WITHIN 8 SECONDS FOR A GROWING BONUS",
+    ],
+  },
   {
     ver: "v1.5.17",
     title: "RECORDS IN THE DEMO",

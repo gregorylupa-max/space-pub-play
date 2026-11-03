@@ -7094,6 +7094,17 @@ const DICT_ROWS                             = [
   ],
   ["THE VISITORS SAY THANK YOU!  +1000", "DIE BESOEKERS SÊ DANKIE!  +1000", "GOŚCIE DZIĘKUJĄ!  +1000"],
   ["COSMIC TIP! +500", "KOSMIESE FOOITJIE! +500", "KOSMICZNY NAPIWEK! +500"],
+  ["EVERY SOUL SAVED", "ELKE SIEL GERED", "KAŻDA DUSZA URATOWANA"],
+  [
+    "EVERY UNWANTED GUEST IS SAVED NOW - HOWEVER YOU DEAL WITH THEM",
+    "ELKE ONGEWENSTE GAS WORD NOU GERED - HOE JY OOK AL MET HULLE HANDEL",
+    "KAŻDY NIECHCIANY GOŚĆ JEST TERAZ RATOWANY - NIEZALEŻNIE OD TEGO, JAK SIĘ Z NIM ROZPRAWISZ",
+  ],
+  [
+    "RUN UP TO THEM, SHOW THE CROSS OR SEND HOLY WATER: THE DEVIL BECOMES AN ANGEL, THE VAMPIRE A GENTLEMAN, THE DEMON A MONK, THE WEREWOLF A MAN",
+    "HARDLOOP NA HULLE, WYS DIE KRUIS OF STUUR WYWATER: DIE DUIWEL WORD 'N ENGEL, DIE VAMPIER 'N HEER, DIE DEMOON 'N MONNIK, DIE WEERWOLF 'N MAN",
+    "PODBIEGNIJ DO NICH, POKAŻ KRZYŻ ALBO WYŚLIJ WODĘ ŚWIĘCONĄ: DIABEŁ STAJE SIĘ ANIOŁEM, WAMPIR DŻENTELMENEM, DEMON MNICHEM, WILKOŁAK CZŁOWIEKIEM",
+  ],
   ["SAVED!", "GERED!", "URATOWANY!"],
   [
     "HOLY WATER LIFTS THEM OFF THE FLOOR, TREMBLING, BEFORE THE CHANGE",
@@ -11553,7 +11564,7 @@ function update(dt) {
       P.lastFace = P.face;
     }
     P.turnT = Math.max(0, (P.turnT || 0) - dt); // (for the turn-around)
-    // run up to a devil or a demon and you refuse to serve it: out it goes in a puff of smoke
+    // run up to a devil or a demon and you refuse to serve it (v1.5.19: and it's saved - see refuse in twists.ts)
     for (const c of customers)
       if (c.type.evil && c.state === "walk" && c.lane === P.lane && Math.abs(P.x - (c.x + 22)) < 34)
         refuse(c, demo);
@@ -15547,6 +15558,10 @@ function thanksServed(c, demo) {
   c.blast = undefined; // (and they stay to finish their shake)
 }
 function refuse(c, demo, how = "kick") {
+  // (v1.5.19) FULL REDEMPTION: every unwanted guest is saved now, whichever way you deal with them - run up the bar to
+  // them, hold up the cross, the silver dragon's blessing or holy water - the devil becomes an angel, the vampire a
+  // gentleman, the demon a monk, the werewolf a man again (the whole show - see redeem). Nobody is just thrown out.
+  if (c.type.evil && redeem(c, demo)) return;
   banishFx(c, how, demo); // (v1.5.3: the spectacular send-off)
   c.state = "pushed";
   c.left = 9999;
@@ -73944,7 +73959,7 @@ function levelOfTour(of) {
     inTour = ((lv - 1) % LAST_LEVEL) + 1;
   return (tour > 1 ? "TOUR " + tour + "  ·  " : "") + "LEVEL " + inTour + of + LAST_LEVEL;
 }
-const GAME_VERSION = "v1.5.18",
+const GAME_VERSION = "v1.5.19",
   GAME_DATE = "30.10.2026",
   VERSION_TEXT = GAME_VERSION + "  ·  " + GAME_DATE;
 const FB = '"Chakra Petch", "Segoe UI", sans-serif';
@@ -81035,6 +81050,14 @@ profWire();
 //  the game, and where the motion capture, the folk songs and the fonts come from. Both from the menu at any time.
 // =====================================================================================
 const NEWS = [
+  {
+    ver: "v1.5.19",
+    title: "EVERY SOUL SAVED",
+    items: [
+      "EVERY UNWANTED GUEST IS SAVED NOW - HOWEVER YOU DEAL WITH THEM",
+      "RUN UP TO THEM, SHOW THE CROSS OR SEND HOLY WATER: THE DEVIL BECOMES AN ANGEL, THE VAMPIRE A GENTLEMAN, THE DEMON A MONK, THE WEREWOLF A MAN",
+    ],
+  },
   {
     ver: "v1.5.18",
     title: "SAVED!",

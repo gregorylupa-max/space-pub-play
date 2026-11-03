@@ -7082,6 +7082,7 @@ const DICT_ROWS                             = [
     "BOSS JEST WŚCIEKŁY - I SZYBSZY!",
   ],
   ["STOMP!", "STAMP!", "TUP!"],
+  ["JUMP!", "SPRING!", "SKOK!"],
   [
     "A UFO!  VISITORS FROM ANOTHER WORLD",
     "'N VVV!  BESOEKERS VAN 'N ANDER WÊRELD",
@@ -7095,6 +7096,17 @@ const DICT_ROWS                             = [
   ["THE VISITORS SAY THANK YOU!  +1000", "DIE BESOEKERS SÊ DANKIE!  +1000", "GOŚCIE DZIĘKUJĄ!  +1000"],
   ["COSMIC TIP! +500", "KOSMIESE FOOITJIE! +500", "KOSMICZNY NAPIWEK! +500"],
   ["QUIET PLACES", "STIL PLEKKE", "CICHE MIEJSCA"],
+  ["SEE HIM JUMP", "SIEN HOM SPRING", "ZOBACZ, JAK SKACZE"],
+  [
+    "A BOSS WARNS YOU BEFORE HE JUMPS TO ANOTHER BAR: HE CROUCHES AND TREMBLES, JUMP! POPS UP",
+    "'N BAAS WAARSKU JOU VOORDAT HY NA 'N ANDER TOONBANK SPRING: HY HURK EN BEWE, SPRING! VERSKYN",
+    "BOSS OSTRZEGA, ZANIM SKOCZY NA INNY BAR: PRZYKUCA I DRŻY, POJAWIA SIĘ SKOK!",
+  ],
+  [
+    "AND A FLASHING ARROW POINTS AT THE BAR HE WILL LAND ON - GET THERE FIRST",
+    "EN 'N FLIKKERENDE PYL WYS NA DIE TOONBANK WAAR HY GAAN LAND - KOM EERSTE DAAR",
+    "A MIGAJĄCA STRZAŁKA WSKAZUJE BAR, NA KTÓRYM WYLĄDUJE - BĄDŹ TAM PIERWSZY",
+  ],
   [
     "NEW RECORD FOR THE SOLAR SYSTEM TOUR: WHISPERS OF THE OUTER PLANETS - MYSTERIOUS",
     "NUWE PLAAT VIR DIE SONNESTELSEL-TOER: WHISPERS OF THE OUTER PLANETS - GEHEIMSINNIG",
@@ -17392,6 +17404,7 @@ function draw() {
         drawCustomer(c, t);
         if (c.rd) drawRedeemFx(c, t); // (v1.5.10: the light, the sparkles, the halo of someone being saved)
         if (c.rage) bossRageFx(c, t); // (v1.5.14: a furious boss glows red and steams - kids.ts)
+        if (c.hopWarn !== undefined) bossHopWarn(c, t); // (v1.5.21: about to jump - the warning arrow)
         if (c.gold) kidDrawVip(c, t);
         if (c.hurry) drawHurry(c, t);
         drawNoServe(c, t); // (v1.4.37: a "don't serve me" sign over the devils, demons and vampires)
@@ -29629,6 +29642,7 @@ function drawVert(V, t) {
           drawCustomer(c, t);
           if (c.rd) drawRedeemFx(c, t); // (v1.5.10: the light, the sparkles, the halo of someone being saved)
           if (c.rage) bossRageFx(c, t); // (v1.5.14: a furious boss glows red and steams - kids.ts)
+          if (c.hopWarn !== undefined) bossHopWarn(c, t); // (v1.5.21: about to jump - the warning arrow)
           if (c.gold) kidDrawVip(c, t);
           if (c.hurry) drawHurry(c, t);
           drawNoServe(c, t); // (v1.4.37: a "don't serve me" sign over the devils, demons and vampires)
@@ -46185,7 +46199,15 @@ function kidUpdate(dt, demo) {
 //   STOMP!: from the boss at stop 12 on, now and then a boss jumps over to the next bar - you have to follow him (more
 //           often when he's furious); never onto someone else, and never right at your end of the bar
 // (the leap from one bar to the next: from where he stood, up in an arc and down onto the new bar, in 0.4 seconds)
+// (v1.5.21: and before he jumps, a warning - he crouches and trembles for a second, "JUMP!" pops up and a flashing
+//  arrow over his head points at the bar he's about to land on, so you can get there first)
+const BOSS_WARN = 1.1,
+  BOSS_WARN_RAGE = 0.8;
 function bossHopUp(c) {
+  if (c.hopWarn !== undefined) {
+    const k = Math.min(1, (G.time - c.hopWarn) * 4);
+    return -10 * k + Math.sin(G.time * 60) * 2.5 * k; // (the crouch, trembling)
+  }
   if (c.hopAt === undefined) return 0;
   const k = (G.time - c.hopAt) / 0.4;
   if (k >= 1 || k < 0) return 0;
@@ -46209,6 +46231,25 @@ function bossRageFx(c, t) {
     disc(sx, fy - 200 - f * 60, 6 + f * 14, withA(C.white, 0.22 * (1 - f) * k), 6 + f * 8);
   }
 }
+// (the warning arrow over a boss about to jump: up or down, towards the bar he'll land on, flashing and bobbing)
+function bossHopWarn(c, t) {
+  if (c.hopWarn === undefined || OUT || c.state === "out") return;
+  const fy = c.fy !== undefined ? c.fy : LY(c.lane, c.x) + 22,
+    up = LY(c.hopTo, c.x) < LY(c.lane, c.x) ? -1 : 1,
+    on = Math.sin(t * 22) > -0.3,
+    bob = Math.sin(t * 10) * 10 * up,
+    x = c.x - 120, // (beside him, clear of his name and the shake counter)
+    y = fy - 120 + bob,
+    yel = col(on ? "#ffe04a" : "#ff8a3a");
+  R.setAdd(true);
+  glow(x, y + 15 * up, 80, withA(yel, 0.4));
+  R.setAdd(false);
+  for (const d of [0, 32]) {
+    const yy = y + d * up; // (a double chevron, pointing the way he'll go)
+    tri(x - 36, yy - 17 * up, x + 36, yy - 17 * up, x, yy + 20 * up, withA(C.black, 0.55));
+    tri(x - 28, yy - 13 * up, x + 28, yy - 13 * up, x, yy + 14 * up, yel);
+  }
+}
 function bossTricks(c, dt) {
   const need = c.type.need || GLUTTON_FED;
   if (!c.rage && (c.fed || 0) >= Math.ceil(need / 2) && (c.fed || 0) < need) {
@@ -46221,26 +46262,46 @@ function bossTricks(c, dt) {
     callout("THE BOSS IS FURIOUS - AND FASTER!", "#ff5a4a", 2.2);
   }
   if (G.level < 12 && !(G.loop > 0)) return;
+  const free = (l) =>
+    !customers.some((o) => o !== c && o.lane === l && o.state !== "out" && Math.abs(o.x - c.x) < 110);
+  if (c.hopWarn !== undefined) {
+    // (the warning is up: when it runs out he jumps - unless someone has stepped into his way, or he's been stopped)
+    if (c.state !== "walk") {
+      c.hopWarn = undefined;
+      c.hopT = 1;
+      return;
+    }
+    if (G.time - c.hopWarn < (c.rage ? BOSS_WARN_RAGE : BOSS_WARN)) return;
+    const to = c.hopTo;
+    c.hopWarn = undefined;
+    if (!free(to)) {
+      c.hopT = 1;
+      return;
+    }
+    dust(c.lane, c.x, 0, 8, true);
+    c.hopFrom = c.lane;
+    c.hopAt = G.time;
+    c.lane = to;
+    dust(to, c.x, 0, 10, true);
+    sfx("bump", c.x);
+    G.shake = Math.max(G.shake || 0, 7 * MOTION());
+    worldText("STOMP!", c, "#ff8a5a");
+    c.hopT = c.rage ? rnd(3.5, 5.5) : rnd(6, 9);
+    return;
+  }
   c.hopT = (c.hopT ?? rnd(5, 8)) - dt;
   if (c.hopT > 0 || c.state !== "walk" || c.x > X1 - 200 || c.x < X0 + 60) return;
   const dirs = [c.lane - 1, c.lane + 1].filter((l) => l >= 0 && l < LANES);
   if (Math.random() < 0.5) dirs.reverse();
-  const to = dirs.find(
-    (l) => !customers.some((o) => o !== c && o.lane === l && o.state !== "out" && Math.abs(o.x - c.x) < 110)
-  );
+  const to = dirs.find(free);
   if (to === undefined) {
     c.hopT = 1;
     return;
   }
-  dust(c.lane, c.x, 0, 8, true);
-  c.hopFrom = c.lane;
-  c.hopAt = G.time;
-  c.lane = to;
-  dust(to, c.x, 0, 10, true);
-  sfx("bump", c.x);
-  G.shake = Math.max(G.shake || 0, 7 * MOTION());
-  worldText("STOMP!", c, "#ff8a5a");
-  c.hopT = c.rage ? rnd(3.5, 5.5) : rnd(6, 9);
+  c.hopWarn = G.time; // (first the warning - see bossHopWarn)
+  c.hopTo = to;
+  sfx("grumble", c.x);
+  worldText("JUMP!", c, "#ffe04a");
 }
 function kidBossDone(c) {
   if (!c.type.boss) return;
@@ -73975,7 +74036,7 @@ function levelOfTour(of) {
     inTour = ((lv - 1) % LAST_LEVEL) + 1;
   return (tour > 1 ? "TOUR " + tour + "  ·  " : "") + "LEVEL " + inTour + of + LAST_LEVEL;
 }
-const GAME_VERSION = "v1.5.20",
+const GAME_VERSION = "v1.5.21",
   GAME_DATE = "30.10.2026",
   VERSION_TEXT = GAME_VERSION + "  ·  " + GAME_DATE;
 const FB = '"Chakra Petch", "Segoe UI", sans-serif';
@@ -81067,6 +81128,14 @@ profWire();
 //  the game, and where the motion capture, the folk songs and the fonts come from. Both from the menu at any time.
 // =====================================================================================
 const NEWS = [
+  {
+    ver: "v1.5.21",
+    title: "SEE HIM JUMP",
+    items: [
+      "A BOSS WARNS YOU BEFORE HE JUMPS TO ANOTHER BAR: HE CROUCHES AND TREMBLES, JUMP! POPS UP",
+      "AND A FLASHING ARROW POINTS AT THE BAR HE WILL LAND ON - GET THERE FIRST",
+    ],
+  },
   {
     ver: "v1.5.20",
     title: "QUIET PLACES",

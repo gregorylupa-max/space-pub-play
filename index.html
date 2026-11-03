@@ -7094,6 +7094,22 @@ const DICT_ROWS                             = [
   ],
   ["THE VISITORS SAY THANK YOU!  +1000", "DIE BESOEKERS SÊ DANKIE!  +1000", "GOŚCIE DZIĘKUJĄ!  +1000"],
   ["COSMIC TIP! +500", "KOSMIESE FOOITJIE! +500", "KOSMICZNY NAPIWEK! +500"],
+  ["QUIET PLACES", "STIL PLEKKE", "CICHE MIEJSCA"],
+  [
+    "NEW RECORD FOR THE SOLAR SYSTEM TOUR: WHISPERS OF THE OUTER PLANETS - MYSTERIOUS",
+    "NUWE PLAAT VIR DIE SONNESTELSEL-TOER: WHISPERS OF THE OUTER PLANETS - GEHEIMSINNIG",
+    "NOWA PŁYTA DO WYCIECZKI PO UKŁADZIE SŁONECZNYM: WHISPERS OF THE OUTER PLANETS - TAJEMNICZA",
+  ],
+  [
+    "NEW RECORD FOR CASTAWAY ISLAND: MOONLIT LAGOON - RELAXING, A LITTLE MYSTERIOUS",
+    "NUWE PLAAT VIR SKIPBREUK-EILAND: MOONLIT LAGOON - ONTSPANNEND, 'N BIETJIE GEHEIMSINNIG",
+    "NOWA PŁYTA DO WYSPY ROZBITKA: MOONLIT LAGOON - RELAKSUJĄCA, TROCHĘ TAJEMNICZA",
+  ],
+  [
+    "BOTH IN THE MUSIC BOX TOO - 28 RECORDS NOW",
+    "ALBEI OOK IN DIE MUSIEKKAS - NOU 28 PLATE",
+    "OBIE TAKŻE W SZAFIE GRAJĄCEJ - TERAZ 28 PŁYT",
+  ],
   ["EVERY SOUL SAVED", "ELKE SIEL GERED", "KAŻDA DUSZA URATOWANA"],
   [
     "EVERY UNWANTED GUEST IS SAVED NOW - HOWEVER YOU DEAL WITH THEM",
@@ -73959,7 +73975,7 @@ function levelOfTour(of) {
     inTour = ((lv - 1) % LAST_LEVEL) + 1;
   return (tour > 1 ? "TOUR " + tour + "  ·  " : "") + "LEVEL " + inTour + of + LAST_LEVEL;
 }
-const GAME_VERSION = "v1.5.19",
+const GAME_VERSION = "v1.5.20",
   GAME_DATE = "30.10.2026",
   VERSION_TEXT = GAME_VERSION + "  ·  " + GAME_DATE;
 const FB = '"Chakra Petch", "Segoe UI", sans-serif';
@@ -79582,10 +79598,11 @@ function musicWanted() {
     const cur = spaceNow();
     if (cur && cur.item.kind === "descend") return DESCENT_TRACK; // a mysterious arrival as we tilt down to the pub
     if (cur && cur.item.what === "invasion") return ROBOT_TRACK; // (v1.4.7) the B-movie gets its theremin
-    if (ATTRACT.tour || (cur && cur.item.tour) || (cur && cur.item.what === "orrery")) return ORRERY_TRACK; // (v1.4.14) the Solar System tour: THE SILENT PLANETS - mysterious and eerie
+    if (ATTRACT.tour || (cur && cur.item.tour) || (cur && cur.item.what === "orrery"))
+      return recTrack("planets") ?? ORRERY_TRACK; // (v1.5.20: a record now - WHISPERS OF THE OUTER PLANETS) // (v1.4.14) the Solar System tour: THE SILENT PLANETS - mysterious and eerie
     return DEEP_TRACK; // the deep-space show: mysterious music
   }
-  if (G.state === "castaway") return ISLAND_TRACK; // (v1.4.24: Castaway Island's own calm, mysterious music)
+  if (G.state === "castaway") return recTrack("lagoon") ?? ISLAND_TRACK; // (v1.5.20: a record now - MOONLIT LAGOON) // (v1.4.24: Castaway Island's own calm, mysterious music)
   if (G.state === "jump" && G.jump && G.jump.inter) return HYPER_TRACK; // (v1.4.7) the great jump to Andromeda
   if (G.state === "jump" && G.jump && G.jump.core) return CORE_TRACK; // (v1.4.7) the heart of Andromeda
   if (G.state === "over" && G.won) return VICTORY_TRACK;
@@ -81051,6 +81068,15 @@ profWire();
 // =====================================================================================
 const NEWS = [
   {
+    ver: "v1.5.20",
+    title: "QUIET PLACES",
+    items: [
+      "NEW RECORD FOR THE SOLAR SYSTEM TOUR: WHISPERS OF THE OUTER PLANETS - MYSTERIOUS",
+      "NEW RECORD FOR CASTAWAY ISLAND: MOONLIT LAGOON - RELAXING, A LITTLE MYSTERIOUS",
+      "BOTH IN THE MUSIC BOX TOO - 28 RECORDS NOW",
+    ],
+  },
+  {
     ver: "v1.5.19",
     title: "EVERY SOUL SAVED",
     items: [
@@ -82276,7 +82302,7 @@ const CREDITS = [
   ["MUSIC", "All the planet tunes are our own. The folk songs are traditional and free for all to play"],
   [
     "ASTRO CAFÉ RECORDS",
-    "26 records - spy themes, exploring blips and 16-bit arcade synth - by GL (made with Suno). Midnight Cipher and Signal from Orbit: written for the game in the same style. Coral Cove Calypso and The Smugglers' Lantern: written for the game in the spirit of the 16-bit pirate adventures",
+    "28 records - spy themes, exploring blips and 16-bit arcade synth - by GL (made with Suno). Midnight Cipher and Signal from Orbit: written for the game in the same style. Coral Cove Calypso and The Smugglers' Lantern: written for the game in the spirit of the 16-bit pirate adventures. Whispers of the Outer Planets and Moonlit Lagoon: written for the game, for the Solar System tour and for Castaway Island",
   ],
   [
     "FOLK SONGS",
@@ -84111,6 +84137,23 @@ const RECORDS            = [
     by: "new",
     game: true,
   },
+  // (v1.5.20) two more written for the game, for its quiet places: a mysterious space-ambient piece for the Solar System
+  // tour (a theremin over slow pads and a glassy celesta) and a relaxing, slightly mysterious island lullaby for
+  // Castaway Island (the waves, a kalimba, an ocarina and wind chimes) - music-box records, not for the stops
+  {
+    id: "planets",
+    title: "WHISPERS OF THE OUTER PLANETS",
+    mood: "mysterious space ambient",
+    loop: [13.3333, 133.3333],
+    by: "new",
+  },
+  {
+    id: "lagoon",
+    title: "MOONLIT LAGOON",
+    mood: "island lullaby",
+    loop: [14.5455, 145.4546],
+    by: "new",
+  },
 ];
 // (v1.5.9) CALM FIRST, LIVELIER LATER: the stops' records, from the calmest to the most energetic - measured from the
 // songs themselves (tempo, how busy the beat is, how bright the sound is), the slow spy themes and space blips first
@@ -84468,6 +84511,12 @@ function recPrefetch() {
           ? recPick(G.level + 1, [...R.played]) // (the next record - asked on a copy, so nothing is marked played yet)
           : R.cur;
   if (nx !== null && curTrack !== nx) recLoad(TRACKS[nx].rec);
+}
+
+// (v1.5.20) a record by its id, as a track to play - or null if it can't be played here (then the old tune plays)
+function recTrack(id) {
+  const r = RECORDS.find((x) => x.id === id);
+  return r && recHere(r) ? REC_FIRST + RECORDS.indexOf(r) : null;
 }
 </script>
 </body></html>

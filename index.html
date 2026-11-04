@@ -7083,6 +7083,17 @@ const DICT_ROWS                             = [
   ],
   ["STOMP!", "STAMP!", "TUP!"],
   ["JUMP!", "SPRING!", "SKOK!"],
+  ["DON'T DROP IT", "MOENIE DIT LAAT VAL NIE", "NIE UPUŚĆ"],
+  [
+    "AN EMPTY GLASS ABOUT TO FALL OFF A BAR WITH NOBODY THERE GLOWS RED WITH A ! - AND THE TAPS FLASH RED",
+    "'N LEË GLAS WAT AMPER VAN 'N TOONBANK AF VAL WAAR NIEMAND STAAN, GLOEI ROOI MET 'N ! - EN DIE KRANE FLIKKER ROOI",
+    "PUSTA SZKLANKA, KTÓRA ZARAZ SPADNIE Z BARU, PRZY KTÓRYM NIKT NIE STOI, ŚWIECI NA CZERWONO Z ! - A KRANY MIGAJĄ NA CZERWONO",
+  ],
+  [
+    "RUN OVER AND CATCH IT IN TIME FOR A JUST IN TIME BONUS",
+    "HARDLOOP SOONTOE EN VANG DIT BETYDS VIR 'N BETYDS-BONUS",
+    "PODBIEGNIJ I ZŁAP JĄ W SAMĄ PORĘ, A DOSTANIESZ PREMIĘ",
+  ],
   [
     "A UFO!  VISITORS FROM ANOTHER WORLD",
     "'N VVV!  BESOEKERS VAN 'N ANDER WÊRELD",
@@ -11262,6 +11273,7 @@ const FLY_SAY = {
   broom: ["cackle", "HEH-HEH-HEH! OFF I GO!", "#c8a0ff"],
   prop: ["whoosh", "UP, UP AND AWAY - SPECIAL DELIVERY!", "#9fd0ff"],
 };
+const EMPTY_WARN = 1.2; // (seconds of warning before an empty falls off - see EMPTY ALARM below)
 function update(dt) {
   // (v1.5.3) HIT-STOP: for a split second after a big hit (a demon banished) everything moves in slow motion
   if (G.hitStop > 0) {
@@ -13803,8 +13815,10 @@ function update(dt) {
       const run = by.x < TAPX - 180,
         chain = (G.catchChain = (G.catchChain || 0) + 1),
         bonusC = Math.min(250, (chain - 1) * 25);
-      addScore((run ? 200 : 100) + bonusC, m.x, LY(m.lane, m.x) - 50);
-      if (!demo && (run || chain % 5 === 0))
+      addScore((run ? 200 : 100) + bonusC + (m.saved ? 150 : 0), m.x, LY(m.lane, m.x) - 50);
+      if (!demo && m.saved) worldText("JUST IN TIME!  +150", { lane: m.lane, x: m.x - 10 }, "#ffd24a");
+      // (v1.5.22: caught after its alarm went off - you ran over in time)
+      else if (!demo && (run || chain % 5 === 0))
         worldText(
           run ? "RUNNING CATCH!" : "CATCH CHAIN x" + chain + "!",
           { lane: m.lane, x: m.x - 10 },
@@ -13814,6 +13828,19 @@ function update(dt) {
       sfx("grab", m.x);
       sparkle(m.x, LY(m.lane, m.x) - 14, [0.6, 1, 0.9, 1], 6, m.lane);
       continue;
+    }
+    // (v1.5.22) EMPTY ALARM: an empty glass about a second from falling off your end of a bar with nobody behind it -
+    // it glows red with a "!" over it, a tick sounds and a red light flashes at that bar's taps, so you can run over in time
+    const ev = prm.empty * (G.twE || 1) * (hasPw("slow") ? 0.5 : 1),
+      eta = ev > 0 ? (TAPX + 26 - m.x) / ev : 9,
+      lone = !active().some((p) => p.lane === m.lane);
+    m.danger = !demo && lone && eta < EMPTY_WARN ? (m.danger ?? G.time) : undefined;
+    if (m.danger !== undefined) m.saved = true; // (if you get there now: JUST IN TIME!)
+    if (m.danger !== undefined && G.time - (m.dTick ?? -9) > 0.35) {
+      const [lx, ly] = at(m.lane, TAPX, LY(m.lane, TAPX) - 30);
+      if (m.dTick === undefined) sfx("dangertick", m.x);
+      m.dTick = G.time;
+      lightFx(lx, ly, 130, [1, 0.15, 0.2, 1], 0.3);
     }
     if (m.x > TAPX + 26) {
       m.dead = true;
@@ -17432,6 +17459,7 @@ function draw() {
           glassGhosts(m, my, null, 0, m.spin, 0, col("#cfe8ff"));
           drawGlass(m.x, my, null, 0, m.spin + gTilt(m.x));
           emptyGlint(m, my, t); // (v1.5.5: now and then it catches the light)
+          emptyDanger(m, my, t); // (v1.5.22: about to fall off, nobody there - juice.ts)
         }
       for (const s of shakes)
         if (s.lane === lane) {
@@ -29679,6 +29707,7 @@ function drawVert(V, t) {
           emptyTrail(m, LY(m.lane, m.x) - 3, t); // (v1.5.5)
           bigGlass(m.lane, m.x, null, 0, m.spin);
           emptyGlint(m, LY(m.lane, m.x) - 3, t);
+          emptyDanger(m, LY(m.lane, m.x) - 3, t); // (v1.5.22)
         }),
     });
   for (const sh of shakes)
@@ -72035,6 +72064,20 @@ function emptyGlint(m, gy, t) {
   R.setAdd(false);
 }
 
+// (v1.5.22) an empty about to fall off with nobody there to catch it: a red pulse round it and a red "!" over it
+function emptyDanger(m, gy, t) {
+  if (OUT || m.danger === undefined) return;
+  const k = Math.min(1, (G.time - m.danger) * 5),
+    p = 0.6 + 0.4 * Math.sin(t * 18),
+    red = col("#ff3a3a");
+  R.setAdd(true);
+  glow(m.x, gy - 14, 42, withA(red, 0.6 * k * p));
+  R.setAdd(false);
+  const y = gy - 58 - Math.abs(Math.sin(t * 9)) * 6;
+  disc(m.x, y, 11 * k, withA(red, 0.95));
+  rect(m.x - 1.8, y - 6.5, 3.6, 8, withA(C.white, k));
+  rect(m.x - 1.8, y + 3, 3.6, 3.2, withA(C.white, k));
+}
 // THE FLING: a swoosh where the arm went and a few drops flicked off the top of the shake
 function throwFx(lane, flavor, perfect) {
   const s = LS(lane),
@@ -74036,7 +74079,7 @@ function levelOfTour(of) {
     inTour = ((lv - 1) % LAST_LEVEL) + 1;
   return (tour > 1 ? "TOUR " + tour + "  ·  " : "") + "LEVEL " + inTour + of + LAST_LEVEL;
 }
-const GAME_VERSION = "v1.5.21",
+const GAME_VERSION = "v1.5.22",
   GAME_DATE = "30.10.2026",
   VERSION_TEXT = GAME_VERSION + "  ·  " + GAME_DATE;
 const FB = '"Chakra Petch", "Segoe UI", sans-serif';
@@ -81128,6 +81171,14 @@ profWire();
 //  the game, and where the motion capture, the folk songs and the fonts come from. Both from the menu at any time.
 // =====================================================================================
 const NEWS = [
+  {
+    ver: "v1.5.22",
+    title: "DON'T DROP IT",
+    items: [
+      "AN EMPTY GLASS ABOUT TO FALL OFF A BAR WITH NOBODY THERE GLOWS RED WITH A ! - AND THE TAPS FLASH RED",
+      "RUN OVER AND CATCH IT IN TIME FOR A JUST IN TIME BONUS",
+    ],
+  },
   {
     ver: "v1.5.21",
     title: "SEE HIM JUMP",

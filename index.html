@@ -7083,6 +7083,22 @@ const DICT_ROWS                             = [
   ],
   ["STOMP!", "STAMP!", "TUP!"],
   ["JUMP!", "SPRING!", "SKOK!"],
+  ["THE BIG RECORD DROP", "DIE GROOT PLATE-VRYSTELLING", "WIELKA DOSTAWA PŁYT"],
+  [
+    "EVERY RECORD PLAYS RIGHT THROUGH: BROKEN OFF BY AN ISLAND, A JUMP OR A SPACE SHOW, IT CARRIES ON FROM WHERE IT WAS",
+    "ELKE PLAAT SPEEL HEELPAD DEUR: AFGEBREEK DEUR 'N EILAND, 'N SPRONG OF 'N RUIMTEVERTONING, GAAN DIT AAN WAAR DIT WAS",
+    "KAŻDA PŁYTA GRA DO KOŃCA: PRZERWANA PRZEZ WYSPĘ, SKOK LUB POKAZ W KOSMOSIE, GRA DALEJ OD MIEJSCA, GDZIE BYŁA",
+  ],
+  [
+    "24 NEW RECORDS OF GL'S - AND NO DOUBLES: 46 IN THE MUSIC BOX NOW",
+    "24 NUWE PLATE VAN GL - EN GEEN DUBBELS NIE: NOU 46 IN DIE MUSIEKBOKS",
+    "24 NOWE PŁYTY GL - I ŻADNYCH DUBLI: TERAZ 46 W SZAFIE GRAJĄCEJ",
+  ],
+  [
+    "19 OF THEM PLAY AT THE STOPS, CALM ONES FIRST AND THE FASTEST LAST",
+    "19 DAARVAN SPEEL BY DIE STOPPE, DIE KALM ENES EERSTE EN DIE VINNIGSTE LAASTE",
+    "19 Z NICH GRA NA PRZYSTANKACH, NAJPIERW SPOKOJNE, NA KOŃCU NAJSZYBSZE",
+  ],
   ["SPOTLIGHT", "KOLLIG", "REFLEKTOR"],
   [
     "YOUR BARTENDER HAS HER OWN SPOTLIGHT: A SOFT BEAM FROM ABOVE AND A POOL OF LIGHT ROUND HER FEET",
@@ -74167,7 +74183,7 @@ function levelOfTour(of) {
     inTour = ((lv - 1) % LAST_LEVEL) + 1;
   return (tour > 1 ? "TOUR " + tour + "  ·  " : "") + "LEVEL " + inTour + of + LAST_LEVEL;
 }
-const GAME_VERSION = "v1.5.24",
+const GAME_VERSION = "v1.5.25",
   GAME_DATE = "30.10.2026",
   VERSION_TEXT = GAME_VERSION + "  ·  " + GAME_DATE;
 const FB = '"Chakra Petch", "Segoe UI", sans-serif';
@@ -81260,6 +81276,15 @@ profWire();
 // =====================================================================================
 const NEWS = [
   {
+    ver: "v1.5.25",
+    title: "THE BIG RECORD DROP",
+    items: [
+      "24 NEW RECORDS OF GL'S - AND NO DOUBLES: 46 IN THE MUSIC BOX NOW",
+      "19 OF THEM PLAY AT THE STOPS, CALM ONES FIRST AND THE FASTEST LAST",
+      "EVERY RECORD PLAYS RIGHT THROUGH: BROKEN OFF BY AN ISLAND, A JUMP OR A SPACE SHOW, IT CARRIES ON FROM WHERE IT WAS",
+    ],
+  },
+  {
     ver: "v1.5.24",
     title: "SPOTLIGHT",
     items: [
@@ -82525,7 +82550,7 @@ const CREDITS = [
   ["MUSIC", "All the planet tunes are our own. The folk songs are traditional and free for all to play"],
   [
     "ASTRO CAFÉ RECORDS",
-    "28 records - spy themes, exploring blips and 16-bit arcade synth - by GL (made with Suno). Midnight Cipher and Signal from Orbit: written for the game in the same style. Coral Cove Calypso and The Smugglers' Lantern: written for the game in the spirit of the 16-bit pirate adventures. Whispers of the Outer Planets and Moonlit Lagoon: written for the game, for the Solar System tour and for Castaway Island",
+    "46 records - spy themes, exploring blips and 16-bit arcade synth - by GL (made with Suno). Midnight Cipher and Signal from Orbit: written for the game in the same style. Coral Cove Calypso and The Smugglers' Lantern: written for the game in the spirit of the 16-bit pirate adventures. Whispers of the Outer Planets and Moonlit Lagoon: written for the game, for the Solar System tour and for Castaway Island",
   ],
   [
     "FOLK SONGS",
@@ -84240,14 +84265,6 @@ const RECORDS            = [
     game: true,
   },
   {
-    id: "brigade",
-    title: "MARCH OF THE BYTE BRIGADE",
-    mood: "heroic march",
-    loop: [20.4568, 144.8575],
-    by: "GL",
-    game: true,
-  },
-  {
     id: "dossier",
     title: "THE MOON BASE DOSSIER",
     mood: "slow-burn spy",
@@ -84297,34 +84314,30 @@ const RECORDS            = [
     game: true,
   },
   {
-    id: "homecoming",
-    title: "HERO'S HOMECOMING",
+    id: "march",
+    title: "DIGITAL HERO'S MARCH",
+    mood: "heroic march",
+    loop: [34.6442, 163.815],
+    by: "GL",
+    game: true,
+  },
+  {
+    id: "fanfara",
+    title: "FANFARA EROE",
     mood: "hero's fanfare",
-    loop: [24.0791, 121.9857],
+    loop: [22.3376, 151.1011],
     by: "GL",
     game: true,
   },
   {
-    id: "finalround",
-    title: "FINAL ROUND FEVER",
+    id: "showdown",
+    title: "TOURNAMENT SHOWDOWN",
     mood: "boss fight",
-    loop: [43.1195, 128.4322],
+    loop: [26.7958, 117.2843],
     by: "GL",
     game: true,
   },
-  { id: "march", title: "DIGITAL HERO'S MARCH", mood: "heroic march", loop: [34.6442, 163.815], by: "GL" },
-  { id: "fanfara", title: "FANFARA EROE", mood: "hero's fanfare", loop: [22.3376, 151.1011], by: "GL" },
-  { id: "showdown", title: "TOURNAMENT SHOWDOWN", mood: "boss fight", loop: [26.7958, 117.2843], by: "GL" },
-  {
-    id: "cartridge",
-    title: "QUEST FOR THE GOLDEN CARTRIDGE",
-    mood: "16-bit quest",
-    loop: [19.3538, 153.0457],
-    by: "GL",
-  },
-  { id: "heartbeat", title: "NEON HEARTBEAT", mood: "arcade pulse", loop: [18.8546, 127.0713], by: "GL" },
   { id: "rush", title: "ARCADE RUSH", mood: "arcade rush", loop: [11.4474, 52.9891], by: "GL" },
-  { id: "countdown", title: "COIN-OP COUNTDOWN", mood: "arcade rush", loop: [8.9861, 58.5607], by: "GL" },
   { id: "blitz", title: "BLITZKAMPF", mood: "battle theme", loop: [18.6456, 80.3317], by: "GL" },
   {
     id: "explore",
@@ -84377,6 +84390,179 @@ const RECORDS            = [
     loop: [14.5455, 145.4546],
     by: "new",
   },
+  // (v1.5.25) four more of GL's own, picked from his library - each checked (clean, no clipping, an instrumental) and
+  // looped on a bar line, and put in the stops' rotation where its energy fits: a bright adventure in C major, a
+  // heroic one, a driving minor-key groove, and a dark, stormy one near the end of the order
+  {
+    id: "awaits",
+    title: "ADVENTURE AWAITS",
+    mood: "bright adventure",
+    loop: [32.299, 151.2444],
+    by: "GL",
+    game: true,
+  },
+  {
+    id: "hero",
+    title: "ARCADE HERO",
+    mood: "heroic arcade",
+    loop: [53.6613, 158.0013],
+    by: "GL",
+    game: true,
+  },
+  {
+    id: "groove",
+    title: "ARCADE GROOVE",
+    mood: "minor-key groove",
+    loop: [22.8717, 108.6201],
+    by: "GL",
+    game: true,
+  },
+  {
+    id: "storms",
+    title: "CATHEDRAL OF STORMS",
+    mood: "dark and stormy",
+    loop: [62.3456, 190.5864],
+    by: "GL",
+    game: true,
+  },
+  // (v1.5.25) and ten more from the second batch: seven join the stops' rotation (an opening fanfare, a bouncy jumper,
+  // a short running groove, two neon drives, a street fight and an epic with a soaring lead near the end), and three
+  // are for the music box only - two more neon ones a lot like the others, and a dark, slow cave piece
+  {
+    id: "opening",
+    title: "OPENING FANFARE",
+    mood: "bright fanfare",
+    loop: [48.8083, 140.9362],
+    by: "GL",
+    game: true,
+  },
+  {
+    id: "nimble",
+    title: "NIMBLE JUMP",
+    mood: "bouncy platformer",
+    loop: [12.4807, 96.7924],
+    by: "GL",
+    game: true,
+  },
+  {
+    id: "levelrun",
+    title: "LEVEL RUN GROOVE",
+    mood: "running groove",
+    loop: [19.5164, 66.941],
+    by: "GL",
+    game: true,
+  },
+  {
+    id: "overdrive",
+    title: "NEON OVERDRIVE",
+    mood: "neon drive",
+    loop: [28.4909, 107.9382],
+    by: "GL",
+    game: true,
+  },
+  {
+    id: "chipfury",
+    title: "CHIP STREET FURY",
+    mood: "street fight",
+    loop: [12.1556, 143.9428],
+    by: "GL",
+    game: true,
+  },
+  {
+    id: "blade",
+    title: "RAISE THE BLADE",
+    mood: "epic battle",
+    loop: [43.3749, 189.9504],
+    by: "GL",
+    game: true,
+  },
+  {
+    id: "velocity",
+    title: "NEON VELOCITY",
+    mood: "full-speed neon",
+    loop: [44.5127, 177.0956],
+    by: "GL",
+    game: true,
+  },
+  { id: "npulse", title: "NEON PULSE", mood: "neon pulse", loop: [41.3663, 157.9084], by: "GL" },
+  { id: "neondrop", title: "NEON DROP", mood: "neon groove", loop: [26.6913, 129.5463], by: "GL" },
+  {
+    id: "cavern",
+    title: "THE HOLLOW CAVERN",
+    mood: "dark cave ambient (Cavernosidad Vacía)",
+    loop: [56.3897, 125.5763],
+    by: "GL",
+  },
+  // (v1.5.25) and the third batch: eight more for the stops (two sly spy pieces, an overture, a retro runner, an
+  // orchestral night piece, a starlit driver, a space battle and a lantern-raising epic) and two quiet, dark ones for
+  // the music box (a shadowed prayer and a deep silence). (GL's "Untitled v2" turned out to be another take of GALACTIC
+  // DEFENSE, and 冒険の調べ and デジタルレース were already here as SONG OF ADVENTURE and DIGITAL RACE)
+  {
+    id: "sly",
+    title: "SLY MINOR MOTIF",
+    mood: "sly spy motif",
+    loop: [14.2803, 51.3946],
+    by: "GL",
+    game: true,
+  },
+  { id: "heist", title: "SNEAKY HEIST", mood: "heist theme", loop: [9.6131, 115.0204], by: "GL", game: true },
+  {
+    id: "overture",
+    title: "ADVENTURE OVERTURE",
+    mood: "adventure overture (冒険の序曲)",
+    loop: [67.5585, 154.9147],
+    by: "GL",
+    game: true,
+  },
+  {
+    id: "retrorun",
+    title: "RETRO RUN",
+    mood: "retro runner",
+    loop: [53.4523, 160.5517],
+    by: "GL",
+    game: true,
+  },
+  {
+    id: "nocturne", // (renamed - its old title is a famous old game's)
+    title: "NOCTURNE OF THE STARS",
+    mood: "night symphony",
+    loop: [24.0443, 176.2948],
+    by: "GL",
+    game: true,
+  },
+  // (GL: "give all songs proper names" - his "Untitled" is named for how it drives along)
+  {
+    id: "highway",
+    title: "STARLIGHT HIGHWAY",
+    mood: "arcade drive",
+    loop: [19.8298, 140.7739],
+    by: "GL",
+    game: true,
+  },
+  {
+    id: "combat",
+    title: "SPACE COMBAT",
+    mood: "space battle",
+    loop: [39.7061, 138.9942],
+    by: "GL",
+    game: true,
+  },
+  {
+    id: "raiselantern",
+    title: "RAISE THE LANTERN",
+    mood: "epic quest",
+    loop: [33.7038, 192.3106],
+    by: "GL",
+    game: true,
+  },
+  { id: "prayer", title: "SHADOWED PRAYER", mood: "dark and solemn", loop: [56.6451, 163.1683], by: "GL" },
+  {
+    id: "silence",
+    title: "DEEP SILENCE",
+    mood: "deep, still calm (深なる静寂)",
+    loop: [92.0439, 177.8776],
+    by: "GL",
+  },
 ];
 // (v1.5.9) CALM FIRST, LIVELIER LATER: the stops' records, from the calmest to the most energetic - measured from the
 // songs themselves (tempo, how busy the beat is, how bright the sound is), the slow spy themes and space blips first
@@ -84392,15 +84578,35 @@ const REC_CALM_FIRST = [
   "orbit",
   "calypso",
   "adventure",
+  // (v1.5.25: GL - "keep starting slow, leave the first stages' songs as they are": everything new comes after here)
+  "sly", // (v1.5.25)
+  "heist", // (v1.5.25)
+  "overture", // (v1.5.25)
+  "awaits", // (v1.5.25)
+  "opening", // (v1.5.25)
   "explore",
-  "homecoming",
+  "nimble", // (v1.5.25)
+  "fanfara", // (v1.5.25: GL's own title - "homecoming" was another take of it, removed as a duplicate)
+  "hero", // (v1.5.25)
+  "levelrun", // (v1.5.25)
+  "retrorun", // (v1.5.25)
   "race",
+  "nocturne", // (v1.5.25)
+  "groove", // (v1.5.25)
   "darkgroove",
+  "overdrive", // (v1.5.25)
+  "highway", // (v1.5.25)
   "galactic",
-  "brigade",
-  "finalround",
+  "combat", // (v1.5.25)
+  "march", // (v1.5.25: GL's own title - "brigade" was another take of it, removed as a duplicate)
+  "chipfury", // (v1.5.25)
+  "showdown", // (v1.5.25: GL's own title - "finalround" was another take of it, removed as a duplicate)
+  "storms", // (v1.5.25)
+  "blade", // (v1.5.25)
+  "raiselantern", // (v1.5.25)
   "quest",
   "pulse",
+  "velocity", // (v1.5.25: the fastest of them all, last)
 ];
 // (v1.5.12) THE MUSIC BOX IN PLAYING ORDER: the records are listed in the music box in the order the game plays them
 // (the stops' records from the calmest to the liveliest, then the music-box-only ones, in their own order)
@@ -84436,22 +84642,42 @@ const REC_TRIM                         = {
   calypso: 0.99,
   adventure: 0.9,
   march: 0.81,
-  countdown: 0.76,
   explore: 0.75,
   rush: 0.73,
   showdown: 0.72,
   fanfara: 0.66,
-  homecoming: 0.65,
   race: 0.63,
   darkgroove: 0.62,
-  heartbeat: 0.62,
   galactic: 0.61,
-  brigade: 0.6,
   blitz: 0.59,
-  finalround: 0.57,
   quest: 0.55,
   pulse: 0.55,
-  cartridge: 0.55,
+  // (v1.5.25) the new ones, by where they sit in the calm-first order: the quiet dark pieces stay full, the faster the
+  // lower, down to the same 0.55 as the liveliest before
+  cavern: 1,
+  prayer: 1,
+  silence: 1,
+  sly: 0.92,
+  heist: 0.9,
+  overture: 0.86,
+  awaits: 0.82,
+  opening: 0.8,
+  nimble: 0.74,
+  hero: 0.7,
+  levelrun: 0.68,
+  retrorun: 0.66,
+  nocturne: 0.65,
+  groove: 0.62,
+  overdrive: 0.6,
+  highway: 0.6,
+  npulse: 0.6,
+  neondrop: 0.6,
+  combat: 0.59,
+  chipfury: 0.58,
+  storms: 0.57,
+  blade: 0.56,
+  raiselantern: 0.56,
+  velocity: 0.55,
 };
 for (const r of RECORDS) if (REC_TRIM[r.id]) r.trim = (r.trim || 1) * REC_TRIM[r.id];
 const REC_FILE = location.protocol === "file:"; // (opened from the disk: the plain audio player)
@@ -84465,7 +84691,18 @@ const REC = {
   el: null                           , // (the plain player, from the disk)
   t0: 0, // (when the record playing now started at its top, on the audio clock)
   elLaps: 0, // (the plain player: how many times it has gone round its loop)
+  ctx: null                 , // (v1.5.25: whose record it is - this game's run, or the demo's - see recCtx)
+  resume: new Map                                      (), // (where each record broken off had got to, and for whom)
 };
+// (v1.5.25) THE WHOLE SONG, EVERY TIME (GL: "we need to hear the whole song every time it starts"): when a record is
+// broken off before it has played right through - Castaway Island, the jump to Andromeda, the story, the space shows
+// between two demos - it remembers where it had got to, and when the same game (or the demo) comes back to it, it
+// carries on from there instead of starting again. So every record that starts is heard to its end. A new game (or a
+// pick in the music box) still starts a record from its top.
+function recCtx() {
+  if (JB.open || (JB.radio && G.state === "menu")) return null; // (the music box: always from the top)
+  return G.demo ? DEMO_REC : G.recRun || null;
+}
 const recUrl = (r         ) => "music/" + r.id + ".mp3";
 const recHere = (r         ) => !REC.bad[r.id];
 // fetch and unpack a song (once) - then keep at most two
@@ -84517,6 +84754,19 @@ function recLoad(r         , then             ) {
   }
 }
 function recStop() {
+  // (v1.5.25: broken off part-way? remember where, so the same run can carry on from there)
+  if (REC.playing >= 0 && TRACKS[REC.playing] && TRACKS[REC.playing].rec) {
+    const r = TRACKS[REC.playing].rec,
+      pos = REC_FILE
+        ? REC.el && REC.elLaps === 0
+          ? REC.el.currentTime
+          : -1
+        : AC
+          ? AC.currentTime - REC.t0
+          : -1;
+    if (REC.ctx && pos > 1 && pos < r.loop[1] - 1) REC.resume.set(r.id, { pos, ctx: REC.ctx });
+    else REC.resume.delete(r.id);
+  }
   if (REC.src) {
     const s = REC.src,
       g = REC.gain;
@@ -84549,6 +84799,11 @@ function recBegin(i) {
   const buf = REC.bufs.get(r.id);
   if (!buf || !musicBus) return;
   recStop();
+  const ctx = recCtx(),
+    rs = REC.resume.get(r.id),
+    off = rs && ctx && rs.ctx === ctx ? Math.min(rs.pos, buf.duration - 1) : 0; // (v1.5.25: carry on)
+  REC.resume.delete(r.id);
+  REC.ctx = ctx;
   const now = AC.currentTime,
     src = AC.createBufferSource(),
     g = AC.createGain();
@@ -84560,8 +84815,8 @@ function recBegin(i) {
   g.gain.linearRampToValueAtTime(REC_GAIN * (r.trim || 1), now + 0.35); // (a quick swell, in case it starts late)
   src.connect(g);
   g.connect(musicBus);
-  src.start(now + 0.03);
-  REC.t0 = now + 0.03;
+  src.start(now + 0.03, off);
+  REC.t0 = now + 0.03 - off; // (as if it had started at its top that long ago - so "played right through" still counts true)
   REC.src = src;
   REC.gain = g;
   REC.playing = i;
@@ -84570,6 +84825,11 @@ function recBegin(i) {
 function recElBegin(i) {
   const r = TRACKS[i].rec;
   recStop();
+  const ctx = recCtx(),
+    rs = REC.resume.get(r.id),
+    off = rs && ctx && rs.ctx === ctx ? rs.pos : 0; // (v1.5.25: carry on from where it was)
+  REC.resume.delete(r.id);
+  REC.ctx = ctx;
   if (!REC.el) {
     REC.el = new Audio();
     REC.el.preload = "auto";
@@ -84591,7 +84851,7 @@ function recElBegin(i) {
   };
   el.volume = 0;
   REC.elLaps = 0;
-  el.src = recUrl(r);
+  el.src = recUrl(r) + (off > 0 ? "#t=" + off.toFixed(2) : ""); // (a media fragment: start part-way in)
   try {
     const p = el.play();
     if (p && p.catch) p.catch(() => {});
@@ -84623,6 +84883,12 @@ function recSwitch(want) {
 }
 // every scheduler tick while a record is the tune: start it if it was still being fetched; keep the plain player in step
 function recTick(i) {
+  // (v1.5.25: a record that plays straight on from the demo into a new game - the same song wanted by both - is the
+  //  game's from then on, so if the game breaks it off it carries on from there too)
+  if (REC.playing === i) {
+    const c = recCtx();
+    if (c) REC.ctx = c;
+  }
   if (REC.playing !== i) recSwitch(i);
   else if (REC_FILE) recElTick(i);
   recHeard(i); // (v1.5.9: once it has played right through, the next stop is the band's)
@@ -84678,16 +84944,17 @@ function recInGame() {
   return R.cur;
 }
 // (v1.5.17) THE DEMO PLAYS RECORDS TOO: while the game plays itself between the space shows, the café's sound system
-// plays the records as well - each time the demo comes round, the next one on the list (calm ones first, the same
-// order as in a game), and if one plays right through during a demo, straight on to the next. (If a record can't be
-// played, the band plays the stop's own tune, as before.)
-const DEMO_REC = { k: -1, seen: 0 };
+// plays the records as well, in order (calm ones first, the same order as in a game). (If a record can't be played,
+// the band plays the stop's own tune, as before.)
+// (v1.5.25) and the whole song every time: a record no longer gives way to the next one when the demo comes round
+// again - the next demo carries on with it from where the last one stopped, and only once it has played right through
+// does the next record start
+const DEMO_REC = { k: -1 };
 function recInDemo() {
   if (!G.demo || !REC_GAME.length) return null;
-  const now = performance.now(),
-    n = REC_GAME.length;
-  if (now - DEMO_REC.seen > 3000 || DEMO_REC.k < 0) DEMO_REC.k = (DEMO_REC.k + 1) % n; // (a new demo: the next record)
-  DEMO_REC.seen = now;
+  const n = REC_GAME.length;
+  if (DEMO_REC.k < 0) DEMO_REC.k = 0;
+  for (let t = 0; t < n && !recHere(REC_GAME[DEMO_REC.k]); t++) DEMO_REC.k = (DEMO_REC.k + 1) % n; // (past any that can't play)
   let r = REC_GAME[DEMO_REC.k],
     i = REC_FIRST + RECORDS.indexOf(r);
   if (AC && REC.playing === i && (REC_FILE ? REC.elLaps > 0 : AC.currentTime - REC.t0 >= r.loop[1])) {

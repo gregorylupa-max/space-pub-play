@@ -832,7 +832,7 @@ const PVS = `attribute vec2 q; varying vec2 uv; void main() { uv = q * 0.5 + 0.5
 // With the CRT screen on, this same pass runs at the full screen resolution and also adds what an arcade
 // monitor did: a slightly curved tube, scanlines, a phosphor mask, glow bleeding from bright pixels,
 // colour fringes towards the edges, a darker rim and a little picture noise.
-const PFS = `precision mediump float; varying vec2 uv; uniform sampler2D tex, ltex, btex, gtex; uniform float levels, crt, time, qual, lit, bake, gpass, gok; uniform vec2 low, outRes;
+const PFS = `precision mediump float; varying vec2 uv; uniform sampler2D tex, ltex, btex, gtex, htex; uniform float levels, crt, time, qual, lit, bake, gpass, gok, hpass, hon; uniform vec2 low, outRes, hres;
 float b2(vec2 m) { return mod(2.0 * m.x + 3.0 * m.y, 4.0); }
 vec3 px(vec2 lp) {                       // one low-res pixel, squeezed into the palette with ordered dither
   vec2 p = clamp(floor(lp), vec2(0.0), low - 1.0);
@@ -859,9 +859,48 @@ vec3 bloomAt(vec2 lp) {
   }
   return max(g1 / 8.0 - 0.48, 0.0) * 0.6 + max(g2 / 8.0 - 0.52, 0.0) * 0.5;
 }
+// (v1.5.28) THE GLOW FOR SMOOTH HD (GL: "can you improve graphics and animations in the game and in all demos"): the
+// soft light that only the old CRT screen had - neon signs, stars, sparks, lit windows, the sun, the planets spill a
+// gentle halo. Worked out on a quarter-size picture (hpass: the bright parts of 16 screen pixels, averaged), smoothly
+// stretched back up and blurred a little more with eight looks round each pixel.
+vec3 brightAt(vec2 p) {
+  vec3 c = texture2D(tex, p).rgb;
+  if (lit > 0.5) c *= texture2D(ltex, p).rgb * 2.0;
+  float l = max(dot(c, vec3(0.299, 0.587, 0.114)), max(c.r, max(c.g, c.b)) * 0.92);   // (bright colours glow too - neon, not just white)
+  return c * smoothstep(0.86, 1.2, l) * 0.8;
+}
+vec3 hdGlow(vec2 p) {
+  vec2 r1 = 1.6 / hres, r2 = 3.6 / hres;
+  vec3 g = texture2D(htex, p).rgb * 0.2, w = vec3(0.0);
+  for (int i = 0; i < 8; i++) {
+    float a = float(i) * 0.7854 + 0.39;
+    vec2 d = vec2(cos(a), sin(a));
+    g += texture2D(htex, p + d * r1).rgb * 0.06;
+    w += texture2D(htex, p + d * r2).rgb * 0.04;
+  }
+  return g + w;
+}
 void main() {
   if (bake > 0.5) { gl_FragColor = vec4(px(uv * low) * 0.5, 1.0); return; }
   if (gpass > 0.5) { gl_FragColor = vec4(bloomAt(uv * low) * 0.5, 1.0); return; }
+  if (hpass > 0.5) {                                             // (v1.5.28) the quarter-size bright picture
+    vec2 s = 1.0 / low;
+    vec3 b = vec3(0.0);
+    for (int j = 0; j < 4; j++) for (int i = 0; i < 4; i++) b += brightAt(uv + (vec2(float(i), float(j)) - 1.5) * s);
+    gl_FragColor = vec4(b / 16.0, 1.0);
+    return;
+  }
+  if (crt < 0.5 && hon > 0.5) {                                  // (v1.5.28) SMOOTH HD, finished like a film:
+    vec3 c = px(uv * low) + hdGlow(uv) * 0.42;                   //  the glow,
+    float lum = dot(c, vec3(0.299, 0.587, 0.114));               //  a touch richer colour - warm highlights, cool shadows,
+    c = mix(vec3(lum), c, 1.06);
+    c += vec3(0.018, 0.008, -0.01) * smoothstep(0.55, 1.0, lum);
+    c += vec3(-0.006, 0.0, 0.014) * (1.0 - smoothstep(0.0, 0.3, lum));
+    vec2 cc = uv * 2.0 - 1.0;
+    c *= 1.0 - 0.13 * pow(dot(cc * vec2(0.8, 1.0), cc * vec2(0.8, 1.0)), 1.5);   //  and a soft darkening into the corners
+    gl_FragColor = vec4(max(c, 0.0), 1.0);
+    return;
+  }
   if (crt < 0.5) { gl_FragColor = vec4(px(uv * low), 1.0); return; }
   vec2 cc = uv * 2.0 - 1.0;
   cc *= 1.0 + 0.035 * dot(cc.yx, cc.yx);                       // the curved glass
@@ -891,6 +930,8 @@ void main() {
   c *= 1.12;
   gl_FragColor = vec4(c, 1.0);
 }`;
+// (v1.5.28) the SMOOTH HD glow and film finish - on (a switch for testing and for comparing)
+let HD_GLOW = true;
 function makeGL(cv, power, retro, levels, crt) {
   let gl = null;
   try {
@@ -970,6 +1011,16 @@ function makeGL(cv, power, retro, levels, crt) {
         uGp: gl.getUniformLocation(pp, "gpass"),
         uGok: gl.getUniformLocation(pp, "gok"),
         uGt: gl.getUniformLocation(pp, "gtex"),
+        // (v1.5.28) the SMOOTH HD glow: a quarter-size picture of the bright parts
+        uHt: gl.getUniformLocation(pp, "htex"),
+        uHp: gl.getUniformLocation(pp, "hpass"),
+        uHon: gl.getUniformLocation(pp, "hon"),
+        uHres: gl.getUniformLocation(pp, "hres"),
+        htex: gl.createTexture(),
+        hfb: gl.createFramebuffer(),
+        hOK: false,
+        hw: 1,
+        hh: 1,
         gtex: gl.createTexture(),
         gfb: gl.createFramebuffer(),
         gOK: false,
@@ -1224,6 +1275,21 @@ function makeGL(cv, power, retro, levels, crt) {
             gl.bindFramebuffer(gl.FRAMEBUFFER, post.gfb);
             gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, post.gtex, 0);
             post.gOK = gl.checkFramebufferStatus(gl.FRAMEBUFFER) === gl.FRAMEBUFFER_COMPLETE;
+            // (v1.5.28) the SMOOTH HD glow's quarter-size picture, smoothly filtered
+            post.hw = Math.max(1, pw >> 2);
+            post.hh = Math.max(1, ph >> 2);
+            gl.bindTexture(gl.TEXTURE_2D, post.htex);
+            gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, post.hw, post.hh, 0, gl.RGBA, gl.UNSIGNED_BYTE, null);
+            for (const [k, v2] of [
+              [gl.TEXTURE_MIN_FILTER, gl.LINEAR],
+              [gl.TEXTURE_MAG_FILTER, gl.LINEAR],
+              [gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE],
+              [gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE],
+            ])
+              gl.texParameteri(gl.TEXTURE_2D, k, v2);
+            gl.bindFramebuffer(gl.FRAMEBUFFER, post.hfb);
+            gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, post.htex, 0);
+            post.hOK = gl.checkFramebufferStatus(gl.FRAMEBUFFER) === gl.FRAMEBUFFER_COMPLETE;
           }
           if (post) {
             // the light map: half size, smoothly filtered
@@ -1554,6 +1620,26 @@ function makeGL(cv, power, retro, levels, crt) {
         }
         gl.uniform1f(post.uGp, 0);
         gl.uniform1f(post.uGok, glowOn ? 1 : 0);
+        // (v1.5.28) 3: the SMOOTH HD glow - in the smooth look, when the machine's keeping up (AUTO QUALITY high)
+        const hdOn = !retro && !CRT_ACTIVE && post.hOK && QUAL > 1.5 && HD_GLOW;
+        if (hdOn) {
+          gl.activeTexture(gl.TEXTURE4);
+          gl.bindTexture(gl.TEXTURE_2D, null);
+          gl.activeTexture(gl.TEXTURE0);
+          gl.bindFramebuffer(gl.FRAMEBUFFER, post.hfb);
+          gl.viewport(0, 0, post.hw, post.hh);
+          gl.uniform1f(post.uHp, 1);
+          gl.drawArrays(gl.TRIANGLES, 0, 3);
+          calls++;
+          gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+          gl.activeTexture(gl.TEXTURE4);
+          gl.bindTexture(gl.TEXTURE_2D, post.htex);
+          gl.uniform1i(post.uHt, 4);
+          gl.activeTexture(gl.TEXTURE0);
+        }
+        gl.uniform1f(post.uHp, 0);
+        gl.uniform1f(post.uHon, hdOn ? 1 : 0);
+        gl.uniform2f(post.uHres, post.hw, post.hh);
         gl.viewport(0, 0, gl.drawingBufferWidth, gl.drawingBufferHeight);
         gl.drawArrays(gl.TRIANGLES, 0, 3);
         gl.enable(gl.BLEND);
@@ -7084,6 +7170,22 @@ const DICT_ROWS                             = [
   ["STOMP!", "STAMP!", "TUP!"],
   ["JUMP!", "SPRING!", "SKOK!"],
   ["NEW FACES", "NUWE GESIGTE", "NOWE TWARZE"],
+  ["A SOFT GLOW", "'N SAGTE GLOED", "MIĘKKI BLASK"],
+  [
+    "SMOOTH HD GLOWS NOW - IN THE GAME AND IN EVERY DEMO: NEON, STAGE LIGHTS, STARS AND GOLD RAILS SPILL A SOFT HALO",
+    "GLAD HD GLOEI NOU - IN DIE SPEL EN IN ELKE DEMO: NEON, VERHOOGLIGTE, STERRE EN GOUE RELINGS STRAAL 'N SAGTE STRALEKRANS UIT",
+    "GŁADKIE HD ŚWIECI TERAZ - W GRZE I WE WSZYSTKICH DEMACH: NEONY, ŚWIATŁA SCENY, GWIAZDY I ZŁOTE PORĘCZE ROZLEWAJĄ MIĘKKĄ POŚWIATĘ",
+  ],
+  [
+    "A FILM FINISH: RICHER COLOUR, WARM HIGHLIGHTS, COOL SHADOWS, A GENTLE DARKENING INTO THE CORNERS",
+    "'N FILMAFWERKING: RYKER KLEUR, WARM HOOGLIGTE, KOEL SKADUS, 'N SAGTE VERDONKERING NA DIE HOEKE",
+    "WYKOŃCZENIE JAK W FILMIE: BOGATSZE KOLORY, CIEPŁE ŚWIATŁA, CHŁODNE CIENIE, DELIKATNE PRZYCIEMNIENIE W ROGACH",
+  ],
+  [
+    "BIG ANNOUNCEMENTS SPRING IN, AND A STREAK OF LIGHT SWEEPS ACROSS THEM",
+    "GROOT AANKONDIGINGS SPRING IN, EN 'N STREEP LIG VEE OOR HULLE",
+    "DUŻE OGŁOSZENIA WSKAKUJĄ NA EKRAN, A PRZEZ NIE PRZEMYKA SMUGA ŚWIATŁA",
+  ],
   [
     "CASTAWAY: KOOS CLIMBS HIS PALM TREE AND LOOKS OUT WITH HIS SPYGLASS FROM THE TOP",
     "SKIPBREUKELING: KOOS KLIM IN SY PALMBOOM EN KYK VAN BO AF DEUR SY VERKYKER",
@@ -75043,7 +75145,7 @@ function levelOfTour(of) {
     inTour = ((lv - 1) % LAST_LEVEL) + 1;
   return (tour > 1 ? "TOUR " + tour + "  ·  " : "") + "LEVEL " + inTour + of + LAST_LEVEL;
 }
-const GAME_VERSION = "v1.5.27",
+const GAME_VERSION = "v1.5.28",
   GAME_DATE = "30.10.2026",
   VERSION_TEXT = GAME_VERSION + "  ·  " + GAME_DATE;
 const FB = '"Chakra Petch", "Segoe UI", sans-serif';
@@ -75942,11 +76044,32 @@ function drawHud(fps) {
       const tw = g.measureText(c.text).width;
       if (tw > cssW - 30)
         g.font = Math.floor((Math.min(30, cssW / 28 / s) * s * (cssW - 30)) / tw) + "px " + FD;
+      // (v1.5.28) BIG ANNOUNCEMENTS WITH A PUNCH: they spring in - from small, overshooting a little and settling - and a
+      // streak of light sweeps across the letters once they've landed (they used to just fade in and drift up)
+      const age = (1 - k) * c.max,
+        pop = age < 0.14 ? 0.6 + (age / 0.14) * 0.52 : age < 0.3 ? 1.12 - ((age - 0.14) / 0.16) * 0.12 : 1,
+        bx = cssW / 2,
+        by = cssH * 0.42 - (1 - k) * 12 * s;
+      g.save();
+      g.translate(bx, by);
+      g.scale(pop, pop);
       g.fillStyle = c.c;
       g.shadowColor = c.c;
       g.shadowBlur = 16 * s;
-      g.fillText(c.text, cssW / 2, cssH * 0.42 - (1 - k) * 12 * s);
+      g.fillText(c.text, 0, 0);
       g.shadowBlur = 0;
+      const sw = (age - 0.3) / 0.55;
+      if (sw > 0 && sw < 1 && !COMFORT.calm) {
+        const w2 = Math.min(tw, cssW - 30) / 2,
+          hx = -w2 + sw * w2 * 2,
+          gr = g.createLinearGradient(hx - 40 * s, 0, hx + 40 * s, 0);
+        gr.addColorStop(0, "rgba(255,255,255,0)");
+        gr.addColorStop(0.5, "rgba(255,255,255,0.75)");
+        gr.addColorStop(1, "rgba(255,255,255,0)");
+        g.fillStyle = gr;
+        g.fillText(c.text, 0, 0); // (the same letters again, painted with the streak - so only the letters shine)
+      }
+      g.restore();
     }
     g.globalAlpha = 1;
   }
@@ -82136,6 +82259,15 @@ profWire();
 //  the game, and where the motion capture, the folk songs and the fonts come from. Both from the menu at any time.
 // =====================================================================================
 const NEWS = [
+  {
+    ver: "v1.5.28",
+    title: "A SOFT GLOW",
+    items: [
+      "SMOOTH HD GLOWS NOW - IN THE GAME AND IN EVERY DEMO: NEON, STAGE LIGHTS, STARS AND GOLD RAILS SPILL A SOFT HALO",
+      "A FILM FINISH: RICHER COLOUR, WARM HIGHLIGHTS, COOL SHADOWS, A GENTLE DARKENING INTO THE CORNERS",
+      "BIG ANNOUNCEMENTS SPRING IN, AND A STREAK OF LIGHT SWEEPS ACROSS THEM",
+    ],
+  },
   {
     ver: "v1.5.27",
     title: "NEW FACES",

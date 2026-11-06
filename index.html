@@ -7083,6 +7083,22 @@ const DICT_ROWS                             = [
   ],
   ["STOMP!", "STAMP!", "TUP!"],
   ["JUMP!", "SPRING!", "SKOK!"],
+  ["THE FAMILY", "DIE FAMILIE", "RODZINA"],
+  [
+    "STELLA, ANNEKE AND BENITA NOW LOOK LIKE THE REAL GIRLS: STELLA'S SUN HAT WITH A ROSE, ANNEKE'S WAVY HAIR AND FLOWERY DRESS, BENITA'S FRINGE AND PINK SHORTS",
+    "STELLA, ANNEKE EN BENITA LYK NOU SOOS DIE REGTE MEISIES: STELLA SE SONHOED MET 'N ROOS, ANNEKE SE GOLWENDE HARE EN BLOMMETJIESROK, BENITA SE KUIFIE EN PIENK KORTBROEK",
+    "STELLA, ANNEKE I BENITA WYGLĄDAJĄ TERAZ JAK PRAWDZIWE DZIEWCZYNKI: KAPELUSZ STELLI Z RÓŻĄ, FALOWANE WŁOSY I SUKIENKA W KWIATY ANNEKE, GRZYWKA I RÓŻOWE SPODENKI BENITY",
+  ],
+  [
+    "THEIR MUM AND DAD JOIN THE CREW: MARIANNA AND RAYN, BOTH IN GLASSES AND CHECKED SHIRTS",
+    "HULLE MA EN PA SLUIT BY DIE SPAN AAN: MARIANNA EN RAYN, ALBEI MET BRILLE EN GERUITE HEMDE",
+    "DO ZAŁOGI DOŁĄCZAJĄ ICH MAMA I TATA: MARIANNA I RAYN, OBOJE W OKULARACH I KOSZULACH W KRATĘ",
+  ],
+  [
+    "SHORTS, FLIP-FLOPS AND SANDALS JUST LIKE IN THE PHOTO",
+    "KORTBROEKE, PLAKKIES EN SANDALE NET SOOS OP DIE FOTO",
+    "SPODENKI, KLAPKI I SANDAŁY DOKŁADNIE JAK NA ZDJĘCIU",
+  ],
   ["THE BIG RECORD DROP", "DIE GROOT PLATE-VRYSTELLING", "WIELKA DOSTAWA PŁYT"],
   [
     "EVERY RECORD PLAYS RIGHT THROUGH: BROKEN OFF BY AN ISLAND, A JUMP OR A SPACE SHOW, IT CARRIES ON FROM WHERE IT WAS",
@@ -9622,57 +9638,79 @@ const G            = {
 const BARTENDERS                         = [
   // (v1.4.18) THE CREW, cut down to ten: STELLA, ANNEKE and BENITA from South Africa and GRZEGORZ from Poland first, then
   // BONGANI, LINDIWE, SIPHO, NOMVULA and AMARA, and MEI
+  // (v1.5.26) GL's own girls, drawn from a family photo (GL: "make our game players look like the girls") - three
+  // sisters behind the taps, the eldest tallest: STELLA in her wide-brimmed sun hat with a red rose, a white top and
+  // denim shorts, her long brown hair down; ANNEKE with long, wavy dark-blonde hair and a fringe, in a navy summer
+  // dress covered in flowers; and little BENITA, the smallest, with a dark brown bob and a straight fringe, a white
+  // flowery top and pink shorts. Girls, so no lipstick or earrings - just big smiles.
   {
     name: "STELLA",
+    noApron: true,
     nation: "za",
     line: "a smile that lights up the Milky Way",
-    w: 0.98,
-    h: 1.03,
+    w: 0.94,
+    h: 0.95,
     sex: "f",
-    skin: "#f2d0b0",
-    hair: "#3a2214",
-    style: "ponytail",
-    shirt: "#fffaf6",
-    dress: "#2a6ad0",
-    tie: "#ffffff",
-    lips: "#c8304a",
-    shoe: "#2a2a3a",
-    hoops: true,
-    eyes: "#5a3a1a",
+    kid: true,
+    skin: "#f0caa8",
+    hair: "#6a4428",
+    style: "long",
+    shirt: "#fbf8f2",
+    dress: "#f4f0e8",
+    skirt: "#4a6a98",
+    tie: "#e8e2d8",
+    lips: "#d47a7a",
+    shoe: "#d8d8e0",
+    eyes: "#6a4a28",
+    sunhat: { crown: "#8a2a3e", brim: "#a06a62", rose: "#e0405e" },
+    foot: "flipflop",
+    shortsF: true,
   },
   {
     name: "ANNEKE",
+    noApron: true,
     nation: "af",
     line: "lekker quick on the taps",
-    w: 0.96,
-    h: 1.04,
+    w: 0.93,
+    h: 0.9,
     sex: "f",
-    skin: "#f6d6bc",
-    hair: "#e8c870",
-    style: "braid",
-    shirt: "#fffaf2",
-    dress: "#007749",
-    tie: "#ffb81c",
-    lips: "#c8304a",
-    shoe: "#5a3a1a",
-    eyes: "#4a7aa0",
+    kid: true,
+    skin: "#f2cdb0",
+    hair: "#b08a58",
+    style: "wavy",
+    shirt: "#1e2a4a",
+    dress: "#1e2a4a",
+    tie: "#2a3a64",
+    lips: "#d47a7a",
+    shoe: "#f4f4f4",
+    eyes: "#5a6a7a",
+    pattern: "floral",
+    patC: ["#e86a8a", "#4ac0b0", "#f0c060", "#8ab0e8"],
+    foot: "maryjane",
   },
   {
     name: "BENITA",
+    noApron: true,
     nation: "za",
     line: "never spills a single drop",
-    w: 1.0,
-    h: 0.99,
+    w: 0.9,
+    h: 0.84,
     sex: "f",
-    skin: "#f4d4b8",
-    hair: "#8a4a24",
-    style: "bob",
-    shirt: "#fffaf2",
-    dress: "#7a3aa0",
-    tie: "#ffd24d",
-    lips: "#b82848",
-    shoe: "#3a1a2a",
-    eyes: "#3a6a4a",
+    kid: true,
+    skin: "#e6b890",
+    hair: "#2e1c12",
+    style: "fringe",
+    shirt: "#fbf6fa",
+    dress: "#f6f0f6",
+    skirt: "#e46a98",
+    tie: "#e46a98",
+    lips: "#cc6a70",
+    shoe: "#e86aa0",
+    eyes: "#4a2a14",
+    pattern: "floral",
+    patC: ["#c05aa8", "#7a6ad0", "#e87aa0"],
+    foot: "flipflop",
+    shortsF: true,
   },
   {
     name: "GRZEGORZ",
@@ -9791,7 +9829,65 @@ const BARTENDERS                         = [
     shoe: "#2a2a3a",
     eyes: "#4a2a18",
   },
+  // (v1.5.26) and the girls' mum and dad, from the same photo: MARIANNA with long auburn hair, glasses and pearl
+  // earrings, in a blue-and-white checked shirt; RAYN, tall, with short dark hair, glasses and a little goatee, in a
+  // navy checked shirt and shorts. (At the end of the list, so everyone's saved pick keeps its number - the picker
+  // shows them beside the girls.)
+  {
+    name: "MARIANNA",
+    noApron: true,
+    nation: "za",
+    line: "the warmest welcome in the galaxy",
+    w: 0.98,
+    h: 1.03,
+    sex: "f",
+    skin: "#f2d2bc",
+    hair: "#7a3a24",
+    style: "long",
+    shirt: "#8aa8d8",
+    dress: "#8aa8d8",
+    skirt: "#2a2a36",
+    tie: "#2a2a36",
+    lips: "#c05a6a",
+    shoe: "#e8dccc",
+    eyes: "#5a4a30",
+    pattern: "plaid",
+    patC: ["#f4f6fa", "#3a5a98"],
+    glasses: "#3a2418",
+    pearls: true,
+    foot: "pearl",
+    shortsF: true,
+  },
+  {
+    name: "RAYN",
+    noApron: true,
+    nation: "za",
+    line: "tall, calm and never in a rush",
+    w: 1.02,
+    h: 1.1,
+    sex: "m",
+    skin: "#e8c2a2",
+    hair: "#2a1e16",
+    style: "side",
+    shirt: "#26304a",
+    pants: "#1e2230",
+    tie: "#26304a",
+    shoe: "#1a1a1a",
+    pattern: "plaid",
+    patC: ["#4a5a84", "#1a2034"],
+    glasses: "#1a1a1a",
+    goatee: true,
+    noTie: true,
+    shorts: true,
+    foot: "sandal",
+  },
 ];
+// (v1.5.26) the order in the picker: the family together (the girls, then their mum and dad), then everyone else
+const CREW_SHOW = (() => {
+  const ix = (n) => BARTENDERS.findIndex((b) => b.name === n),
+    fam = ["STELLA", "ANNEKE", "BENITA", "MARIANNA", "RAYN"].map(ix).filter((i) => i >= 0);
+  return [...fam, ...BARTENDERS.map((b, i) => i).filter((i) => !fam.includes(i))];
+})();
 // where our bartenders come from: a flag pin on the shirt, and a hello in their own language when a level starts
 const NATION_INFO = {
   pl: { label: "POLISH", flag: "pl", hi: "NA ZDROWIE!" },
@@ -20576,7 +20672,42 @@ function drawPowerFx(t) {
 // ---- bartender hairstyles: what goes behind the head, and what goes on top ----
 function hairBack(style, hair, tie, t, running, ph) {
   const sw = running ? Math.sin(ph * 2) * 2 - 2 : Math.sin(t * 2) * 0.8;
-  if (style === "afro") {
+  // (v1.5.26) the family's hair: Benita's straight bob down to her chin, Anneke's long waves, and the long straight
+  // hair of Stella and her mum, swinging as they run
+  if (style === "fringe") {
+    disc(-2, 1, 11.8, hair, 12.2);
+    rect(-12.6, -2, 12, 10.5, hair);
+    rect(-12.6, 7.5, 12, 1.2, shade(hair, 0.75));
+  } else if (style === "wavy") {
+    disc(-3, -1, 12, hair, 12);
+    for (let i = 0; i < 9; i++)
+      disc(
+        -8.5 + Math.sin(i * 1.3 + t * 1.5) * 1.4 + sw * 0.2 * (i / 9),
+        2 + i * 2.7,
+        6.4 - i * 0.25,
+        i % 2 ? shade(hair, 1.12) : hair,
+        3.6
+      );
+    polyline([-10, 4, -12, 10 + sw * 0.3, -9, 16 + sw * 0.5, -11, 22 + sw * 0.6], 0.8, shade(hair, 1.4));
+  } else if (style === "long") {
+    disc(-2.5, -1, 11.6, hair, 11.8);
+    quad4(
+      -13,
+      -2,
+      -3,
+      -2,
+      -4 + sw * 0.4,
+      21 + sw * 0.2,
+      -13.5 + sw,
+      20,
+      hair,
+      hair,
+      shade(hair, 0.85),
+      shade(hair, 0.85)
+    );
+    disc(-8.8 + sw * 0.7, 20.5, 4.8, shade(hair, 0.85), 2);
+    line(-9 + sw * 0.3, 0, -9.5 + sw * 0.8, 18, 0.8, shade(hair, 1.35));
+  } else if (style === "afro") {
     disc(-2, -4, 15, hair, 13.5);
     disc(-6, -10, 6, shade(hair, 1.4), 4);
   } else if (style === "bob") disc(-2, 0.5, 11.6, hair, 11.2);
@@ -20597,7 +20728,25 @@ function hairBack(style, hair, tie, t, running, ph) {
 }
 function hairFront(style, hair, tie, ST) {
   const hl = shade(hair, 1.5);
-  if (style === "side") {
+  if (style === "fringe") {
+    disc(-1, -5, 10.8, hair, 6.8);
+    rect(-6, -11.2, 15.5, 7, hair); // (the straight fringe, down to her brows)
+    rect(-6, -4.6, 15.5, 0.9, shade(hair, 0.7));
+    rect(-12, -7, 5.4, 14.5, hair); // (and down past her ear)
+    disc(1, -9.5, 4, hl, 1.2);
+  } else if (style === "wavy") {
+    disc(-1, -5, 10.8, hair, 6.8);
+    quad4(-5, -11.4, 7, -10.6, 9.2, -5.4, 0, -6.6, hair); // (a fringe swept across)
+    polyline([-10, -6, -11.2, 0, -9.2, 6, -11, 12, -9, 17], 4.4, hair); // (a wavy lock falling past her shoulder)
+    polyline([-10, -4, -10.6, 2, -9, 8], 0.8, hl);
+    disc(2.5, -9.6, 3.6, hl, 1.1);
+  } else if (style === "long") {
+    disc(-1, -5, 10.8, hair, 6.8);
+    line(2.5, -11.5, 1, -7, 0.7, shade(hair, 0.6)); // (the parting)
+    quad4(3, -11, 8.5, -8, 6.5, -5.5, 1.5, -7.5, hair);
+    rect(-11.6, -7, 4.2, 15, hair); // (down past her ear)
+    disc(-2.5, -9.8, 3.6, hl, 1.1);
+  } else if (style === "side") {
     rect(-10, -10, 20, 6, hair);
     rect(-11, -7, 4, 9, hair);
   } else if (style === "flattop") {
@@ -27714,6 +27863,88 @@ const PLEG = 6; // the bartender's legs are this much longer than they used to b
 //  YOU: the soda jerk - paper hat, moustache, bow tie, apron. Runs, hops lanes, pours, flings, wipes the bar.
 // =====================================================================================
 const IDLE_SEQ2 = ["lean", "foot", "yawn", "watch", "lean", "whistle", "foot", "sigh"]; // (the same order playerBody uses)
+// (v1.5.26) FLOWERS OR CHECKS on a bartender's clothes: Anneke's and Benita's flowery summer things, Marianna's and
+// Rayn's checked shirts (fem: the bodice and, unless it's a skirt of its own, the skirt; a man: the shirt)
+function bodyPattern(ST, fem, top, flap) {
+  if (OUT || !ST.pattern) return;
+  const pc = (ST.patC || ["#ffffff"]).map((c) => col(c));
+  if (ST.pattern === "floral") {
+    const spots = [
+      [-5, top + 4],
+      [2.5, top + 3],
+      [-1.5, top + 10],
+      [4, top + 13],
+      [-5.5, top + 15],
+      [0.5, top + 19],
+    ];
+    if (fem && !ST.skirt)
+      spots.push(
+        [-8 + flap * 0.6, 2],
+        [-2 + flap * 0.4, 0],
+        [4 + flap * 0.3, 2.5],
+        [8 + flap * 0.3, 6.5],
+        [-10 + flap * 0.8, 7],
+        [1 + flap * 0.4, 6.5]
+      );
+    spots.forEach(([x, y], i) => {
+      const c = pc[i % pc.length];
+      for (let k = 0; k < 5; k++) {
+        const a = (k / 5) * Math.PI * 2 + i;
+        disc(x + Math.cos(a) * 1.1, y + Math.sin(a) * 1.1, 0.9, c);
+      }
+      disc(x, y, 0.6, col("#fff4c0"));
+    });
+  } else if (ST.pattern === "plaid") {
+    const bot = fem ? -6 : -1,
+      halfW = (y) => (fem ? 8 - ((y - top) / (bot - top)) * 1.8 : 9.6 - ((y - top) / (bot - top)) * 0.8);
+    for (let y = top + 3; y < bot; y += 5)
+      line(-halfW(y), y, halfW(y) - 0.5, y, 1.2, withA(pc[1] || pc[0], 0.55));
+    for (let x = -6; x <= 6; x += 4) line(x, top + 1, x * 0.92, bot, 0.9, withA(pc[0], 0.55));
+  }
+}
+// (v1.5.26) SHOES FROM THE PHOTO, at the ankle, toes forward: flip-flops (Benita's pink, Stella's silver), sandals
+// (Marianna's with pearls, Rayn's black straps) and Anneke's white strap shoes
+function footwear(kind, shoe, skin, dk) {
+  const sc = shade(shoe, dk);
+  if (kind === "flipflop") {
+    rect(-2.2, -1.6, 8.6, 2.6, shade(skin, dk * 0.92)); // (the bare foot)
+    rect(-2.8, 1, 10, 1.4, sc); // (the sole)
+    line(-0.5, 0.9, 3.2, -1.3, 0.8, shade(shoe, dk * 0.8));
+    line(3.2, -1.3, 5.6, 0.9, 0.8, shade(shoe, dk * 0.8)); // (the thong strap)
+  } else if (kind === "sandal" || kind === "pearl") {
+    rect(-2.4, -1.8, 9, 2.8, shade(skin, dk * 0.92));
+    rect(-3, 1, 10.6, 1.6, sc);
+    line(1, -1.8, 1, 1, 1.2, sc);
+    line(4.4, -1.4, 4.4, 1, 1.2, sc); // (two straps across)
+    if (kind === "pearl") for (const px of [1, 2.6, 4.4]) disc(px, -1.6, 0.55, col("#f8f4ec"));
+    else line(-2.4, -0.8, 1, -0.8, 1, sc); // (and one round the heel)
+  } else if (kind === "maryjane") {
+    rect(-2, -1.8, 8.6, 3.2, sc);
+    disc(6.2, -0.2, 1.8, sc, 1.6); // (a round toe)
+    line(1.4, -1.8, 3.6, -1.8, 1, shade(shoe, dk * 0.75)); // (the strap)
+    disc(3.8, -1.8, 0.5, col("#d8d8e0"));
+    rect(-2.2, 1.2, 9.4, 0.8, shade(shoe, dk * 0.7));
+  }
+}
+// (v1.5.26) STELLA'S SUN HAT: a wide brim, a round crown with a dark band, and a big red rose on the side
+function sunHat(h, t, running) {
+  const crown = col(h.crown),
+    brim = col(h.brim),
+    rose = col(h.rose),
+    flop = running ? Math.sin(t * 14) * 0.6 : 0;
+  disc(0, 1 + flop * 0.3, 17.5, shade(brim, 0.8), 3.6); // (the brim's underside)
+  disc(0, 0 + flop * 0.3, 17, brim, 3.2);
+  quad4(-8.5, 0, 8.5, 0, 7, -8.5, -7, -8.5, crown, crown, shade(crown, 1.15), shade(crown, 1.15));
+  disc(0, -8.5, 7, shade(crown, 1.15), 2.6);
+  rect(-8.6, -3.4, 17.2, 2.4, shade(crown, 0.6)); // (the band)
+  // the rose, pinned on the side
+  disc(-7.5, -3.6, 3.4, shade(rose, 0.8));
+  disc(-7.5, -3.9, 2.7, rose);
+  arc(-7.5, -3.9, 1.6, 0, Math.PI * 1.6, 0.7, shade(rose, 0.6), 6);
+  disc(-7.8, -4.6, 0.7, withA(C.white, 0.5));
+  tri(-10.6, -2.6, -13.4, -1, -10.2, -0.6, col("#3a7a3a")); // (a leaf)
+  if (!OUT) line(-15, 0.4, 15, 0.4, 0.6, withA(C.white, 0.25));
+}
 function drawPlayer(t) {
   const lane = P.lane;
   let x = P.x + 8,
@@ -28253,7 +28484,7 @@ function playerBody(t, flying) {
           12 + PLEG / 2,
           6,
           shade(pants, dk),
-          shade(pants, dk * 0.88)
+          ST.shorts ? shade(skin, dk * 0.88) : shade(pants, dk * 0.88) // (v1.5.26: in shorts, bare shins)
         );
     const toe =
       (idleAct === "whistle" || idleAct === "foot") && side > 0
@@ -28262,7 +28493,9 @@ function playerBody(t, flying) {
     push();
     translate(fx, fy);
     rotate(toe);
-    if (fem) {
+    if (ST.foot)
+      footwear(ST.foot, shoe, skin, dk); // (v1.5.26: flip-flops, sandals, strap shoes - from the photo)
+    else if (fem) {
       rect(-2, -2, 9, 3.6, shade(shoe, dk));
       rect(-2, 1.4, 2.2, 2.2, shade(shoe, dk * 0.7));
       rect(3, -1.6, 2.5, 1, withA(C.white, 0.5));
@@ -28401,32 +28634,63 @@ function playerBody(t, flying) {
     disc(8.5, top + 3, 3, dress);
     quad4(5, top + 1, 8.5, top, 6.5, -5, 4.5, -5, shade(dress, 0.8));
     rect(-8, top + 2, 2.2, th - 8, shade(dress, 1.2));
-    quad4(
-      -6.5,
-      -6,
-      6.5,
-      -6,
-      12 + flap * 0.3,
-      9,
-      -12 + flap,
-      9,
-      dress,
-      dress,
-      shade(dress, 0.8),
-      shade(dress, 0.8)
-    );
-    line(-12 + flap, 9, 12 + flap * 0.3, 9, 1.4, shade(dress, 0.6));
-    for (let i = -1; i <= 1; i++) line(i * 3, -5, i * 6 + flap * 0.5, 8.5, 0.8, shade(dress, 0.85));
+    const skirt = ST.skirt ? col(ST.skirt) : dress; // (v1.5.26: a skirt - or shorts - of its own colour)
+    if (ST.shortsF) {
+      // (v1.5.26) SHORTS: a short pair, each leg flaring a little, a turned-up hem and a seam down the middle
+      quad4(-6.8, -6.5, 6.8, -6.5, 7.4, -1, -7.4, -1, skirt);
+      for (const sd of [-1, 1]) {
+        const ox2 = sd * 3.9 + (sd < 0 ? flap * 0.15 : 0);
+        quad4(
+          ox2 - 3.6,
+          -1.5,
+          ox2 + 3.6,
+          -1.5,
+          ox2 + 4.2 * 1,
+          4,
+          ox2 - 4.2,
+          4,
+          skirt,
+          skirt,
+          shade(skirt, 0.82),
+          shade(skirt, 0.82)
+        );
+        line(ox2 - 4.2, 4, ox2 + 4.2, 4, 1.4, shade(skirt, 1.18)); // (the turn-up)
+      }
+      line(0, -3, 0, 2, 0.7, shade(skirt, 0.6));
+    } else
+      quad4(
+        -6.5,
+        -6,
+        6.5,
+        -6,
+        12 + flap * 0.3,
+        9,
+        -12 + flap,
+        9,
+        skirt,
+        skirt,
+        shade(skirt, 0.8),
+        shade(skirt, 0.8)
+      );
+    if (!ST.shortsF) {
+      line(-12 + flap, 9, 12 + flap * 0.3, 9, 1.4, shade(skirt, 0.6));
+      for (let i = -1; i <= 1; i++) line(i * 3, -5, i * 6 + flap * 0.5, 8.5, 0.8, shade(skirt, 0.85));
+    }
+    bodyPattern(ST, true, top, flap); // (v1.5.26: flowers or checks)
     rect(-6.5, -6.5, 13, 2, tie); // belt
-    tri(-4, top, 0, top + 5, 4, top, shirt);
-    tri(-4, top, -1, top + 3.5, -5, top + 3, col("#ffffff"));
-    tri(4, top, 1, top + 3.5, 5, top + 3, col("#ffffff")); // collar
+    if (!ST.kid) {
+      tri(-4, top, 0, top + 5, 4, top, shirt);
+      tri(-4, top, -1, top + 3.5, -5, top + 3, col("#ffffff"));
+      tri(4, top, 1, top + 3.5, 5, top + 3, col("#ffffff")); // collar
+    } else quad4(-4, top, 4, top, 2.5, top + 2.6, -2.5, top + 2.6, shade(skin, 0.95)); // (a girl's summer neckline)
   } else {
     quad4(-10, top, 10, top, 9, 0, -9, 0, shirt);
     disc(-10, top + 3, 3.4, shirt);
     disc(10, top + 3, 3.4, shirt);
     quad4(6, top + 1, 10, top, 9, 0, 6, 0, shade(shirt, 0.8));
-    rect(-9, top + 2, 2.5, th - 4, col("#ffffff"));
+    if (ST.pattern)
+      bodyPattern(ST, false, top, flap); // (v1.5.26: his checked shirt)
+    else rect(-9, top + 2, 2.5, th - 4, col("#ffffff"));
     rect(-10, -3, 20, 3, pants);
     if (ST.coat) {
       // DETECTIVE DEX's trench coat: open over a shirt and tie, belted, swinging as he runs
@@ -28464,7 +28728,8 @@ function playerBody(t, flying) {
       disc(10, top + 3, 3.8, cd);
     }
   }
-  if (!(FR && FR.off === "apron") && !ST.coat) {
+  if (!(FR && FR.off === "apron") && !ST.coat && !ST.noApron) {
+    // (v1.5.26: the family from GL's photo wear their own summer clothes - no apron over the shorts and the flowers)
     // (in the fired scene the apron comes off; the detective wears his coat instead)
     if (fem)
       quad4(
@@ -28526,12 +28791,16 @@ function playerBody(t, flying) {
       disc(sp.x + flap * (sp.y / 20) * 0.6, top + 12 + sp.y, sp.r, FLAVORS[sp.f][1], sp.r * 0.8); // every shake you pour leaves its mark
     rect(-8 + flap, 6, 17 - flap * 0.7, 2, col("#d0d0c4")); // grubby hem
   }
-  if (!fem) {
+  if (!fem && ST.noTie) {
+    tri(-4, top, 0, top + 4, -1, top, shade(shirt, 1.25));
+    tri(4, top, 0, top + 4, 1, top, shade(shirt, 1.25)); // (v1.5.26: an open collar, no bow tie)
+    quad4(-1.6, top, 1.6, top, 0.6, top + 3, -0.6, top + 3, shade(skin, 0.9));
+  } else if (!fem) {
     rect(-3, top + 1, 6, 3, tie);
     tri(-7, top - 1, -2, top + 2.5, -7, top + 5, tie);
     tri(7, top - 1, 2, top + 2.5, 7, top + 5, tie);
     disc(0, top + 2.5, 1.4, shade(tie, 0.6));
-  } else {
+  } else if (!ST.kid && !ST.pattern) {
     disc(0, top + 6, 1.6, tie);
     disc(0, top + 10, 1.4, col("#ffffff"));
   }
@@ -28561,10 +28830,13 @@ function playerBody(t, flying) {
   disc(-9, 0, 2.4, shade(skin, 0.85), 3.2); // ear
   if (!OUT) arc(-8.8, 0.2, 1.3, -2.4, 1.4, 0.6, shade(skin, 0.62), 6); // (its inner fold)
   hairFront(ST.style, hair, tie, ST);
-  if (ST.hoops || fem) {
+  if ((ST.hoops || fem) && !ST.kid) {
     const g2 = col("#ffd24d");
     if (ST.hoops) ring(-9, 5, 2.4, 0.8, g2);
-    else disc(-9, 4, 1.1, g2);
+    else if (ST.pearls) {
+      disc(-9, 4.2, 1.35, col("#f6f2ea"));
+      disc(-9.4, 3.8, 0.45, C.white); // (v1.5.26: a pearl)
+    } else disc(-9, 4, 1.1, g2);
   } // earrings
   if (flying) {
     for (const ex of [2, 6.5]) {
@@ -28592,8 +28864,10 @@ function playerBody(t, flying) {
       disc(ex + 0.6, -0.4, 0.65, INK);
       disc(ex + 0.1, -1.1, 0.5, C.white);
       arc(ex, -0.4, 2.2, Math.PI + 0.2, Math.PI * 2 - 0.1, 1, INK, 6);
-      line(ex + 1.8, -1.6, ex + 3, -2.8, 0.9, INK);
-      line(ex + 1, -2.4, ex + 1.8, -3.6, 0.8, INK);
+      if (!ST.kid) {
+        line(ex + 1.8, -1.6, ex + 3, -2.8, 0.9, INK);
+        line(ex + 1, -2.4, ex + 1.8, -3.6, 0.8, INK);
+      } else line(ex + 1.9, -1.5, ex + 2.7, -2.3, 0.6, INK); // (a girl: just a little lash)
     }
   } else {
     disc(2.3, -1, 1.7, C.white, 1.9);
@@ -28628,6 +28902,19 @@ function playerBody(t, flying) {
     line(0.5, -3.2 - brow * 0.3, 4, -4.2 + brow * 0.6, 1.2, hair);
     line(5.5, -4.2 + brow * 0.6, 9, -3.2 - brow * 0.3, 1.2, hair);
   } // cross eyebrows
+  if (ST.glasses && !flying) {
+    // (v1.5.26) GLASSES - Marianna's and Rayn's: two round frames, a bridge over the nose, the arm back to the ear,
+    // and a faint glint on the lenses
+    const gc = col(ST.glasses),
+      ey = fem ? -0.6 : -1;
+    for (const ex of fem ? [2.2, 6.8] : [2.3, 6.7]) {
+      disc(ex, ey, 2.7, withA(col("#e8f4ff"), 0.14), 2.5);
+      ring(ex, ey, 2.85, 0.75, gc);
+      if (!OUT) line(ex - 1.2, ey - 1.4, ex - 0.2, ey - 2, 0.5, withA(C.white, 0.7));
+    }
+    line(fem ? 5.05 : 5.15, ey - 0.3, fem ? 3.95 : 3.85, ey - 0.3, 0.7, gc);
+    line(-0.6, ey - 0.6, -7.8, ey - 0.4, 0.75, gc);
+  }
   disc(8, 2, 2, col("#e0a070"));
   if (!OUT) disc(8.6, 3.2, 0.5, shade(skin, 0.55)); // (a nostril)
   const ms = running ? Math.sin(ph * 2) * 0.5 : 0;
@@ -28649,7 +28936,10 @@ function playerBody(t, flying) {
       rect(4, 4.5 + ms, 6, 1.6, hair);
     }
   }
-  if (fem && mouth === "flat") {
+  if (fem && ST.kid && mouth === "flat") {
+    arc(5.4, 6.4, 2.6, 0.25, Math.PI - 0.25, 1.4, shade(lips, 0.8), 5);
+    disc(5.4, 8.3, 1.5, withA(col("#ffffff"), 0.75), 0.7); // (v1.5.26: a big girl's smile, teeth showing - no lipstick)
+  } else if (fem && mouth === "flat") {
     disc(5.6, 7.4, 2.6, lips, 1);
     disc(5.6, 8.5, 2.3, shade(lips, 0.85), 1.1);
     disc(4.8, 7.2, 0.8, withA(C.white, 0.45), 0.4);
@@ -28674,6 +28964,7 @@ function playerBody(t, flying) {
   );
   const KH = !(FR && FR.off === "hat") ? kidHatFor(P) || holidayHat() || (ST.fedora ? "fedora" : "") : "";
   if (KH) drawKidHat(KH, t, running);
+  else if (ST.sunhat && !(FR && FR.off === "hat")) sunHat(ST.sunhat, t, running);
   else if (ST.hat && !(FR && FR.off === "hat")) {
     rect(-10, -9, 20, 9, col("#ffffff"));
     rect(-11, -3, 22, 3, tie);
@@ -74183,7 +74474,7 @@ function levelOfTour(of) {
     inTour = ((lv - 1) % LAST_LEVEL) + 1;
   return (tour > 1 ? "TOUR " + tour + "  ·  " : "") + "LEVEL " + inTour + of + LAST_LEVEL;
 }
-const GAME_VERSION = "v1.5.25",
+const GAME_VERSION = "v1.5.26",
   GAME_DATE = "30.10.2026",
   VERSION_TEXT = GAME_VERSION + "  ·  " + GAME_DATE;
 const FB = '"Chakra Petch", "Segoe UI", sans-serif';
@@ -80671,7 +80962,8 @@ function charsText() {
 function buildChars() {
   const list = $("csList");
   list.innerHTML = "";
-  BARTENDERS.forEach((b, i) => {
+  CREW_SHOW.forEach((i) => {
+    const b = BARTENDERS[i]; // (v1.5.26: the family together first)
     const el = document.createElement("button");
     el.dataset.i = String(i);
     el.innerHTML = b.name + "<small>" + b.line + "</small>";
@@ -80722,7 +81014,7 @@ function confirmChar() {
     refreshChars();
     sfx("click");
     setTimeout(() => {
-      const el = $("csList").children[P2.char];
+      const el = $("csList").querySelector(`[data-i="${P2.char}"]`)               ; // (v1.5.26: by number, not place)
       if (el) el.focus();
     }, 30);
     return;
@@ -80754,7 +81046,7 @@ function openChars(start) {
   buildChars();
   showPanels();
   setTimeout(() => {
-    const el = $("csList").children[P1.char];
+    const el = $("csList").querySelector(`[data-i="${P1.char}"]`)               ; // (v1.5.26: by number, not place)
     if (el) el.focus();
   }, 30);
 }
@@ -81275,6 +81567,15 @@ profWire();
 //  the game, and where the motion capture, the folk songs and the fonts come from. Both from the menu at any time.
 // =====================================================================================
 const NEWS = [
+  {
+    ver: "v1.5.26",
+    title: "THE FAMILY",
+    items: [
+      "STELLA, ANNEKE AND BENITA NOW LOOK LIKE THE REAL GIRLS: STELLA'S SUN HAT WITH A ROSE, ANNEKE'S WAVY HAIR AND FLOWERY DRESS, BENITA'S FRINGE AND PINK SHORTS",
+      "THEIR MUM AND DAD JOIN THE CREW: MARIANNA AND RAYN, BOTH IN GLASSES AND CHECKED SHIRTS",
+      "SHORTS, FLIP-FLOPS AND SANDALS JUST LIKE IN THE PHOTO",
+    ],
+  },
   {
     ver: "v1.5.25",
     title: "THE BIG RECORD DROP",

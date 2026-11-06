@@ -7083,6 +7083,17 @@ const DICT_ROWS                             = [
   ],
   ["STOMP!", "STAMP!", "TUP!"],
   ["JUMP!", "SPRING!", "SKOK!"],
+  ["SPOTLIGHT", "KOLLIG", "REFLEKTOR"],
+  [
+    "YOUR BARTENDER HAS HER OWN SPOTLIGHT: A SOFT BEAM FROM ABOVE AND A POOL OF LIGHT ROUND HER FEET",
+    "JOU KROEGMEISIE HET HAAR EIE KOLLIG: 'N SAGTE STRAAL VAN BO EN 'N POEL LIG OM HAAR VOETE",
+    "TWOJA BARMANKA MA WŁASNY REFLEKTOR: DELIKATNY SNOP ŚWIATŁA Z GÓRY I PLAMA ŚWIATŁA WOKÓŁ STÓP",
+  ],
+  [
+    "IT GLIDES WITH HER FROM BAR TO BAR, SO YOU ALWAYS FIND HER AT A GLANCE",
+    "DIT GLY SAAM MET HAAR VAN TOONBANK TOT TOONBANK, SODAT JY HAAR ALTYD DADELIK RAAKSIEN",
+    "PŁYNIE ZA NIĄ OD BARU DO BARU, WIĘC ZAWSZE ZNAJDZIESZ JĄ JEDNYM SPOJRZENIEM",
+  ],
   ["CLEAR GLASS", "HELDER GLAS", "CZYSTE SZKŁO"],
   [
     "EMPTY GLASSES ARE EASIER TO SEE NOW: A DARK EDGE ROUND THE GLASS AND THE LAST OF THE SHAKE PINK INSIDE",
@@ -17527,6 +17538,7 @@ function draw() {
           pop();
           drawSpeedTrails(t, pl);
           laneT(lane);
+          playerSpot(pl, t); // (v1.5.24: her own spotlight, so you always find her - juice.ts)
           kidDrawPet(pl, t);
           funPerks(pl, t);
           P = pl;
@@ -72079,6 +72091,67 @@ function emptyGlint(m, gy, t) {
   R.setAdd(false);
 }
 
+// (v1.5.24) THE BARTENDER'S SPOTLIGHT: a soft beam of warm light from the ceiling onto whoever's behind the taps, a
+// pool of it round her feet and a few specks of dust drifting in it - so in the busiest moment your eye finds her at
+// once. It glides with her from bar to bar. (In two-player, each has their own; the second one's a little cooler.)
+const SPOT_POS = new Map();
+function playerSpot(pl, t) {
+  if (OUT || VERT || QUAL < 1 || G.state === "lost") return;
+  const fx = pl.x + 8,
+    fy = LY(pl.lane, pl.x) + 30,
+    // (it slides after her rather than jumping: eased towards where she is now)
+    last = SPOT_POS.get(pl) || { x: fx, y: fy, t },
+    e = Math.min(1, (t - last.t) * 14),
+    x = last.x + (fx - last.x) * e,
+    y = last.y + (fy - last.y) * e;
+  SPOT_POS.set(pl, { x, y, t });
+  const warm = col(pl === P1 ? "#fff1d0" : "#d8f0ff"),
+    br = 0.9 + 0.1 * Math.sin(t * 2.1),
+    h = 250;
+  R.setAdd(true);
+  // the beam: narrow up in the dark, wide at her feet
+  quad4(
+    x - 14,
+    y - h,
+    x + 14,
+    y - h,
+    x + 52,
+    y - 4,
+    x - 52,
+    y - 4,
+    withA(warm, 0),
+    withA(warm, 0),
+    withA(warm, 0.15 * br),
+    withA(warm, 0.15 * br)
+  );
+  quad4(
+    x - 6,
+    y - h,
+    x + 6,
+    y - h,
+    x + 24,
+    y - 4,
+    x - 24,
+    y - 4,
+    withA(warm, 0),
+    withA(warm, 0),
+    withA(warm, 0.12 * br),
+    withA(warm, 0.12 * br)
+  ); // (its brighter core)
+  // the pool of light she stands in
+  glowE(x, y - 2, 58, 12, withA(warm, 0.6 * br));
+  glowE(x, y - 2, 30, 6, withA(warm, 0.45 * br));
+  // dust drifting down through it
+  if (MOTION() >= 0.5)
+    for (let i = 0; i < 6; i++) {
+      const f = (t * (0.05 + hash(i * 3.3) * 0.05) + hash(i * 1.7)) % 1,
+        yy = y - h * 0.85 + f * h * 0.8,
+        wx = (yy - (y - h)) / h, // (0 up top .. 1 at her feet - the beam's width there)
+        xx = x + (hash(i * 5.9) - 0.5) * (20 + 80 * wx) + Math.sin(t * 0.8 + i * 2) * 4;
+      disc(xx, yy, 0.9 + hash(i) * 0.6, withA(warm, 0.45 * Math.sin(f * Math.PI)));
+    }
+  R.setAdd(false);
+}
 // (v1.5.22) an empty about to fall off with nobody there to catch it: a red pulse round it and a red "!" over it
 function emptyDanger(m, gy, t) {
   if (OUT || m.danger === undefined) return;
@@ -74094,7 +74167,7 @@ function levelOfTour(of) {
     inTour = ((lv - 1) % LAST_LEVEL) + 1;
   return (tour > 1 ? "TOUR " + tour + "  ·  " : "") + "LEVEL " + inTour + of + LAST_LEVEL;
 }
-const GAME_VERSION = "v1.5.23",
+const GAME_VERSION = "v1.5.24",
   GAME_DATE = "30.10.2026",
   VERSION_TEXT = GAME_VERSION + "  ·  " + GAME_DATE;
 const FB = '"Chakra Petch", "Segoe UI", sans-serif';
@@ -81186,6 +81259,14 @@ profWire();
 //  the game, and where the motion capture, the folk songs and the fonts come from. Both from the menu at any time.
 // =====================================================================================
 const NEWS = [
+  {
+    ver: "v1.5.24",
+    title: "SPOTLIGHT",
+    items: [
+      "YOUR BARTENDER HAS HER OWN SPOTLIGHT: A SOFT BEAM FROM ABOVE AND A POOL OF LIGHT ROUND HER FEET",
+      "IT GLIDES WITH HER FROM BAR TO BAR, SO YOU ALWAYS FIND HER AT A GLANCE",
+    ],
+  },
   {
     ver: "v1.5.23",
     title: "CLEAR GLASS",

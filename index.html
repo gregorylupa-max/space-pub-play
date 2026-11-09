@@ -7171,6 +7171,22 @@ const DICT_ROWS                             = [
   ["JUMP!", "SPRING!", "SKOK!"],
   ["NEW FACES", "NUWE GESIGTE", "NOWE TWARZE"],
   ["A SOFT GLOW", "'N SAGTE GLOED", "MIĘKKI BLASK"],
+  ["ALIVE", "LEWENDIG", "ŻYWI"],
+  [
+    "THE DEMO MOVES SOFTLY FROM ONE PART TO THE NEXT - A GENTLE DIP THROUGH THE DARK INSTEAD OF A HARD CUT",
+    "DIE DEMO BEWEEG SAGKENS VAN EEN DEEL NA DIE VOLGENDE - 'N SAGTE DOOF DEUR DIE DONKER IN PLAAS VAN 'N SKIELIKE SNY",
+    "DEMO PŁYNNIE PRZECHODZI Z CZĘŚCI DO CZĘŚCI - ŁAGODNE PRZYCIEMNIENIE ZAMIAST OSTREGO CIĘCIA",
+  ],
+  [
+    "YOUR SCORE COUNTS UP WITH A LITTLE BOUNCE, AND LIVES WON OR LOST FLASH AND SWELL",
+    "JOU TELLING TEL OP MET 'N KLEIN WIP, EN LEWENS GEWEN OF VERLOOR FLITS EN SWEL",
+    "WYNIK NALICZA SIĘ Z LEKKIM PODSKOKIEM, A ZDOBYTE LUB STRACONE ŻYCIA BŁYSKAJĄ I ROSNĄ",
+  ],
+  [
+    "EVERY CUSTOMER BREATHES, AND THE HAPPY HOP WHEN SERVED SQUASHES AND STRETCHES LIKE A CARTOON",
+    "ELKE KLANT ASEM, EN DIE BLY WIPPIE AS HULLE BEDIEN WORD PLAT EN REK SOOS 'N TEKENPRENT",
+    "KAŻDY KLIENT ODDYCHA, A RADOSNY PODSKOK PO PODANIU SPŁASZCZA SIĘ I ROZCIĄGA JAK W KRESKÓWCE",
+  ],
   [
     "SMOOTH HD GLOWS NOW - IN THE GAME AND IN EVERY DEMO: NEON, STAGE LIGHTS, STARS AND GOLD RAILS SPILL A SOFT HALO",
     "GLAD HD GLOEI NOU - IN DIE SPEL EN IN ELKE DEMO: NEON, VERHOOGLIGTE, STERRE EN GOUE RELINGS STRAAL 'N SAGTE STRALEKRANS UIT",
@@ -23170,6 +23186,15 @@ function drawCustomerRaw(c, t) {
       translate(c.x, floorY - lift - fh);
       rotate(ftilt);
       if (fsq) scaleXY(1 + fsq, 1 - fsq);
+      // (v1.5.29) ALIVE: everyone breathes - a slow, tiny rise and fall - and the happy hop when served now squashes
+      // on take-off and landing and stretches in the air, like a cartoon
+      if (!c.fly) {
+        const br = Math.sin(t * 2.3 + c.ph * 2.1) * 0.012 * MOTION(),
+          hs = c.joy > 0 ? Math.abs(Math.sin(c.joy * 11)) : 1,
+          hk = c.joy > 0 ? Math.min(1, c.joy * 1.5) * MOTION() : 0,
+          sq = hk ? 0.09 * (1 - hs) ** 3 - 0.05 * hs * hs : 0;
+        if (br || sq) scaleXY(1 + sq - br * 0.5, 1 - sq + br);
+      }
       scaleBy(1.12);
       scaleXY(bd.w, bd.h);
       if (c.state === "out" && !c.fly) scaleXY((turn >= 0 ? 1 : -1) * (0.8 + 0.2 * Math.abs(turn)), 1); // (v1.4.41: a quick pivot - never squeezed flat side-on)
@@ -74371,7 +74396,39 @@ function neon2(g, txt, x, y, px, c) {
   g.fillText(txt, x, y);
   g.shadowBlur = 0;
 }
+// (v1.5.29) SOFT CUTS: the demo used to jump straight from one part to the next - the title, the game, the hall of
+// fame, the regulars, the show, and inside the show from deep space into a moment in history or down to the diner.
+// Now each of those changes dips softly through the dark and comes back up, like a film cut (about a third of a second
+// each way; the flights through space already glide from one sight to the next, so they're left as they are).
+const DIP_LEN = 0.36;
+function attractDip() {
+  if (!ATTRACT.on || !G.demo || CS.open || WD.open) return 0;
+  let a = 0;
+  const edge = (since, len) => {
+    const e = (v) => 1 - smooth01(clamp(v / DIP_LEN, 0, 1));
+    a = Math.max(a, e(since), len > 0 ? e(len - since) : 0);
+  };
+  if (!ATTRACT.tour) edge(ATTRACT.t, ATTRACT_LEN[ATTRACT.phase] || 0);
+  if (ATTRACT.phase === "space") {
+    const c = spaceNow();
+    if (c && (c.item.kind === "scene" || c.item.kind === "descend")) edge(c.ph, c.item.len);
+  }
+  return a * 0.8; // (never quite black - just a soft dip)
+}
+const smooth01 = (v) => v * v * (3 - 2 * v);
 function drawAttract(g, s, t) {
+  drawAttract0(g, s, t);
+  const a = attractDip();
+  if (a > 0.01) {
+    g.save();
+    g.setTransform(hdpr, 0, 0, hdpr, 0, 0);
+    g.globalAlpha = a;
+    g.fillStyle = "#05030c";
+    g.fillRect(0, 0, cssW, cssH);
+    g.restore();
+  }
+}
+function drawAttract0(g, s, t) {
   if (CS.open || WD.open) {
     // the bartender on stage: name and motto
     const b = BARTENDERS[PL[CS.who].char],
@@ -75145,7 +75202,7 @@ function levelOfTour(of) {
     inTour = ((lv - 1) % LAST_LEVEL) + 1;
   return (tour > 1 ? "TOUR " + tour + "  ·  " : "") + "LEVEL " + inTour + of + LAST_LEVEL;
 }
-const GAME_VERSION = "v1.5.28",
+const GAME_VERSION = "v1.5.29",
   GAME_DATE = "30.10.2026",
   VERSION_TEXT = GAME_VERSION + "  ·  " + GAME_DATE;
 const FB = '"Chakra Petch", "Segoe UI", sans-serif';
@@ -75255,7 +75312,36 @@ function tourMap(g, s, a) {
   g.globalAlpha = 1;
   g.textBaseline = "top";
 }
+// (v1.5.29) A LIVELY SCORE: the score no longer jumps - it counts up quickly to the new total, and the number gives a
+// little bounce as it does. The LIVES number does the same: it swells and flashes white when you win a life, red when you
+// lose one. (A new game, or a smaller score, snaps straight to it; calm mode keeps the bounce small.)
+const HUDJ = { v: [-1, -1, -1], b: [0, 0, 0], lives: -1, lifeT: 0, lifeUp: true, lt: 0, dt: 0 };
+function hudRoll(i, real) {
+  const v = HUDJ.v[i];
+  if (v < 0 || real < v || real - v > 200000) HUDJ.v[i] = real;
+  else if (real > v) {
+    HUDJ.v[i] = Math.min(real, v + Math.max(1, Math.ceil((real - v) * Math.min(1, HUDJ.dt * 9))));
+    HUDJ.b[i] = 1;
+  }
+  HUDJ.b[i] = Math.max(0, HUDJ.b[i] - HUDJ.dt * 4);
+  return HUDJ.v[i];
+}
+// the bounce: the number swells a little from its corner (k: how much it's bouncing, 0..1)
+function hudBounce(g, x, y, k, fn) {
+  const sc = 1 + (COMFORT.calm ? 0.04 : 0.13) * Math.sin(Math.min(1, k) * Math.PI * 0.5);
+  if (sc === 1) return fn(x, y);
+  g.save();
+  g.translate(x, y);
+  g.scale(sc, sc);
+  fn(0, 0);
+  g.restore();
+}
 function drawHud(fps) {
+  {
+    const now = performance.now();
+    HUDJ.dt = HUDJ.lt ? Math.min(0.1, (now - HUDJ.lt) / 1000) : 0;
+    HUDJ.lt = now;
+  }
   HUDHIT.holy = HUDHIT.cross = HUDHIT.flav = null; // (filled in again as they are drawn)
   HUD_TOP.low = 0; // (v1.4.78: set again below if the level line and meters are drawn this frame)
   HUD_OBS.prev = HUD_OBS.cur;
@@ -75809,7 +75895,12 @@ function drawHud(fps) {
         g.font = fD(12);
         g.fillText(cupName(p.id) ? cupName(p.id).slice(0, 4) : p.id ? "2UP" : "1UP", pad, y + 4 * s); // (in a cup match: the names)
         g.font = fD(18);
-        g.fillText(String(p.score).padStart(6, "0"), pad + 46 * s, y);
+        {
+          const sv = hudRoll(p.id, p.score);
+          hudBounce(g, pad + 46 * s, y, HUDJ.b[p.id], (x2, y2) =>
+            g.fillText(String(sv).padStart(6, "0"), x2, y2)
+          );
+        }
         if (G.versus)
           for (let i = 0; i < Math.max(0, p.lives); i++) {
             g.fillRect(pad + 170 * s + i * 9 * s, y + 4 * s, 6 * s, 12 * s);
@@ -75828,14 +75919,15 @@ function drawHud(fps) {
       const bw = Math.max(coopW(), 200 * s);
       hudObs(pad + bw / 2, pad + 38 * s, bw + 8 * s, 80 * s);
     } else {
-      g.fillText(String(G.score).padStart(6, "0"), pad, pad);
+      const sv = hudRoll(2, G.score);
+      hudBounce(g, pad, pad, HUDJ.b[2], (x2, y2) => g.fillText(String(sv).padStart(6, "0"), x2, y2));
       g.shadowBlur = 0;
       g.font = fB(13, 700);
       g.lineWidth = 3 * s;
       g.strokeStyle = "rgba(4,2,12,.8)";
-      g.strokeText("HI " + String(Math.max(G.hi, G.score)).padStart(6, "0"), pad, pad + 30 * s);
+      g.strokeText("HI " + String(Math.max(G.hi, sv)).padStart(6, "0"), pad, pad + 30 * s);
       g.fillStyle = "#e0d0e0"; // (v1.4.54: brighter, with a dark edge)
-      g.fillText("HI " + String(Math.max(G.hi, G.score)).padStart(6, "0"), pad, pad + 30 * s);
+      g.fillText("HI " + String(Math.max(G.hi, sv)).padStart(6, "0"), pad, pad + 30 * s);
     }
     // lives: little shakes, clear of the corner buttons. (v1.4.28) never over the score: if there are more lives than
     // there's room for (extra lives pile up), it shows as many as fit and then "x7"
@@ -75857,7 +75949,21 @@ function drawHud(fps) {
       g.fillStyle = nL <= 1 && !unl ? "#ff5a6a" : "#ff8fbf"; // (red on your last life)
       g.shadowColor = "rgba(255,95,168,.5)";
       g.shadowBlur = 8 * s;
-      g.fillText(txt, rightL - 10 * s, ly + 13 * s);
+      // (v1.5.29) a life won or lost: the number swells and flashes (white for a new one, red for one lost)
+      if (HUDJ.lives >= 0 && nL !== HUDJ.lives && !unl) {
+        HUDJ.lifeT = 1;
+        HUDJ.lifeUp = nL > HUDJ.lives;
+      }
+      HUDJ.lives = nL;
+      HUDJ.lifeT = Math.max(0, HUDJ.lifeT - HUDJ.dt * 1.6);
+      if (HUDJ.lifeT > 0) {
+        const f = HUDJ.lifeT;
+        g.fillStyle = HUDJ.lifeUp ? (f > 0.55 ? "#ffffff" : g.fillStyle) : f > 0.55 ? "#ff3048" : g.fillStyle;
+        g.shadowColor = HUDJ.lifeUp ? "rgba(255,255,255,.8)" : "rgba(255,40,60,.8)";
+        g.shadowBlur = (8 + 10 * f) * s;
+      }
+      g.textAlign = "right";
+      hudBounce(g, rightL - 10 * s, ly + 13 * s, HUDJ.lifeT * 1.6, (x2, y2) => g.fillText(txt, x2, y2));
       g.shadowBlur = 0;
       g.textAlign = "left";
       g.textBaseline = "top";
@@ -82259,6 +82365,15 @@ profWire();
 //  the game, and where the motion capture, the folk songs and the fonts come from. Both from the menu at any time.
 // =====================================================================================
 const NEWS = [
+  {
+    ver: "v1.5.29",
+    title: "ALIVE",
+    items: [
+      "THE DEMO MOVES SOFTLY FROM ONE PART TO THE NEXT - A GENTLE DIP THROUGH THE DARK INSTEAD OF A HARD CUT",
+      "YOUR SCORE COUNTS UP WITH A LITTLE BOUNCE, AND LIVES WON OR LOST FLASH AND SWELL",
+      "EVERY CUSTOMER BREATHES, AND THE HAPPY HOP WHEN SERVED SQUASHES AND STRETCHES LIKE A CARTOON",
+    ],
+  },
   {
     ver: "v1.5.28",
     title: "A SOFT GLOW",

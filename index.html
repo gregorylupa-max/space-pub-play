@@ -880,6 +880,25 @@ vec3 hdGlow(vec2 p) {
   }
   return g + w;
 }
+// (v1.5.30) "CAN YOU IMPROVE GRAPHICS EVEN MORE": a long, thin streak of light running sideways from the brightest
+// lights - neon tubes, the stage spots, the sun, bright stars - the way a film camera's lens catches them. Read along
+// the same quarter-size bright picture, faintly tinted blue at the tips.
+vec3 hdStreak(vec2 p) {
+  vec3 s = vec3(0.0);
+  for (int i = 1; i <= 5; i++) {
+    float f = float(i), w = (6.0 - f) / 15.0;
+    vec2 d = vec2(f * 4.5 / hres.x, 0.0);
+    s += (texture2D(htex, p + d).rgb + texture2D(htex, p - d).rgb) * w * mix(vec3(1.0), vec3(0.75, 0.88, 1.15), f / 5.0);
+  }
+  return s;
+}
+// (v1.5.30) a crisper picture: each pixel is pushed a little away from the average of its four neighbours (edges and
+// fine detail stand out), but never past the brightest or darkest of them - so no bright rims or dark halos appear
+vec3 hdSharp(vec2 lp, vec3 c) {
+  vec3 n = px(lp + vec2(1.0, 0.0)), s2 = px(lp - vec2(1.0, 0.0)), e = px(lp + vec2(0.0, 1.0)), w = px(lp - vec2(0.0, 1.0));
+  vec3 lo = min(min(n, s2), min(min(e, w), c)), hi = max(max(n, s2), max(max(e, w), c));
+  return clamp(c + (c - (n + s2 + e + w) * 0.25) * 0.55, lo, hi);
+}
 void main() {
   if (bake > 0.5) { gl_FragColor = vec4(px(uv * low) * 0.5, 1.0); return; }
   if (gpass > 0.5) { gl_FragColor = vec4(bloomAt(uv * low) * 0.5, 1.0); return; }
@@ -891,13 +910,16 @@ void main() {
     return;
   }
   if (crt < 0.5 && hon > 0.5) {                                  // (v1.5.28) SMOOTH HD, finished like a film:
-    vec3 c = px(uv * low) + hdGlow(uv) * 0.42;                   //  the glow,
+    vec3 c = hdSharp(uv * low, px(uv * low)) + hdGlow(uv) * 0.42 + hdStreak(uv) * 0.2;   //  crisp, the glow and the streaks,
     float lum = dot(c, vec3(0.299, 0.587, 0.114));               //  a touch richer colour - warm highlights, cool shadows,
     c = mix(vec3(lum), c, 1.06);
     c += vec3(0.018, 0.008, -0.01) * smoothstep(0.55, 1.0, lum);
     c += vec3(-0.006, 0.0, 0.014) * (1.0 - smoothstep(0.0, 0.3, lum));
     vec2 cc = uv * 2.0 - 1.0;
     c *= 1.0 - 0.13 * pow(dot(cc * vec2(0.8, 1.0), cc * vec2(0.8, 1.0)), 1.5);   //  and a soft darkening into the corners
+    // (v1.5.30) a trace of fine noise, too small to see, that breaks up the stepped bands in smooth dark gradients (the
+    // night sky, the space backdrop, the soft glow's edges)
+    c += (fract(sin(dot(gl_FragCoord.xy, vec2(12.9898, 78.233))) * 43758.5453) - 0.5) / 160.0;
     gl_FragColor = vec4(max(c, 0.0), 1.0);
     return;
   }
@@ -7172,6 +7194,22 @@ const DICT_ROWS                             = [
   ["NEW FACES", "NUWE GESIGTE", "NOWE TWARZE"],
   ["A SOFT GLOW", "'N SAGTE GLOED", "MIĘKKI BLASK"],
   ["ALIVE", "LEWENDIG", "ŻYWI"],
+  ["CRISP AND CINEMATIC", "SKERP EN FILMIES", "OSTRO I FILMOWO"],
+  [
+    "A CRISPER PICTURE IN SMOOTH HD: EDGES AND FINE DETAIL STAND OUT, WITH NO HALOS",
+    "'N SKERPER BEELD IN GLAD HD: RANDE EN FYN DETAIL STAAN UIT, SONDER STRALEKRANSE",
+    "OSTRZEJSZY OBRAZ W GŁADKIM HD: KRAWĘDZIE I DROBNE SZCZEGÓŁY SĄ WYRAŹNE, BEZ OBWÓDEK",
+  ],
+  [
+    "THE BRIGHTEST LIGHTS THROW A LONG, THIN STREAK SIDEWAYS, LIKE A FILM CAMERA'S LENS",
+    "DIE HELDERSTE LIGTE GOOI 'N LANG, DUN STREEP SYWAARTS, SOOS 'N FILMKAMERA SE LENS",
+    "NAJJAŚNIEJSZE ŚWIATŁA RZUCAJĄ DŁUGĄ, CIENKĄ SMUGĘ NA BOKI, JAK OBIEKTYW KAMERY FILMOWEJ",
+  ],
+  [
+    "SMOOTH DARK SKIES WITHOUT STEPPED BANDS OF COLOUR",
+    "GLADDE DONKER LUGTE SONDER GETRAPTE KLEURBANDE",
+    "GŁADKIE CIEMNE NIEBO BEZ SCHODKOWYCH PASÓW KOLORU",
+  ],
   [
     "THE DEMO MOVES SOFTLY FROM ONE PART TO THE NEXT - A GENTLE DIP THROUGH THE DARK INSTEAD OF A HARD CUT",
     "DIE DEMO BEWEEG SAGKENS VAN EEN DEEL NA DIE VOLGENDE - 'N SAGTE DOOF DEUR DIE DONKER IN PLAAS VAN 'N SKIELIKE SNY",
@@ -75202,7 +75240,7 @@ function levelOfTour(of) {
     inTour = ((lv - 1) % LAST_LEVEL) + 1;
   return (tour > 1 ? "TOUR " + tour + "  ·  " : "") + "LEVEL " + inTour + of + LAST_LEVEL;
 }
-const GAME_VERSION = "v1.5.29",
+const GAME_VERSION = "v1.5.30",
   GAME_DATE = "30.10.2026",
   VERSION_TEXT = GAME_VERSION + "  ·  " + GAME_DATE;
 const FB = '"Chakra Petch", "Segoe UI", sans-serif';
@@ -82365,6 +82403,15 @@ profWire();
 //  the game, and where the motion capture, the folk songs and the fonts come from. Both from the menu at any time.
 // =====================================================================================
 const NEWS = [
+  {
+    ver: "v1.5.30",
+    title: "CRISP AND CINEMATIC",
+    items: [
+      "A CRISPER PICTURE IN SMOOTH HD: EDGES AND FINE DETAIL STAND OUT, WITH NO HALOS",
+      "THE BRIGHTEST LIGHTS THROW A LONG, THIN STREAK SIDEWAYS, LIKE A FILM CAMERA'S LENS",
+      "SMOOTH DARK SKIES WITHOUT STEPPED BANDS OF COLOUR",
+    ],
+  },
   {
     ver: "v1.5.29",
     title: "ALIVE",

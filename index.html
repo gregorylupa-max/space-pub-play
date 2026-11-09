@@ -7195,6 +7195,22 @@ const DICT_ROWS                             = [
   ["A SOFT GLOW", "'N SAGTE GLOED", "MIĘKKI BLASK"],
   ["ALIVE", "LEWENDIG", "ŻYWI"],
   ["CRISP AND CINEMATIC", "SKERP EN FILMIES", "OSTRO I FILMOWO"],
+  ["SHINING WORLDS", "BLINKENDE WÊRELDE", "LŚNIĄCE ŚWIATY"],
+  [
+    "THE PLANETS IN THE SPACE SHOW CATCH THE SUN SOFTLY - NO MORE HARD WHITE CIRCLES ON THEM",
+    "DIE PLANETE IN DIE RUIMTEVERTONING VANG DIE SON SAGKENS - GEEN HARDE WIT SIRKELS MEER OP HULLE NIE",
+    "PLANETY W POKAZIE KOSMICZNYM ŁAGODNIE ŁAPIĄ SŁOŃCE - BEZ TWARDYCH BIAŁYCH KÓŁ",
+  ],
+  [
+    "MARS AND NEPTUNE GET SOFT MARKINGS, STORMS AND CLOUDS, AND SATURN'S RINGS SHOW FINE RINGLETS",
+    "MARS EN NEPTUNUS KRY SAGTE MERKE, STORMS EN WOLKE, EN SATURNUS SE RINGE WYS FYN RINGETJIES",
+    "MARS I NEPTUN MAJĄ MIĘKKIE PLAMY, BURZE I CHMURY, A PIERŚCIENIE SATURNA POKAZUJĄ DROBNE PIERŚCIONKI",
+  ],
+  [
+    "THE BLACK HOLE'S DISC GLOWS AS ONE SMOOTH SWIRL OF LIGHT, FROM WHITE-HOT TO DEEP RED",
+    "DIE SWART GAT SE SKYF GLOEI AS EEN GLADDE WARREL LIG, VAN WITWARM TOT DIEPROOI",
+    "DYSK CZARNEJ DZIURY ŚWIECI JAK JEDEN GŁADKI WIR ŚWIATŁA, OD BIAŁEGO ŻARU PO GŁĘBOKĄ CZERWIEŃ",
+  ],
   [
     "A CRISPER PICTURE IN SMOOTH HD: EDGES AND FINE DETAIL STAND OUT, WITH NO HALOS",
     "'N SKERPER BEELD IN GLAD HD: RANDE EN FYN DETAIL STAAN UIT, SONDER STRALEKRANSE",
@@ -19019,6 +19035,60 @@ function ringBand(x, y, r1, r2, tilt, a0, a1, c, n = 30) {
     );
   }
 }
+// (v1.5.31: "improve graphics") A BIG SATURN'S RINGS are made of thousands of thin ringlets: fine lighter and darker
+// lines laid over each broad band, so up close they shimmer with detail instead of being six flat stripes
+function satRinglets(r, tilt, a0, a1, n, k) {
+  if (OUT) return;
+  for (let i = 0; i < 26; i++) {
+    const u = 1.24 + i * 0.043 + hash(i * 3.7) * 0.02,
+      w = 0.006 + hash(i * 5.1) * 0.012,
+      lite = hash(i * 9.3) > 0.5;
+    if (u > 2.34) break;
+    ringBand(
+      0,
+      0,
+      r * u,
+      r * (u + w),
+      tilt,
+      a0,
+      a1,
+      withA(lite ? C.white : col("#1a1206"), (lite ? 0.12 : 0.2) * k),
+      n
+    );
+  }
+}
+// (v1.5.31) a FEATHERED ring band: brightest along its middle, fading smoothly to nothing at its inner and outer edges -
+// bands laid side by side melt into one glowing disc instead of showing hard steps between them
+function ringBandSoft(x, y, r1, r2, tilt, a0, a1, c, n = 30) {
+  const rm = (r1 + r2) / 2,
+    c0 = withA(c, 0);
+  for (let i = 0; i < n; i++) {
+    const p = a0 + ((a1 - a0) * i) / n,
+      q = a0 + ((a1 - a0) * (i + 1)) / n,
+      cp = Math.cos(p),
+      sp = Math.sin(p),
+      cq = Math.cos(q),
+      sq = Math.sin(q);
+    for (const [ra, rb, ka, kb] of [
+      [r1, rm, c0, c],
+      [rm, r2, c, c0],
+    ]         )
+      quad4(
+        x + cp * ra,
+        y + sp * ra * tilt,
+        x + cq * ra,
+        y + sq * ra * tilt,
+        x + cq * rb,
+        y + sq * rb * tilt,
+        x + cp * rb,
+        y + sp * rb * tilt,
+        ka,
+        ka,
+        kb,
+        kb
+      );
+  }
+}
 function drawSaturn(x, y, r, tilt, c1, c2, rot = 0) {
   push();
   translate(x, y);
@@ -19026,6 +19096,7 @@ function drawSaturn(x, y, r, tilt, c1, c2, rot = 0) {
   const n = r > 40 ? 48 : 22,
     rc = (b, back) => withA(shade(b[2] > 0.95 ? c1 : c2, b[2] * (back ? 0.75 : 1)), b[3]);
   for (const b of RING_BANDS) ringBand(0, 0, r * b[0], r * b[1], tilt, Math.PI, Math.PI * 2, rc(b, true), n); // the far half
+  if (r > 40) satRinglets(r, tilt, Math.PI, Math.PI * 2, n, 0.7);
   // the planet: limb-darkened, banded, lit from the upper left
   disc(0, 0, r, shade(c2, 0.7));
   disc(0, 0, r * 0.97, shade(c1, 0.82));
@@ -19038,7 +19109,9 @@ function drawSaturn(x, y, r, tilt, c1, c2, rot = 0) {
       la = (v) => Math.asin(Math.max(-1, Math.min(1, -v / r)));
     latBand(r, la(yy + h), la(yy - h), withA(i % 2 ? c2 : shade(c1, 1.12), 0.5));
   }
-  disc(-r * 0.35, -r * 0.4, r * 0.4, withA(C.white, 0.12));
+  if (r > 20 && !OUT)
+    glowE(-r * 0.35, -r * 0.38, r * 0.48, r * 0.44, withA(C.white, 0.24)); // (v1.5.31: soft sunlight, no hard circle)
+  else disc(-r * 0.35, -r * 0.4, r * 0.4, withA(C.white, 0.12));
   if (r > 20) nightSide(r, 0.25, 0.72);
   else disc(r * 0.32, r * 0.22, r * 0.86, withA(col("#02030c"), 0.42), r * 0.86); // highlight, night side (a small far-off Saturn keeps the simple shadow)
   {
@@ -19052,6 +19125,7 @@ function drawSaturn(x, y, r, tilt, c1, c2, rot = 0) {
     if (pts.length > 3) ribbon(pts, r * 0.08, withA(col("#02030c"), 0.3), 0.3); // (v1.4.65: one even, soft band that fades out at its ends)
   } // the rings' shadow
   for (const b of RING_BANDS) ringBand(0, 0, r * b[0], r * b[1], tilt, 0, Math.PI, rc(b, false), n); // the near half, in front
+  if (r > 40) satRinglets(r, tilt, 0, Math.PI, n, 1);
   {
     const sh = [];
     for (let i = 0; i <= 10; i++) {
@@ -37906,16 +37980,18 @@ function drawBlackHole(cx, cy, Rd, t, fade) {
   }
   const discPt = (u, rr) => [cx + (Math.cos(u) * rr * rx) / Rd, cy + (Math.sin(u) * rr * ry) / Rd],
     tl = ry / rx;
+  // (v1.5.31: "improve graphics") the bands are FEATHERED now and overlap - one smooth glow from white-hot at the
+  // middle to deep red at the rim; they were four flat stripes with hard steps between them
   const BANDS = [
-    [1.12, 1.4, "#fff8e0", 0.55],
-    [1.4, 1.8, "#ffd070", 0.42],
-    [1.8, 2.3, "#ff9a40", 0.3],
-    [2.3, 2.8, "#d05a20", 0.18],
+    [1.04, 1.6, "#fff8e0", 0.85],
+    [1.25, 2.05, "#ffd070", 0.7],
+    [1.6, 2.6, "#ff9a40", 0.5],
+    [2.0, 3.0, "#d05a20", 0.32],
   ]         ;
   const discHalf = (front) => {
     for (const [r1, r2, c, a] of BANDS) {
       const flick = 0.85 + 0.15 * Math.sin(t * 3 + r1 * 7);
-      ringBand(
+      ringBandSoft(
         cx,
         cy,
         Rd * r1,
@@ -37970,11 +38046,11 @@ function drawBlackHole(cx, cy, Rd, t, fade) {
       arc(cx, cy, rr, a0, a0 + len, Rd * 0.03, c2(i % 3 ? "#ffd890" : "#fff4e0", 0.4), 8);
   }
   for (const [r1, r2, c, a] of [
-    [1.06, 1.22, "#fff8e0", 0.75],
-    [1.22, 1.45, "#ffd070", 0.5],
-    [1.45, 1.7, "#ff9a40", 0.28],
-  ]         ) // ...its light bent up over the top of the hole
-    ringBand(cx, cy, Rd * r1, Rd * r2, 1, Math.PI * 1.02, Math.PI * 1.98, c2(c, a), 30);
+    [1.02, 1.3, "#fff8e0", 1.1],
+    [1.14, 1.55, "#ffd070", 0.75],
+    [1.35, 1.85, "#ff9a40", 0.42],
+  ]         ) // ...its light bent up over the top of the hole (v1.5.31: feathered too)
+    ringBandSoft(cx, cy, Rd * r1, Rd * r2, 1, Math.PI * 1.02, Math.PI * 1.98, c2(c, a), 40);
   ringBand(cx, cy, Rd * 1.05, Rd * 1.16, 1, Math.PI * 0.06, Math.PI * 0.94, c2("#ffc060", 0.35), 24); // (and a thin echo under it)
   glow(cx, cy - Rd * 1.25, Rd * 1.4, c2("#ffb050", 0.18));
   R.setAdd(false);
@@ -51171,9 +51247,28 @@ function atmosphere(r, c, a) {
   R.setAdd(false);
 }
 // a sheen of sunlight on the day side (the light comes from the left)
+// (v1.5.31: "improve graphics") the sheen was two flat white circles laid on the planet - you could see their hard
+// edges, like stickers. Now it's soft light that fades smoothly out to nothing, a wide gentle glow and a smaller,
+// brighter one inside it, both kept well inside the rim.
 function sunSheen(r, a = 0.14) {
-  disc(-r * 0.42, -r * 0.3, r * 0.42, withA(C.white, a), r * 0.38);
-  disc(-r * 0.5, -r * 0.36, r * 0.2, withA(C.white, a * 0.8), r * 0.18);
+  if (OUT) return;
+  glowE(-r * 0.4, -r * 0.3, r * 0.5, r * 0.46, withA(C.white, Math.min(1, a * 1.9)));
+  glowE(-r * 0.47, -r * 0.35, r * 0.24, r * 0.22, withA(C.white, Math.min(1, a * 1.5)));
+}
+// (v1.5.31) a soft spot on the sphere: like onSphere, but it fades out to nothing at its edge (no rings, no hard rim)
+function onSphereSoft(r, rot, lon, lat, sz, c, kx = 1, ky = 1) {
+  if (OUT) return;
+  const d = lon - rot,
+    cz = Math.cos(lat) * Math.cos(d);
+  if (cz <= 0.04) return;
+  const x = r * Math.cos(lat) * Math.sin(d),
+    y = -r * Math.sin(lat),
+    rx = sz * kx * Math.max(0.12, Math.cos(d)),
+    ry = sz * ky * Math.max(0.2, Math.cos(lat)),
+    room = r - Math.hypot(x, y); // (it must fade out before the rim)
+  if (room < 1) return;
+  const k = Math.min(1, room / Math.max(rx, ry));
+  glowE(x, y, rx * k, ry * k, withA(c, c[3] * Math.min(1, cz * 3)));
 }
 // ---- the bodies themselves (each centred on 0,0, radius r) ----
 function wSun(r, t) {
@@ -51373,8 +51468,8 @@ function wEarth(r, t, moon = true) {
   polarCap(r, -1.25, col("#f4f8ff")); // the ice caps
   // a glint of the Sun on the water, up to the upper left
   R.setAdd(true);
-  disc(-r * 0.38, -r * 0.3, r * 0.16, withA(col("#cfe8ff"), 0.22), r * 0.11);
-  disc(-r * 0.38, -r * 0.3, r * 0.06, withA(C.white, 0.3), r * 0.04);
+  glowE(-r * 0.38, -r * 0.3, r * 0.24, r * 0.17, withA(col("#cfe8ff"), 0.4)); // (v1.5.31: a soft glint, no hard edge)
+  glowE(-r * 0.38, -r * 0.3, r * 0.09, r * 0.065, withA(C.white, 0.5));
   R.setAdd(false);
   // (v1.4.97) THE CLOUDS, AS THEY REALLY LOOK FROM SPACE: soft wisps built up in thin layers (never one flat white
   // blob) - drifting a little faster than the ground:
@@ -51611,12 +51706,12 @@ function wMars(r, t) {
     [4.6, 0.35, 0.18, "#8a3a1e"],
     [5.4, -0.45, 0.22, "#7a321a"],
   ]         )
+    // the dark markings (v1.4.60: soft, layered - v1.5.31: truly soft now, they fade out with no rings in them)
     for (const [k, al] of [
-      [1.35, 0.3],
-      [1, 0.42],
-      [0.62, 0.55],
+      [1.6, 0.85],
+      [1.0, 0.75],
     ]         )
-      onSphere(r, rot, lon + (k - 1) * 0.05, lat, r * s * k, withA(col(c), al), 1.4, 0.8); // the dark markings (v1.4.60: soft, layered)
+      onSphereSoft(r, rot, lon + (k - 1) * 0.05, lat, r * s * k, withA(col(c), al), 1.4, 0.8);
   for (let i = 0; i < 9; i++)
     onSphere(r, rot, 1.6 + i * 0.09, -0.12 - Math.sin(i) * 0.03, r * 0.04, col("#5a2210"), 1.6, 0.6); // a great canyon
   onSphere(r, rot, 2.9, 0.3, r * 0.12, col("#e88a5a"));
@@ -51780,16 +51875,17 @@ function wNeptune(r, t) {
   const rot = t * 0.12;
   for (let i = 0; i < 5; i++)
     latBand(r, -1.0 + i * 0.45, -0.92 + i * 0.45, withA(col(i % 2 ? "#5a8aff" : "#2a4ab8"), 0.35));
-  onSphere(r, rot, 2.0, -0.35, r * 0.15, col("#14287a"), 1.5, 0.75); // a great dark storm...
-  onSphere(r, rot * 1.3, 2.05, -0.2, r * 0.07, withA(C.white, 0.85), 2.4, 0.5); // ...and the white clouds riding beside it
+  // (v1.5.31: the storm and the clouds are soft now - they were hard-edged white ovals)
+  onSphereSoft(r, rot, 2.0, -0.35, r * 0.22, withA(col("#14287a"), 0.95), 1.5, 0.75); // a great dark storm...
+  onSphereSoft(r, rot * 1.3, 2.05, -0.2, r * 0.1, withA(C.white, 0.95), 2.4, 0.5); // ...and the white clouds riding beside it
   for (let i = 0; i < 12; i++)
-    onSphere(
+    onSphereSoft(
       r,
       rot * 1.6,
       hash(i * 5.3) * 6.283,
       (hash(i * 2.1) - 0.5) * 1.8,
-      r * 0.04,
-      withA(C.white, 0.75),
+      r * 0.06,
+      withA(C.white, 0.9),
       3.5,
       0.5
     ); // fast streaks of cloud
@@ -75240,7 +75336,7 @@ function levelOfTour(of) {
     inTour = ((lv - 1) % LAST_LEVEL) + 1;
   return (tour > 1 ? "TOUR " + tour + "  ·  " : "") + "LEVEL " + inTour + of + LAST_LEVEL;
 }
-const GAME_VERSION = "v1.5.30",
+const GAME_VERSION = "v1.5.31",
   GAME_DATE = "30.10.2026",
   VERSION_TEXT = GAME_VERSION + "  ·  " + GAME_DATE;
 const FB = '"Chakra Petch", "Segoe UI", sans-serif';
@@ -82403,6 +82499,15 @@ profWire();
 //  the game, and where the motion capture, the folk songs and the fonts come from. Both from the menu at any time.
 // =====================================================================================
 const NEWS = [
+  {
+    ver: "v1.5.31",
+    title: "SHINING WORLDS",
+    items: [
+      "THE PLANETS IN THE SPACE SHOW CATCH THE SUN SOFTLY - NO MORE HARD WHITE CIRCLES ON THEM",
+      "MARS AND NEPTUNE GET SOFT MARKINGS, STORMS AND CLOUDS, AND SATURN'S RINGS SHOW FINE RINGLETS",
+      "THE BLACK HOLE'S DISC GLOWS AS ONE SMOOTH SWIRL OF LIGHT, FROM WHITE-HOT TO DEEP RED",
+    ],
+  },
   {
     ver: "v1.5.30",
     title: "CRISP AND CINEMATIC",

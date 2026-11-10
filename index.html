@@ -910,7 +910,13 @@ void main() {
     return;
   }
   if (crt < 0.5 && hon > 0.5) {                                  // (v1.5.28) SMOOTH HD, finished like a film:
-    vec3 c = hdSharp(uv * low, px(uv * low)) + hdGlow(uv) * 0.42 + hdStreak(uv) * 0.2;   //  crisp, the glow and the streaks,
+    vec3 c = hdSharp(uv * low, px(uv * low));                    //  crisp, the glow and the streaks,
+    // (v1.5.34 "polish") the glow and the streaks are added like light through a SCREEN - full strength over the dark,
+    // less and less over what's already bright - and the very brightest is then eased off in a soft shoulder instead
+    // of cut flat at white: bursts of light over the bartender (a perfect pour, a quick-hands flash) no longer wash
+    // the bartender's face out to a blank white blob
+    c += (hdGlow(uv) * 0.42 + hdStreak(uv) * 0.2) * (1.0 - min(c, vec3(1.0)) * 0.7);
+    c = mix(c, 0.8 + 0.2 * (1.0 - exp(-(c - 0.8) * 5.0)), step(0.8, c));
     float lum = dot(c, vec3(0.299, 0.587, 0.114));               //  a touch richer colour - warm highlights, cool shadows,
     c = mix(vec3(lum), c, 1.06);
     c += vec3(0.018, 0.008, -0.01) * smoothstep(0.55, 1.0, lum);
@@ -7197,6 +7203,37 @@ const DICT_ROWS                             = [
   ["CRISP AND CINEMATIC", "SKERP EN FILMIES", "OSTRO I FILMOWO"],
   ["SHINING WORLDS", "BLINKENDE WÊRELDE", "LŚNIĄCE ŚWIATY"],
   ["PERFECT TIMING", "PERFEKTE TYDSBEPLANNING", "IDEALNE WYCZUCIE"],
+  ["SMOOTH RUNNING", "GLAD LOOP", "PŁYNNA PRACA"],
+  [
+    "THE GAME RUNS SMOOTHER: A FRAME DURING PLAY TAKES ABOUT A THIRD LESS WORK, AND HALF AS MUCH IS SENT TO THE GRAPHICS CARD",
+    "DIE SPEL LOOP GLADDER: 'N RAAM TYDENS SPEL VERG OMTRENT 'N DERDE MINDER WERK, EN DIE HELFTE MINDER GAAN NA DIE GRAFIKAKAART",
+    "GRA DZIAŁA PŁYNNIEJ: KLATKA PODCZAS GRY WYMAGA OKOŁO JEDNEJ TRZECIEJ MNIEJ PRACY, A DO KARTY GRAFICZNEJ TRAFIA O POŁOWĘ MNIEJ DANYCH",
+  ],
+  [
+    "THE EARTH IN THE BAR'S WINDOW USES A LIGHTER MAP WHEN IT'S SMALL ON THE SCREEN - IT LOOKS THE SAME, AND COSTS FAR LESS",
+    "DIE AARDE IN DIE KROEG SE VENSTER GEBRUIK 'N LIGTER KAART AS DIT KLEIN OP DIE SKERM IS - DIT LYK DIESELFDE, EN KOS BAIE MINDER",
+    "ZIEMIA W OKNIE BARU UŻYWA LŻEJSZEJ MAPY, GDY JEST MAŁA NA EKRANIE - WYGLĄDA TAK SAMO, A KOSZTUJE DUŻO MNIEJ",
+  ],
+  [
+    "PHONES AND OLDER COMPUTERS FEEL IT MOST: FEWER DROPPED FRAMES, AND THE GAME STAYS ON HIGH QUALITY MORE OFTEN",
+    "FONE EN OUER REKENAARS VOEL DIT DIE MEESTE: MINDER VERLORE RAME, EN DIE SPEL BLY MEER DIKWELS OP HOË GEHALTE",
+    "TELEFONY I STARSZE KOMPUTERY ODCZUJĄ TO NAJBARDZIEJ: MNIEJ GUBIONYCH KLATEK, A GRA CZĘŚCIEJ ZOSTAJE NA WYSOKIEJ JAKOŚCI",
+  ],
+  [
+    "BRIGHT FLASHES OVER THE BARTENDER NO LONGER WASH THEM OUT - THE GLOW NOW EASES OFF SOFTLY INSTEAD OF BURNING TO WHITE",
+    "HELDER FLITSE OOR DIE KROEGMAN WAS HULLE NIE MEER UIT NIE - DIE GLOED VERSAG NOU SAG IN PLAAS VAN OM WIT TE BRAND",
+    "JASNE BŁYSKI NAD BARMANEM JUŻ GO NIE PRZEPALAJĄ - POŚWIATA ŁAGODNIE GAŚNIE, ZAMIAST WYPALAĆ SIĘ DO BIELI",
+  ],
+  [
+    "THE FACT UNDER AN ANNOUNCEMENT IS EASIER TO READ: A DARKER STRIP BEHIND IT AND OUTLINED LETTERS",
+    "DIE FEIT ONDER 'N AANKONDIGING IS MAKLIKER OM TE LEES: 'N DONKERDER STROOK AGTER DIT EN OMLYNDE LETTERS",
+    "CIEKAWOSTKA POD OGŁOSZENIEM JEST CZYTELNIEJSZA: CIEMNIEJSZY PASEK ZA NIĄ I OBRYSOWANE LITERY",
+  ],
+  [
+    "ON PHONES: THE LINE UNDER THE LEVEL STARS CAN BE READ, AND BANNERS NO LONGER COVER THE HOLY WATER OR HIDE UNDER THE BUTTONS",
+    "OP FONE: DIE REËL ONDER DIE VLAK SE STERRE IS LEESBAAR, EN BANIERE BEDEK NIE MEER DIE HEILIGE WATER OF KRUIP ONDER DIE KNOPPIES NIE",
+    "NA TELEFONACH: NAPIS POD GWIAZDKAMI POZIOMU DA SIĘ PRZECZYTAĆ, A BANERY NIE ZASŁANIAJĄ JUŻ WODY ŚWIĘCONEJ ANI NIE CHOWAJĄ SIĘ POD PRZYCISKAMI",
+  ],
   [
     "A LITTLE RING OVER THE BARTENDER FILLS AS YOU POUR - LET GO THE MOMENT IT FLASHES GOLD FOR A PERFECT POUR",
     "'N KLEIN RINGETJIE BO DIE KROEGMAN SE KOP VUL SOOS JY SKINK - LOS DIE OOMBLIK WAT DIT GOUD FLITS VIR 'N PERFEKTE SKINK",
@@ -47581,10 +47618,39 @@ function kidHud(g, s, t, fD, sx, sy) {
     //  nor the stage show's name behind them)
     const cx = cssW / 2,
       cy = cssH * 0.24,
-      pa = Math.min(1, (G.starsT - 0.1) * 4);
+      pa = Math.min(1, (G.starsT - 0.1) * 4),
+      w = Math.min(cssW - 16 * s, 470 * s);
+    // (v1.5.34 "polish") the line under the stars never shrinks below 11 pixels - on a phone it was about six pixels
+    // tall, too small to read - and if it's then too long for the card it breaks onto two lines and the card grows
+    const msg = T(
+        G.starsNow >= 3
+          ? "PERFECT LEVEL!"
+          : G.starsNow === 2
+            ? "NO LIVES LOST!  4 PERFECT POURS FOR THE 3RD STAR"
+            : "LOSE NO LIVES FOR MORE STARS"
+      ),
+      mpx = Math.max(12 * s * TXT(), 11);
+    g.font = fD(mpx / s / TXT());
+    let mLines = [msg];
+    if (g.measureText(msg).width > w - 20 * s) {
+      const ws = msg.split(" ").filter((x) => x);
+      let best = 1,
+        bd = 1e9;
+      for (let i = 1; i < ws.length; i++) {
+        const d = Math.abs(
+          g.measureText(ws.slice(0, i).join(" ")).width - g.measureText(ws.slice(i).join(" ")).width
+        );
+        if (d < bd) {
+          bd = d;
+          best = i;
+        }
+      }
+      mLines = [ws.slice(0, best).join(" "), ws.slice(best).join(" ")];
+    }
+    const mlh = mpx * 1.2,
+      mExtra = Math.max(0, cy + 46 * s + (mLines.length - 1) * mlh + mpx * 0.7 - (cy + 66 * s)); // (how far it would hang out of the card)
     if (pa > 0) {
-      const w = Math.min(cssW - 16 * s, 470 * s),
-        h = 116 * s;
+      const h = 116 * s + mExtra;
       g.globalAlpha = pa;
       g.fillStyle = "rgba(10,6,20,.62)";
       g.beginPath();
@@ -47612,17 +47678,9 @@ function kidHud(g, s, t, fD, sx, sy) {
     }
     g.shadowBlur = 0;
     g.globalAlpha = Math.min(1, Math.max(0, G.starsT - 1.4) * 2);
-    g.font = fD(12);
+    g.font = fD(mpx / s / TXT());
     g.fillStyle = "#fff3e2";
-    g.fillText(
-      G.starsNow >= 3
-        ? "PERFECT LEVEL!"
-        : G.starsNow === 2
-          ? "NO LIVES LOST!  4 PERFECT POURS FOR THE 3RD STAR"
-          : "LOSE NO LIVES FOR MORE STARS",
-      cx,
-      cy + 46 * s
-    );
+    mLines.forEach((l, i) => g.fillText(l, cx, cy + 46 * s + i * mlh));
     g.globalAlpha = 1;
   } else for (let i = 0; i < 3; i++) G["starSnd" + i] = false;
   // the daily challenge, along the top
@@ -50969,13 +51027,18 @@ function earthBiome(lon, lat) {
   return 2; // grassland and forest
 }
 const EARTH_COLS = ["#eef4fa", "#7a8a5a", "#3e8a3a", "#23642a", "#d2b06a"];
-// the runs of land, built once from the map: [middle longitude, latitude, how many squares long, what it is] (radians)
-const EARTH_RUNS             = (() => {
+// the runs of land, built once from the map: [middle longitude, latitude, how many squares long, what it is, on the
+// coast?, cos(latitude)] (radians)
+// (v1.5.33 "polish and speed") built at TWO levels of detail: the fine one-degree grid for a big Earth, and a two-degree
+// one (still smoothed) for a small one - the Earth in the bar's side window was a third of all the drawing work of a
+// frame. Each run also knows whether it touches the sea, so the turquoise shallows are drawn only along real coasts
+// (inland they were always hidden under the land anyway), and carries cos(latitude), worked out once instead of twice a run every frame
+function earthRuns(step        )             {
   const raw = atob(EARTH_MASK),
     MW = 360 / EARTH_MASK_STEP,
     MH = 180 / EARTH_MASK_STEP,
-    W = 360 / EARTH_STEP,
-    H = 180 / EARTH_STEP,
+    W = 360 / step,
+    H = 180 / step,
     mbit = (i, j) => {
       i = ((i % MW) + MW) % MW; // (it wraps round east-west)
       j = Math.max(0, Math.min(MH - 1, j));
@@ -50983,8 +51046,10 @@ const EARTH_RUNS             = (() => {
     },
     // the smoothed map at a fine square: a blend of the map squares round it (and a slow wobble, so the coasts wander)
     bit = (i, j) => {
-      const u = ((i + 0.5) * EARTH_STEP) / EARTH_MASK_STEP - 0.5,
-        v = ((j + 0.5) * EARTH_STEP) / EARTH_MASK_STEP - 0.5,
+      i = ((i % W) + W) % W; // (it wraps round east-west)
+      if (j < 0 || j >= H) return 0;
+      const u = ((i + 0.5) * step) / EARTH_MASK_STEP - 0.5,
+        v = ((j + 0.5) * step) / EARTH_MASK_STEP - 0.5,
         i0 = Math.floor(u),
         j0 = Math.floor(v),
         fu = u - i0,
@@ -51005,23 +51070,28 @@ const EARTH_RUNS             = (() => {
     out             = [],
     d2r = Math.PI / 180;
   for (let j = 0; j < H; j++) {
-    const lat = 90 - (j + 0.5) * EARTH_STEP;
+    const lat = 90 - (j + 0.5) * step;
     let i = 0;
     while (i < W) {
       if (!bit(i, j)) {
         i++;
         continue;
       }
-      const lon0 = -180 + (i + 0.5) * EARTH_STEP,
+      const lon0 = -180 + (i + 0.5) * step,
         b = biome(lon0, lat);
       let n = 1;
-      while (i + n < W && n < 4 && bit(i + n, j) && biome(lon0 + n * EARTH_STEP, lat) === b) n++;
-      out.push([(lon0 + ((n - 1) * EARTH_STEP) / 2) * d2r, lat * d2r, n, b]);
+      while (i + n < W && n < 4 && bit(i + n, j) && biome(lon0 + n * step, lat) === b) n++;
+      // (on the coast if any square of the run has sea beside it - left, right, above or below)
+      let coast = !bit(i - 1, j) || !bit(i + n, j);
+      for (let k = 0; k < n && !coast; k++) coast = !bit(i + k, j - 1) || !bit(i + k, j + 1);
+      out.push([(lon0 + ((n - 1) * step) / 2) * d2r, lat * d2r, n, b, coast ? 1 : 0, Math.cos(lat * d2r)]);
       i += n;
     }
   }
   return out;
-})();
+}
+const EARTH_RUNS = earthRuns(EARTH_STEP), // (the fine grid - a big Earth, close up)
+  EARTH_RUNS_LO = earthRuns(EARTH_MASK_STEP); // (the coarser one - a small Earth, far off or in a window)
 // =====================================================================================
 //  THE PLANET TOUR (v1.4.1): in the full-screen show, the Sun and the worlds of the Solar System drift by one at a time,
 //  big and slowly turning - each with its own look (storms, ice caps, rings, moons) and true facts as captions along the
@@ -51491,11 +51561,19 @@ function wEarth(r, t, moon = true) {
   const rot = t * 0.09;
   // (v1.4.96) THE REAL CONTINENTS (earthmap.ts): every row of land on the map, in short runs round the turning globe -
   // first a turquoise rim of shallow sea, then the land in the colour of what grows there; a few lumps of mountains
-  const sq = (EARTH_STEP * Math.PI) / 180,
+  // (v1.5.33: the fine map only when this Earth is big on the screen - over 150 pixels across its radius; a smaller
+  // one gets the two-degree map, which looks the same at that size and is four times less work)
+  const fine = r * TS() > 150,
+    runs = fine ? EARTH_RUNS : EARTH_RUNS_LO,
+    sq = ((fine ? EARTH_STEP : EARTH_MASK_STEP) * Math.PI) / 180,
     cols = EARTH_COLS.map((h) => col(h)),
     shallow = withA(col("#3ab8c8"), 0.3);
-  for (const [lon, lat, n] of EARTH_RUNS) onSphere(r, rot, lon, lat, r * sq * 1.7, shallow, n * 0.5 + 0.7, 1); // (the shallow sea round every coast - which softens it too)
-  for (const [lon, lat, n, b] of EARTH_RUNS) {
+  // (v1.5.33: the far side of the globe is skipped right here, before any of the sums - about half of all the runs)
+  for (const [lon, lat, n, , coast, cl] of runs)
+    if (coast && cl * Math.cos(lon - rot) > 0.04)
+      onSphere(r, rot, lon, lat, r * sq * 1.7, shallow, n * 0.5 + 0.7, 1); // (the shallow sea round every coast - which softens it too)
+  for (const [lon, lat, n, b, , cl] of runs) {
+    if (cl * Math.cos(lon - rot) <= 0.04) continue;
     const c = b === 2 && hash(lon * 7 + lat * 3) < 0.25 ? cols[3] : cols[b];
     onSphere(r, rot, lon, lat, r * sq * 0.95, c, n * 0.55 + 0.6, 1.3); // (v1.5.32: on the finer grid they overlap - no gaps)
   }
@@ -51604,8 +51682,9 @@ function wEarth(r, t, moon = true) {
   nightSide(r, 0.3, 0.9);
   // city lights on the night side
   R.setAdd(true);
-  for (let q = 0; q < EARTH_RUNS.length; q += 7) {
-    const [lon, lat, , bio] = EARTH_RUNS[q],
+  // (v1.5.33: picked from the two-degree map, as they were before v1.5.32 - the finer map had made four times as many)
+  for (let q = 0; q < EARTH_RUNS_LO.length; q += 7) {
+    const [lon, lat, , bio] = EARTH_RUNS_LO[q],
       s = 0.05;
     if (bio === 0 || bio === 4) continue; // (nobody lives out on the ice or deep in the desert)
     const d = lon - rot,
@@ -72041,7 +72120,8 @@ function flawHud(g, s, pad, fD) {
   g.font = fD(11);
   g.textAlign = "left";
   g.fillStyle = "#ffd24d";
-  g.fillText("FLAWLESS x" + flawMul().toFixed(1), pad + 150 * s, pad + 24 * s);
+  // (v1.5.34 "polish": on a phone it ran under the Full screen button - there it sits closer, just right of the HI line)
+  g.fillText("FLAWLESS x" + flawMul().toFixed(1), pad + (cssW < 700 ? 96 : 150) * s, pad + 24 * s);
 }
 // =====================================================================================
 //  THE GALAXY MAP (v2026.10.04ao, the two galaxies v2026.10.04ar): the whole tour on one page - drawn on the two real
@@ -75415,8 +75495,8 @@ function levelOfTour(of) {
     inTour = ((lv - 1) % LAST_LEVEL) + 1;
   return (tour > 1 ? "TOUR " + tour + "  ·  " : "") + "LEVEL " + inTour + of + LAST_LEVEL;
 }
-const GAME_VERSION = "v1.5.32",
-  GAME_DATE = "30.10.2026",
+const GAME_VERSION = "v1.5.33",
+  GAME_DATE = "10.11.2026",
   VERSION_TEXT = GAME_VERSION + "  ·  " + GAME_DATE;
 const FB = '"Chakra Petch", "Segoe UI", sans-serif';
 let FD = '"Bungee", "Impact", sans-serif';
@@ -75441,7 +75521,19 @@ const HUD_OBS = {
 function hudObs(x, y, w, h) {
   HUD_OBS.cur.push({ x, y, hw: w / 2, h });
 }
-const HUDB = { w: 0, t: -9, l: 0, b: 0, right: 0, lives: 0, room: 0, under: false, scoreW: 0, signBot: 0 };
+const HUDB = {
+  w: 0,
+  t: -9,
+  l: 0,
+  b: 0,
+  right: 0,
+  lives: 0,
+  room: 0,
+  under: false,
+  scoreW: 0,
+  signBot: 0,
+  holyR: 0,
+};
 let signX = 0,
   signY = 0; // (0: the usual place, at the top)
 // THE TOUR MAP (on the hyperspace jump): every stop, grouped into the solar system, the rest of the Milky Way and Andromeda
@@ -75820,7 +75912,7 @@ function drawHud(fps) {
     const lh = parseFloat(g.font) * 1.05,
       // (v1.5.12: a plate is kept wholly on the screen - a two-line announcement at the very top had its glass cut off)
       // (the letters hang DOWN from where they're drawn - the text's top edge is at y0, a line's height above the next)
-      y0 = plate
+      y00 = plate
         ? Math.max(
             signY ? signY + ((lines.length - 1) / 2) * lh : sy(10), // (on a tall screen it grows down, clear of the buttons)
             ((lines.length - 1) / 2) * lh + 9 * s
@@ -75835,7 +75927,14 @@ function drawHud(fps) {
           ? Math.max(HUDB.scoreW || 0, 14 * s + coopW() + 8 * s)
           : HUDB.scoreW || 0,
       rightEdge = signY || HUDB.under || !HUDB.lives ? cssW : HUDB.lives, // (v1.4.80: and of the LIVES on the right)
-      cx = Math.max(signY ? wNow : leftEdge + wNow, Math.min(rightEdge - wNow, signX));
+      cx = Math.max(signY ? wNow : leftEdge + wNow, Math.min(rightEdge - wNow, signX)),
+      // (v1.5.34 "polish") on a phone the announcement drops to its own row under the buttons - where a wide one ran
+      // right across the HOLY water bottles under the score. If it reaches over that corner, it now hangs just below it
+      leftBot = 14 * s + (twoP() ? 96 : 66) * s,
+      y0 =
+        plate && signY && cx - wNow < Math.max(HUDB.scoreW, G.level >= 2 ? HUDB.holyR : 0)
+          ? Math.max(y00, leftBot + 5 * s + ((lines.length - 1) / 2) * lh)
+          : y00;
     // (v1.5.12) AN ANNOUNCEMENT ON ITS OWN GLASS PLATE: a dark see-through panel with a thin neon edge in the
     // announcement's colour, so it stands clear of the stage show, the dancers and the speech bubbles behind it (the
     // venue's own name keeps the bare neon look)
@@ -75941,7 +76040,9 @@ function drawHud(fps) {
     topDy = lineY - sy(44),
     backing = (txt, cx, y, a) => {
       const w = g.measureText(txt).width + 18 * s;
-      g.globalAlpha = a * 0.7;
+      // (v1.5.34 "polish": a darker strip - the bright planets and spotlights of the stage show came through it and
+      // washed out the fact written over them)
+      g.globalAlpha = a * 0.86;
       g.fillStyle = "rgba(10,6,20,.85)";
       g.beginPath();
       g.roundRect
@@ -76002,6 +76103,11 @@ function drawHud(fps) {
     const lh = 15 * s;
     lines.forEach((l, i) => {
       backing(l, cx, lineY + i * lh, al);
+      // (v1.5.34: and a thin dark edge round the letters, so they stay sharp whatever is behind)
+      g.strokeStyle = "rgba(10,6,20,.8)";
+      g.lineWidth = 3 * s;
+      g.lineJoin = "round";
+      g.strokeText(l, cx, lineY + i * lh);
       g.fillStyle = c.c;
       g.fillText(l, cx, lineY + i * lh);
     });
@@ -76236,6 +76342,7 @@ function drawHud(fps) {
         if (!twoP()) HUDHIT.cross = [cx0 - 6 * s, cy0 - 6 * s, 22 * s, 28 * s]; // (click: show the cross)
         x0 += 20 * s;
       }
+      HUDB.holyR = x0; // (v1.5.34: where the HOLY row ends on the right - an announcement on a phone keeps clear of it)
     }
     // active power-ups: icon colour, name and a shrinking timer bar
     if (G.pw) {
@@ -82578,6 +82685,18 @@ profWire();
 //  the game, and where the motion capture, the folk songs and the fonts come from. Both from the menu at any time.
 // =====================================================================================
 const NEWS = [
+  {
+    ver: "v1.5.33",
+    title: "SMOOTH RUNNING",
+    items: [
+      "THE GAME RUNS SMOOTHER: A FRAME DURING PLAY TAKES ABOUT A THIRD LESS WORK, AND HALF AS MUCH IS SENT TO THE GRAPHICS CARD",
+      "THE EARTH IN THE BAR'S WINDOW USES A LIGHTER MAP WHEN IT'S SMALL ON THE SCREEN - IT LOOKS THE SAME, AND COSTS FAR LESS",
+      "PHONES AND OLDER COMPUTERS FEEL IT MOST: FEWER DROPPED FRAMES, AND THE GAME STAYS ON HIGH QUALITY MORE OFTEN",
+      "BRIGHT FLASHES OVER THE BARTENDER NO LONGER WASH THEM OUT - THE GLOW NOW EASES OFF SOFTLY INSTEAD OF BURNING TO WHITE",
+      "THE FACT UNDER AN ANNOUNCEMENT IS EASIER TO READ: A DARKER STRIP BEHIND IT AND OUTLINED LETTERS",
+      "ON PHONES: THE LINE UNDER THE LEVEL STARS CAN BE READ, AND BANNERS NO LONGER COVER THE HOLY WATER OR HIDE UNDER THE BUTTONS",
+    ],
+  },
   {
     ver: "v1.5.32",
     title: "PERFECT TIMING",

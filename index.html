@@ -911,7 +911,7 @@ void main() {
   }
   if (crt < 0.5 && hon > 0.5) {                                  // (v1.5.28) SMOOTH HD, finished like a film:
     vec3 c = hdSharp(uv * low, px(uv * low));                    //  crisp, the glow and the streaks,
-    // (v1.5.34 "polish") the glow and the streaks are added like light through a SCREEN - full strength over the dark,
+    // (v1.5.33 "polish") the glow and the streaks are added like light through a SCREEN - full strength over the dark,
     // less and less over what's already bright - and the very brightest is then eased off in a soft shoulder instead
     // of cut flat at white: bursts of light over the bartender (a perfect pour, a quick-hands flash) no longer wash
     // the bartender's face out to a blank white blob
@@ -7203,6 +7203,27 @@ const DICT_ROWS                             = [
   ["CRISP AND CINEMATIC", "SKERP EN FILMIES", "OSTRO I FILMOWO"],
   ["SHINING WORLDS", "BLINKENDE WÊRELDE", "LŚNIĄCE ŚWIATY"],
   ["PERFECT TIMING", "PERFEKTE TYDSBEPLANNING", "IDEALNE WYCZUCIE"],
+  ["IN THE ROUND", "RONDOM", "W PEŁNYM WYMIARZE"],
+  [
+    "THE STAGE DANCERS ARE ROUND NOW: WHEN THEY SPIN, THEIR SKIRTS ARE PLEATED CONES THAT SWEEP RIGHT ROUND INSTEAD OF FLAT CUT-OUTS",
+    "DIE VERHOOGDANSERS IS NOU ROND: AS HULLE DRAAI, IS HULLE ROMPE GEPLOOIDE KEËLS WAT HEELTEMAL OMSWAAI IN PLAAS VAN PLAT UITKNIPSELS",
+    "TANCERKI NA SCENIE SĄ TERAZ OKRĄGŁE: GDY SIĘ OBRACAJĄ, ICH SPÓDNICE TO PLISOWANE STOŻKI, KTÓRE OBRACAJĄ SIĘ DOOKOŁA, A NIE PŁASKIE WYCINANKI",
+  ],
+  [
+    "THEIR BODIES ARE SHADED LIKE REAL SHAPES, THE FAR ARM AND LEG FALL INTO SHADOW, AND THE FRONT AND BACK OF THEIR CLOTHES SLIDE ROUND AS THEY TURN",
+    "HULLE LYWE IS SOOS REGTE VORMS GESKADU, DIE VER ARM EN BEEN VAL IN DIE SKADU, EN DIE VOOR- EN AGTERKANT VAN HULLE KLERE GLY OM SOOS HULLE DRAAI",
+    "ICH CIAŁA SĄ CIENIOWANE JAK PRAWDZIWE BRYŁY, DALSZA RĘKA I NOGA KRYJĄ SIĘ W CIENIU, A PRZÓD I TYŁ STROJU PRZESUWAJĄ SIĘ, GDY SIĘ OBRACAJĄ",
+  ],
+  [
+    "THE FOLK DANCERS FACE INTO THEIR RING AND TURN WITH IT AS IT GOES ROUND, AND FACE THEIR PARTNERS WHEN THEY SWING IN PAIRS",
+    "DIE VOLKSDANSERS KYK NA DIE MIDDEL VAN HULLE KRING EN DRAAI SAAM SOOS DIT OMGAAN, EN KYK NA HULLE MAATS AS HULLE IN PARE SWAAI",
+    "TANCERKI LUDOWE PATRZĄ DO ŚRODKA KOŁA I OBRACAJĄ SIĘ RAZEM Z NIM, A W PARACH PATRZĄ NA SWOJE PARTNERKI",
+  ],
+  [
+    "FIXED: FROM BEHIND, A THIN CURVE OF A DANCER'S FACE SHOWED UNDER HER HAIR, AND TURNING ONE WAY, HER FAR ARM WAS DRAWN IN FRONT",
+    "REGGEMAAK: VAN AGTER HET 'N DUN KURWE VAN 'N DANSER SE GESIG ONDER HAAR HARE GEWYS, EN AS SY EEN KANT TOE DRAAI, IS HAAR VER ARM VOOR GETEKEN",
+    "POPRAWIONE: OD TYŁU SPOD WŁOSÓW TANCERKI WYSTAWAŁ CIENKI ŁUK TWARZY, A PRZY OBROCIE W JEDNĄ STRONĘ DALSZA RĘKA BYŁA RYSOWANA Z PRZODU",
+  ],
   ["SMOOTH RUNNING", "GLAD LOOP", "PŁYNNA PRACA"],
   [
     "THE GAME RUNS SMOOTHER: A FRAME DURING PLAY TAKES ABOUT A THIRD LESS WORK, AND HALF AS MUCH IS SENT TO THE GRAPHICS CARD",
@@ -47620,7 +47641,7 @@ function kidHud(g, s, t, fD, sx, sy) {
       cy = cssH * 0.24,
       pa = Math.min(1, (G.starsT - 0.1) * 4),
       w = Math.min(cssW - 16 * s, 470 * s);
-    // (v1.5.34 "polish") the line under the stars never shrinks below 11 pixels - on a phone it was about six pixels
+    // (v1.5.33 "polish") the line under the stars never shrinks below 11 pixels - on a phone it was about six pixels
     // tall, too small to read - and if it's then too long for the card it breaks onto two lines and the card grows
     const msg = T(
         G.starsNow >= 3
@@ -65533,11 +65554,26 @@ const showBpm = () => {
 // middle, the body keeps its depth (side-on she's narrower, never paper-thin), arms reaching out shorten as they point
 // at us, the far arm passes BEHIND the body, the face slides round to the side into profile - and facing away we see
 // the back of her head and her hair.
+// (v1.5.34 "make the dancers more 3D, so they don't look flat as they turn") THE SPIN IS NOW REALLY ROUND:
+//  - the skirt is a cone of pleated panels going right round her, worked out in 3D and turned with the body - the
+//    pleats sweep across as she spins, the hem is an ellipse (the front of it a touch lower, as we look down on the
+//    stage), and the back half of the skirt is drawn BEHIND her legs, its darker lining showing when it flares;
+//  - the body is shaded like a cylinder (a lit side, a soft highlight, a shadowed side), and the front of her dress
+//    (the neckline) and the back (a seam) slide round with the turn, so you can SEE which way she faces;
+//  - the arm and the leg on the far side go darker, the near ones catch the light, and the far leg is drawn first;
+//  - (and a bug: turning one way, the far arm was drawn in front of her - it's the right arm now)
 // STAGE LIGHTING ON EVERY PERFORMER (v2026.10.04ar): a pool of the show's coloured light on the boards at their feet,
 // and a rim of coloured light down one side from the stage lights (the
 // performer is drawn once in the light's colour, nudged towards the light, then for real on top). Struggling machines
 // skip it. STAGE_ACC: tonight's light colour.
 let STAGE_ACC = "#ff5fa8";
+// (v1.5.34) the 3D skirt's ring of points, worked out each time it's drawn (reused - no garbage)
+const SK3 = {
+  x: new Float32Array(13),
+  z: new Float32Array(13),
+  wx: new Float32Array(13),
+  hx: new Float32Array(13),
+};
 function perf(x        , y        , s        , o      , p      , t        ) {
   if (OUT || (R.kind === "CPU" && QUAL < 1) || QUAL < 1) return perfBody(x, y, s, o, p, t);
   const acc = col(STAGE_ACC),
@@ -65574,6 +65610,64 @@ function perfBody(x        , y        , s        , o      , p      , t        ) 
   const tA = Math.sign(turn || 1) * Math.max(0.28, cw); // how much left-right is squeezed (signed: facing away it's mirrored)
   const swingTo = (a        ) => Math.atan2(Math.sin(a), Math.cos(a) * tA),
     lenAt = (a        , l        ) => l * Math.hypot(Math.sin(a), Math.cos(a) * tA);
+  // (v1.5.34) how near or far a side of the body is: sd = -1 / 1 (the left / right side as we see her facing us) -
+  // +1 when that side has swung round towards us, -1 when it's gone round the back. Far things go darker, near things
+  // catch the light
+  const nearOf = (sd        ) => -sd * sn,
+    litOf = (sd        ) => 1 - 0.24 * Math.max(0, -nearOf(sd)) + 0.07 * Math.max(0, nearOf(sd));
+  // (v1.5.34) THE SKIRT IN 3D: a ring of pleated panels from the waist to the hem, turned with the body (front:
+  // false = the panels at the back, drawn behind the legs; true = the ones at the front)
+  const skirt3d = (front         ) => {
+    const sl = o.skirt || 0,
+      fl = (p.flare || 0) * 7,
+      sw = (p.swing || 0) * 4,
+      c0 = A(o.skirtC || o.top),
+      N = 12,
+      wa = 6.5,
+      wb = 3.6, // the waist: an ellipse, as wide as her and not as deep
+      ha = 9 + sl * 0.25 + fl,
+      hb = ha * 0.8, // the hem: a wider ellipse - wider still as it flares
+      hy = sl - fl * 0.25,
+      pe = 1.2 + fl * 0.12; // (how much lower the front of the hem sits than the back: we look down on her a little)
+    const XS = SK3.x,
+      ZS = SK3.z;
+    for (let k = 0; k <= N; k++) {
+      const a = (k / N) * Math.PI * 2,
+        sa = Math.sin(a),
+        ca = Math.cos(a);
+      // a point on the ring turned round by the spin: x across the stage, z towards us
+      XS[k] = sa * turn + ca * sn; // (unit ring: scaled for the waist or the hem below)
+      ZS[k] = -sa * sn + ca * turn;
+      SK3.wx[k] = sa * wa * turn + ca * wb * sn;
+      SK3.hx[k] = sa * ha * turn + ca * hb * sn + sw;
+    }
+    for (let k = 0; k < N; k++) {
+      const zm = ZS[k] + ZS[k + 1];
+      if (zm >= 0 !== front) continue;
+      const pleat = k % 2 ? 1 : 0.86, // (every other panel a shade darker: the pleats, sweeping round as she turns)
+        // lit from the front and a little from the left; the inside of the back (its lining) is darker still
+        lit = (j        ) =>
+          (front ? 0.66 + 0.42 * Math.max(0, ZS[j] * 0.9 - XS[j] * 0.45) : 0.5 + 0.12 * Math.max(0, -XS[j])) *
+          pleat,
+        y0 = -2 + ZS[k] * 0.5,
+        y1 = -2 + ZS[k + 1] * 0.5;
+      quad4(
+        SK3.wx[k],
+        y0,
+        SK3.wx[k + 1],
+        y1,
+        SK3.hx[k + 1],
+        hy + ZS[k + 1] * pe,
+        SK3.hx[k],
+        hy + ZS[k] * pe,
+        shade(c0, lit(k)),
+        shade(c0, lit(k + 1)),
+        shade(c0, lit(k + 1) * 0.84),
+        shade(c0, lit(k) * 0.84)
+      );
+      if (front) line(SK3.hx[k], hy + ZS[k] * pe, SK3.hx[k + 1], hy + ZS[k + 1] * pe, 1, shade(c0, 1.25)); // (a hem catching the light)
+    }
+  };
   disc(x + sway * s, y + 1, 9 * s * (1 - Math.min(0.5, lift / 60)), withA(col("#000000"), 0.3), 2.2 * s); // a shadow on the boards
   push();
   translate(x, y - lift);
@@ -65585,8 +65679,17 @@ function perfBody(x        , y        , s        , o      , p      , t        ) 
     pop();
   }
   const hip = -23 + bob; // (v1.4.45: a touch lower than the legs' full reach, so standing, the knees are soft - never locked straight)
+  // (v1.5.34) the back of the skirt goes BEHIND the legs
+  if (o.skirt) {
+    push();
+    translate(sway, hip);
+    rotate(p.tilt || 0);
+    skirt3d(false);
+    pop();
+  }
   // LEGS: angles if given (a kick, a leap); otherwise the feet stay planted and the knees bend as the body crouches
-  for (const sd of [-1, 1]) {
+  // (v1.5.34: the far leg first, and darker)
+  for (const sd of sn > 0 ? [1, -1] : [-1, 1]) {
     let lg = sd < 0 ? p.ll : p.rl;
     // (v1.4.45) NATURAL KNEES: a leg given as a dead-straight line gets a little bend at the knee, the shin hanging
     // towards the ground
@@ -65595,7 +65698,7 @@ function perfBody(x        , y        , s        , o      , p      , t        ) 
       lg = [lg[0], (Math.abs(d) > 0.05 ? Math.sign(d) : sd) * 0.2];
     }
     const hx = sway * 0.6 + sd * 3 * tA,
-      lc = o.legs ? A(o.legs) : sk;
+      lc = shade(o.legs ? A(o.legs) : sk, litOf(sd));
     let [a1, a2] = lg || ik(hx, hip, sd * st * tA + sway * 0.2, -1, 12, 12, sd * tA < 0 ? -1 : 1);
     let l1 = 12,
       l2 = 12;
@@ -65608,7 +65711,7 @@ function perfBody(x        , y        , s        , o      , p      , t        ) 
       a2 = b2 - b1;
     }
     const [fx, fy] = limb(hx, hip, a1, l1, a2, l2, 3.6, lc, shade(lc, 0.92));
-    disc(fx + sd * 0.8 * tA, fy, 2.7, A(o.shoes || "#2a1a10"), 1.8);
+    disc(fx + sd * 0.8 * tA, fy, 2.7, shade(A(o.shoes || "#2a1a10"), litOf(sd)), 1.8);
     if (o.legBands) disc(fx - Math.cos(a1 + a2) * 4, fy - Math.sin(a1 + a2) * 4, 2.8, A("#f4f2ec")); // (fur bands at the calves)
   }
   // THE BODY, from the hips up: it shifts with the sway and leans with the tilt
@@ -65628,7 +65731,8 @@ function perfBody(x        , y        , s        , o      , p      , t        ) 
         cross = Math.cos(r1) * (sh + 8 - ey) - Math.sin(r1) * (0 - ex); // (which way is in towards the body)
       r2 = (cross >= 0 ? 1 : -1) * 0.3;
     }
-    const ac = o.sleeves ? A(o.top) : sk;
+    const ac = shade(o.sleeves ? A(o.top) : sk, litOf(sd)), // (v1.5.34: darker when it's the far arm)
+      hc = shade(sk, litOf(sd));
     const b1 = swingTo(r1),
       b2 = swingTo(r1 + r2),
       sx0 = sd * 7 * tA;
@@ -65642,7 +65746,7 @@ function perfBody(x        , y        , s        , o      , p      , t        ) 
       3,
       ac,
       ac,
-      p.glow ? null : sk,
+      p.glow ? null : hc,
       2.2
     );
     if (o.armBands) disc(sx0 + Math.cos(b1) * lenAt(r1, 8), sh + 2 + Math.sin(b1) * 8, 2.4, A("#f4f2ec"));
@@ -65655,73 +65759,94 @@ function perfBody(x        , y        , s        , o      , p      , t        ) 
     if (sd < 0 && o.leftHand) o.leftHand(hx, hy);
     if (sd > 0 && o.rightHand) o.rightHand(hx, hy);
   };
-  const farSd = cw < 0.75 ? (sn * tA > 0 ? -1 : 1) : 0; // (0: facing us - both arms in front)
+  // (v1.5.34: the far arm is the one on the side that's swung round the back - it was the wrong one, turning one way)
+  const farSd = cw < 0.75 ? (sn > 0 ? 1 : -1) : 0; // (0: facing us - both arms in front)
   if (farSd) arm(farSd);
   if (o.skirt) {
     const sl = o.skirt,
       fl = (p.flare || 0) * 7,
-      sw = (p.swing || 0) * 4,
-      c0 = A(o.skirtC || o.top),
-      c1 = shade(c0, 0.82),
-      wd = depth * 0.6 + 0.4; // the skirt: flares out as she spins, swings as she moves
-    quad4(
-      -7 * wd,
-      -2,
-      7 * wd,
-      -2,
-      (9 + sl * 0.25) * wd + fl + sw,
-      sl - fl * 0.25,
-      -(9 + sl * 0.25) * wd - fl + sw,
-      sl - fl * 0.25,
-      c0,
-      c0,
-      c1,
-      c1
-    );
-    line(
-      -(9 + sl * 0.25) * wd - fl + sw,
-      sl - fl * 0.25,
-      (9 + sl * 0.25) * wd + fl + sw,
-      sl - fl * 0.25,
-      1,
-      shade(c0, 1.25)
-    ); // (a hem catching the light)
+      sw = (p.swing || 0) * 4;
+    // the skirt: flares out as she spins, swings as she moves (v1.5.34: its front half, in 3D - the back half went
+    // behind the legs)
+    skirt3d(true);
     if (fl > 3) {
       R.setAdd(true);
       arc(sw, sl * 0.6, 10 + fl, 0.2, Math.PI - 0.2, 0.8, withA(C.white, 0.12 * Math.min(1, fl / 7)), 8);
       R.setAdd(false);
     } // (a swish of movement round the flare)
-    if (o.apron && !away)
+    // (v1.5.34) the apron rides round on the front of the skirt - narrower as she turns side-on, gone round the back
+    // when she faces away
+    if (o.apron && turn > 0.05) {
+      const ww = 0.25 + 0.75 * cw,
+        at = 3.6 * sn,
+        ab = (9 + sl * 0.25 + fl) * 0.72 * sn + sw * 0.6;
       quad4(
-        -4 * depth + sn * 2,
+        -4 * ww + at,
         0,
-        4 * depth + sn * 2,
+        4 * ww + at,
         0,
-        5 * depth + sw * 0.6 + sn * 2,
+        5 * ww + ab,
         sl - 2,
-        -5 * depth + sw * 0.6 + sn * 2,
+        -5 * ww + ab,
         sl - 2,
-        A("#f8f6f0")
+        A("#f8f6f0"),
+        A("#f8f6f0"),
+        shade(A("#f8f6f0"), 0.88),
+        shade(A("#f8f6f0"), 0.88)
       );
+    }
     if (o.hide)
       for (let i = 0; i < 4; i++)
         disc((-5 + i * 3.4) * depth + sw * 0.5, 3 + (i % 2) * 3, 1.8, A("#f4f2ec"), 1.3);
   }
-  quad4(
-    -tw,
-    sh,
-    tw,
-    sh,
-    tw - 1,
-    0,
-    -tw + 1,
-    0,
-    A(o.top),
-    A(o.top),
-    shade(A(o.top), 0.85),
-    shade(A(o.top), 0.85)
-  );
-  quad4(tw - 2 * depth, sh, tw, sh, tw - 1, 0, tw - 1 - 2 * depth, 0, shade(A(o.top), 0.78)); // (the side in shadow, so the body looks round)
+  // the body (v1.5.34: shaded ROUND, like a cylinder - the lit side on the left, a soft highlight just left of the
+  // middle, and the side in shadow on the right - so it looks solid from every angle as she turns, where before it
+  // was one flat colour with a dark strip down one side)
+  {
+    const tc = A(o.top),
+      hx0 = -tw * 0.25,
+      hx1 = -(tw - 1) * 0.25;
+    quad4(
+      -tw,
+      sh,
+      hx0,
+      sh,
+      hx1,
+      0,
+      -tw + 1,
+      0,
+      shade(tc, 0.84),
+      mix(tc, C.white, 0.1),
+      shade(tc, 0.92),
+      shade(tc, 0.72)
+    );
+    quad4(
+      hx0,
+      sh,
+      tw,
+      sh,
+      tw - 1,
+      0,
+      hx1,
+      0,
+      mix(tc, C.white, 0.1),
+      shade(tc, 0.66),
+      shade(tc, 0.56),
+      shade(tc, 0.92)
+    );
+    // (v1.5.34) the front of the dress and the back slide round as she turns: the neckline on the front, a seam down
+    // the back - that's what shows which way she's facing, mid-spin
+    if (turn > -0.15) {
+      const nx = sn * tw * 0.62,
+        nw = 2.4 * (0.35 + 0.65 * cw),
+        na = clamp((turn + 0.15) * 3, 0, 1);
+      tri(nx - nw, sh, nx + nw, sh, nx + sn * 0.4, sh + 3.2, withA(shade(sk, 0.95), na));
+    }
+    if (turn < 0.15) {
+      const bx = -sn * tw * 0.62;
+      line(bx, sh + 1, bx * 0.9, -1.5, 0.7, withA(shade(tc, 0.62), clamp((0.15 - turn) * 3, 0, 1)));
+    }
+  }
   quad4(
     -tw,
     sh,
@@ -65737,7 +65862,7 @@ function perfBody(x        , y        , s        , o      , p      , t        ) 
     withA(C.white, 0)
   ); // (light across the shoulders)
   line(-tw + 1, -1, tw - 1, -1, 1, shade(A(o.top), 0.6)); // (the waistline)
-  rect(-1.7, sh - 3.2, 3.4, 3.6, shade(sk, 0.88)); // the neck
+  rect(-1.7 + sn * 0.8, sh - 3.2, 3.4, 3.6, shade(sk, 0.88)); // the neck (v1.5.34: a little forward of the middle as she turns)
   if (o.sparkle && Math.sin(t * 5 + x) > 0.2) {
     R.setAdd(true);
     for (let i = 0; i < 3; i++)
@@ -65841,20 +65966,23 @@ function perfBody(x        , y        , s        , o      , p      , t        ) 
   }
   if (o.hair) {
     const hc = A(o.hair);
-    if (away) disc(0, -1, hr + 0.6, hc, 7.4); // from behind: the back of her head, all hair
-    if (o.hairStyle === "long") disc(-fx * 0.3, -3, 7.2, hc, 4.6);
-    else if (o.hairStyle === "bun") {
-      disc(-fx * 0.3, -3.6, 7, hc, 4);
+    // from behind: the back of her head, all hair (v1.5.34: big enough now to cover ALL of her face - the head is an
+    // oval 7.2 tall, and the bottom of it showed under the hair as a thin curve, like a smile on the back of her head)
+    if (away) disc(0, 0.2, hr + 0.8, hc, 7.8);
+    if (o.hairStyle === "long") {
+      if (!away) disc(-fx * 0.3, -3, 7.2, hc, 4.6);
+    } else if (o.hairStyle === "bun") {
+      if (!away) disc(-fx * 0.3, -3.6, 7, hc, 4);
       disc(-fx * 0.6, -10, 3.4, hc);
     } else if (o.hairStyle === "pony") {
-      disc(-fx * 0.3, -3.6, 7, hc, 4);
+      if (!away) disc(-fx * 0.3, -3.6, 7, hc, 4);
       const pd = away ? 0 : -sn * 4;
       polyline(
         [5 * tA + pd, -6, 10 * tA + hsw + pd, -2 + Math.sin(t * 8) * 1.5, 9 * tA + hsw * 1.8 + pd, 6],
         2.6,
         hc
       );
-    } else disc(-fx * 0.3, -4, 6.8, hc, 3.4);
+    } else if (!away) disc(-fx * 0.3, -4, 6.8, hc, 3.4);
     if (!away) disc(-fx * 0.3 - 2.2, -6.2, 2.4, withA(C.white, 0.22), 0.9); // (a shine on the hair)
   }
   if (o.hat === "kappie") {
@@ -66428,14 +66556,29 @@ function showVolkspele(t, y, bt) {
   const ds = [0, 1, 2, 3].map((i) => {
     if (part <= 1) {
       const a = a0 + i * DN;
-      return { i, x: 480 + Math.cos(a) * 58, z: Math.sin(a), vx: -Math.sin(a) * dir };
+      // (v1.5.34) facing IN, towards the middle of the ring (turned a little out to the audience) - so as the ring goes
+      // round, each girl turns right round with it: her face, then her side, then her back as she passes the front
+      return {
+        i,
+        x: 480 + Math.cos(a) * 58,
+        z: Math.sin(a),
+        vx: -Math.sin(a) * dir,
+        th: Math.atan2(-Math.cos(a), -Math.sin(a) + 0.5),
+      };
     } // the ring
     if (part === 2) {
       const pc = i < 2 ? 440 : 520,
         a = bt * 1.6 * (i < 2 ? 1 : -1) + (i % 2) * Math.PI;
-      return { i, x: pc + Math.cos(a) * 12, z: Math.sin(a), vx: -Math.sin(a) };
+      // (v1.5.34: each facing her partner as they swing round each other)
+      return {
+        i,
+        x: pc + Math.cos(a) * 12,
+        z: Math.sin(a),
+        vx: -Math.sin(a),
+        th: Math.atan2(-Math.cos(a), -Math.sin(a) + 0.3),
+      };
     } // swinging in pairs
-    return { i, x: 425 + i * 40, z: 0, vx: 0 };
+    return { i, x: 425 + i * 40, z: 0, vx: 0, th: 0 };
   }); // in a line, for the curtsy
   ds.sort((a, b) => a.z - b.z);
   for (const d of ds) {
@@ -66457,8 +66600,8 @@ function showVolkspele(t, y, bt) {
             flare: part === 2 ? 0.9 : 0.4,
             ll: [DN + Math.sin(bt * Math.PI * 2 + d.i) * 0.3, 0.25],
             rl: [DN - Math.sin(bt * Math.PI * 2 + d.i) * 0.3, -0.25],
-            turn: part === 2 ? Math.cos(bt * 1.6) * 0.6 + 0.4 : 1,
-            side: Math.sin(bt * 1.6),
+            turn: Math.cos(d.th),
+            side: Math.sin(d.th),
           },
       t
     );
@@ -72120,7 +72263,7 @@ function flawHud(g, s, pad, fD) {
   g.font = fD(11);
   g.textAlign = "left";
   g.fillStyle = "#ffd24d";
-  // (v1.5.34 "polish": on a phone it ran under the Full screen button - there it sits closer, just right of the HI line)
+  // (v1.5.33 "polish": on a phone it ran under the Full screen button - there it sits closer, just right of the HI line)
   g.fillText("FLAWLESS x" + flawMul().toFixed(1), pad + (cssW < 700 ? 96 : 150) * s, pad + 24 * s);
 }
 // =====================================================================================
@@ -75495,7 +75638,7 @@ function levelOfTour(of) {
     inTour = ((lv - 1) % LAST_LEVEL) + 1;
   return (tour > 1 ? "TOUR " + tour + "  ·  " : "") + "LEVEL " + inTour + of + LAST_LEVEL;
 }
-const GAME_VERSION = "v1.5.33",
+const GAME_VERSION = "v1.5.34",
   GAME_DATE = "10.11.2026",
   VERSION_TEXT = GAME_VERSION + "  ·  " + GAME_DATE;
 const FB = '"Chakra Petch", "Segoe UI", sans-serif';
@@ -75928,7 +76071,7 @@ function drawHud(fps) {
           : HUDB.scoreW || 0,
       rightEdge = signY || HUDB.under || !HUDB.lives ? cssW : HUDB.lives, // (v1.4.80: and of the LIVES on the right)
       cx = Math.max(signY ? wNow : leftEdge + wNow, Math.min(rightEdge - wNow, signX)),
-      // (v1.5.34 "polish") on a phone the announcement drops to its own row under the buttons - where a wide one ran
+      // (v1.5.33 "polish") on a phone the announcement drops to its own row under the buttons - where a wide one ran
       // right across the HOLY water bottles under the score. If it reaches over that corner, it now hangs just below it
       leftBot = 14 * s + (twoP() ? 96 : 66) * s,
       y0 =
@@ -76040,7 +76183,7 @@ function drawHud(fps) {
     topDy = lineY - sy(44),
     backing = (txt, cx, y, a) => {
       const w = g.measureText(txt).width + 18 * s;
-      // (v1.5.34 "polish": a darker strip - the bright planets and spotlights of the stage show came through it and
+      // (v1.5.33 "polish": a darker strip - the bright planets and spotlights of the stage show came through it and
       // washed out the fact written over them)
       g.globalAlpha = a * 0.86;
       g.fillStyle = "rgba(10,6,20,.85)";
@@ -76103,7 +76246,7 @@ function drawHud(fps) {
     const lh = 15 * s;
     lines.forEach((l, i) => {
       backing(l, cx, lineY + i * lh, al);
-      // (v1.5.34: and a thin dark edge round the letters, so they stay sharp whatever is behind)
+      // (v1.5.33: and a thin dark edge round the letters, so they stay sharp whatever is behind)
       g.strokeStyle = "rgba(10,6,20,.8)";
       g.lineWidth = 3 * s;
       g.lineJoin = "round";
@@ -76342,7 +76485,7 @@ function drawHud(fps) {
         if (!twoP()) HUDHIT.cross = [cx0 - 6 * s, cy0 - 6 * s, 22 * s, 28 * s]; // (click: show the cross)
         x0 += 20 * s;
       }
-      HUDB.holyR = x0; // (v1.5.34: where the HOLY row ends on the right - an announcement on a phone keeps clear of it)
+      HUDB.holyR = x0; // (v1.5.33: where the HOLY row ends on the right - an announcement on a phone keeps clear of it)
     }
     // active power-ups: icon colour, name and a shrinking timer bar
     if (G.pw) {
@@ -82685,6 +82828,16 @@ profWire();
 //  the game, and where the motion capture, the folk songs and the fonts come from. Both from the menu at any time.
 // =====================================================================================
 const NEWS = [
+  {
+    ver: "v1.5.34",
+    title: "IN THE ROUND",
+    items: [
+      "THE STAGE DANCERS ARE ROUND NOW: WHEN THEY SPIN, THEIR SKIRTS ARE PLEATED CONES THAT SWEEP RIGHT ROUND INSTEAD OF FLAT CUT-OUTS",
+      "THEIR BODIES ARE SHADED LIKE REAL SHAPES, THE FAR ARM AND LEG FALL INTO SHADOW, AND THE FRONT AND BACK OF THEIR CLOTHES SLIDE ROUND AS THEY TURN",
+      "THE FOLK DANCERS FACE INTO THEIR RING AND TURN WITH IT AS IT GOES ROUND, AND FACE THEIR PARTNERS WHEN THEY SWING IN PAIRS",
+      "FIXED: FROM BEHIND, A THIN CURVE OF A DANCER'S FACE SHOWED UNDER HER HAIR, AND TURNING ONE WAY, HER FAR ARM WAS DRAWN IN FRONT",
+    ],
+  },
   {
     ver: "v1.5.33",
     title: "SMOOTH RUNNING",

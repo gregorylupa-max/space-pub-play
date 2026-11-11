@@ -834,10 +834,16 @@ const PVS = `attribute vec2 q; varying vec2 uv; void main() { uv = q * 0.5 + 0.5
 // colour fringes towards the edges, a darker rim and a little picture noise.
 const PFS = `precision mediump float; varying vec2 uv; uniform sampler2D tex, ltex, btex, gtex, htex; uniform float levels, crt, time, qual, lit, bake, gpass, gok, hpass, hon; uniform vec2 low, outRes, hres;
 float b2(vec2 m) { return mod(2.0 * m.x + 3.0 * m.y, 4.0); }
+// (v1.5.35 "improve graphics in whole game") LIGHT WITH HEADROOM: lights go into the light map at HALF strength (see
+// beginLights) and come back out times four - so where lamps, the spotlight on you and the taps overlap, the light keeps
+// rising instead of stopping flat at the top of the map. Then a soft shoulder: past 1.25x it eases towards ~2.1x, so the
+// brightest spots (you under your spotlight by the tap, a bar under a lamp) stay bright but keep their colour and shape
+// instead of burning out into a flat white disc.
+vec3 lm(vec3 L) { vec3 m = L * 4.0; return mix(m, 1.25 + 0.85 * (1.0 - exp(-(m - 1.25) / 0.85)), step(1.25, m)); }
 vec3 px(vec2 lp) {                       // one low-res pixel, squeezed into the palette with ordered dither
   vec2 p = clamp(floor(lp), vec2(0.0), low - 1.0);
   vec3 c = texture2D(tex, (p + 0.5) / low).rgb;
-  if (lit > 0.5) c *= texture2D(ltex, (p + 0.5) / low).rgb * 2.0;      // LIGHTING: 0.5 in the light map = unchanged, more = brighter
+  if (lit > 0.5) c *= lm(texture2D(ltex, (p + 0.5) / low).rgb);        // LIGHTING: 0.25 in the light map = unchanged, more = brighter
   if (levels > 1.5) { float b = (4.0 * b2(mod(p, 2.0)) + b2(mod(floor(p / 2.0), 2.0)) + 0.5) / 16.0; float L = levels - 1.0; c = floor(c * L + b) / L; }
   return c;
 }
@@ -865,7 +871,7 @@ vec3 bloomAt(vec2 lp) {
 // stretched back up and blurred a little more with eight looks round each pixel.
 vec3 brightAt(vec2 p) {
   vec3 c = texture2D(tex, p).rgb;
-  if (lit > 0.5) c *= texture2D(ltex, p).rgb * 2.0;
+  if (lit > 0.5) c *= lm(texture2D(ltex, p).rgb);
   float l = max(dot(c, vec3(0.299, 0.587, 0.114)), max(c.r, max(c.g, c.b)) * 0.92);   // (bright colours glow too - neon, not just white)
   return c * smoothstep(0.86, 1.2, l) * 0.8;
 }
@@ -1497,14 +1503,19 @@ function makeGL(cv, power, retro, levels, crt) {
       flush();
       gl.bindFramebuffer(gl.FRAMEBUFFER, post.lfb);
       gl.viewport(0, 0, post.lw, post.lh);
-      gl.clearColor(amb[0], amb[1], amb[2], 1);
+      gl.clearColor(amb[0] * 0.5, amb[1] * 0.5, amb[2] * 0.5, 1);
       gl.clear(gl.COLOR_BUFFER_BIT);
+      // (v1.5.35) every light is put in at half strength (the picture pass reads it back x4 - see lm in the shader), so
+      // overlapping lights have room to add up before the map tops out
+      gl.blendColor(0.5, 0.5, 0.5, 0.5);
+      gl.blendFunc(gl.CONSTANT_COLOR, gl.ONE_MINUS_SRC_ALPHA);
       this.setAdd(true);
       post.used = true;
       return true;
     },
     endLights() {
       flush();
+      gl.blendFunc(gl.ONE, gl.ONE_MINUS_SRC_ALPHA);
       gl.bindFramebuffer(gl.FRAMEBUFFER, post.fb);
       gl.viewport(0, 0, post.w, post.h);
       this.setAdd(false);
@@ -7203,6 +7214,27 @@ const DICT_ROWS                             = [
   ["CRISP AND CINEMATIC", "SKERP EN FILMIES", "OSTRO I FILMOWO"],
   ["SHINING WORLDS", "BLINKENDE WÊRELDE", "LŚNIĄCE ŚWIATY"],
   ["PERFECT TIMING", "PERFEKTE TYDSBEPLANNING", "IDEALNE WYCZUCIE"],
+  ["BETTER LIGHT", "BETER LIG", "LEPSZE ŚWIATŁO"],
+  [
+    "THE LIGHTING HAS MORE ROOM: WHERE LAMPS, TAPS AND YOUR SPOTLIGHT OVERLAP, THE LIGHT RISES SMOOTHLY INSTEAD OF BURNING OUT TO FLAT WHITE",
+    "DIE BELIGTING HET MEER RUIMTE: WAAR LAMPE, KRANE EN JOU KOLLIG OORVLEUEL, STYG DIE LIG GLAD IN PLAAS VAN OM UIT TE BRAND TOT PLAT WIT",
+    "OŚWIETLENIE MA WIĘCEJ ZAPASU: TAM, GDZIE NAKŁADAJĄ SIĘ LAMPY, NALEWAKI I TWÓJ REFLEKTOR, ŚWIATŁO ROŚNIE PŁYNNIE, ZAMIAST PRZEPALAĆ SIĘ DO PŁASKIEJ BIELI",
+  ],
+  [
+    "THE BARTENDER NO LONGER TURNS INTO A GLARING WHITE BLOB UNDER HER LIGHT: SHE STAYS CLEARLY LIT AND KEEPS HER COLOURS",
+    "DIE KROEGMAN WORD NIE MEER 'N VERBLINDENDE WIT KLOND ONDER HAAR LIG NIE: SY BLY DUIDELIK BELIG EN BEHOU HAAR KLEURE",
+    "BARMANKA NIE ZAMIENIA SIĘ JUŻ W OŚLEPIAJĄCĄ BIAŁĄ PLAMĘ W SWOIM ŚWIETLE: JEST WYRAŹNIE OŚWIETLONA I ZACHOWUJE SWOJE KOLORY",
+  ],
+  [
+    "THE BARS LOOK MORE SOLID: THEIR FRONTS CATCH THE LIGHT AT THE TOP AND FALL INTO SHADOW NEAR THE FLOOR, AND THEIR SHADOWS FADE SOFTLY ACROSS THE FLOOR",
+    "DIE TOONBANKE LYK MEER SOLIED: HULLE VOORKANTE VANG BO DIE LIG EN VAL ONDER BY DIE VLOER IN DIE SKADU, EN HULLE SKADUS VERVAAG SAG OOR DIE VLOER",
+    "LADY WYGLĄDAJĄ SOLIDNIEJ: ICH FRONTY ŁAPIĄ ŚWIATŁO U GÓRY I CHOWAJĄ SIĘ W CIENIU PRZY PODŁODZE, A ICH CIENIE ŁAGODNIE ZANIKAJĄ NA PODŁODZE",
+  ],
+  [
+    "THE HOLIDAY CONFETTI TUMBLES: EACH PIECE SPINS, FLIPS OVER AND DRIFTS AS IT FALLS",
+    "DIE FEESKONFETTI TUIMEL: ELKE STUKKIE TOL, SLAAN OM EN DRYF SOOS DIT VAL",
+    "ŚWIĄTECZNE KONFETTI WIRUJE: KAŻDY KAWAŁEK SIĘ KRĘCI, PRZEWRACA I DRYFUJE, SPADAJĄC",
+  ],
   ["IN THE ROUND", "RONDOM", "W PEŁNYM WYMIARZE"],
   [
     "THE STAGE DANCERS ARE ROUND NOW: WHEN THEY SPIN, THEIR SKIRTS ARE PLEATED CONES THAT SWEEP RIGHT ROUND INSTEAD OF FLAT CUT-OUTS",
@@ -21829,6 +21861,22 @@ function counterBody(lane, V) {
     withA(C.black, 0),
     withA(C.black, 0)
   );
+  // (v1.5.35 "improve graphics in whole game") and a wider, fainter shadow round it - so the bar's shadow fades out
+  // softly across the floor instead of stopping at a hard edge
+  quad4(
+    a - 2,
+    ya + 40,
+    b + 12,
+    yb + 40,
+    b + 26,
+    yb + 62,
+    a + 10,
+    ya + 62,
+    withA(C.black, 0.16),
+    withA(C.black, 0.16),
+    withA(C.black, 0),
+    withA(C.black, 0)
+  );
   quad4(a - 10, ya - 10, b - 10, yb - 10, b, yb, a, ya, V.top2, V.top2, V.top, V.top); // the top, seen from above
   // (v1.4.27) every stop its own bar: the top's material, the front, the things on it (stopkit.ts)
   const K = stopKit();
@@ -21917,6 +21965,39 @@ function counterBody(lane, V) {
     ); // shadow under the overhang
     if (K.front <= 7) barFront(K.front, lane, V, a, b, ya, yb);
     else kitFront(K.front, lane, V, a, b);
+    // (v1.5.35) A ROUNDED FRONT: the light from the ceiling catches the top of the front and fades away down it, and
+    // the bottom sinks into shadow near the floor - the panels read as a solid, curved-over counter, not a flat strip
+    quad4(
+      a,
+      ya + 4,
+      b,
+      yb + 4,
+      b,
+      yb + 12,
+      a,
+      ya + 12,
+      withA(C.white, 0.07),
+      withA(C.white, 0.07),
+      withA(C.white, 0),
+      withA(C.white, 0)
+    );
+    quad4(
+      a,
+      ya + 12,
+      b,
+      yb + 12,
+      b,
+      yb + 23,
+      a,
+      ya + 23,
+      withA(C.black, 0),
+      withA(C.black, 0),
+      withA(C.black, 0.22),
+      withA(C.black, 0.22)
+    );
+    R.setAdd(true);
+    for (const lx of LAMPS) glowE(lx, LY(lane, lx) + 9, 46, 8, withA(C.white, 0.05)); // (each lamp's light on the front)
+    R.setAdd(false);
     quad4(a, ya + 23, b, yb + 23, b, yb + 28, a, ya + 28, shade(V.face, 0.6)); // kick plate
     line(a, ya + 1, b, yb + 1, 2, withA(C.white, 0.35));
     line(a, ya + 2.6, b, yb + 2.6, 1, withA(C.black, 0.3)); // (v1.4.28: the shadowed underside of the rounded edge)
@@ -29810,8 +29891,10 @@ function drawLights(V, t) {
     for (const p of active()) {
       const [sx2, sy2] = projL(p.lane, p.x + 8, LY(p.lane, p.x) - 30, VSIDE.p),
         sz = pS(p.lane, p.x, VSIDE.p);
-      g(sx2, sy2, 130 * sz, warm, 0.55);
-      g(sx2, sy2 + 10 * sz, 60 * sz, C.white, 0.3);
+      // (v1.5.35) softer: with her own beam from the ceiling (v1.5.24, juice.ts) as well, the full-strength light here
+      // lit her past white - a pale dress or blonde hair became a glaring blob. Now she's clearly lit but keeps her colours.
+      g(sx2, sy2, 130 * sz, warm, 0.3);
+      g(sx2, sy2 + 10 * sz, 60 * sz, C.white, 0.1);
     } // a spotlight that follows you
     for (const p of active()) {
       const [x, y] = projL(p.lane, p.x + 8, LY(p.lane, p.x) - 4, VSIDE.p);
@@ -75556,12 +75639,25 @@ function drawEggs(g, s) {
       W0 / 2,
       H0 - 46 * s
     );
+    // (v1.5.35) the paper pieces TUMBLE as they fall - each one spins, flips over (narrowing to an edge and showing its
+    // darker back) and drifts from side to side, instead of sliding straight down as a flat block
     for (let i = 0; i < 30; i++) {
-      const y = ((now * 0.12 + hash(i * 5.1)) % 1) * H0,
-        x = hash(i * 2.9) * W0;
-      g.fillStyle =
-        hd === "za" ? ["#007749", "#ffb81c", "#e03c31", "#001489"][i % 4] : i % 2 ? "#ffffff" : "#dc143c";
-      g.fillRect(x, y, 4 * s, 7 * s);
+      const sp = 0.09 + hash(i * 3.7) * 0.07,
+        y = ((now * sp + hash(i * 5.1)) % 1) * (H0 + 20 * s) - 10 * s,
+        x = hash(i * 2.9) * W0 + Math.sin(now * (0.9 + hash(i) * 0.8) + i) * 14 * s,
+        flip = Math.cos(now * (3 + hash(i * 1.3) * 4) + i * 1.7),
+        c0 =
+          hd === "za" ? ["#007749", "#ffb81c", "#e03c31", "#001489"][i % 4] : i % 2 ? "#ffffff" : "#dc143c";
+      g.save();
+      g.translate(x, y);
+      g.rotate(now * (hash(i * 4.4) - 0.5) * 5 + i);
+      g.fillStyle = c0;
+      g.fillRect(-2.5 * s * Math.abs(flip) - 0.3 * s, -3.5 * s, 5 * s * Math.abs(flip) + 0.6 * s, 7 * s);
+      g.globalAlpha = 0.9 * (flip < 0 ? 0.35 : 0.12 * (1 - flip)); // (the back of the paper, and the shade as it turns)
+      g.fillStyle = "#000000";
+      g.fillRect(-2.5 * s * Math.abs(flip) - 0.3 * s, -3.5 * s, 5 * s * Math.abs(flip) + 0.6 * s, 7 * s);
+      g.globalAlpha = 0.9;
+      g.restore();
     }
   }
   g.restore();
@@ -75638,8 +75734,8 @@ function levelOfTour(of) {
     inTour = ((lv - 1) % LAST_LEVEL) + 1;
   return (tour > 1 ? "TOUR " + tour + "  ·  " : "") + "LEVEL " + inTour + of + LAST_LEVEL;
 }
-const GAME_VERSION = "v1.5.34",
-  GAME_DATE = "10.11.2026",
+const GAME_VERSION = "v1.5.35",
+  GAME_DATE = "11.11.2026",
   VERSION_TEXT = GAME_VERSION + "  ·  " + GAME_DATE;
 const FB = '"Chakra Petch", "Segoe UI", sans-serif';
 let FD = '"Bungee", "Impact", sans-serif';
@@ -82828,6 +82924,16 @@ profWire();
 //  the game, and where the motion capture, the folk songs and the fonts come from. Both from the menu at any time.
 // =====================================================================================
 const NEWS = [
+  {
+    ver: "v1.5.35",
+    title: "BETTER LIGHT",
+    items: [
+      "THE LIGHTING HAS MORE ROOM: WHERE LAMPS, TAPS AND YOUR SPOTLIGHT OVERLAP, THE LIGHT RISES SMOOTHLY INSTEAD OF BURNING OUT TO FLAT WHITE",
+      "THE BARTENDER NO LONGER TURNS INTO A GLARING WHITE BLOB UNDER HER LIGHT: SHE STAYS CLEARLY LIT AND KEEPS HER COLOURS",
+      "THE BARS LOOK MORE SOLID: THEIR FRONTS CATCH THE LIGHT AT THE TOP AND FALL INTO SHADOW NEAR THE FLOOR, AND THEIR SHADOWS FADE SOFTLY ACROSS THE FLOOR",
+      "THE HOLIDAY CONFETTI TUMBLES: EACH PIECE SPINS, FLIPS OVER AND DRIFTS AS IT FALLS",
+    ],
+  },
   {
     ver: "v1.5.34",
     title: "IN THE ROUND",

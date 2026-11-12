@@ -7214,6 +7214,22 @@ const DICT_ROWS                             = [
   ["CRISP AND CINEMATIC", "SKERP EN FILMIES", "OSTRO I FILMOWO"],
   ["SHINING WORLDS", "BLINKENDE WÊRELDE", "LŚNIĄCE ŚWIATY"],
   ["PERFECT TIMING", "PERFEKTE TYDSBEPLANNING", "IDEALNE WYCZUCIE"],
+  ["SNAP AND SPARKLE", "KNAP EN SKITTER", "ZRYW I BLASK"],
+  [
+    "STARDUST SNOW HAS DEPTH: FAR FLAKES ARE TINY AND SLOW, NEAR ONES BRIGHT AND QUICK, AND THE BIG FLAT STARS ARE NOW LITTLE GLINTS THAT TURN AS THEY FALL",
+    "STERSTOFSNEEU HET DIEPTE: VER VLOKKIES IS KLEIN EN STADIG, NABYES HELDER EN VINNIG, EN DIE GROOT PLAT STERRE IS NOU KLEIN GLINSTERINGS WAT DRAAI SOOS HULLE VAL",
+    "GWIEZDNY ŚNIEG MA GŁĘBIĘ: DALEKIE PŁATKI SĄ MALUTKIE I POWOLNE, BLISKIE JASNE I SZYBKIE, A DUŻE PŁASKIE GWIAZDY TO TERAZ MAŁE BŁYSKI, KTÓRE OBRACAJĄ SIĘ, SPADAJĄC",
+  ],
+  [
+    "THE TWO BARS AT THE TOP SIT ON A SMALL SEE-THROUGH PLATE WITH ROUNDED ENDS AND A SHINE, INSTEAD OF CUTTING THROUGH THE BAND ON STAGE",
+    "DIE TWEE STAWE BO SIT OP 'N KLEIN DEURSIGTIGE PLAATJIE MET RONDE ENTE EN 'N GLANS, IN PLAAS DAARVAN OM DEUR DIE ORKES OP DIE VERHOOG TE SNY",
+    "DWA PASKI U GÓRY LEŻĄ NA MAŁEJ PRZEJRZYSTEJ PŁYTCE Z ZAOKRĄGLONYMI KOŃCAMI I POŁYSKIEM, ZAMIAST PRZECINAĆ ZESPÓŁ NA SCENIE",
+  ],
+  [
+    'ANNOUNCEMENTS POP IN WITH A LITTLE SPRING INSTEAD OF ONLY FADING IN, AND "GO!" SWELLS AS IT FADES',
+    'AANKONDIGINGS SPRING IN MET \'N KLEIN VERING IN PLAAS VAN NET IN TE VERVAAG, EN "GO!" SWEL SOOS DIT VERVAAG',
+    'OGŁOSZENIA WSKAKUJĄ ZE SPRĘŻYSTYM ODBICIEM, ZAMIAST TYLKO SIĘ POJAWIAĆ, A "GO!" ROŚNIE, GDY ZNIKA',
+  ],
   ["SMOOTHER MOVES", "GLADDER BEWEGINGS", "PŁYNNIEJSZY RUCH"],
   [
     "WORDS AND POINTS GLIDE: WHEN A NEW ONE POPS UP, THE OTHERS SLIDE ASIDE TO MAKE ROOM INSTEAD OF JUMPING, AND THEY NEVER LAND ON EACH OTHER",
@@ -52482,20 +52498,34 @@ function drawWeather(t) {
       // stardust snow: little glittering star-flakes drifting down, swaying, catching the light
       rect(L, T, w, h, A("#bfe0ff", 0.08));
       R.setAdd(true);
+      // (v1.5.37) SNOW WITH DEPTH: the old flakes were all one size and one speed, and every third was a big flat
+      // five-pointed star - heavy grey shapes over the bar. Now each flake has a depth: far ones are tiny, faint and
+      // slow, near ones bigger, brighter and quicker, swaying wider - and the glinting ones are small four-rayed
+      // sparkles that turn slowly as they fall, rays fading to points, instead of solid stars
       for (let i = 0, n = many(150); i < n; i++) {
-        const sp = 22 + hash(i * 1.3) * 36,
+        const d = hash(i * 8.9),
+          z = d * d, // (most flakes far away, a few close)
+          sp = 14 + z * 58 + hash(i * 1.3) * 10,
           y = T + fm(hash(i * 5.1) * h + tt * sp, h),
-          x = L + hash(i * 3.7) * w + Math.sin(tt * (0.6 + hash(i) * 0.8) + i) * 18,
-          s = 3 + hash(i * 7.3) * 4.5,
+          x = L + hash(i * 3.7) * w + Math.sin(tt * (0.6 + hash(i) * 0.8) + i) * (8 + z * 22),
+          s = 2 + z * 5 + hash(i * 7.3) * 1.4,
           tw = 0.6 + 0.4 * Math.sin(tt * 3 + i * 1.7);
         if (i % 3 === 0) {
-          star(x, y, s * 1.9, A("#ffffff", tw));
+          // a glint: a bright core and four thin rays, slowly turning, twinkling longer and shorter
+          const an = tt * (0.4 + hash(i * 2.1) * 0.8) + i,
+            rl = s * (1.5 + 0.9 * tw),
+            rw = 1.2 + z * 1;
+          for (let r = 0; r < 4; r++) {
+            const a2 = an + (r * Math.PI) / 2;
+            streak(x, y, x + Math.cos(a2) * rl, y + Math.sin(a2) * rl, rw, A("#ffffff", 0.95 * tw));
+          }
+          disc(x, y, s * 0.42, A("#ffffff", 1));
           glow(x, y, s * 3, A("#ffffff", 0.45 * tw));
         } else {
-          disc(x, y, s * 0.8, A("#ffffff", 1));
-          glow(x, y, s * 2.2, A("#e8f4ff", 0.35));
+          disc(x, y, s * 0.7, A("#ffffff", 0.6 + 0.4 * z));
+          glow(x, y, s * 2.2, A("#e8f4ff", 0.2 + 0.2 * z));
         }
-        if (i % 4 === 0) glow(x, y, s * 5, A("#cfe8ff", 0.4 * tw));
+        if (i % 6 === 0 && z > 0.4) glow(x, y, s * 5, A("#cfe8ff", 0.35 * tw)); // (only the near ones get a halo)
       }
       R.setAdd(false);
       break;
@@ -75838,7 +75868,7 @@ function levelOfTour(of) {
     inTour = ((lv - 1) % LAST_LEVEL) + 1;
   return (tour > 1 ? "TOUR " + tour + "  ·  " : "") + "LEVEL " + inTour + of + LAST_LEVEL;
 }
-const GAME_VERSION = "v1.5.36",
+const GAME_VERSION = "v1.5.37",
   GAME_DATE = "12.11.2026",
   VERSION_TEXT = GAME_VERSION + "  ·  " + GAME_DATE;
 const FB = '"Chakra Petch", "Segoe UI", sans-serif';
@@ -76334,6 +76364,17 @@ function drawHud(fps) {
     g.globalAlpha = 1;
   };
   HUDB.signBot = 0;
+  // (v1.5.37) draws the sign scaled about its own middle (not in calm mode - there it just fades, as before)
+  const signPop = (sc, fn) => {
+    if (COMFORT.calm || Math.abs(sc - 1) < 0.002) return fn();
+    const py = signY || sy(10) + 12 * s;
+    g.save();
+    g.translate(signX, py);
+    g.scale(sc, sc);
+    g.translate(-signX, -py);
+    fn();
+    g.restore();
+  };
   if (liveHud && G.state === "play" && G.resumeT > 0) {
     // (v1.4.81) back from a pause
     const go = G.resumeT < 0.45;
@@ -76344,14 +76385,22 @@ function drawHud(fps) {
     );
   } else if (readyNow) {
     const go = G.readyT < 0.55;
-    signText(
-      go ? "GO!" : "READY?",
-      go ? "#5ff5c8" : "#ffc34d",
-      go ? Math.min(1, (G.readyT / 0.55) * 1.5) : Math.min(1, (1.9 - G.readyT) * 4)
+    // (v1.5.37) "GO!" SWELLS AS IT GOES: it grows a little as it fades out, like a shout - instead of only fading
+    signPop(go ? 1 + (1 - G.readyT / 0.55) * 0.35 : 1, () =>
+      signText(
+        go ? "GO!" : "READY?",
+        go ? "#5ff5c8" : "#ffc34d",
+        go ? Math.min(1, (G.readyT / 0.55) * 1.5) : Math.min(1, (1.9 - G.readyT) * 4)
+      )
     );
   } else if (bigNow) {
-    const k = bigNow.life / bigNow.max;
-    signText(bigNow.text, bigNow.c, Math.min(1, k * 3, (1 - k) * 10), true);
+    const k = bigNow.life / bigNow.max,
+      age = (1 - k) * bigNow.max,
+      // (v1.5.37) AN ANNOUNCEMENT POPS IN: it used to only fade in where it stood - now it springs up from a little
+      // smaller, just past full size and back (an "ease out back"), in about a third of a second
+      x = Math.min(1, age / 0.32),
+      back = 1 + 2.7 * Math.pow(x - 1, 3) + 1.7 * Math.pow(x - 1, 2);
+    signPop(0.8 + 0.2 * back, () => signText(bigNow.text, bigNow.c, Math.min(1, k * 3, (1 - k) * 10), true));
   } else {
     g.fillStyle = neon;
     g.shadowColor = neon;
@@ -76493,26 +76542,36 @@ function drawHud(fps) {
     const bw = 220 * s,
       bx = sx(PW / 2) - bw / 2,
       by = sy(62) + topDy;
-    g.fillStyle = "rgba(255,255,255,.15)";
-    g.fillRect(bx, by, bw, 4 * s);
-    g.fillStyle = "#5ff5c8";
-    g.fillRect(
-      bx,
-      by,
-      bw * (G.ta ? Math.min(1, G.ta.served / TA_GOAL) : G.served / Math.max(1, G.total)),
-      4 * s
-    ); // (Time Attack: towards its fifty)
     // the SHAKE FEVER meter: fills as you serve and catch without a slip; full = fever time
     const fv = G.fever > 0,
       fk = Math.min(1, fv ? G.fever / FEVER_LEN : (G.streak || 0) / FEVER_AT), // (v1.4.76: a fed fever can run past full)
       fy = by + 7 * s;
     HUD_TOP.low = fy + (fv ? 18 : 6) * s; // (v1.4.78: where the top of the HUD ends - the floating words stay below it)
-    g.fillStyle = "rgba(255,255,255,.1)";
-    g.fillRect(bx, fy, bw, 3 * s);
-    g.fillStyle = fv ? "hsl(" + ((t * 360) % 360) + " 95% 65%)" : "#ff5fd8";
-    g.fillRect(bx, fy, bw * fk, 3 * s);
+    // (v1.5.37) THE METERS ON A PLATE: the two thin bars used to be drawn straight over the stage, cutting through the
+    // band's heads and the act's words. Now they sit on a small dark rounded plate (taller while the fever label shows),
+    // with rounded ends, and the full part of each has a soft shine along its top
+    const rb = (x, y, w, h, c) => {
+      if (w <= 0) return;
+      g.fillStyle = c;
+      g.beginPath();
+      g.roundRect ? g.roundRect(x, y, w, h, h / 2) : g.rect(x, y, w, h);
+      g.fill();
+    };
+    const pl = 6 * s,
+      plB = fy + (fv ? 17 : 3) * s + 3 * s;
+    rb(bx - pl, by - 3 * s, bw + pl * 2, plB - (by - 3 * s), "rgba(8,5,20,.42)"); // (light enough to see the act through)
+    const sk = G.ta ? Math.min(1, G.ta.served / TA_GOAL) : G.served / Math.max(1, G.total); // (Time Attack: towards its fifty)
+    rb(bx, by, bw, 4 * s, "rgba(255,255,255,.15)");
+    rb(bx, by, Math.max(4 * s, bw * sk), 4 * s, "#5ff5c8");
+    rb(bx + 2 * s, by + 0.5 * s, Math.max(0, bw * sk - 4 * s), 1.2 * s, "rgba(255,255,255,.45)");
+    rb(bx, fy, bw, 3 * s, "rgba(255,255,255,.1)");
+    if (fk > 0) {
+      rb(bx, fy, Math.max(3 * s, bw * fk), 3 * s, fv ? "hsl(" + ((t * 360) % 360) + " 95% 65%)" : "#ff5fd8");
+      rb(bx + 2 * s, fy + 0.4 * s, Math.max(0, bw * fk - 4 * s), 1 * s, "rgba(255,255,255,.4)");
+    }
     if (fv) {
       g.font = fD(10);
+      g.fillStyle = "hsl(" + ((t * 360) % 360) + " 95% 70%)";
       g.fillText("SHAKE FEVER  x2", sx(PW / 2), fy + 6 * s);
     }
   }
@@ -83038,6 +83097,15 @@ profWire();
 //  the game, and where the motion capture, the folk songs and the fonts come from. Both from the menu at any time.
 // =====================================================================================
 const NEWS = [
+  {
+    ver: "v1.5.37",
+    title: "SNAP AND SPARKLE",
+    items: [
+      "STARDUST SNOW HAS DEPTH: FAR FLAKES ARE TINY AND SLOW, NEAR ONES BRIGHT AND QUICK, AND THE BIG FLAT STARS ARE NOW LITTLE GLINTS THAT TURN AS THEY FALL",
+      "THE TWO BARS AT THE TOP SIT ON A SMALL SEE-THROUGH PLATE WITH ROUNDED ENDS AND A SHINE, INSTEAD OF CUTTING THROUGH THE BAND ON STAGE",
+      'ANNOUNCEMENTS POP IN WITH A LITTLE SPRING INSTEAD OF ONLY FADING IN, AND "GO!" SWELLS AS IT FADES',
+    ],
+  },
   {
     ver: "v1.5.36",
     title: "SMOOTHER MOVES",

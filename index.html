@@ -7214,6 +7214,27 @@ const DICT_ROWS                             = [
   ["CRISP AND CINEMATIC", "SKERP EN FILMIES", "OSTRO I FILMOWO"],
   ["SHINING WORLDS", "BLINKENDE WÊRELDE", "LŚNIĄCE ŚWIATY"],
   ["PERFECT TIMING", "PERFEKTE TYDSBEPLANNING", "IDEALNE WYCZUCIE"],
+  ["SMOOTHER MOVES", "GLADDER BEWEGINGS", "PŁYNNIEJSZY RUCH"],
+  [
+    "WORDS AND POINTS GLIDE: WHEN A NEW ONE POPS UP, THE OTHERS SLIDE ASIDE TO MAKE ROOM INSTEAD OF JUMPING, AND THEY NEVER LAND ON EACH OTHER",
+    "WOORDE EN PUNTE GLY: WANNEER 'N NUWE EEN OPSPRING, GLY DIE ANDER OPSY OM PLEK TE MAAK IN PLAAS VAN OM TE SPRING, EN HULLE BELAND NOOIT OP MEKAAR NIE",
+    "NAPISY I PUNKTY SZYBUJĄ: GDY POJAWIA SIĘ NOWY, POZOSTAŁE PŁYNNIE ODSUWAJĄ SIĘ, ZAMIAST SKAKAĆ, I NIGDY NA SIEBIE NIE NACHODZĄ",
+  ],
+  [
+    "A CLEANER JUMP BETWEEN BARS: THE LIGHTNING CRACKLES AND IS GONE, THE AFTERIMAGES MELT AWAY, AND THE FLASH WHERE YOU LAND NO LONGER LIGHTS YOU UP WHITE",
+    "'N SKONER SPRONG TUSSEN TOONBANKE: DIE WEERLIG KNETTER EN IS WEG, DIE NABEELDE SMELT WEG, EN DIE FLITS WAAR JY LAND, BELIG JOU NIE MEER WIT NIE",
+    "CZYSTSZY SKOK MIĘDZY BARAMI: BŁYSKAWICE TRZASKAJĄ I ZNIKAJĄ, POWIDOKI SIĘ ROZPŁYWAJĄ, A BŁYSK PRZY LĄDOWANIU JUŻ CIĘ NIE WYBIELA",
+  ],
+  [
+    "AT THE TAP AND AT EVERY CATCH THE LIGHT IS GENTLER: YOU CAN SEE THE BARTENDER'S FACE WHILE SHE POURS, AND THE GLASS AND THE HAND THAT CATCHES IT",
+    "BY DIE KRAAN EN BY ELKE VANG IS DIE LIG SAGTER: JY SIEN DIE KROEGMEISIE SE GESIG TERWYL SY SKINK, EN DIE GLAS EN DIE HAND WAT DIT VANG",
+    "PRZY NALEWAKU I PRZY KAŻDYM ZŁAPANIU ŚWIATŁO JEST ŁAGODNIEJSZE: WIDAĆ TWARZ BARMANKI, GDY NALEWA, ORAZ SZKLANKĘ I ŁAPIĄCĄ JĄ DŁOŃ",
+  ],
+  [
+    "AFTER A LEVEL, THE SURPRISE BOX IS SHADED, ITS LID FLIES OFF SPINNING INSTEAD OF HANGING OVER THE WORDS, AND THE GALAXY MAP IS A ROUNDED WINDOW ONTO SPACE",
+    "NA 'N VLAK IS DIE VERRASSINGSDOOS GESKADU, SY DEKSEL VLIEG TOLLEND AF IN PLAAS VAN OOR DIE WOORDE TE HANG, EN DIE STERRESTELSELKAART IS 'N RONDE VENSTER OP DIE RUIMTE",
+    "PO POZIOMIE PUDEŁKO-NIESPODZIANKA MA CIENIE, JEGO WIECZKO ODLATUJE, WIRUJĄC, ZAMIAST WISIEĆ NAD NAPISAMI, A MAPA GALAKTYKI TO ZAOKRĄGLONE OKNO NA KOSMOS",
+  ],
   ["BETTER LIGHT", "BETER LIG", "LEPSZE ŚWIATŁO"],
   [
     "THE LIGHTING HAS MORE ROOM: WHERE LAMPS, TAPS AND YOUR SPOTLIGHT OVERLAP, THE LIGHT RISES SMOOTHLY INSTEAD OF BURNING OUT TO FLAT WHITE",
@@ -8037,6 +8058,7 @@ const DICT_PAT                             = [
   [/^A FREE (.+)!$/, "'N GRATIS $1!", "$1 ZA DARMO!"],
   [/^SAVING UP FOR: (.+)$/, "SPAAR VIR: $1", "ODKŁADASZ NA: $1"],
   [/^(\d+) COINS TO GO$/, "NOG $1 MUNTE", "BRAKUJE $1 MONET"],
+  [/^1 COIN TO GO$/, "NOG 1 MUNT", "BRAKUJE 1 MONETY"], // (v1.5.36)
   // (v1.4.79) v1.5.2
   [/^([A-Z][A-Z\- ]{2,})!$/, "$1!", "$1!"],
   // (v1.4.79) v1.5.4 redemption
@@ -17121,9 +17143,10 @@ const at = (lane, x, y) => (lane === undefined ? projAuto(x, y) : projL(lane, x,
 function emit(o) {
   parts.push(o);
 }
-function lightFx(x, y, r, c, life) {
+function lightFx(x, y, r, c, life, a = 0.5) {
+  // (v1.5.36: and how strong it starts - a quick flash right on the bartender is kept softer, see sky.ts)
   G.lfx = G.lfx || [];
-  G.lfx.push({ x, y, r, c, life, max: life });
+  G.lfx.push({ x, y, r, c, life, max: life, a });
 }
 function updateParts(dt) {
   for (let i = parts.length - 1; i >= 0; i--) {
@@ -17268,7 +17291,7 @@ function splash(lane, x, y, flavor) {
       size: 4 * s,
       grow: 26,
       drag: 4,
-      c: [1, 0.95, 0.88, 0.55],
+      c: [1, 0.95, 0.88, 0.35], // (v1.5.36: thinner puffs - with the flash, three of them made a white ball over the catch)
     });
   sparkle(x, y, [1, 0.8, 0.9, 1], 5, lane);
   lightFx(px, py, 70, c, 0.3);
@@ -20898,12 +20921,16 @@ function drawSpeedTrails(t, p) {
         ax + (bx0 - ax) * f,
         ay + (by0 - ay) * f,
         s,
-        withA(i % 2 ? hot[1] : hot[0], fade * (0.3 - 0.18 * f)),
+        withA(i % 2 ? hot[1] : hot[0], fade * fade * (0.3 - 0.18 * f)), // (v1.5.36: fading faster - fade squared - so the ghosts melt away rather than linger)
         t
       );
     }
     R.setAdd(true);
-    for (let b = 0; b < 3; b++) {
+    // (v1.5.36) THE BOLTS CRACKLE AND ARE GONE: they used to stay at full strength for the whole jump - three thick white
+    // zig-zags hanging under her long after she'd landed, like a scribble. Now they're thinner, gone in the first half
+    // of the jump and fading as they go, and the last one is the trail's own icy colour rather than plain white
+    const boltK = Math.max(0, 1 - k / 0.5);
+    for (let b = 0; b < 3 && boltK > 0; b++) {
       // jagged bolts, re-drawn every frame so they crackle
       // (v1.4.63: a new shape 20 times a second rather than every frame - still crackling, but no strobe)
       const pts = [],
@@ -20914,13 +20941,18 @@ function drawSpeedTrails(t, p) {
           jy = (hash(sd + 13 + j) - 0.5) * 10;
         pts.push(ax + (bx - ax) * f + jx, ay - 40 + (by - ay) * f + jy);
       }
-      polyline(pts, 3 - b * 0.6, withA(b === 2 ? C.white : hot[b], fade));
+      polyline(
+        pts,
+        (2.2 - b * 0.5) * (0.6 + 0.4 * boltK),
+        withA(b === 2 ? hot[1] : hot[b], 0.8 * boltK * boltK)
+      );
     }
     glow(ax, ay - 40, 50, withA(hot[0], 0.5 * fade));
     R.setAdd(false);
     if (p.laneT < 0.02) {
       sparkle(p.x + 8, LY(p.lane, p.x) - 10, hot[1], 10, p.lane);
-      lightFx(bx0, by0 - 40, 140, hot[1], 0.3);
+      // (v1.5.36: a softer flash where she lands - at full strength it lit her up white for a moment on every jump)
+      lightFx(bx0, by0 - 40, 120, hot[1], 0.3, 0.22);
     }
   }
 }
@@ -29864,10 +29896,13 @@ function drawLights(V, t) {
       g(dx, dy, 95 * LS(l), V.neon, 0.45 * (0.85 + (COMFORT.calm ? 0 : 0.3 * beatPulse()))); // (v1.4.28: the door neon throbs with the music)
       const [tx, ty] = projL(l, TAPX + 52, LY(l, TAPX) + 22),
         on = active().some((p) => p.lane === l);
-      g(tx, ty, (on ? 90 : 50) * LS(l), on ? C.mint : C.amber, on ? 0.45 : 0.25);
+      // (v1.5.36) gentler where she stands: the tap's light, the pour's light, her spotlight and her ceiling beam all
+      // land on the same spot - together they still lit her past white at the tap (most of all on the top bar, under
+      // the lamps). Each is a little softer now, so at the tap she glows but keeps her face and colours.
+      g(tx, ty, (on ? 90 : 50) * LS(l), on ? C.mint : C.amber, on ? 0.3 : 0.25);
       if (active().some((p) => p.lane === l && p.pouring)) {
         const [sx, sy] = projL(l, TAPX + 14, LY(l, TAPX) - 20);
-        g(sx, sy, 60, FLAVORS[l % 3][0], 0.35);
+        g(sx, sy, 60, FLAVORS[l % 3][0], 0.2);
       }
     }
     for (const s of shakes) {
@@ -29944,7 +29979,7 @@ function drawLights(V, t) {
   for (const p of parts)
     if (p.light && !(p.wait > 0))
       g(p.x, p.y, p.light * (0.6 + (0.6 * p.life) / p.max), p.c, (0.3 * p.life) / p.max);
-  for (const l of G.lfx || []) g(l.x, l.y, l.r, l.c, (0.5 * l.life) / l.max);
+  for (const l of G.lfx || []) g(l.x, l.y, l.r, l.c, ((l.a ?? 0.5) * l.life) / l.max);
   if (G.flash > 0.01) g(PW / 2, PH / 2, 900, G.flashC, 0.3 * G.flash * FLASH());
   R.endLights();
 }
@@ -60626,10 +60661,29 @@ function giftHud(g, s, t, fD) {
   g.fillRect(-bw / 2, -bw * 0.15, bw, bw * 0.65);
   g.fillStyle = G0.big ? "#ff5fa8" : "#5ff5c8";
   g.fillRect(-bw * 0.08, -bw * 0.15, bw * 0.16, bw * 0.65);
-  const lift = open ? Math.min(1, (u - 1.3) * 4) : 0;
+  // (v1.5.36) A BOX WITH SOME BODY: light catching its left edge, its right side in shade and a darker band under the
+  // lid's shadow - it was three flat rectangles before
+  {
+    const sh = g.createLinearGradient(-bw / 2, 0, bw / 2, 0);
+    sh.addColorStop(0, "rgba(255,255,255,.22)");
+    sh.addColorStop(0.18, "rgba(255,255,255,0)");
+    sh.addColorStop(0.62, "rgba(0,0,0,0)");
+    sh.addColorStop(1, "rgba(20,0,30,.28)");
+    g.fillStyle = sh;
+    g.fillRect(-bw / 2, -bw * 0.15, bw, bw * 0.65);
+    g.fillStyle = "rgba(20,0,30,.22)";
+    g.fillRect(-bw / 2, -bw * 0.15, bw, bw * 0.07);
+  }
+  // (v1.5.36) THE LID FLIES OFF: it used to pop up, tilt and then hang there in mid-air for the rest of the screen,
+  // right across the line of words about the stars. Now it's thrown up and away in an arc, spinning, and fades as it
+  // falls - out of the way before the words come
+  const tl = open ? u - 1.3 : 0,
+    lift = open ? Math.min(1, tl * 4) : 0,
+    lidA = open ? clamp(1 - (tl - 0.45) / 0.35, 0, 1) : 1;
   g.save();
-  g.translate(-lift * bw * 0.3, -lift * bw * 0.7);
-  g.rotate(-lift * 0.6);
+  g.globalAlpha = lidA;
+  g.translate(-bw * (lift * 0.3 + tl * 1.1), -bw * (lift * 0.7 + tl * 2.2 - tl * tl * 3.4));
+  g.rotate(-lift * 0.6 - tl * 5);
   g.fillStyle = G0.big ? "#ffe066" : "#ff7ab8";
   g.fillRect(-bw * 0.58, -bw * 0.34, bw * 1.16, bw * 0.22);
   g.fillStyle = G0.big ? "#ff5fa8" : "#5ff5c8";
@@ -60695,7 +60749,15 @@ function giftHud(g, s, t, fD) {
       g.globalAlpha = a2;
       g.font = "700 " + Math.round(11 * s) + "px " + FB;
       g.fillStyle = "#ffd24d";
-      g.fillText("SAVING UP FOR: " + goal.name + "  ·  " + goal.left + " COINS TO GO", cx, by);
+      g.fillText(
+        "SAVING UP FOR: " +
+          goal.name +
+          "  ·  " +
+          goal.left +
+          (goal.left === 1 ? " COIN TO GO" : " COINS TO GO"), // (v1.5.36: "1 COIN", not "1 COINS")
+        cx,
+        by
+      );
       g.fillStyle = "rgba(10,6,20,.75)";
       g.fillRect(cx - w / 2, by + 9 * s, w, 7 * s);
       g.fillStyle = "#ffd24d";
@@ -72536,7 +72598,15 @@ function gmAndromeda(g, fr) {
   g.fill();
 }
 // draw the map into a 2D canvas: cur = the stop you're at, hop = 0..1 as the ship flies on to the next stop
-function drawGalaxyMap(g, w, h, cur, hop, t, opts                                                    = {}) {
+function drawGalaxyMap(
+  g,
+  w,
+  h,
+  cur,
+  hop,
+  t,
+  opts                                                                    = {}
+) {
   const L = gmLayout(w, h),
     P = L.pts,
     F = L.F,
@@ -72550,7 +72620,9 @@ function drawGalaxyMap(g, w, h, cur, hop, t, opts                               
   bg.addColorStop(1, "#140618");
   g.fillStyle = bg;
   g.beginPath();
-  g.rect(0, 0, w, h);
+  // (v1.5.36: with rounded corners where it's asked for - the window of space after a level)
+  if (opts.round && g.roundRect) g.roundRect(0, 0, w, h, opts.round);
+  else g.rect(0, 0, w, h);
   g.fill();
   g.clip();
   for (let i = 0; i < 160; i++) {
@@ -72846,7 +72918,38 @@ function gmClearHud(g, s) {
     y = cssH * 0.6 + (1 - k) * 30 * s;
   g.save();
   g.translate(x, y);
-  drawGalaxyMap(g, w, h, tourStop(), clamp((G.starsT - 2.3) / 1.1, 0, 1), G.time, { alpha: k });
+  // (v1.5.36) A WINDOW ONTO SPACE: the map used to be a hard-cornered dark slab across the bottom of the screen. Now it
+  // has rounded corners, a soft shadow under it and a thin bright rim, with a glint of light along its top edge
+  const rr = 16 * s;
+  g.save();
+  g.globalAlpha = 0.55 * k;
+  g.shadowColor = "rgba(0,0,0,.9)";
+  g.shadowBlur = 24 * s;
+  g.shadowOffsetY = 6 * s;
+  g.fillStyle = "#060a1c";
+  g.beginPath();
+  if (g.roundRect) g.roundRect(0, 0, w, h, rr);
+  else g.rect(0, 0, w, h);
+  g.fill();
+  g.restore();
+  drawGalaxyMap(g, w, h, tourStop(), clamp((G.starsT - 2.3) / 1.1, 0, 1), G.time, { alpha: k, round: rr });
+  g.globalAlpha = k;
+  g.lineWidth = 1.5 * s;
+  g.strokeStyle = "rgba(159,176,255,.45)";
+  g.beginPath();
+  if (g.roundRect) g.roundRect(0.75 * s, 0.75 * s, w - 1.5 * s, h - 1.5 * s, rr);
+  else g.rect(0, 0, w, h);
+  g.stroke();
+  const gl = g.createLinearGradient(0, 0, w, 0);
+  gl.addColorStop(0, "rgba(255,255,255,0)");
+  gl.addColorStop(0.5, "rgba(255,255,255,.35)");
+  gl.addColorStop(1, "rgba(255,255,255,0)");
+  g.strokeStyle = gl;
+  g.lineWidth = 1 * s;
+  g.beginPath();
+  g.moveTo(rr, 2.5 * s);
+  g.lineTo(w - rr, 2.5 * s);
+  g.stroke();
   g.restore();
 }
 // =====================================================================================
@@ -74405,7 +74508,8 @@ function drawCatchFx(lane) {
     R.setAdd(true);
     polyline(pts, 3.2 * (1 - k) + 0.6, withA(c, 0.8 * a));
     polyline(pts, 1.2, withA(C.white, 0.6 * a));
-    if (age < 0.15) glow(e.x, e.y - 10, 46, withA(c, 0.5 * (1 - age / 0.15)));
+    // (v1.5.36: a softer flash - at 0.5 it whited out the glass and the hand catching it, the very thing to see)
+    if (age < 0.15) glow(e.x, e.y - 10, 40, withA(c, 0.3 * (1 - age / 0.15)));
     R.setAdd(false);
   }
 }
@@ -75734,8 +75838,8 @@ function levelOfTour(of) {
     inTour = ((lv - 1) % LAST_LEVEL) + 1;
   return (tour > 1 ? "TOUR " + tour + "  ·  " : "") + "LEVEL " + inTour + of + LAST_LEVEL;
 }
-const GAME_VERSION = "v1.5.35",
-  GAME_DATE = "11.11.2026",
+const GAME_VERSION = "v1.5.36",
+  GAME_DATE = "12.11.2026",
   VERSION_TEXT = GAME_VERSION + "  ·  " + GAME_DATE;
 const FB = '"Chakra Petch", "Segoe UI", sans-serif';
 let FD = '"Bungee", "Impact", sans-serif';
@@ -76682,6 +76786,16 @@ function drawHud(fps) {
         const y = want + (k % 2 ? -1 : 1) * Math.ceil(k / 2) * (tall + 2 * s);
         if (y >= topY) cyw = y;
       }
+      // (v1.5.36) GLIDING, NOT JUMPING: when a new word arrived and this one had to make room, it used to jump to its new
+      // place in a single frame - a few words popping up together twitched about. Now each one slides there (in screen
+      // pixels, so it's the same on a phone and a big screen), and a word just born starts where it lands
+      // (only the step aside is eased - the word still rises with its own motion, without lagging behind it)
+      // (and never onto another word on the way: if the in-between place would cover one, it goes straight there)
+      const off = cyw - want,
+        offE = c._wo !== undefined && Math.abs(c._wo - off) < cssH * 0.5 ? c._wo + (off - c._wo) * 0.3 : off,
+        yE = Math.max(topY, want + offE);
+      if (free(yE)) cyw = yE;
+      c._wo = cyw - want;
       WBOX.push({ x: cxw, y: cyw, hw, h: tall });
       g.save();
       g.translate(cxw, cyw);
@@ -82924,6 +83038,16 @@ profWire();
 //  the game, and where the motion capture, the folk songs and the fonts come from. Both from the menu at any time.
 // =====================================================================================
 const NEWS = [
+  {
+    ver: "v1.5.36",
+    title: "SMOOTHER MOVES",
+    items: [
+      "WORDS AND POINTS GLIDE: WHEN A NEW ONE POPS UP, THE OTHERS SLIDE ASIDE TO MAKE ROOM INSTEAD OF JUMPING, AND THEY NEVER LAND ON EACH OTHER",
+      "A CLEANER JUMP BETWEEN BARS: THE LIGHTNING CRACKLES AND IS GONE, THE AFTERIMAGES MELT AWAY, AND THE FLASH WHERE YOU LAND NO LONGER LIGHTS YOU UP WHITE",
+      "AT THE TAP AND AT EVERY CATCH THE LIGHT IS GENTLER: YOU CAN SEE THE BARTENDER'S FACE WHILE SHE POURS, AND THE GLASS AND THE HAND THAT CATCHES IT",
+      "AFTER A LEVEL, THE SURPRISE BOX IS SHADED, ITS LID FLIES OFF SPINNING INSTEAD OF HANGING OVER THE WORDS, AND THE GALAXY MAP IS A ROUNDED WINDOW ONTO SPACE",
+    ],
+  },
   {
     ver: "v1.5.35",
     title: "BETTER LIGHT",

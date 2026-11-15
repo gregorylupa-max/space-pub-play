@@ -7214,6 +7214,27 @@ const DICT_ROWS                             = [
   ["CRISP AND CINEMATIC", "SKERP EN FILMIES", "OSTRO I FILMOWO"],
   ["SHINING WORLDS", "BLINKENDE WÊRELDE", "LŚNIĄCE ŚWIATY"],
   ["PERFECT TIMING", "PERFEKTE TYDSBEPLANNING", "IDEALNE WYCZUCIE"],
+  ["FAIR AND LIGHT", "REGVERDIG EN LIG", "UCZCIWIE I LEKKO"],
+  [
+    "NO MORE HIDDEN CUSTOMERS: A NEWCOMER NEVER APPEARS ON TOP OF SOMEONE STILL IN THE DOORWAY, AND A QUICK CUSTOMER WAITS A STEP BEHIND A SLOW ONE INSTEAD OF WALKING THROUGH THEM",
+    "GEEN VERSTEEKTE KLANTE MEER NIE: 'N NUWE KLANT VERSKYN NOOIT BO-OP IEMAND WAT NOG IN DIE DEUR STAAN NIE, EN 'N VINNIGE KLANT WAG 'N TREE AGTER 'N STADIGE IN PLAAS VAN DEUR HOM TE LOOP",
+    "KONIEC Z UKRYTYMI KLIENTAMI: NOWY KLIENT NIGDY NIE POJAWIA SIĘ NA KIMŚ, KTO JESZCZE STOI W DRZWIACH, A SZYBKI KLIENT CZEKA KROK ZA WOLNYM, ZAMIAST PRZEZ NIEGO PRZECHODZIĆ",
+  ],
+  [
+    "THE BARS AT THE TOP KEEP BELOW THE LINE OF NEWS INSTEAD OF RUNNING INTO IT, AND ON YOUR LAST LIFE THE RED LIVES NUMBER GLOWS WITH A SLOW HEARTBEAT",
+    "DIE STAWE BO BLY ONDER DIE NUUSREËL IN PLAAS DAARVAN OM DAARIN TE LOOP, EN OP JOU LAASTE LEWE GLOEI DIE ROOI LEWENS-GETAL MET 'N STADIGE HARTKLOP",
+    "PASKI U GÓRY TRZYMAJĄ SIĘ PONIŻEJ LINII WIADOMOŚCI, ZAMIAST NA NIĄ NACHODZIĆ, A NA OSTATNIM ŻYCIU CZERWONA LICZBA ŻYĆ ŚWIECI W RYTMIE POWOLNEGO BICIA SERCA",
+  ],
+  [
+    "RUNNING LEAVES A SOFT STREAK AND A FEW THIN SPEED LINES BEHIND HER, INSTEAD OF A GLOWING BLOCK, AND HER AFTERIMAGES FADE FASTER",
+    "AS SY HARDLOOP, LAAT SY 'N SAGTE STREEP EN 'N PAAR DUN SPOEDLYNE AGTER, IN PLAAS VAN 'N GLOEIENDE BLOK, EN HAAR NABEELDE VERVAAG VINNIGER",
+    "GDY BIEGNIE, ZOSTAWIA ZA SOBĄ MIĘKKĄ SMUGĘ I KILKA CIENKICH LINII PRĘDKOŚCI ZAMIAST ŚWIECĄCEGO BLOKU, A JEJ POWIDOKI ZNIKAJĄ SZYBCIEJ",
+  ],
+  [
+    "SOFTER LIGHT FROM SPEED AND SHIELD POWER-UPS, SO SHE ISN'T LOST IN A WHITE HAZE, AND THE ANGEL'S HOLY FLASH NO LONGER WHITES OUT THE BAR",
+    "SAGTER LIG VAN SPOED- EN SKILD-KRAGTE, SODAT SY NIE IN 'N WIT WASIGHEID VERDWYN NIE, EN DIE ENGEL SE HEILIGE FLITS MAAK NIE MEER DIE TOONBANK WIT NIE",
+    "ŁAGODNIEJSZE ŚWIATŁO Z MOCY SZYBKOŚCI I TARCZY, WIĘC NIE GINIE W BIAŁEJ MGIEŁCE, A ŚWIĘTY BŁYSK ANIOŁA JUŻ NIE WYBIELA BARU",
+  ],
   ["SNAP AND SPARKLE", "KNAP EN SKITTER", "ZRYW I BLASK"],
   [
     "STARDUST SNOW HAS DEPTH: FAR FLAKES ARE TINY AND SLOW, NEAR ONES BRIGHT AND QUICK, AND THE BIG FLAT STARS ARE NOW LITTLE GLINTS THAT TURN AS THEY FALL",
@@ -12367,14 +12388,22 @@ function update(dt) {
   const remaining = G.total - G.served - customers.filter((c) => c.state !== "out").length;
   // (v1.5.11) A KNOCK AT THE DOOR: the next customer's bar is chosen a moment early, so that door can light up and
   // swing a little before they walk in (doorWarn, juice.ts) - you see where they'll come from instead of being surprised
+  // (v1.5.38) NOBODY HIDDEN IN THE DOORWAY: a group arrives a quarter of a second apart, and the second could be sent to
+  // the bar the first had only just walked in on - two customers drawn in exactly the same place, so you saw one and
+  // served one, and the hidden one cost you a life. Now a newcomer gets a bar whose doorway is clear (when there is one),
+  // and if the door that already lit up for them is still busy, they wait a moment on the step rather than switch bars
+  const doorBusy = (l) => customers.some((c) => c.lane === l && c.state === "walk" && c.x < X0 + 14);
   const pickLane = () => {
     const counts = [0, 0, 0, 0];
     for (const c of customers) counts[c.lane]++;
-    let l = Math.floor(Math.random() * LANES);
-    if (Math.random() < 0.6) l = counts.indexOf(Math.min(...counts));
+    const open = [0, 1, 2, 3].filter((l) => l < LANES && !doorBusy(l)),
+      pool = open.length ? open : [0, 1, 2, 3].filter((l) => l < LANES);
+    let l = pool[Math.floor(Math.random() * pool.length)];
+    if (Math.random() < 0.6) l = pool.reduce((a, b) => (counts[b] < counts[a] ? b : a), pool[0]);
     return l;
   };
   if (G.nextLane == null && G.spawnT < DOOR_WARN && remaining > 0) G.nextLane = pickLane();
+  if (G.spawnT <= 0 && remaining > 0 && G.nextLane != null && doorBusy(G.nextLane)) G.spawnT = 0.12; // (wait on the step)
   if (G.spawnT <= 0 && remaining > 0 && customers.filter((c) => c.state !== "out").length < prm.maxOn) {
     const lane = G.nextLane ?? pickLane();
     G.nextLane = null;
@@ -13241,10 +13270,17 @@ function update(dt) {
         // (v1.4.65) nobody walks INTO a boss: a customer coming up behind one on the same bar waits a step behind it,
         // instead of disappearing inside its huge body
         // (and a boss coming up behind someone waits behind them too - it doesn't trample over them)
+        // (v1.5.38) AND NOBODY WALKS INTO ANYONE: a quick customer catching up with a slow one on the same bar used to
+        // walk straight through them - two drawn as one, and the one behind hidden until it was nearly at your end. Now
+        // everyone keeps a step apart (a boss still needs a bigger gap). Who's ahead is settled even when two stand on
+        // exactly the same spot (the one who came in first), so they can never both wait for each other
+        const ci = customers.indexOf(c);
         for (const o of customers) {
-          if (o === c || o.lane !== c.lane || o.state !== "walk" || !(o.type.boss || c.type.boss)) continue;
-          const gap = 80;
-          if (o.x >= c.x - 4 && c.x > o.x - gap) c.x = Math.max(c.x - v, Math.min(c.x, o.x - gap));
+          if (o === c || o.lane !== c.lane || o.state !== "walk") continue;
+          const ahead = o.x > c.x + 0.01 || (Math.abs(o.x - c.x) <= 0.01 && customers.indexOf(o) < ci);
+          if (!ahead) continue;
+          const gap = o.type.boss || c.type.boss ? 80 : 40;
+          if (c.x > o.x - gap) c.x = Math.max(c.x - v, Math.min(c.x, o.x - gap));
         }
         const w0 = c.walk || 0;
         c.walk = w0 + v;
@@ -17470,7 +17506,9 @@ function banishFx(c, mode, demo) {
   // two shockwaves, a big flash of light
   rings.push({ x: px, y: py, r: 90, life: 0.45, max: 0.45 });
   rings.push({ x: px, y: py, r: 160, life: 0.7, max: 0.7 });
-  lightFx(px, py, mode === "kick" ? 240 : 320, col0, 0.5);
+  // (v1.5.38) a gentler holy flash: the big flash and the pillar's light below landed on the same spot - together they
+  // washed the top corner of the bar out to white for a second (the words over it unreadable). Still a flare, not a blowout
+  lightFx(px, py, mode === "kick" ? 240 : 300, col0, mode === "kick" ? 0.5 : 0.38);
   if (!demo) {
     G.flash = Math.max(G.flash || 0, mode === "kick" ? 0.18 : 0.3);
     G.flashC = col0;
@@ -17512,7 +17550,7 @@ function banishFx(c, mode, demo) {
         drag: 0.6,
         light: i % 3 ? 0 : 26,
       });
-    lightFx(px, (py + top) / 2, 220, col0, 0.7);
+    lightFx(px, (py + top) / 2, 200, col0, 0.36);
   }
   if (mode === "kick" && evil) {
     // fire and brimstone: embers and dark smoke curling up
@@ -20837,34 +20875,46 @@ function drawSpeedTrails(t, p) {
       [ox2, oy2] = at(old.x),
       [ex, ey] = at(tail);
     R.setAdd(true);
+    // (v1.5.38) A SOFT STREAK, NOT A BOX: the glow behind a running bartender used to be one band with hard top and
+    // bottom edges (plus a white band through it), and with the afterimages on top it read as a glowing block beside
+    // her. Now the glow is brightest along a middle line and fades to nothing above and below it, and the white band is
+    // three thin speed lines at different heights and lengths, tapering away behind her
+    const om = oy2 - 35 * ps; // (the middle line at the trail's far end)
     quad4(
       ox2,
       oy2 - 58 * ps,
       ex,
       ey - 64 * ps,
       ex,
-      ey - 8 * ps,
+      ey - 36 * ps,
       ox2,
-      oy2 - 12 * ps,
+      om,
       withA(hot[0], 0),
-      withA(hot[1], 0.22),
-      withA(hot[1], 0.16),
+      withA(hot[1], 0),
+      withA(hot[1], 0.18),
       withA(hot[0], 0)
     );
     quad4(
       ox2,
-      oy2 - 40 * ps,
+      om,
       ex,
-      ey - 44 * ps,
+      ey - 36 * ps,
       ex,
-      ey - 28 * ps,
+      ey - 8 * ps,
       ox2,
-      oy2 - 30 * ps,
-      withA(C.white, 0),
-      withA(C.white, 0.22),
-      withA(C.white, 0.16),
-      withA(C.white, 0)
+      oy2 - 12 * ps,
+      withA(hot[0], 0),
+      withA(hot[1], 0.18),
+      withA(hot[1], 0),
+      withA(hot[0], 0)
     );
+    for (let l = 0; l < 3; l++) {
+      const ly = [22, 38, 52][l] * ps,
+        ll = [0.7, 1, 0.55][l],
+        lx = ex + (ox2 - ex) * ll,
+        lyo = ey + (oy2 - ey) * ll;
+      streak(ex, ey - ly, lx, lyo - ly, (l === 1 ? 2 : 1.4) * ps, withA(l === 1 ? C.white : hot[1], 0.45));
+    }
     for (let b = 0; b < 2; b++) {
       // a couple of sparks crackling in the wake
       // (v1.4.63: each spark holds for a tenth of a second instead of jumping every frame - no flicker)
@@ -20886,7 +20936,8 @@ function drawSpeedTrails(t, p) {
       age = G.time - h.t,
       k = 1 - age / 0.38,
       [gx, gy] = at(h.x);
-    ghost(p, gx, gy, ps, withA(age < 0.14 ? hot[1] : hot[0], 0.26 * k), t);
+    // (v1.5.38: fainter and quicker to fade - five full-strength copies of her added up to a bright block)
+    ghost(p, gx, gy, ps, withA(age < 0.1 ? hot[1] : hot[0], 0.2 * k * k), t);
   }
   // jumping between bars: a quick smear from where you were, fading out before it reaches you
   const hop = p.laneT < DUR && p.laneT >= 0 && p.from !== undefined && p.from !== p.lane && live;
@@ -29949,8 +30000,10 @@ function drawLights(V, t) {
     } // a spotlight that follows you
     for (const p of active()) {
       const [x, y] = projL(p.lane, p.x + 8, LY(p.lane, p.x) - 4, VSIDE.p);
-      if (hasPw("shield")) g(x, y, 70, C.mint, 0.25);
-      if (hasPw("speed")) g(x, y, 60, col("#ffd040"), 0.3);
+      // (v1.5.38) softer power-up lights: on top of her spotlight and the lamp pools, the full-strength SPEED FORCE
+      // light turned her into a white-orange haze as she ran - now it's a warm tint round her, wider and fainter
+      if (hasPw("shield")) g(x, y, 80, C.mint, 0.17);
+      if (hasPw("speed")) g(x, y, 75, col("#ffd040"), 0.16);
     }
     // (v1.4.29) A SOFT LIGHT ON EVERY CUSTOMER: so their faces and clothes read clearly, even far from the lamps
     for (const c of customers) {
@@ -75868,8 +75921,8 @@ function levelOfTour(of) {
     inTour = ((lv - 1) % LAST_LEVEL) + 1;
   return (tour > 1 ? "TOUR " + tour + "  ·  " : "") + "LEVEL " + inTour + of + LAST_LEVEL;
 }
-const GAME_VERSION = "v1.5.37",
-  GAME_DATE = "12.11.2026",
+const GAME_VERSION = "v1.5.38",
+  GAME_DATE = "15.11.2026",
   VERSION_TEXT = GAME_VERSION + "  ·  " + GAME_DATE;
 const FB = '"Chakra Petch", "Segoe UI", sans-serif';
 let FD = '"Bungee", "Impact", sans-serif';
@@ -76443,6 +76496,7 @@ function drawHud(fps) {
       g.fill();
       g.globalAlpha = a;
     };
+  let subLines = 1; // (v1.5.38: how many lines the level line took - the meters go below them all)
   if (subNow.length) {
     const c = subNow[0], // (v1.4.83: the first in line - they take turns now, see update.ts)
       k = c.life / c.max,
@@ -76493,6 +76547,7 @@ function drawHud(fps) {
     const lw = Math.max(...lines.map((l) => g.measureText(l).width));
     if (lw > room) g.font = fB((fpx * room) / lw, 700);
     const lh = 15 * s;
+    subLines = lines.length;
     lines.forEach((l, i) => {
       backing(l, cx, lineY + i * lh, al);
       // (v1.5.33: and a thin dark edge round the letters, so they stay sharp whatever is behind)
@@ -76541,7 +76596,10 @@ function drawHud(fps) {
     }
     const bw = 220 * s,
       bx = sx(PW / 2) - bw / 2,
-      by = sy(62) + topDy;
+      // (v1.5.38) CLEAR OF THE LINE ABOVE: the meters sat a fixed distance under the level line - on some screens less
+      // than the height of the line's dark strip, so "NEW STICKER..." ran into their plate (and a fact broken onto two
+      // lines ran right across them). Now they keep below the strip of the last line, with a small gap
+      by = Math.max(sy(62) + topDy, lineY + (subLines - 1) * 15 * s + 16 * s);
     // the SHAKE FEVER meter: fills as you serve and catch without a slip; full = fever time
     const fv = G.fever > 0,
       fk = Math.min(1, fv ? G.fever / FEVER_LEN : (G.streak || 0) / FEVER_AT), // (v1.4.76: a fed fever can run past full)
@@ -76670,6 +76728,14 @@ function drawHud(fps) {
       g.fillStyle = nL <= 1 && !unl ? "#ff5a6a" : "#ff8fbf"; // (red on your last life)
       g.shadowColor = "rgba(255,95,168,.5)";
       g.shadowBlur = 8 * s;
+      // (v1.5.38) A HEARTBEAT ON THE LAST LIFE: the red number glows in a slow double beat (lub-dub) - a quiet warning,
+      // not a flashing alarm (and not in calm mode)
+      if (nL <= 1 && !unl && !COMFORT.calm) {
+        const ph = (performance.now() / 1000) % 1.1,
+          hb = Math.max(Math.exp(-((ph - 0.1) ** 2) / 0.003), 0.6 * Math.exp(-((ph - 0.32) ** 2) / 0.003));
+        g.shadowColor = "rgba(255,40,70," + (0.5 + 0.4 * hb).toFixed(2) + ")";
+        g.shadowBlur = (8 + 14 * hb) * s;
+      }
       // (v1.5.29) a life won or lost: the number swells and flashes (white for a new one, red for one lost)
       if (HUDJ.lives >= 0 && nL !== HUDJ.lives && !unl) {
         HUDJ.lifeT = 1;
@@ -83097,6 +83163,16 @@ profWire();
 //  the game, and where the motion capture, the folk songs and the fonts come from. Both from the menu at any time.
 // =====================================================================================
 const NEWS = [
+  {
+    ver: "v1.5.38",
+    title: "FAIR AND LIGHT",
+    items: [
+      "NO MORE HIDDEN CUSTOMERS: A NEWCOMER NEVER APPEARS ON TOP OF SOMEONE STILL IN THE DOORWAY, AND A QUICK CUSTOMER WAITS A STEP BEHIND A SLOW ONE INSTEAD OF WALKING THROUGH THEM",
+      "RUNNING LEAVES A SOFT STREAK AND A FEW THIN SPEED LINES BEHIND HER, INSTEAD OF A GLOWING BLOCK, AND HER AFTERIMAGES FADE FASTER",
+      "SOFTER LIGHT FROM SPEED AND SHIELD POWER-UPS, SO SHE ISN'T LOST IN A WHITE HAZE, AND THE ANGEL'S HOLY FLASH NO LONGER WHITES OUT THE BAR",
+      "THE BARS AT THE TOP KEEP BELOW THE LINE OF NEWS INSTEAD OF RUNNING INTO IT, AND ON YOUR LAST LIFE THE RED LIVES NUMBER GLOWS WITH A SLOW HEARTBEAT",
+    ],
+  },
   {
     ver: "v1.5.37",
     title: "SNAP AND SPARKLE",

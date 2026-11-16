@@ -7214,6 +7214,27 @@ const DICT_ROWS                             = [
   ["CRISP AND CINEMATIC", "SKERP EN FILMIES", "OSTRO I FILMOWO"],
   ["SHINING WORLDS", "BLINKENDE WÊRELDE", "LŚNIĄCE ŚWIATY"],
   ["PERFECT TIMING", "PERFEKTE TYDSBEPLANNING", "IDEALNE WYCZUCIE"],
+  ["NO SURPRISES", "GEEN VERRASSINGS NIE", "BEZ NIESPODZIANEK"],
+  [
+    "A CUSTOMER STILL STANDING IN THE DOORWAY NOW CATCHES A SHAKE SENT TO THEM, INSTEAD OF WATCHING IT FALL OFF THE END RIGHT IN FRONT OF THEM",
+    "'N KLANT WAT NOG IN DIE DEUR STAAN, VANG NOU 'N SKOMMEL WAT NA HOM GESTUUR IS, IN PLAAS DAARVAN OM TE KYK HOE DIT REG VOOR HOM VAN DIE ENT AF VAL",
+    "KLIENT, KTÓRY JESZCZE STOI W DRZWIACH, ŁAPIE TERAZ WYSŁANEGO DO NIEGO SZEJKA, ZAMIAST PATRZEĆ, JAK SPADA Z KOŃCA BARU TUŻ PRZED NIM",
+  ],
+  [
+    "WHEN YOU LOSE A LIFE, THE SIGN TELLS YOU WHY STRAIGHT AWAY, INSTEAD OF AFTER THE FUN FACTS AND TROPHIES WAITING THEIR TURN",
+    "WANNEER JY 'N LEWE VERLOOR, SÊ DIE BORD DADELIK HOEKOM, IN PLAAS VAN NA DIE PRET-FEITE EN TROFEË WAT OP HUL BEURT WAG",
+    "GDY TRACISZ ŻYCIE, SZYLD OD RAZU MÓWI DLACZEGO, ZAMIAST PO CIEKAWOSTKACH I TROFEACH CZEKAJĄCYCH NA SWOJĄ KOLEJ",
+  ],
+  [
+    "THE EMPTY-GLASS ALARM ALSO GOES OFF WHEN YOU ARE ON THAT BAR BUT THE GLASS HAS ALREADY SLID PAST YOU",
+    "DIE LEË-GLAS-ALARM GAAN OOK AF WANNEER JY BY DAARDIE TOONBANK IS, MAAR DIE GLAS AL VERBY JOU GESKUIF HET",
+    "ALARM PUSTEJ SZKLANKI WŁĄCZA SIĘ TEŻ WTEDY, GDY JESTEŚ PRZY TYM BARZE, ALE SZKLANKA JUŻ CIĘ MINĘŁA",
+  ],
+  [
+    "THE POINTS THAT FLOAT UP KEEP CLEAR OF THE POWER-UP TIMERS AND THE FLAVOUR LINES, AND THE BAR'S ORDER HAS A DARK EDGE SO IT READS OVER A BRIGHT BAR",
+    "DIE PUNTE WAT OPDRYF, BLY WEG VAN DIE KRAGTE SE TYDSTAWE EN DIE GEURREËLS, EN DIE TOONBANK SE BESTELLING HET 'N DONKER RAND SODAT DIT OOR 'N HELDER TOONBANK LEESBAAR IS",
+    "PUNKTY, KTÓRE WYPŁYWAJĄ W GÓRĘ, OMIJAJĄ PASKI CZASU WZMOCNIEŃ I LINIE SMAKU, A ZAMÓWIENIE BARU MA CIEMNĄ OBWÓDKĘ, ŻEBY BYŁO CZYTELNE NA JASNYM BARZE",
+  ],
   ["FAIR AND LIGHT", "REGVERDIG EN LIG", "UCZCIWIE I LEKKO"],
   [
     "NO MORE HIDDEN CUSTOMERS: A NEWCOMER NEVER APPEARS ON TOP OF SOMEONE STILL IN THE DOORWAY, AND A QUICK CUSTOMER WAITS A STEP BEHIND A SLOW ONE INSTEAD OF WALKING THROUGH THEM",
@@ -13618,14 +13639,19 @@ function update(dt) {
       c.type.glutton &&
       (c.state === "pushed" || c.state === "drink") &&
       (c.fed || 0) < (c.type.need || GLUTTON_FED);
+    // (v1.5.39) THE DOORWAY CATCHES TOO: a customer who'd only just come in stands in the doorway, a few steps short of
+    // the bar's end - and a shake sent to them fell off the end right in front of their nose ("NOBODY CAUGHT IT!", with
+    // someone standing right there). Anyone waiting in the doorway (still walking in, held up by a show, a freeze or
+    // the one ahead) now reaches out and takes it at the doorstep
+    const reach = (c) => (c.state === "walk" && c.x < X0 - 30 && c.x > X0 - 120 ? X0 - 30 : c.x);
     for (const c of customers)
       if (
         c.lane === s.lane &&
         (c.state === "walk" || bigEater(c)) &&
         (!s.holy || c.type.evil) &&
         !(c.bat > 0 && !s.holy) &&
-        c.x + 20 <= before + 2 &&
-        c.x + 20 >= s.x - 2 &&
+        reach(c) + 20 <= before + 2 &&
+        reach(c) + 20 >= s.x - 2 &&
         (!catcher || c.x > catcher.x)
       )
         catcher = c;
@@ -14407,7 +14433,9 @@ function update(dt) {
     // it glows red with a "!" over it, a tick sounds and a red light flashes at that bar's taps, so you can run over in time
     const ev = prm.empty * (G.twE || 1) * (hasPw("slow") ? 0.5 : 1),
       eta = ev > 0 ? (TAPX + 26 - m.x) / ev : 9,
-      lone = !active().some((p) => p.lane === m.lane);
+      // (v1.5.39) ...and also when you ARE on that bar but up it, behind the glass (gone for a tip, say): it slides past
+      // you to the taps and falls, and the alarm used to stay quiet because you were "on the bar"
+      lone = !active().some((p) => p.lane === m.lane && p.x + 34 * cw >= m.x);
     m.danger = !demo && lone && eta < EMPTY_WARN ? (m.danger ?? G.time) : undefined;
     if (m.danger !== undefined) m.saved = true; // (if you get there now: JUST IN TIME!)
     if (m.danger !== undefined && G.time - (m.dTick ?? -9) > 0.35) {
@@ -16246,7 +16274,7 @@ function lose(why, lane, x) {
     // the shield takes the hit instead of you
     G.pw.shield = 0;
     LOSER = null;
-    callout("SHIELD SAVED YOU!", "#5ff5c8", 1.8);
+    calloutNow("SHIELD SAVED YOU!", "#5ff5c8", 1.8); // (v1.5.39: straight away, not after the queue)
     sfx("shieldpop", x);
     buzz("shield");
     if (why === "grab")
@@ -16305,7 +16333,8 @@ function lose(why, lane, x) {
   if (why === "shake" || why === "empty") {
     smash(x, y - 14, lane);
     sfx("smash", x);
-    if (!DF().kid) callout(why === "shake" ? "NOBODY CAUGHT IT!" : "YOU MISSED THE EMPTY!", "#ff5fa8", 2);
+    // (v1.5.39: the reason goes straight to the front of the sign - see calloutNow in endgame.ts)
+    if (!DF().kid) calloutNow(why === "shake" ? "NOBODY CAUGHT IT!" : "YOU MISSED THE EMPTY!", "#ff5fa8", 2);
   } else {
     P.throwT = 1.6;
     P.lane = lane;
@@ -16315,7 +16344,7 @@ function lose(why, lane, x) {
       if (o.lane === lane) o.lane = (lane + 1) % LANES;
     }
     const gc = customers.find((c) => c.lane === lane && c.x > X1 - 40);
-    callout(
+    calloutNow(
       gc && gc.type.evil ? "A " + gc.type.kind.toUpperCase() + " GOT TO YOU!" : "A CUSTOMER GOT TO YOU!",
       "#ff5fa8",
       2
@@ -16361,7 +16390,8 @@ function afterLoss() {
     p.stunT = p.slipT = 0;
   }
   G.state = "play";
-  callout(
+  calloutNow(
+    // (v1.5.39: how many lives are left, shown straight away)
     G.versus
       ? "P1 LIVES " + P1.lives + "   ·   P2 LIVES " + P2.lives
       : DF().kid
@@ -16912,6 +16942,14 @@ function addScore(n, x , y ) {
 function callout(text, c, sec) {
   if (text) G.callouts.push({ text, c, life: sec, max: sec });
   say(text); // (the reading voice, if it's on)
+}
+// (v1.5.39) NEWS THAT CAN'T WAIT: the big announcements take turns in the neon sign, so "A CUSTOMER GOT TO YOU!" used to
+// queue behind a fun fact and a trophy - by the time it showed, the next round had begun and you never saw why you'd
+// lost a life. This one goes to the front of the line; whatever was showing just waits and comes back after it
+function calloutNow(text, c, sec) {
+  if (!text) return;
+  G.callouts.unshift({ text, c, life: sec, max: sec, urgent: true });
+  say(text);
 }
 
 // =====================================================================================
@@ -62484,21 +62522,30 @@ function funHud(g, s, t, fD, sx, sy) {
       g.strokeText(ft, 16 * s, cssH - 56 * s);
       g.fillStyle = FLAV_TXT[f];
       g.fillText(ft, 16 * s, cssH - 56 * s);
+      hudObs(16 * s + g.measureText(ft).width / 2, cssH - 56 * s, g.measureText(ft).width + 12 * s, 20 * s); // (v1.5.39: the floating words keep clear of it)
       {
         const o = laneOrder(P1.lane);
         if (o !== null && !(oneBtn() || DF().kid)) {
           const ok = o === f;
           g.font = fD(11);
+          const ot = ok
+            ? "✔ ORDER ON THIS BAR: " + FLAV_NAMES[o]
+            : "ORDER ON THIS BAR: " +
+              FLAV_NAMES[o] +
+              " - SWITCH WITH " +
+              (lastDev === "pad" ? "SELECT" : lastDev === "touch" || coarse ? "THE FLAVOUR BUTTON" : "E");
+          // (v1.5.39) a dark edge round these letters too, like the FLAVOUR line above - over the front of a bright bar
+          // the orange words were hard to make out
+          g.lineWidth = 3 * s;
+          g.strokeStyle = "rgba(8,4,16,.8)";
+          g.strokeText(ot, 16 * s, cssH - 40 * s);
           g.fillStyle = ok ? "#5ff5c8" : "#ffc34d";
-          g.fillText(
-            ok
-              ? "✔ ORDER ON THIS BAR: " + FLAV_NAMES[o]
-              : "ORDER ON THIS BAR: " +
-                  FLAV_NAMES[o] +
-                  " - SWITCH WITH " +
-                  (lastDev === "pad" ? "SELECT" : lastDev === "touch" || coarse ? "THE FLAVOUR BUTTON" : "E"),
-            16 * s,
-            cssH - 40 * s
+          g.fillText(ot, 16 * s, cssH - 40 * s);
+          hudObs(
+            16 * s + g.measureText(ot).width / 2,
+            cssH - 40 * s,
+            g.measureText(ot).width + 12 * s,
+            18 * s
           );
         }
       } // (what this bar wants) g.textAlign = "center";
@@ -75921,8 +75968,8 @@ function levelOfTour(of) {
     inTour = ((lv - 1) % LAST_LEVEL) + 1;
   return (tour > 1 ? "TOUR " + tour + "  ·  " : "") + "LEVEL " + inTour + of + LAST_LEVEL;
 }
-const GAME_VERSION = "v1.5.38",
-  GAME_DATE = "15.11.2026",
+const GAME_VERSION = "v1.5.39",
+  GAME_DATE = "16.11.2026",
   VERSION_TEXT = GAME_VERSION + "  ·  " + GAME_DATE;
 const FB = '"Chakra Petch", "Segoe UI", sans-serif';
 let FD = '"Bungee", "Impact", sans-serif';
@@ -76829,6 +76876,7 @@ function drawHud(fps) {
         g.fillStyle = P0.c;
         g.fillRect(pad, y + 13 * s, 110 * s * Math.min(1, left / P0.dur), 4 * s);
         g.globalAlpha = 1;
+        hudObs(pad + 58 * s, y + 9 * s, 124 * s, 24 * s); // (v1.5.39: "LONG SLIDE!" landed on the SHIELD timer - the floating words keep clear of it now)
         row++;
       }
     }
@@ -83163,6 +83211,16 @@ profWire();
 //  the game, and where the motion capture, the folk songs and the fonts come from. Both from the menu at any time.
 // =====================================================================================
 const NEWS = [
+  {
+    ver: "v1.5.39",
+    title: "NO SURPRISES",
+    items: [
+      "A CUSTOMER STILL STANDING IN THE DOORWAY NOW CATCHES A SHAKE SENT TO THEM, INSTEAD OF WATCHING IT FALL OFF THE END RIGHT IN FRONT OF THEM",
+      "WHEN YOU LOSE A LIFE, THE SIGN TELLS YOU WHY STRAIGHT AWAY, INSTEAD OF AFTER THE FUN FACTS AND TROPHIES WAITING THEIR TURN",
+      "THE EMPTY-GLASS ALARM ALSO GOES OFF WHEN YOU ARE ON THAT BAR BUT THE GLASS HAS ALREADY SLID PAST YOU",
+      "THE POINTS THAT FLOAT UP KEEP CLEAR OF THE POWER-UP TIMERS AND THE FLAVOUR LINES, AND THE BAR'S ORDER HAS A DARK EDGE SO IT READS OVER A BRIGHT BAR",
+    ],
+  },
   {
     ver: "v1.5.38",
     title: "FAIR AND LIGHT",

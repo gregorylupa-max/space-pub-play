@@ -7214,6 +7214,27 @@ const DICT_ROWS                             = [
   ["CRISP AND CINEMATIC", "SKERP EN FILMIES", "OSTRO I FILMOWO"],
   ["SHINING WORLDS", "BLINKENDE WÊRELDE", "LŚNIĄCE ŚWIATY"],
   ["PERFECT TIMING", "PERFEKTE TYDSBEPLANNING", "IDEALNE WYCZUCIE"],
+  ["CLEAR VIEW", "HELDER UITSIG", "CZYSTY WIDOK"],
+  [
+    "ORDER BUBBLES STAY IN VIEW: THE POINTS THAT FLOAT UP AND THE NAME TAGS STEP ROUND THEM, AND A NAME TAG NO LONGER SITS ACROSS SOMEONE ELSE'S FACE",
+    "BESTELLINGBORRELS BLY SIGBAAR: DIE PUNTE WAT OPDRYF EN DIE NAAMKAARTJIES GAAN OM HULLE, EN 'N NAAMKAARTJIE SIT NIE MEER OOR IEMAND ANDERS SE GESIG NIE",
+    "DYMKI Z ZAMÓWIENIAMI ZAWSZE WIDAĆ: UNOSZĄCE SIĘ PUNKTY I PLAKIETKI Z IMIONAMI OMIJAJĄ JE, A PLAKIETKA NIE ZASŁANIA JUŻ NIKOMU TWARZY",
+  ],
+  [
+    "ONE BONUS, ONE NUMBER: LONG SLIDE, CLUTCH SAVE, QUICK HANDS AND JUST IN TIME SHOW THE POINTS YOU REALLY GET, SHAKE FEVER INCLUDED, WITH NO SECOND NUMBER BESIDE THEM",
+    "EEN BONUS, EEN GETAL: LANG GLY, OP DIE NIPPERTJIE, VINNIGE HANDE EN NET BETYDS WYS DIE PUNTE WAT JY REGTIG KRY, SKOMMELKOORS INGESLUIT, SONDER 'N TWEEDE GETAL LANGS HULLE",
+    "JEDNA PREMIA, JEDNA LICZBA: DŁUGI ŚLIZG, RATUNEK W OSTATNIEJ CHWILI, SZYBKIE RĘCE I W SAMĄ PORĘ POKAZUJĄ PUNKTY, KTÓRE NAPRAWDĘ DOSTAJESZ, RAZEM Z GORĄCZKĄ KOKTAJLI, BEZ DRUGIEJ LICZBY OBOK",
+  ],
+  [
+    "THE LEVEL CLEAR SIGN SHOWS THE BONUS YOU REALLY GET, WITH THE FLAWLESS EXTRA COUNTED IN",
+    "DIE VLAK-KLAAR-BORD WYS DIE BONUS WAT JY REGTIG KRY, MET DIE FOUTLOOS-EKSTRA INGEREKEN",
+    "NAPIS PO UKOŃCZENIU POZIOMU POKAZUJE PREMIĘ, KTÓRĄ NAPRAWDĘ DOSTAJESZ, RAZEM Z DODATKIEM ZA BEZBŁĘDNĄ GRĘ",
+  ],
+  [
+    "WHEN YOU'RE FIRED, THE MANAGER'S PARTING WORDS ARE BIG ENOUGH TO READ, AND HIS SPEECH BUBBLE POINTS RIGHT AT HIM",
+    "AS JY AFGEDANK WORD, IS DIE BESTUURDER SE AFSKEIDSWOORDE GROOT GENOEG OM TE LEES, EN SY PRAATBORREL WYS REG NA HOM",
+    "GDY CIĘ ZWALNIAJĄ, POŻEGNALNE SŁOWA SZEFA DA SIĘ PRZECZYTAĆ, A JEGO DYMEK WSKAZUJE PROSTO NA NIEGO",
+  ],
   ["NO SURPRISES", "GEEN VERRASSINGS NIE", "BEZ NIESPODZIANEK"],
   [
     "A CUSTOMER STILL STANDING IN THE DOORWAY NOW CATCHES A SHAKE SENT TO THEM, INSTEAD OF WATCHING IT FALL OFF THE END RIGHT IN FRONT OF THEM",
@@ -7871,6 +7892,10 @@ const DICT_PAT                             = [
     "KIBICE: $1!  PODWÓJNE PUNKTY",
   ],
   [/^JUST IN TIME!  \+(\d+)$/, "NET BETYDS!  +$1", "W SAMĄ PORĘ!  +$1"],
+  // (v1.5.40) the catch bonuses now show the points really given (SHAKE FEVER doubles them), so they're patterns too
+  [/^CLUTCH SAVE! \+(\d+)$/, "OP DIE NIPPERTJIE! +$1", "RATUNEK W OSTATNIEJ CHWILI! +$1"],
+  [/^LONG SLIDE! \+(\d+)$/, "LANG GLY! +$1", "DŁUGI ŚLIZG! +$1"],
+  [/^QUICK HANDS! \+(\d+)$/, "VINNIGE HANDE! +$1", "SZYBKIE RĘCE! +$1"],
   [/^PHEW!  \+(\d+)$/, "SJOE!  +$1", "UFF!  +$1"],
   [/^(\d+) tricks?$/, "$1 truuks", "sztuczki: $1"],
   [
@@ -14415,8 +14440,11 @@ function update(dt) {
       const run = by.x < TAPX - 180,
         chain = (G.catchChain = (G.catchChain || 0) + 1),
         bonusC = Math.min(250, (chain - 1) * 25);
-      addScore((run ? 200 : 100) + bonusC + (m.saved ? 150 : 0), m.x, LY(m.lane, m.x) - 50);
-      if (!demo && m.saved) worldText("JUST IN TIME!  +150", { lane: m.lane, x: m.x - 10 }, "#ffd24a");
+      addScore((run ? 200 : 100) + bonusC, m.x, LY(m.lane, m.x) - 50);
+      // (v1.5.40: the JUST IN TIME bonus is counted on its own, so its word shows the points it really gave - "+150"
+      //  was wrong in a SHAKE FEVER or on HARD)
+      const gotT = m.saved ? addScore(150) : 0;
+      if (!demo && m.saved) worldText("JUST IN TIME!  +" + gotT, { lane: m.lane, x: m.x - 10 }, "#ffd24a");
       // (v1.5.22: caught after its alarm went off - you ran over in time)
       else if (!demo && (run || chain % 5 === 0))
         worldText(
@@ -14499,14 +14527,16 @@ function update(dt) {
       funLevelClear();
       G.clearT = G.versus ? 4.2 : 4.8; // (time to see the stars - and the galaxy map, as the ship hops on)
       const bonusPts = 1000 * G.level + (G.perfect ? 2000 : 0);
+      // (v1.5.40: the sign shows the bonus you really got - with FLAWLESS x1.1 it said "+6000" and gave 6600)
+      let gotPts = 0;
       for (const p of active()) {
         SCORER = p;
-        addScore(bonusPts);
+        gotPts = Math.max(gotPts, addScore(bonusPts));
       }
       SCORER = null;
       sfx("clear");
       callout(
-        "LEVEL " + G.level + " CLEAR!   +" + bonusPts + (G.perfect ? "   PERFECT SERVICE!" : ""),
+        "LEVEL " + G.level + " CLEAR!   +" + (gotPts || bonusPts) + (G.perfect ? "   PERFECT SERVICE!" : ""),
         "#5ff5c8",
         3
       );
@@ -16913,8 +16943,10 @@ function gameOver() {
     } catch (e) {}
   }, 50);
 }
+// (v1.5.40: it hands back the points actually given - after the difficulty, SHAKE FEVER and FLAWLESS multipliers - so
+//  a bonus can say what you really got: "LONG SLIDE! +300" in a fever, not "+150" next to a separate "+300")
 function addScore(n, x , y ) {
-  if (G.demo || G.state === "menu") return;
+  if (G.demo || G.state === "menu") return 0;
   if (n > 0) n = Math.round((n * DF().score * (G.fever > 0 ? 2 : 1) * flawMul()) / 10) * 10; // (easy scores a bit less, hard a lot more; FLAWLESS levels in a row multiply it)
   const who = SCORER || P1;
   who.score = Math.max(0, who.score + n);
@@ -16926,7 +16958,7 @@ function addScore(n, x , y ) {
     callout(twoP() ? "EXTRA LIFE · P" + (who.id + 1) : "EXTRA LIFE!", "#5ff5c8", 2);
     sfx("tip");
   }
-  if (n === 0) return; // (nothing to show for a refused customer leaving)
+  if (n === 0) return 0; // (nothing to show for a refused customer leaving)
   if (x !== undefined) [x, y] = projAuto(x, y);
   if (x !== undefined)
     G.callouts.push({
@@ -16938,6 +16970,7 @@ function addScore(n, x , y ) {
       life: n < 0 ? 1.4 : 0.9,
       max: n < 0 ? 1.4 : 0.9,
     });
+  return n;
 }
 function callout(text, c, sec) {
   if (text) G.callouts.push({ text, c, life: sec, max: sec });
@@ -50122,10 +50155,51 @@ function tagName(c) {
   if (c.fan) return (FAN_NAMES[c.fan.nation] || ["", ""])[0].replace(/ (FOOTBALL|RUGBY)$/, "") + " FAN";
   return NICE[c.type.kind] || c.type.kind.toUpperCase();
 }
+// (v1.5.40) WHERE A CUSTOMER'S ORDER BUBBLE IS ON THE SCREEN: the same spot funOrderBubble draws it (fun.ts) - in the
+// side view the whole bar is scaled about its middle (projL), in the tall view it's drawn upright at its spot (vAt) - as
+// a box { x, y (the middle), hw (half the width), h }, for the words that have to keep off it
+function orderBubbleBox(c, sx, sy) {
+  const bx = c.x + 34 + (c.gold ? 18 : 0),
+    by = LY(c.lane, c.x) + 22 - 104 + 4; // (the bubble's middle, counting its little tail)
+  let px, py, k;
+  if (VERT) {
+    const [vx, vy, sc] = vpt(c.lane, vMx(c.x), 0, VSIDE.c);
+    px = vx + (bx - c.x) * sc;
+    py = vy + (by - LY(c.lane, c.x)) * sc;
+    k = sc;
+  } else {
+    [px, py] = projL(c.lane, bx, by);
+    k = pS(c.lane, c.x);
+  }
+  const x = sx(px),
+    y = sy(py),
+    u = Math.abs(sx(px + 10 * k) - x) / 10; // (screen pixels per drawn pixel, right there)
+  return { x, y, hw: 21 * u, h: 52 * u };
+}
 function nameTagsHud(g, s, sx, sy) {
   if (G.demo || !["play", "lost"].includes(G.state)) return;
   let n = 0;
   const used             = [];
+  // (v1.5.40) THE ORDERS STAY IN VIEW: a customer's order bubble - which shake they want - is what you need to see most.
+  // "+600", "CLUTCH SAVE!" and the other floating words used to land right on top of one, and so did a name tag; now
+  // the floating words step round them (hudObs, as for the tips and timers), and a name tag that would cover one moves
+  // up over it
+  const bubbles = customers
+    .filter((c) => c.want !== undefined && c.state === "walk" && c.alpha >= 0.6) // (the doorway too: it shows there already)
+    .map((c) => orderBubbleBox(c, sx, sy));
+  for (const b of bubbles) hudObs(b.x, b.y, b.hw * 2, b.h);
+  // (v1.5.40) AND NEVER OVER SOMEONE'S FACE: where the top of each head is on the screen - a tag over a short customer
+  // standing just behind a tall one used to sit right across the tall one's face; now it goes up over that head too
+  const heads = customers
+    .filter(
+      (c) =>
+        c.state === "walk" && c.x >= X0 - 6 && c.alpha >= 0.6 && c.__hy !== undefined && c.__f0 !== c.__f1
+    )
+    .map((c) => {
+      const hH = clamp((100 * (c.__f0 - c.__hy)) / (c.__f0 - c.__f1), 30, 190),
+        [hx, hy] = projL(c.lane, c.x + 10, LY(c.lane, c.x) + 22 - hH * (VERT ? 1 : pS(c.lane, c.x)));
+      return { c, x: sx(hx), y: sy(hy), hw: 16 * s * (VERT ? 1 : pS(c.lane, c.x)) + 8 * s };
+    });
   g.textAlign = "center";
   g.textBaseline = "middle";
   // where the shakes and empty glasses are on screen: a tag never hides one
@@ -50154,11 +50228,27 @@ function nameTagsHud(g, s, sx, sy) {
         LY(c.lane, c.x) + 22 - (headH + (c.hurry ? 60 : 32)) * (VERT ? 1 : pS(c.lane, c.x)) // (v1.4.50: a little higher - it used to sit on hats and faces)
       ),
       txt = T(tagName(c)),
-      x0 = sx(px),
-      y = sy(py);
+      x0 = sx(px);
+    let y = sy(py);
     g.font = "800 " + Math.round(12 * Math.max(s, 0.8)) + "px " + FB;
     const w = g.measureText(txt).width + 14 * s;
     const x = clamp(x0, w / 2 + 4, cssW - w / 2 - 4); // (v1.4.78: kept on the screen - near the edge of a narrow phone it poked off)
+    // (v1.5.40) up over a face or an order bubble it would cover (see above) - twice, in case that lifts it onto another
+    for (let pass = 0; pass < 2; pass++) {
+      for (const h of heads)
+        if (
+          h.c !== c &&
+          h.c.lane === c.lane &&
+          Math.abs(h.x - x) < w / 2 + h.hw &&
+          y + 9 * s > h.y &&
+          y - 9 * s < h.y + 46 * s
+        )
+          y = Math.min(y, h.y - 12 * s);
+      for (const b of bubbles)
+        if (Math.abs(b.x - x) < w / 2 + b.hw && Math.abs(b.y - y) < b.h / 2 + 9 * s)
+          y = Math.min(y, b.y - b.h / 2 - 11 * s);
+    }
+    y = Math.max(y, (HUD_TOP.low || 0) + 10 * s); // (but never up into the score and the sign)
     if (used.some((r) => Math.abs(r[0] - x) < (r[2] + w) / 2 && Math.abs(r[1] - y) < 20 * s)) continue; // (never one on top of another)
     used.push([x, y, w]);
     const near = busy.some(([bx, by]) => Math.abs(bx - x) < w / 2 + 24 * s && Math.abs(by - y) < 26 * s),
@@ -72355,9 +72445,12 @@ function coachSlid(P0, demo) {
   coachMark("pour");
   if (P0.lastSlideT !== undefined && G.time - P0.lastSlideT < 0.9 && P0.lastSlideLane !== P0.lane) {
     SCORER = P0;
-    addScore(200, TAPX - 40, LY(P0.lane, TAPX) - 90);
+    // (v1.5.40) ONE BONUS, ONE NUMBER: these used to pop up twice - a plain "+400" and, beside it, "QUICK HANDS! +200" -
+    // and the two didn't even agree (the "+200" never counted SHAKE FEVER or the difficulty). Now there's just the one
+    // word, with the points you really got
+    const got = addScore(200);
     SCORER = null;
-    worldText("QUICK HANDS! +200", { lane: P0.lane, x: TAPX - 70 }, "#5ff5c8");
+    worldText("QUICK HANDS! +" + got, { lane: P0.lane, x: TAPX - 70 }, "#5ff5c8");
     sfx("chime", TAPX, 1);
     G.style = (G.style || 0) + 1;
   }
@@ -72382,16 +72475,16 @@ function coachServed(c, s, demo) {
   const by = PL[s.owner || 0];
   if (c.alarmed) {
     SCORER = by;
-    addScore(300, c.x + 20, LY(s.lane, c.x) - 130);
+    const got = addScore(300); // (v1.5.40: one word with the real points - see coachSlid)
     SCORER = null;
-    worldText("CLUTCH SAVE! +300", c, "#ff7a5a");
+    worldText("CLUTCH SAVE! +" + got, c, "#ff7a5a");
     sfx("chime", c.x, 2);
     G.style = (G.style || 0) + 1;
   } else if (c.x < X0 + 90) {
     SCORER = by;
-    addScore(150, c.x + 20, LY(s.lane, c.x) - 130);
+    const got = addScore(150); // (v1.5.40: one word with the real points - see coachSlid)
     SCORER = null;
-    worldText("LONG SLIDE! +150", c, "#9fd0ff");
+    worldText("LONG SLIDE! +" + got, c, "#9fd0ff");
     G.style = (G.style || 0) + 1;
   }
 }
@@ -75968,8 +76061,8 @@ function levelOfTour(of) {
     inTour = ((lv - 1) % LAST_LEVEL) + 1;
   return (tour > 1 ? "TOUR " + tour + "  ·  " : "") + "LEVEL " + inTour + of + LAST_LEVEL;
 }
-const GAME_VERSION = "v1.5.39",
-  GAME_DATE = "16.11.2026",
+const GAME_VERSION = "v1.5.40",
+  GAME_DATE = "17.11.2026",
   VERSION_TEXT = GAME_VERSION + "  ·  " + GAME_DATE;
 const FB = '"Chakra Petch", "Segoe UI", sans-serif';
 let FD = '"Bungee", "Impact", sans-serif';
@@ -77599,8 +77692,10 @@ function drawFiredHud(g, s, t, fD, fB, sx, sy) {
     const big = lines[1] === "FIRED!",
       k = Math.min(1, (big ? T - 1 : T - 3) * 6),
       pop = big ? 1 + Math.max(0, 0.25 - (T - 1)) * 1.6 : 1;
-    let f0 = (big ? 19 : 8.5) * pop,
-      f1 = (big ? 24 : 9.5) * pop; // (the bubble grows to fit the words, whatever the font)
+    // (v1.5.40: "...AND DON'T SLAM THE DOOR!" was tiny, about nine pixels, rattling about in a big bubble - now it's a size
+    //  you can read at a glance, and the bubble still grows to fit)
+    let f0 = (big ? 19 : 12) * pop,
+      f1 = (big ? 24 : 14) * pop; // (the bubble grows to fit the words, whatever the font)
     g.font = fD(f0);
     let tw = g.measureText(lines[0]).width;
     g.font = fD(f1);
@@ -77609,11 +77704,13 @@ function drawFiredHud(g, s, t, fD, fB, sx, sy) {
     f0 *= fit;
     f1 *= fit;
     tw *= fit;
-    const [hx, hy] = projL(F.lane, F.bx - 12, LY(F.lane, F.bx) - 118, VSIDE.p),
+    // (v1.5.40) THE BUBBLE POINTS AT HIM: it used to sit right down on his antennae, so its little tail was squashed
+    // into a flat dash off to one side - now it floats a step above his head and the tail reaches down to him
+    const [hx, hy] = projL(F.lane, F.bx - 8, LY(F.lane, F.bx) - 94, VSIDE.p),
       w = Math.max(168 * s * pop, tw + 36 * s),
-      h = (big ? 70 : 56) * s * pop,
+      h = (big ? 70 : 62) * s * pop, // (v1.5.40: a touch taller for the bigger words)
       bx = clamp(sx(hx) - 100 * s, w / 2 + 6, cssW - w / 2 - 6),
-      by = Math.max(h / 2 + 6, sy(hy) - 34 * s);
+      by = Math.max(h / 2 + 6, sy(hy) - 24 * s - h / 2);
     g.globalAlpha = k;
     g.fillStyle = "#fffaf0";
     g.strokeStyle = "#140a1e";
@@ -77623,7 +77720,7 @@ function drawFiredHud(g, s, t, fD, fB, sx, sy) {
     g.stroke();
     g.beginPath();
     g.moveTo(bx + w * 0.22, by + h / 2 - 2 * s);
-    g.lineTo(sx(hx) - 8 * s, sy(hy) - 8 * s);
+    g.lineTo(sx(hx) - 8 * s, Math.max(sy(hy) - 6 * s, by + h / 2 + 8 * s));
     g.lineTo(bx + w * 0.38, by + h / 2 - 2 * s);
     g.closePath();
     g.fill();
@@ -83211,6 +83308,16 @@ profWire();
 //  the game, and where the motion capture, the folk songs and the fonts come from. Both from the menu at any time.
 // =====================================================================================
 const NEWS = [
+  {
+    ver: "v1.5.40",
+    title: "CLEAR VIEW",
+    items: [
+      "ORDER BUBBLES STAY IN VIEW: THE POINTS THAT FLOAT UP AND THE NAME TAGS STEP ROUND THEM, AND A NAME TAG NO LONGER SITS ACROSS SOMEONE ELSE'S FACE",
+      "ONE BONUS, ONE NUMBER: LONG SLIDE, CLUTCH SAVE, QUICK HANDS AND JUST IN TIME SHOW THE POINTS YOU REALLY GET, SHAKE FEVER INCLUDED, WITH NO SECOND NUMBER BESIDE THEM",
+      "THE LEVEL CLEAR SIGN SHOWS THE BONUS YOU REALLY GET, WITH THE FLAWLESS EXTRA COUNTED IN",
+      "WHEN YOU'RE FIRED, THE MANAGER'S PARTING WORDS ARE BIG ENOUGH TO READ, AND HIS SPEECH BUBBLE POINTS RIGHT AT HIM",
+    ],
+  },
   {
     ver: "v1.5.39",
     title: "NO SURPRISES",

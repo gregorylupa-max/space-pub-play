@@ -285,6 +285,20 @@ body.retro .table { font-size: 10px; gap: 5px; }
 #touch .row2 { display: flex; gap: 6px; } #touch .row2 button.holy { width: 53px; flex-direction: column; gap: 0; font-size: 12px; }
 #touch button.cross { border-color: rgba(255, 210, 77, .85); background: rgba(90, 60, 10, .55); font-size: 18px !important; }
 @media (max-height: 420px) { #touch button { width: 72px; height: 72px; } #touch .col button { width: 64px; height: 52px; } #touch button.act { width: 94px; height: 94px; } #touch button.holy { width: 94px; height: 36px; } #touch .row2 button.holy { width: 44px; } }
+/* (v1.5.41) A PHONE HELD UPRIGHT: the touch buttons scale with the screen's width. At their full size the row was about
+   510 pixels wide - on a phone (320-430) POUR, HOLY WATER and the CROSS sat off the right edge where no thumb could reach
+   them (and on the smallest phones the RUN arrows too). --c is one round button: the row is about 5.1 of them wide, plus
+   the gaps, so it always fits - and on a big phone it stops growing at a comfortable 80 pixels */
+@media (orientation: portrait) and (max-width: 620px) {
+  #touch { --c: min(80px, calc((100vw - 64px) / 5.1)); padding-left: calc(10px + env(safe-area-inset-left, 0px)); padding-right: calc(10px + env(safe-area-inset-right, 0px)); }
+  #touch .grp, #touch .col { gap: 8px; }
+  #touch button { width: var(--c); height: var(--c); font-size: calc(var(--c) * .3); }
+  #touch .col button { width: calc(var(--c) * .82); height: calc(var(--c) * .72); border-radius: 14px; font-size: calc(var(--c) * .26); }
+  #touch button.act { width: calc(var(--c) * 1.27); height: calc(var(--c) * 1.27); font-size: calc(var(--c) * .22); }
+  #touch .row2 { gap: 4px; }
+  #touch .row2 button.holy { width: calc(var(--c) * .615); height: calc(var(--c) * .52); font-size: calc(var(--c) * .15); }
+  #touch button small { font-size: 9px; letter-spacing: .04em; }
+}
 #crash { position: fixed; inset: 0; z-index: 50; display: flex; align-items: center; justify-content: center; background: rgba(4, 2, 12, .82); }
 #crash[hidden] { display: none; }
 #crash .box { max-width: 520px; margin: 16px; padding: 24px; display: flex; flex-direction: column; gap: 12px; background: var(--panel, #120c24); border: 1px solid var(--line, #5ff5c8); border-radius: 14px; }
@@ -519,21 +533,23 @@ body.retro .table { font-size: 10px; gap: 5px; }
     <div><i>3</i><b>CATCH</b><small>Catch the empty glass coming back</small></div>
   </div>
   <p class="quickNo">Don't let a customer reach your end of the bar, and never drop a glass.</p>
+  <!-- (v1.5.41) data-tr: each paragraph is translated WHOLE (see langPage in lang.ts) - word by word, around its bold
+       words, it came out in pieces, so it stayed in English -->
   <div class="help">
     <h3>THE AIM</h3>
-    <p>Customers walk down the four bars towards you. Pour a shake and slide it to them: when one catches it, they slide back up the bar, drink it - and slide the empty glass back down to you. Serve everyone in the queue and the level is done; then it's off to the next stop of the tour.</p>
+    <p data-tr>Customers walk down the four bars towards you. Pour a shake and slide it to them: when one catches it, they slide back up the bar, drink it - and slide the empty glass back down to you. Serve everyone in the queue and the level is done; then it's off to the next stop of the tour.</p>
     <h3>POURING AND SLIDING</h3>
-    <p>Stand at the taps and <b>hold POUR</b> to fill the glass; <b>let go</b> to slide it down the bar. Let go just as it fills for a <b>PERFECT</b> pour (extra points). In TAP mode (Settings, or T) one press does it all.</p>
+    <p data-tr>Stand at the taps and <b>hold POUR</b> to fill the glass; <b>let go</b> to slide it down the bar. Let go just as it fills for a <b>PERFECT</b> pour (extra points). In TAP mode (Settings, or T) one press does it all.</p>
     <h3>YOU LOSE A LIFE WHEN</h3>
-    <p>&bull; a customer reaches your end of the bar &bull; a shake slides off the far end with nobody to catch it &bull; an empty glass slides back past you and smashes. So: serve them early, never slide a shake down an empty bar, and run to catch the empties!</p>
+    <p data-tr>&bull; a customer reaches your end of the bar &bull; a shake slides off the far end with nobody to catch it &bull; an empty glass slides back past you and smashes. So: serve them early, never slide a shake down an empty bar, and run to catch the empties!</p>
     <h3>RUNNING, TIPS AND TURBO</h3>
-    <p>Run along the bar (left/right). Customers served quickly often leave a <b>TIP</b> on the counter - run up and grab it for bonus points. Tap a direction twice - or double-click / double-tap ahead of you on your bar - for a <b>TURBO</b> run. Change bar with up/down, 1-4, or a tap/click on it.</p>
+    <p data-tr>Run along the bar (left/right). Customers served quickly often leave a <b>TIP</b> on the counter - run up and grab it for bonus points. Tap a direction twice - or double-click / double-tap ahead of you on your bar - for a <b>TURBO</b> run. Change bar with up/down, 1-4, or a tap/click on it.</p>
     <h3>FLAVOURS</h3>
-    <p>Some customers show the flavour they'd like in a bubble over their head - strawberry, chocolate or mint. Switch your flavour (<b>E</b>, a <b>right-click</b>, SELECT on a controller, or the FLAVOUR words / button) and serve the one they asked for: <b>+150</b>. The wrong flavour is still fine - just no bonus. Don't want to bother? Turn <b>FLAVOUR ORDERS</b> off in SETTINGS: then nobody asks, and there's just one flavour to pour.</p>
+    <p data-tr>Some customers show the flavour they'd like in a bubble over their head - strawberry, chocolate or mint. Switch your flavour (<b>E</b>, a <b>right-click</b>, SELECT on a controller, or the FLAVOUR words / button) and serve the one they asked for: <b>+150</b>. The wrong flavour is still fine - just no bonus. Don't want to bother? Turn <b>FLAVOUR ORDERS</b> off in SETTINGS: then nobody asks, and there's just one flavour to pour.</p>
     <h3>SPECIAL GUESTS</h3>
-    <p>Don't serve <b>devils, demons or vampires</b>: run up the bar and show them the door, or send HOLY WATER (H) / show the CROSS (Q). <b>Angels</b> are worth triple points. Customers with a <b>stopwatch</b> are in a hurry - serve them fast for a bonus. A <b>protest</b> calms down when you serve the marchers.</p>
+    <p data-tr>Don't serve <b>devils, demons or vampires</b>: run up the bar and show them the door, or send HOLY WATER (H) / show the CROSS (Q). <b>Angels</b> are worth triple points. Customers with a <b>stopwatch</b> are in a hurry - serve them fast for a bonus. A <b>protest</b> calms down when you serve the marchers.</p>
     <h3>POWER-UPS, STARS AND COINS</h3>
-    <p>Grab the <b>power-ups</b> that appear on the bar when it's quiet. Each level gives up to three <b>stars</b>, and you earn <b>coins</b> to spend in the COIN SHOP (PLAY MORE). FREE PLAY mode has no losing and no timer.</p>
+    <p data-tr>Grab the <b>power-ups</b> that appear on the bar when it's quiet. Each level gives up to three <b>stars</b>, and you earn <b>coins</b> to spend in the COIN SHOP (PLAY MORE). FREE PLAY mode has no losing and no timer.</p>
   </div>
   <button id="howBack" class="primary">DONE <kbd>Esc</kbd></button>
 </section>
@@ -6406,6 +6422,298 @@ const DICT_ROWS                             = [
     "Nie pozwól, by klient doszedł do twojego końca baru, i nigdy nie upuść szklanki.",
   ],
 
+  // (v1.5.41) TRANSLATIONS: HOW TO PLAY's paragraphs, each looked up whole (with its bold words - see langPage), the
+  // graphics card lines in the settings and pause menus, and the two long control lines
+  [
+    "Customers walk down the four bars towards you. Pour a shake and slide it to them: when one catches it, they slide back up the bar, drink it - and slide the empty glass back down to you. Serve everyone in the queue and the level is done; then it's off to the next stop of the tour.",
+    "Klante stap met die vier toonbanke af na jou toe. Skink 'n melkskommel en gly dit na hulle toe: as een dit vang, gly hy terug teen die toonbank op, drink dit - en gly die leë glas terug na jou toe. Bedien almal in die tou en die vlak is klaar; dan is dit op na die volgende stop van die toer.",
+    "Klienci idą wzdłuż czterech lad w twoją stronę. Nalej koktajl i pchnij go do nich: kiedy ktoś go złapie, cofa się wzdłuż lady, wypija go - i odsyła ci pustą szklankę. Obsłuż wszystkich w kolejce, a poziom jest zaliczony; potem ruszasz do następnego przystanku trasy.",
+  ],
+  [
+    "Stand at the taps and <b>hold POUR</b> to fill the glass; <b>let go</b> to slide it down the bar. Let go just as it fills for a <b>PERFECT</b> pour (extra points). In TAP mode (Settings, or T) one press does it all.",
+    "Staan by die krane en <b>hou SKINK</b> om die glas vol te maak; <b>los</b> om dit met die toonbank af te gly. Los net soos dit vol word vir 'n <b>PERFEKTE</b> skinkbeurt (ekstra punte). In TIK-modus (Instellings, of T) doen een druk alles.",
+    "Stań przy kranach i <b>przytrzymaj NALEJ</b>, by napełnić szklankę; <b>puść</b>, by pchnąć ją wzdłuż lady. Puść dokładnie wtedy, gdy się napełni, a nalewanie będzie <b>PERFEKCYJNE</b> (dodatkowe punkty). W trybie STUKNIJ (Ustawienia albo T) wystarczy jedno naciśnięcie.",
+  ],
+  [
+    "• a customer reaches your end of the bar • a shake slides off the far end with nobody to catch it • an empty glass slides back past you and smashes. So: serve them early, never slide a shake down an empty bar, and run to catch the empties!",
+    "• 'n klant bereik jou kant van die toonbank • 'n melkskommel gly by die ver punt af sonder dat iemand dit vang • 'n leë glas gly verby jou en breek. Dus: bedien hulle vroeg, gly nooit 'n melkskommel met 'n leë toonbank af nie, en hardloop om die leë glase te vang!",
+    "• klient dojdzie do twojego końca lady • koktajl spadnie z drugiego końca, bo nikt go nie złapał • pusta szklanka prześlizgnie się obok ciebie i rozbije. Więc: obsługuj wcześnie, nigdy nie pchaj koktajlu po pustej ladzie i biegnij łapać puste szklanki!",
+  ],
+  [
+    "Run along the bar (left/right). Customers served quickly often leave a <b>TIP</b> on the counter - run up and grab it for bonus points. Tap a direction twice - or double-click / double-tap ahead of you on your bar - for a <b>TURBO</b> run. Change bar with up/down, 1-4, or a tap/click on it.",
+    "Hardloop langs die toonbank (links/regs). Klante wat vinnig bedien word, los dikwels 'n <b>FOOI</b> op die toonbank - hardloop op en gryp dit vir bonuspunte. Druk 'n rigting twee keer - of dubbelklik / dubbeltik voor jou op jou toonbank - vir 'n <b>TURBO</b>-lopie. Wissel toonbank met op/af, 1-4, of 'n tik/klik daarop.",
+    "Biegaj wzdłuż lady (lewo/prawo). Szybko obsłużeni klienci często zostawiają na ladzie <b>NAPIWEK</b> - podbiegnij i złap go po dodatkowe punkty. Naciśnij kierunek dwa razy - albo kliknij / stuknij dwukrotnie przed sobą na swojej ladzie - a pobiegniesz w trybie <b>TURBO</b>. Zmieniaj ladę strzałkami góra/dół, klawiszami 1-4 albo stuknięciem/kliknięciem.",
+  ],
+  [
+    "Some customers show the flavour they'd like in a bubble over their head - strawberry, chocolate or mint. Switch your flavour (<b>E</b>, a <b>right-click</b>, SELECT on a controller, or the FLAVOUR words / button) and serve the one they asked for: <b>+150</b>. The wrong flavour is still fine - just no bonus. Don't want to bother? Turn <b>FLAVOUR ORDERS</b> off in SETTINGS: then nobody asks, and there's just one flavour to pour.",
+    "Party klante wys die geur wat hulle wil hê in 'n borrel bo hul kop - aarbei, sjokolade of kruisement. Wissel jou geur (<b>E</b>, 'n <b>regsklik</b>, SELECT op 'n beheerder, of die GEUR-woorde / -knoppie) en bedien die een waarvoor hulle gevra het: <b>+150</b>. Die verkeerde geur is ook reg - net geen bonus nie. Wil jy nie pla nie? Skakel <b>GEURBESTELLINGS</b> af in INSTELLINGS: dan vra niemand nie, en daar is net een geur om te skink.",
+    "Niektórzy klienci pokazują w dymku nad głową smak, na który mają ochotę - truskawkowy, czekoladowy albo miętowy. Zmień smak (<b>E</b>, <b>prawy przycisk myszy</b>, SELECT na kontrolerze albo napis / przycisk SMAK) i podaj ten, o który prosili: <b>+150</b>. Zły smak też jest w porządku - tylko bez premii. Nie chcesz się tym przejmować? Wyłącz <b>ZAMÓWIENIA SMAKÓW</b> w USTAWIENIACH: wtedy nikt nie prosi i jest tylko jeden smak do nalewania.",
+  ],
+  [
+    "Don't serve <b>devils, demons or vampires</b>: run up the bar and show them the door, or send HOLY WATER (H) / show the CROSS (Q). <b>Angels</b> are worth triple points. Customers with a <b>stopwatch</b> are in a hurry - serve them fast for a bonus. A <b>protest</b> calms down when you serve the marchers.",
+    "Moenie <b>duiwels, demone of vampiere</b> bedien nie: hardloop op met die toonbank en wys hulle die deur, of stuur WYWATER (H) / wys die KRUIS (Q). <b>Engele</b> is drie keer soveel punte werd. Klante met 'n <b>stophorlosie</b> is haastig - bedien hulle vinnig vir 'n bonus. 'n <b>Betoging</b> bedaar as jy die optoggangers bedien.",
+    "Nie obsługuj <b>diabłów, demonów ani wampirów</b>: podbiegnij wzdłuż lady i wskaż im drzwi albo wyślij WODĘ ŚWIĘCONĄ (H) / pokaż KRZYŻ (Q). <b>Anioły</b> są warte potrójne punkty. Klienci ze <b>stoperem</b> się spieszą - obsłuż ich szybko, a dostaniesz premię. <b>Protest</b> ucicha, gdy obsłużysz demonstrantów.",
+  ],
+  [
+    "Grab the <b>power-ups</b> that appear on the bar when it's quiet. Each level gives up to three <b>stars</b>, and you earn <b>coins</b> to spend in the COIN SHOP (PLAY MORE). FREE PLAY mode has no losing and no timer.",
+    "Gryp die <b>kragte</b> wat op die toonbank verskyn as dit stil is. Elke vlak gee tot drie <b>sterre</b>, en jy verdien <b>munte</b> om in die MUNTWINKEL (SPEEL MEER) te spandeer. In SPEEL VERNIET kan jy nie verloor nie en is daar geen tydhouer nie.",
+    "Łap <b>bonusy</b>, które pojawiają się na ladzie, gdy jest spokojnie. Każdy poziom daje do trzech <b>gwiazdek</b>, a do tego zarabiasz <b>monety</b> do wydania w SKLEPIE (WIĘCEJ GRANIA). W trybie GRA ZA DARMO nie da się przegrać i nie ma limitu czasu.",
+  ],
+  ["Drawing on:", "Teken met:", "Rysuje:"],
+  ["the processor", "die verwerker", "procesor"],
+  ["(Canvas 2D, software)", "(Canvas 2D, sagteware)", "(Canvas 2D, programowo)"],
+  [
+    "Asks for the fastest graphics card. On a laptop with two, it picks the gaming one when the browser allows it.",
+    "Vra vir die vinnigste grafiese kaart. Op 'n skootrekenaar met twee kies dit die speletjie-kaart as die blaaier dit toelaat.",
+    "Prosi o najszybszą kartę graficzną. W laptopie z dwiema wybiera tę do gier, jeśli przeglądarka na to pozwala.",
+  ],
+  [
+    "Asks for the built-in, battery-friendly graphics chip.",
+    "Vra vir die ingeboude, battery-vriendelike grafiese skyfie.",
+    "Prosi o wbudowany, oszczędzający baterię układ graficzny.",
+  ],
+  [
+    "No video card: every pixel is worked out by the processor. Slower, useful for comparing.",
+    "Geen videokaart nie: elke pixel word deur die verwerker uitgewerk. Stadiger, handig om te vergelyk.",
+    "Bez karty graficznej: każdy piksel liczy procesor. Wolniej, ale przydatne do porównań.",
+  ],
+  [
+    "Windows app: the choice is also used when the game starts next time.",
+    "Windows-toep: die keuse word ook gebruik wanneer die spel volgende keer begin.",
+    "Aplikacja Windows: ten wybór zostanie użyty także przy następnym uruchomieniu gry.",
+  ],
+  [
+    "P1: W A S D + Space, H holy, Q cross · P2: arrows + Enter, . holy, , cross (or a controller each)",
+    "P1: W A S D + Spasie, H wywater, Q kruis · P2: pyltjies + Enter, . wywater, , kruis (of elk 'n beheerder)",
+    "P1: W A S D + Spacja, H woda święcona, Q krzyż · P2: strzałki + Enter, . woda święcona, , krzyż (albo każdy z kontrolerem)",
+  ],
+  [
+    "Keyboard: ↑ ↓ or 1-4 counters · ← → run · Space pour · T pour mode · P resume. Controller: D-pad or LB/RB · A pour · Start resume. Touch: tap or swipe the counters, POUR button.",
+    "Sleutelbord: ↑ ↓ of 1-4 toonbanke · ← → hardloop · Spasie skink · T skinkmodus · P gaan voort. Beheerder: D-pad of LB/RB · A skink · Start gaan voort. Raak: tik of vee oor die toonbanke, SKINK-knoppie.",
+    "Klawiatura: ↑ ↓ lub 1-4 lady · ← → bieg · Spacja nalewa · T tryb nalewania · P wznawia. Kontroler: krzyżak lub LB/RB · A nalewa · Start wznawia. Dotyk: stuknij lub przesuń po ladach, przycisk NALEJ.",
+  ],
+
+  // (v1.5.41) a saved guest's thank-you and the werewolf's story, and the fans' name tags - they stayed in English
+  ["THE HOWLING HAS STOPPED...", "DIE GEHUIL HET OPGEHOU...", "WYCIE UCICHŁO..."],
+  [
+    "NO MORE FUR! NO MORE FANGS!",
+    "NIE MEER BONT NIE! NIE MEER SLAGTANDE NIE!",
+    "KONIEC Z FUTREM! KONIEC Z KŁAMI!",
+  ],
+  ["I CAN LOOK AT THE FULL MOON AGAIN", "EK KAN WEER NA DIE VOLMAAN KYK", "ZNÓW MOGĘ PATRZEĆ NA PEŁNIĘ"],
+  [
+    "I'LL BE BACK FOR A SHAKE - ON TWO LEGS!",
+    "EK KOM TERUG VIR 'N MELKSKOMMEL - OP TWEE BENE!",
+    "WRÓCĘ NA KOKTAJL - NA DWÓCH NOGACH!",
+  ],
+  ["I'M MYSELF AGAIN - FOR GOOD!", "EK IS WEER MYSELF - VIR GOED!", "ZNÓW JESTEM SOBĄ - NA DOBRE!"],
+  ["WHAT A NIGHTMARE THAT WAS", "WAT 'N NAGMERRIE WAS DIT", "CO ZA KOSZMAR TO BYŁ"],
+  [
+    "NO MORE CHASING THE DELIVERY ROBOTS",
+    "NIE MEER AGTER DIE AFLEWERINGSROBOTTE AAN NIE",
+    "KONIEC Z GONIENIEM ROBOTÓW KURIERSKICH",
+  ],
+  ["SEE YOU SOON, FRIEND!", "SIEN JOU GOU, VRIEND!", "DO ZOBACZENIA, PRZYJACIELU!"],
+  ["THANK YOU! THANK YOU!", "DANKIE! DANKIE!", "DZIĘKUJĘ! DZIĘKUJĘ!"],
+  [
+    "BLESS YOU, FRIEND - THANK YOU!",
+    "SEËN JOU, VRIEND - DANKIE!",
+    "BŁOGOSŁAWIĘ CIĘ, PRZYJACIELU - DZIĘKUJĘ!",
+  ],
+  ["THANK YOU... I AM AT PEACE", "DANKIE... EK HET VREDE", "DZIĘKUJĘ... ZAZNAŁEM SPOKOJU"],
+  ["THANK YOU, KIND BARTENDER", "DANKIE, GOEIE KROEGMAN", "DZIĘKUJĘ, DOBRY BARMANIE"],
+  ["THANK YOU - YOU SAVED MY SOUL!", "DANKIE - JY HET MY SIEL GERED!", "DZIĘKUJĘ - URATOWAŁEŚ MOJĄ DUSZĘ!"],
+  ["THANK YOU! I'M FREE!", "DANKIE! EK IS VRY!", "DZIĘKUJĘ! JESTEM WOLNY!"],
+  ["THANK YOU! I'M HUMAN AGAIN!", "DANKIE! EK IS WEER 'N MENS!", "DZIĘKUJĘ! ZNÓW JESTEM CZŁOWIEKIEM!"],
+  ["THANK YOU - NO MORE HOWLING!", "DANKIE - NIE MEER GEHUIL NIE!", "DZIĘKUJĘ - KONIEC Z WYCIEM!"],
+  ["POLISH FAN", "POOLSE ONDERSTEUNER", "KIBIC Z POLSKI"],
+  ["SOUTH AFRICAN FAN", "SUID-AFRIKAANSE ONDERSTEUNER", "KIBIC Z RPA"],
+  ["SCOTTISH FAN", "SKOTSE ONDERSTEUNER", "KIBIC ZE SZKOCJI"],
+  ["BRITISH FAN", "BRITSE ONDERSTEUNER", "KIBIC Z WIELKIEJ BRYTANII"],
+  ["FRENCH FAN", "FRANSE ONDERSTEUNER", "KIBIC Z FRANCJI"],
+  ["INDIAN FAN", "INDIESE ONDERSTEUNER", "KIBIC Z INDII"],
+  ["AUSTRIAN FAN", "OOSTENRYKSE ONDERSTEUNER", "KIBIC Z AUSTRII"],
+  ["GERMAN FAN", "DUITSE ONDERSTEUNER", "KIBIC Z NIEMIEC"],
+  ["RUSSIAN FAN", "RUSSIESE ONDERSTEUNER", "KIBIC Z ROSJI"],
+  ["UKRAINIAN FAN", "OEKRAÏENSE ONDERSTEUNER", "KIBIC Z UKRAINY"],
+  ["IRISH FAN", "IERSE ONDERSTEUNER", "KIBIC Z IRLANDII"],
+
+  // (v1.5.41) every stop's own line - where you are - shown as the stop begins (it was still in English)
+  [
+    "Mercury - the closest planet to the Sun",
+    "Mercurius - die naaste planeet aan die Son",
+    "Merkury - planeta najbliżej Słońca",
+  ],
+  [
+    "Venus - 50 km up, above the thick yellow clouds",
+    "Venus - 50 km hoog, bo die dik geel wolke",
+    "Wenus - 50 km w górze, nad gęstymi żółtymi chmurami",
+  ],
+  [
+    "Earth's Moon - the Sea of Tranquility",
+    "Die Aarde se Maan - die See van Kalmte",
+    "Księżyc - Morze Spokoju",
+  ],
+  [
+    "Mars, the red planet - Valles Marineris",
+    "Mars, die rooi planeet - Valles Marineris",
+    "Mars, czerwona planeta - Valles Marineris",
+  ],
+  [
+    "Ceres - the asteroid belt between Mars and Jupiter",
+    "Ceres - die asteroïdegordel tussen Mars en Jupiter",
+    "Ceres - pas planetoid między Marsem a Jowiszem",
+  ],
+  [
+    "Europa, Jupiter's icy moon - mind the slippery floor",
+    "Europa, Jupiter se ysmaan - pasop vir die gladde vloer",
+    "Europa, lodowy księżyc Jowisza - uwaga, ślisko",
+  ],
+  ["Saturn - Dock 3, B-Ring", "Saturnus - Dok 3, B-Ring", "Saturn - Dok 3, Pierścień B"],
+  [
+    "Titan, Saturn's biggest moon - Kraken Mare",
+    "Titan, Saturnus se grootste maan - Kraken Mare",
+    "Tytan, największy księżyc Saturna - Kraken Mare",
+  ],
+  [
+    "Uranus - the sideways ice giant, where it snows",
+    "Uranus - die skuins ysreus, waar dit sneeu",
+    "Uran - lodowy olbrzym na boku, gdzie pada śnieg",
+  ],
+  [
+    "Neptune - the windiest planet",
+    "Neptunus - die winderigste planeet",
+    "Neptun - najbardziej wietrzna planeta",
+  ],
+  [
+    "Pluto - a dwarf planet in the Kuiper Belt",
+    "Pluto - 'n dwergplaneet in die Kuipergordel",
+    "Pluton - planeta karłowata w Pasie Kuipera",
+  ],
+  ["Riding a comet from the Oort Cloud", "Op 'n komeet uit die Oortwolk", "Na komecie z Obłoku Oorta"],
+  [
+    "Alpha Centauri A and B - high noon twice a day",
+    "Alpha Centauri A en B - twee keer per dag middag",
+    "Alfa Centauri A i B - południe dwa razy dziennie",
+  ],
+  [
+    "Proxima b - a planet round a little red star",
+    "Proxima b - 'n planeet om 'n klein rooi ster",
+    "Proxima b - planeta wokół małej czerwonej gwiazdy",
+  ],
+  [
+    "Sirius - the brightest star in Earth's night sky",
+    "Sirius - die helderste ster in die Aarde se naghemel",
+    "Syriusz - najjaśniejsza gwiazda na nocnym niebie Ziemi",
+  ],
+  [
+    "Kepler-452b, Earth's big cousin",
+    "Kepler-452b, die Aarde se groot neef",
+    "Kepler-452b, wielki kuzyn Ziemi",
+  ],
+  ["Inside the Orion Nebula", "Binne-in die Orion-newel", "W środku Mgławicy Oriona"],
+  [
+    "The Crab Pulsar - spinning 30 times a second",
+    "Die Krappulsar - draai 30 keer per sekonde",
+    "Pulsar w Krabie - 30 obrotów na sekundę",
+  ],
+  [
+    "The centre of the Milky Way - one drink before the event horizon",
+    "Die middel van die Melkweg - een drankie voor die gebeurtenishorison",
+    "Środek Drogi Mlecznej - jeden drink przed horyzontem zdarzeń",
+  ],
+  [
+    "Ember - a lava world, closest to the star",
+    "Ember - 'n lawawêreld, die naaste aan die ster",
+    "Ember - lawowy świat, najbliżej gwiazdy",
+  ],
+  [
+    "Ferrum - a hot giant where it rains molten iron",
+    "Ferrum - 'n warm reus waar dit gesmelte yster reën",
+    "Ferrum - gorący olbrzym, gdzie pada roztopione żelazo",
+  ],
+  [
+    "Azura - deep blue, where the wind blows glass sideways",
+    "Azura - diepblou, waar die wind glas sywaarts waai",
+    "Azura - głęboki błękit, gdzie wiatr niesie szkło w poziomie",
+  ],
+  [
+    "Janus - endless day on one side, endless night on the other",
+    "Janus - eindelose dag aan die een kant, eindelose nag aan die ander",
+    "Janus - wieczny dzień po jednej stronie, wieczna noc po drugiej",
+  ],
+  [
+    "Thalassa - an ocean world with no land at all",
+    "Thalassa - 'n oseaanwêreld sonder enige land",
+    "Thalassa - oceaniczny świat bez skrawka lądu",
+  ],
+  [
+    "Carbonia - a pitch-black world with diamond deep inside",
+    "Carbonia - 'n pikswart wêreld met diamant diep binne",
+    "Carbonia - smoliście czarny świat z diamentem głęboko w środku",
+  ],
+  [
+    "Puffball - a town floating in the clouds of a candyfloss planet",
+    "Puffball - 'n dorp wat in die wolke van 'n spookasem-planeet dryf",
+    "Puffball - miasteczko unoszące się w chmurach planety z waty cukrowej",
+  ],
+  [
+    "Geysera - an ice moon of the giant, shooting fountains",
+    "Geysera - 'n ysmaan van die reus, wat fonteine spuit",
+    "Geysera - lodowy księżyc olbrzyma, tryskający fontannami",
+  ],
+  [
+    "Halo - a planet with the biggest rings you've ever seen",
+    "Halo - 'n planeet met die grootste ringe wat jy nog ooit gesien het",
+    "Halo - planeta z największymi pierścieniami, jakie widziałeś",
+  ],
+  [
+    "Prisma - an ice giant where it rains diamonds",
+    "Prisma - 'n ysreus waar dit diamante reën",
+    "Prisma - lodowy olbrzym, gdzie padają diamenty",
+  ],
+  [
+    "The Wanderer - a rogue planet with no sun at all",
+    "Die Swerwer - 'n swerfplaneet sonder enige son",
+    "Wędrowiec - samotna planeta bez żadnego słońca",
+  ],
+  [
+    "Three moons over the dunes, in the little galaxy M32",
+    "Drie mane oor die duine, in die klein sterrestelsel M32",
+    "Trzy księżyce nad wydmami, w małej galaktyce M32",
+  ],
+  [
+    "M110 - a little galaxy of very old stars",
+    "M110 - 'n klein sterrestelsel van baie ou sterre",
+    "M110 - mała galaktyka bardzo starych gwiazd",
+  ],
+  [
+    "The Giant Stellar Stream - a river of stars",
+    "Die Reuse-sterrestroom - 'n rivier van sterre",
+    "Wielki Strumień Gwiazd - rzeka gwiazd",
+  ],
+  [
+    "A star that bursts as a nova every single year",
+    "'n Ster wat elke jaar as 'n nova uitbars",
+    "Gwiazda, która co roku wybucha jako nowa",
+  ],
+  [
+    "Where a star exploded in 1885",
+    "Waar 'n ster in 1885 ontplof het",
+    "Tu, gdzie w 1885 roku wybuchła gwiazda",
+  ],
+  [
+    "The heart of the Andromeda galaxy - the final bar",
+    "Die hart van die Andromeda-sterrestelsel - die laaste kroeg",
+    "Serce galaktyki Andromedy - ostatni bar",
+  ],
+  ["MILKY WAY", "MELKWEG", "DROGA MLECZNA"],
+  ["SCOTTISH", "SKOTSE", "SZKOCCY"],
+  ["BRITISH", "BRITSE", "BRYTYJSCY"],
+  ["FRENCH", "FRANSE", "FRANCUSCY"],
+
+  ["LAST ONE!", "DIE LAASTE EEN!", "OSTATNI!"],
+
   // (v1.4.79) TRANSLATIONS, v1.4.84: the game-over tip
   [
     "A CUSTOMER REACHED YOUR END OF THE BAR",
@@ -7214,6 +7522,27 @@ const DICT_ROWS                             = [
   ["CRISP AND CINEMATIC", "SKERP EN FILMIES", "OSTRO I FILMOWO"],
   ["SHINING WORLDS", "BLINKENDE WÊRELDE", "LŚNIĄCE ŚWIATY"],
   ["PERFECT TIMING", "PERFEKTE TYDSBEPLANNING", "IDEALNE WYCZUCIE"],
+  ["THUMBS UP", "DUIME OP", "KCIUKI W GÓRĘ"],
+  [
+    "THE FIRST TEN STOPS ARE HALF AS LONG AGAIN, EASING BACK TO THE USUAL LENGTH BY STOP 25 - AND HALFWAY THERE! AND LAST ONE! TELL YOU HOW FAR YOU'VE GOT",
+    "DIE EERSTE TIEN STOPS IS HALF SO LANK WEER, EN KRY TEEN STOP 25 WEER HUL GEWONE LENGTE - EN HALFPAD! EN DIE LAASTE EEN! SÊ HOE VER JY IS",
+    "PIERWSZE DZIESIĘĆ PRZYSTANKÓW JEST O POŁOWĘ DŁUŻSZYCH, A DO PRZYSTANKU 25 WRACAJĄ DO ZWYKŁEJ DŁUGOŚCI - A POŁOWA ZA TOBĄ! I OSTATNI! MÓWIĄ, ILE JUŻ ZA TOBĄ",
+  ],
+  [
+    "ON A PHONE HELD UPRIGHT EVERY TOUCH BUTTON FITS ON THE SCREEN - POUR, HOLY WATER AND THE CROSS WERE OFF THE EDGE - AND THE WORDS AT THE BOTTOM KEEP ABOVE THE BUTTONS",
+    "OP 'N FOON WAT REGOP GEHOU WORD, PAS ELKE RAAKKNOPPIE OP DIE SKERM - SKINK, WYWATER EN DIE KRUIS WAS VAN DIE RAND AF - EN DIE WOORDE ONDER BLY BO DIE KNOPPIES",
+    "NA TELEFONIE TRZYMANYM PIONOWO KAŻDY PRZYCISK DOTYKOWY MIEŚCI SIĘ NA EKRANIE - NALEJ, WODA ŚWIĘCONA I KRZYŻ BYŁY ZA KRAWĘDZIĄ - A NAPISY NA DOLE TRZYMAJĄ SIĘ NAD PRZYCISKAMI",
+  ],
+  [
+    "GAME OVER ON A PHONE: NO KEYBOARD POPPING UP, AND YOUR HIGH SCORE GOES IN THE TABLE EVEN IF YOU DON'T PRESS SAVE",
+    "SPEL VERBY OP 'N FOON: GEEN SLEUTELBORD WAT OPSPRING NIE, EN JOU HOOGSTE TELLING GAAN IN DIE TABEL OOK AS JY NIE STOOR DRUK NIE",
+    "KONIEC GRY NA TELEFONIE: BEZ WYSKAKUJĄCEJ KLAWIATURY, A TWÓJ REKORD TRAFIA DO TABELI, NAWET GDY NIE NACIŚNIESZ ZAPISZ",
+  ],
+  [
+    "MORE IN AFRIKAANS AND POLISH - HOW TO PLAY, EVERY STOP'S OWN LINE, THE THANK-YOUS AND THE FANS - AND THE COMEDIAN'S JOKES SHOW IN THE MIRRORED BARS TOO",
+    "MEER IN AFRIKAANS EN POOLS - HOE OM TE SPEEL, ELKE STOP SE EIE REËL, DIE DANKIES EN DIE ONDERSTEUNERS - EN DIE KOMEDIANT SE GRAPPE WYS OOK IN DIE OMGEKEERDE KROEË",
+    "WIĘCEJ PO AFRIKAANS I PO POLSKU - JAK GRAĆ, OPIS KAŻDEGO PRZYSTANKU, PODZIĘKOWANIA I KIBICE - A ŻARTY KOMIKA WIDAĆ TEŻ W LUSTRZANYCH BARACH",
+  ],
   ["CLEAR VIEW", "HELDER UITSIG", "CZYSTY WIDOK"],
   [
     "ORDER BUBBLES STAY IN VIEW: THE POINTS THAT FLOAT UP AND THE NAME TAGS STEP ROUND THEM, AND A NAME TAG NO LONGER SITS ACROSS SOMEONE ELSE'S FACE",
@@ -7879,6 +8208,10 @@ const DICT_ROWS                             = [
 ];
 // the texts that carry numbers or names: patterns
 const DICT_PAT                             = [
+  // (v1.5.41) the lives left, between stops
+  [/^LIVES LEFT: (\d+)$/, "LEWENS OOR: $1", "POZOSTAŁE ŻYCIA: $1"],
+  // (v1.5.41) on the way through a stop
+  [/^HALFWAY THERE!  (\d+) TO GO$/, "HALFPAD!  NOG $1", "POŁOWA ZA TOBĄ!  ZOSTAŁO $1"],
   // (v1.4.78) a wrong catch in Cherry Catch
   [/^OOPS - YOU CAUGHT (.+)!$/, "OEPS - JY HET $1 GEVANG!", "UPS - ZŁAPAŁEŚ: $1!"],
   // (v1.4.76) in a row, and the Time Attack ghost
@@ -8064,7 +8397,8 @@ const DICT_PAT                             = [
   [/^BARTENDER LEVEL (\d+)!  (.+)$/, "KROEGMAN VLAK $1!  $2", "POZIOM BARMANA $1!  $2"],
   [/^\+(\d+) COINS  ·  (.+)$/, "+$1 MUNTE  ·  $2", "+$1 MONET  ·  $2"],
   [
-    /^A (DEMON|DEVIL|VAMPIRE)! SHOW THE CROSS \((.+)\), SEND HOLY WATER \((.+)\) OR RUN UP TO IT$/,
+    // (v1.5.41: the werewolf too - his warning stayed in English)
+    /^A (DEMON|DEVIL|VAMPIRE|WEREWOLF)! SHOW THE CROSS \((.+)\), SEND HOLY WATER \((.+)\) OR RUN UP TO IT$/,
     "'N $1! WYS DIE KRUIS ($2), STUUR WYWATER ($3) OF HARDLOOP NA HOM TOE",
     "$1! POKAŻ KRZYŻ ($2), POŚLIJ WODĘ ŚWIĘCONĄ ($3) ALBO PODBIEGNIJ DO NIEGO",
   ],
@@ -8209,6 +8543,13 @@ function langPage() {
       for (const c of n.childNodes) doNode(c);
     }
   };
+  // (v1.5.41) WHOLE PARAGRAPHS FIRST: a paragraph marked data-tr (HOW TO PLAY) is looked up as a whole, bold words and
+  // all, and swapped for its translation - piece by piece around the bold words it was a row of English fragments the
+  // dictionary had never seen, so it stayed in English
+  for (const el of Array.from(document.querySelectorAll("[data-tr]"))) {
+    const key = el.innerHTML.replace(/\s+/g, " ").trim();
+    if (DICT.has(key)) el.innerHTML = DICT.get(key);
+  }
   doNode(document.body);
   new MutationObserver((ms) => {
     for (const m of ms) {
@@ -8490,8 +8831,13 @@ function resize() {
       RW = Math.max(1, Math.round(W / lpx));
       RH = Math.max(1, Math.round(H / lpx));
     } else {
-      RW = Math.round(cssW * dpr * (QUAL < 1 ? 0.6 : 1));
-      RH = Math.round(cssH * dpr * (QUAL < 1 ? 0.6 : 1));
+      // (v1.5.41) A GENTLER MIDDLE STEP FOR SHARP PHONE SCREENS: on AUTO QUALITY medium the picture is drawn at no more
+      // than 1.5 pixels a point (it stayed at the full 2 - the same number of pixels as high - and the next step down
+      // went straight to 0.6, a big blurry jump). On a phone that's about 44% fewer pixels to fill, often enough to keep
+      // up without dropping to low; an ordinary computer screen (1 pixel a point) is not affected
+      const dq = QUAL < 1 ? dpr * 0.6 : QUAL < 2 ? Math.min(dpr, 1.5) : dpr;
+      RW = Math.round(cssW * dq);
+      RH = Math.round(cssH * dq);
     }
     if (CRT_ACTIVE) {
       const k = QUAL >= 2 ? Math.min(1.5, window.devicePixelRatio || 1) : QUAL === 1 ? 1 : 0.7;
@@ -10562,7 +10908,15 @@ const params = () => {
 // (v1.5.9) LONGER STOPS: half as many customers again at every stop, so a stop lasts long enough to enjoy the music
 // (about 45 seconds to a minute and more, from about 30-45) - not in the demo, which moves on by the clock anyway
 const STOP_LONGER = 1.5;
-const longer = (p) => (G.demo ? p : { ...p, total: Math.round(p.total * STOP_LONGER) });
+// (v1.5.41) THE EARLY STOPS LONGER STILL: the first stops were over in well under a minute (about 35-45 seconds), while
+// the far ones already run three or four. So stops 1-10 get half as many customers again on top, and that extra shrinks
+// steadily to nothing by stop 25 - the long stops out in the galaxy stay as they were (counted by the tour stop, the
+// same in Endless)
+const earlyLonger = () => {
+  const L = G.endless ? G.endLvl || 1 : G.level;
+  return 1 + 0.5 * clamp((25 - L) / 15, 0, 1);
+};
+const longer = (p) => (G.demo ? p : { ...p, total: Math.round(p.total * STOP_LONGER * earlyLonger()) });
 // (v1.4.12) A CALMER GAME FOR EVERYONE: even the normal mode is a touch gentler now - customers walk in a little
 // slower and come a little less often, in smaller groups (the later stages still get busy, just never frantic)
 const calmer = (p) =>
@@ -10742,6 +11096,7 @@ function startLevel() {
   rings = [];
   bonus = null;
   G.served = 0;
+  G.halfSaid = G.lastSaid = false; // (v1.5.41: "HALFWAY THERE!" and "LAST ONE!" - once each a stop, update.ts)
   G.total = params().total;
   G.spawnT = 1.2;
   G.nextLane = null; // (v1.5.11: whose door lights up next - update.ts)
@@ -10820,6 +11175,7 @@ function startLevel() {
     }
 }
 function startGame() {
+  keepScore(); // (v1.5.41: a new high score left unsaved on the GAME OVER screen goes in the table first)
   G.contN = 0;
   G.pourLock = [true, true];
   G.runPerf = G.runCombo = 0;
@@ -10844,7 +11200,18 @@ function startGame() {
   showPanels();
   sfx("start");
 }
+// (v1.5.41) A HIGH SCORE IS NEVER LOST: leaving the GAME OVER screen (PLAY AGAIN, MENU, CONTINUE) without pressing SAVE
+// used to drop the score - it never reached the high-score table. Now it goes in under your initials as they stand (the
+// last ones you used, GL at first). On a phone that matters most: the initials box no longer pops the keyboard up
+// (endgame.ts), so many players never touch it
+function keepScore() {
+  if (G.state !== "over" || $("nameForm").hidden) return;
+  try {
+    $("nameForm").requestSubmit ? $("nameForm").requestSubmit() : $("nameSave").click();
+  } catch (e) {}
+}
 function toMenu() {
+  keepScore();
   if (CUP.match) {
     CUP.match = null;
     if (CUP.keep) {
@@ -14512,6 +14879,26 @@ function update(dt) {
   tips = tips.filter((t) => !t.dead);
   if (G.state === "play" || demo) updatePowers(dt, demo);
   updateBananas(dt, demo);
+  // (v1.5.41) HALFWAY, AND THE LAST ONE: the stops are longer now (half as many customers again on the first ten), so
+  // a small word on the way - when half of them have had their shake, and when only one is left. On the level line
+  // under the sign (a "small" announcement), never over the bars; not in Time Attack, Endless, Relax or the demo
+  if (!demo && G.state === "play" && !G.endless && G.total >= 12 && G.total < 1e8) {
+    const left = G.total - G.served;
+    if (!G.halfSaid && G.served >= Math.ceil(G.total / 2) && left > 1) {
+      G.halfSaid = true;
+      G.callouts.push({
+        text: "HALFWAY THERE!  " + left + " TO GO",
+        c: "#5ff5c8",
+        life: 1.8,
+        max: 1.8,
+        sub: true,
+      });
+    }
+    if (!G.lastSaid && left === 1) {
+      G.lastSaid = true;
+      G.callouts.push({ text: "LAST ONE!", c: "#ffc34d", life: 1.6, max: 1.6, sub: true });
+    }
+  }
   // ---- level clear ----
   if (G.served >= G.total && !customers.some((c) => c.state !== "out")) {
     G.state = "clear";
@@ -16935,6 +17322,13 @@ function gameOver() {
   nameLabel();
   setTimeout(() => {
     try {
+      // (v1.5.41) ON A TOUCH SCREEN NOTHING IS FOCUSED: putting the cursor in the initials box popped the phone's keyboard
+      // up over half the screen the moment the game ended, and scrolled the panel down so GAME OVER and the score were out
+      // of sight. Now the panel opens at its top; tap the box to type (the score is kept anyway - keepScore, setup.ts)
+      if (lastDev === "touch" || (coarse && lastDev !== "pad")) {
+        $("over").scrollTop = 0;
+        return;
+      }
       if (makes) {
         $("nameIn").focus();
         if (lastDev === "pad") $("nameIn").setSelectionRange(0, 1);
@@ -62593,9 +62987,14 @@ function funHud(g, s, t, fD, sx, sy) {
     // your flavour, the endless counter
     if (COMFORT.flav) {
       const f = P1.flav ?? 0;
+      // (v1.5.41) ABOVE THE TOUCH BUTTONS: with buttons on the left, both lines move up to just above them (they were
+      // drawn under the BAR buttons - "FLAVOUR: CHOCOLATE" ran through the BAR label). fy is where the lower line goes
+      const tbs = touchTops(),
+        fy = tbs ? Math.min(cssH - 40 * s, tbs.l - 12 * s) : cssH - 40 * s,
+        fy0 = fy - 16 * s;
       g.font = fD(12);
       g.textAlign = "left";
-      HUDHIT.flav = [8 * s, cssH - 66 * s, 260 * s, 22 * s]; // (click it - or right-click anywhere - to change flavour)
+      HUDHIT.flav = [8 * s, fy0 - 10 * s, 260 * s, 22 * s]; // (click it - or right-click anywhere - to change flavour)
       const ft =
         "FLAVOUR: " +
         FLAV_NAMES[f] +
@@ -62609,10 +63008,10 @@ function funHud(g, s, t, fD, sx, sy) {
       // (v1.4.77) a dark edge round the letters, and chocolate a shade lighter - dark brown on a dark bar was hard to read
       g.lineWidth = 3 * s;
       g.strokeStyle = "rgba(8,4,16,.8)";
-      g.strokeText(ft, 16 * s, cssH - 56 * s);
+      g.strokeText(ft, 16 * s, fy0);
       g.fillStyle = FLAV_TXT[f];
-      g.fillText(ft, 16 * s, cssH - 56 * s);
-      hudObs(16 * s + g.measureText(ft).width / 2, cssH - 56 * s, g.measureText(ft).width + 12 * s, 20 * s); // (v1.5.39: the floating words keep clear of it)
+      g.fillText(ft, 16 * s, fy0);
+      hudObs(16 * s + g.measureText(ft).width / 2, fy0, g.measureText(ft).width + 12 * s, 20 * s); // (v1.5.39: the floating words keep clear of it)
       {
         const o = laneOrder(P1.lane);
         if (o !== null && !(oneBtn() || DF().kid)) {
@@ -62628,15 +63027,10 @@ function funHud(g, s, t, fD, sx, sy) {
           // the orange words were hard to make out
           g.lineWidth = 3 * s;
           g.strokeStyle = "rgba(8,4,16,.8)";
-          g.strokeText(ot, 16 * s, cssH - 40 * s);
+          g.strokeText(ot, 16 * s, fy);
           g.fillStyle = ok ? "#5ff5c8" : "#ffc34d";
-          g.fillText(ot, 16 * s, cssH - 40 * s);
-          hudObs(
-            16 * s + g.measureText(ot).width / 2,
-            cssH - 40 * s,
-            g.measureText(ot).width + 12 * s,
-            18 * s
-          );
+          g.fillText(ot, 16 * s, fy);
+          hudObs(16 * s + g.measureText(ot).width / 2, fy, g.measureText(ot).width + 12 * s, 18 * s);
         }
       } // (what this bar wants) g.textAlign = "center";
     } // (v1.4.5: none of this when flavour orders are off)
@@ -62672,6 +63066,7 @@ function contRemember() {
 function continueGame() {
   const c = contSave();
   if (!c || !contOn()) return;
+  keepScore(); // (v1.5.41: the score goes in the table before you carry on - setup.ts)
   const keep = fromLevel;
   fromLevel = c.level;
   G.introShown = true;
@@ -67858,7 +68253,10 @@ function stageHud(g, s, t, fD, sx, sy) {
               ? parts.slice(1).join("? ")
               : joke; // the set-up... then the punchline
       g.font = fD(9);
-      const maxW = sx(STAGE.x1 + 120) - sx(STAGE.x0 - 120);
+      // (v1.5.41) THE JOKE SHOWS IN A MIRRORED PUB TOO: where the bars run the other way round (the doors on the right),
+      // the screen runs right-to-left over the stage, so this width came out negative - the joke's letters were never
+      // drawn (a negative widest-allowed) and its bubble was drawn backwards as a long empty white bar over the stage
+      const maxW = Math.abs(sx(STAGE.x1 + 120) - sx(STAGE.x0 - 120));
       // (v1.4.8) too long for one line: two lines, split at the space nearest the middle - never squashed
       let lines = [line1];
       if (g.measureText(line1).width + 16 * s > maxW) {
@@ -76061,7 +76459,7 @@ function levelOfTour(of) {
     inTour = ((lv - 1) % LAST_LEVEL) + 1;
   return (tour > 1 ? "TOUR " + tour + "  ·  " : "") + "LEVEL " + inTour + of + LAST_LEVEL;
 }
-const GAME_VERSION = "v1.5.40",
+const GAME_VERSION = "v1.5.41",
   GAME_DATE = "17.11.2026",
   VERSION_TEXT = GAME_VERSION + "  ·  " + GAME_DATE;
 const FB = '"Chakra Petch", "Segoe UI", sans-serif';
@@ -76086,6 +76484,39 @@ const HUD_OBS = {
 };
 function hudObs(x, y, w, h) {
   HUD_OBS.cur.push({ x, y, hw: w / 2, h });
+}
+// (v1.5.41) WHERE THE TOUCH BUTTONS START, on each side of the screen (screen pixels from the top; the screen's height
+// when there are none on that side). The words along the bottom - your FLAVOUR on the left, the tune's name and GL on
+// the right - sat a fixed 120 pixels up, which was under the buttons on a phone held upright and on its side ("FLAVOUR:"
+// ran through the BAR button). Now they keep just above the real buttons. Measured at most twice a second (and when the
+// window changes) - and by the middle of each group, so it works with the left-handed layout too
+// (lx: where the left-hand group ends, rx: where the right-hand one starts - for words across the middle)
+// (help: the top of the how-to-play box this frame, if it's up - the tune's name and GL go above it, not across it)
+const TOUCHB = { at: -1e9, w: 0, h: 0, l: 0, r: 0, lx: 0, rx: 0, help: 0 };
+function touchTops() {
+  const el = $("touch");
+  if (!el || el.hidden) return null;
+  const now = performance.now();
+  if (now - TOUCHB.at > 500 || TOUCHB.w !== cssW || TOUCHB.h !== cssH) {
+    TOUCHB.at = now;
+    TOUCHB.w = cssW;
+    TOUCHB.h = cssH;
+    TOUCHB.l = TOUCHB.r = cssH;
+    TOUCHB.lx = 0;
+    TOUCHB.rx = cssW;
+    for (const gp of Array.from(el.querySelectorAll(".grp"))) {
+      const rc = (gp               ).getBoundingClientRect();
+      if (rc.height <= 0) continue;
+      if (rc.left + rc.width / 2 < cssW / 2) {
+        TOUCHB.l = Math.min(TOUCHB.l, rc.top);
+        TOUCHB.lx = Math.max(TOUCHB.lx, rc.right);
+      } else {
+        TOUCHB.r = Math.min(TOUCHB.r, rc.top);
+        TOUCHB.rx = Math.min(TOUCHB.rx, rc.left);
+      }
+    }
+  }
+  return TOUCHB;
 }
 const HUDB = {
   w: 0,
@@ -77181,7 +77612,9 @@ function drawHud(fps) {
     g.fillText("HOLO-SHOW  " + Math.ceil(G.showT), sx(PW / 2), sy(176));
   }
   // which renderer and how fast; the author's initials and the version
-  const lift = G.state === "play" && (lastDev === "touch" || (coarse && lastDev !== "pad")) ? 120 : 0;
+  // (v1.5.41: lifted to just above the touch buttons on that side, measured - it was a fixed 120 pixels, under them)
+  const tbs = G.state === "play" ? touchTops() : null,
+    lift = tbs ? Math.max(0, cssH - tbs.r + 4, TOUCHB.help ? cssH - TOUCHB.help + 4 : 0) : 0;
   g.font = fB(12, 500);
   g.textAlign = "left";
   g.textBaseline = "bottom";
@@ -77305,6 +77738,7 @@ function helpLines() {
   ];
 }
 function drawHelp(g, s, t, fD, fB, sx, sy) {
+  TOUCHB.help = 0;
   if (G.state !== "play" || G.demo) return;
   g.textAlign = "center";
   g.textBaseline = "middle";
@@ -77358,7 +77792,14 @@ function drawHelp(g, s, t, fD, fB, sx, sy) {
     lh = 22 * s,
     h = (L.length + 1) * lh + 18 * s,
     x = cssW / 2 - w / 2,
-    y = cssH - h - (coarse || lastDev === "touch" ? 130 : 26) * s;
+    tb = touchTops(),
+    // (v1.5.41) above the touch buttons it would cover, measured: on a phone held upright they fill the whole width,
+    // and the box sat a fixed 130 points up - behind them. Held sideways the middle is free and it stays low, as before
+    bot = tb
+      ? Math.min(cssH - 26 * s, x < tb.lx ? tb.l - 8 * s : cssH, x + w > tb.rx ? tb.r - 8 * s : cssH)
+      : cssH - (coarse || lastDev === "touch" ? 130 : 26) * s,
+    y = bot - h;
+  TOUCHB.help = y;
   g.globalAlpha = a;
   g.fillStyle = "rgba(10,8,26,.82)";
   roundRect(g, x, y, w, h, 12 * s);
@@ -83309,6 +83750,16 @@ profWire();
 // =====================================================================================
 const NEWS = [
   {
+    ver: "v1.5.41",
+    title: "THUMBS UP",
+    items: [
+      "THE FIRST TEN STOPS ARE HALF AS LONG AGAIN, EASING BACK TO THE USUAL LENGTH BY STOP 25 - AND HALFWAY THERE! AND LAST ONE! TELL YOU HOW FAR YOU'VE GOT",
+      "ON A PHONE HELD UPRIGHT EVERY TOUCH BUTTON FITS ON THE SCREEN - POUR, HOLY WATER AND THE CROSS WERE OFF THE EDGE - AND THE WORDS AT THE BOTTOM KEEP ABOVE THE BUTTONS",
+      "GAME OVER ON A PHONE: NO KEYBOARD POPPING UP, AND YOUR HIGH SCORE GOES IN THE TABLE EVEN IF YOU DON'T PRESS SAVE",
+      "MORE IN AFRIKAANS AND POLISH - HOW TO PLAY, EVERY STOP'S OWN LINE, THE THANK-YOUS AND THE FANS - AND THE COMEDIAN'S JOKES SHOW IN THE MIRRORED BARS TOO",
+    ],
+  },
+  {
     ver: "v1.5.40",
     title: "CLEAR VIEW",
     items: [
@@ -85130,7 +85581,13 @@ const PADRESET = { t: 0 };
 setInterval(() => {
   {
     const sk = $("tSkip");
-    if (sk) sk.hidden = G.state !== "mini" && G.state !== "bonus" && G.state !== "story";
+    const hide = G.state !== "mini" && G.state !== "bonus" && G.state !== "story";
+    // (v1.5.41) when SKIP comes or goes the corner buttons change width - the HUD measures them again straight away
+    // (it re-measured once a second, so for up to a second "LIVES" sat behind the buttons at a bonus round's start)
+    if (sk && sk.hidden !== hide) {
+      sk.hidden = hide;
+      HUDB.t = -9;
+    }
   } // (the SKIP button only shows during a mini-game - and, v1.4.86, Bogdan's story)
   let held = false;
   try {

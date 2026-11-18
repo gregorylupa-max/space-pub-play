@@ -7546,6 +7546,22 @@ const DICT_ROWS                             = [
   ["CRISP AND CINEMATIC", "SKERP EN FILMIES", "OSTRO I FILMOWO"],
   ["SHINING WORLDS", "BLINKENDE WÊRELDE", "LŚNIĄCE ŚWIATY"],
   ["PERFECT TIMING", "PERFEKTE TYDSBEPLANNING", "IDEALNE WYCZUCIE"],
+  ["ONE SWIPE", "EEN VEEG", "JEDNO PRZESUNIĘCIE"],
+  [
+    "ON A PHONE ONE SWIPE MOVES ONE BAR: A NORMAL SWIPE USED TO JUMP TWO OR THREE BARS, AND PAST THE LAST BAR IT WRAPPED ROUND TO THE FIRST",
+    "OP 'N FOON SKUIF EEN VEEG EEN TOONBANK: 'N GEWONE VEEG HET TWEE OF DRIE TOONBANKE GESPRING, EN VERBY DIE LAASTE TOONBANK WEER NA DIE EERSTE",
+    "NA TELEFONIE JEDNO PRZESUNIĘCIE TO JEDNA LADA: ZWYKŁE PRZESUNIĘCIE SKAKAŁO O DWIE LUB TRZY LADY, A ZA OSTATNIĄ WRACAŁO DO PIERWSZEJ",
+  ],
+  [
+    "CHECKED ON BIG SCREENS, ULTRAWIDE MONITORS AND TABLETS, AND IN AFRIKAANS ON PHONES: NOTHING HIDDEN OR CUT OFF",
+    "NAGEGAAN OP GROOT SKERMS, ULTRAWYE MONITORS EN TABLETTE, EN IN AFRIKAANS OP FONE: NIKS VERSTEEK OF AFGESNY NIE",
+    "SPRAWDZONE NA DUŻYCH EKRANACH, SZEROKICH MONITORACH I TABLETACH ORAZ PO AFRIKAANS NA TELEFONACH: NIC UKRYTEGO ANI UCIĘTEGO",
+  ],
+  [
+    "NO SCRIPT ERRORS IN A LONG RUN THROUGH EVERY MODE - THE TOUR, TIME ATTACK, BOSS RUSH, CASTAWAY ISLAND, THE SOLAR SYSTEM TOUR AND THE DEMO",
+    "GEEN SKRIPFOUTE IN 'N LANG LOOP DEUR ELKE MODUS NIE - DIE TOER, TYDJAG, BAAS-STORMLOOP, SKIPBREUKELING-EILAND, DIE SONNESTELSELTOER EN DIE DEMO",
+    "ŻADNYCH BŁĘDÓW SKRYPTU W DŁUGIM PRZEJŚCIU PRZEZ KAŻDY TRYB - TRASĘ, NA CZAS, SZTURM NA BOSSÓW, WYSPĘ ROZBITKA, PODRÓŻ PRZEZ UKŁAD SŁONECZNY I DEMO",
+  ],
   ["FAIR PLAY", "REGVERDIGE SPEL", "UCZCIWA GRA"],
   [
     "A BOSS WHO JUMPS TO ANOTHER BAR NO LONGER COSTS YOU A LIFE FOR THE SHAKE YOU'D ALREADY SENT HIM - IT FIZZLES OUT",
@@ -12072,10 +12088,18 @@ function bindPointer(canvas) {
       sw = VERT ? (e.clientX - g.sx) * k : (e.clientY - g.sy) * k,
       other = VERT ? (e.clientY - g.y) * k : (e.clientX - g.x) * k;
     const dx = other; // run: drag right (wide) or down (tall) = towards the taps
-    if (Math.abs(sw) > 38 && Math.abs(sw) > Math.abs(other) * 0.8) {
-      // a swipe: one bar per 38 px
-      if (sw < 0) pressedEdge.lu = true;
-      else pressedEdge.ld = true;
+    // (v1.5.43) ONE BAR PER THUMB-WIDTH, IN SCREEN PIXELS - AND NO WRAPPING ROUND: the step was 38 game units, which on a
+    // phone (under half a pixel to a unit) is only about 19 pixels - an ordinary swipe jumped two or three bars, and
+    // past the last bar it carried on round to the first (1, 2, 3, 0...). Now a bar is about 52 pixels of swipe (more on a
+    // big tablet), and a swipe stops at the outside bar
+    const swPx = VERT ? e.clientX - g.sx : e.clientY - g.sy,
+      otherPx = VERT ? e.clientY - g.y : e.clientX - g.x,
+      step = Math.max(52, 38 * u);
+    if (Math.abs(swPx) > step && Math.abs(swPx) > Math.abs(otherPx) * 0.8) {
+      // a swipe: one bar per step
+      if (sw < 0) {
+        if (P1.lane > 0) pressedEdge.lu = true;
+      } else if (P1.lane < LANES - 1) pressedEdge.ld = true;
       g.sx = e.clientX;
       g.sy = e.clientY;
       g.moved = true;
@@ -76627,7 +76651,7 @@ function levelOfTour(of) {
     inTour = ((lv - 1) % LAST_LEVEL) + 1;
   return (tour > 1 ? "TOUR " + tour + "  ·  " : "") + "LEVEL " + inTour + of + LAST_LEVEL;
 }
-const GAME_VERSION = "v1.5.42",
+const GAME_VERSION = "v1.5.43",
   GAME_DATE = "18.11.2026",
   VERSION_TEXT = GAME_VERSION + "  ·  " + GAME_DATE;
 const FB = '"Chakra Petch", "Segoe UI", sans-serif';
@@ -83964,6 +83988,15 @@ profWire();
 //  the game, and where the motion capture, the folk songs and the fonts come from. Both from the menu at any time.
 // =====================================================================================
 const NEWS = [
+  {
+    ver: "v1.5.43",
+    title: "ONE SWIPE",
+    items: [
+      "ON A PHONE ONE SWIPE MOVES ONE BAR: A NORMAL SWIPE USED TO JUMP TWO OR THREE BARS, AND PAST THE LAST BAR IT WRAPPED ROUND TO THE FIRST",
+      "CHECKED ON BIG SCREENS, ULTRAWIDE MONITORS AND TABLETS, AND IN AFRIKAANS ON PHONES: NOTHING HIDDEN OR CUT OFF",
+      "NO SCRIPT ERRORS IN A LONG RUN THROUGH EVERY MODE - THE TOUR, TIME ATTACK, BOSS RUSH, CASTAWAY ISLAND, THE SOLAR SYSTEM TOUR AND THE DEMO",
+    ],
+  },
   {
     ver: "v1.5.42",
     title: "FAIR PLAY",

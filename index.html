@@ -7575,6 +7575,17 @@ const DICT_ROWS                             = [
   ["CRISP AND CINEMATIC", "SKERP EN FILMIES", "OSTRO I FILMOWO"],
   ["SHINING WORLDS", "BLINKENDE WÊRELDE", "LŚNIĄCE ŚWIATY"],
   ["PERFECT TIMING", "PERFEKTE TYDSBEPLANNING", "IDEALNE WYCZUCIE"],
+  ["KEYS EVERYWHERE", "SLEUTELS ORAL", "KLAWISZE WSZĘDZIE"],
+  [
+    "WITH THE KEYBOARD OR A CONTROLLER YOU CAN NOW MOVE THROUGH WHO'S PLAYING, CONTROLS, THE CUP AND THE OTHER PANELS THAT IGNORED THE ARROWS",
+    "MET DIE SLEUTELBORD OF 'N BEHEERDER KAN JY NOU DEUR WIE SPEEL, KONTROLES, DIE BEKER EN DIE ANDER PANELE BEWEEG WAT DIE PYLTJIES GEÏGNOREER HET",
+    "KLAWIATURĄ LUB KONTROLEREM MOŻESZ TERAZ PORUSZAĆ SIĘ PO PANELACH KTO GRA, STEROWANIE, PUCHAR I INNYCH, KTÓRE IGNOROWAŁY STRZAŁKI",
+  ],
+  [
+    "IN A NAME BOX ESC CLOSES THE PANEL AND UP OR DOWN TAKES YOU BACK TO THE BUTTONS",
+    "IN 'N NAAMBLOKKIE MAAK ESC DIE PANEEL TOE EN OP OF AF NEEM JOU TERUG NA DIE KNOPPIES",
+    "W POLU Z IMIENIEM ESC ZAMYKA PANEL, A STRZAŁKA W GÓRĘ LUB W DÓŁ WRACA DO PRZYCISKÓW",
+  ],
   ["BIG PRINT", "GROOT DRUK", "DUŻY DRUK"],
   [
     "WITH BIGGER TEXT (SETTINGS) THE CONTROLS, CUP AND GALAXY MAP PANELS FIT THE SCREEN - ON A PHONE THEY HUNG OFF BOTH SIDES, THEIR TITLES CUT",
@@ -76786,7 +76797,7 @@ function levelOfTour(of) {
     inTour = ((lv - 1) % LAST_LEVEL) + 1;
   return (tour > 1 ? "TOUR " + tour + "  ·  " : "") + "LEVEL " + inTour + of + LAST_LEVEL;
 }
-const GAME_VERSION = "v1.5.48",
+const GAME_VERSION = "v1.5.49",
   GAME_DATE = "18.11.2026",
   VERSION_TEXT = GAME_VERSION + "  ·  " + GAME_DATE;
 const FB = '"Chakra Petch", "Segoe UI", sans-serif';
@@ -83665,6 +83676,14 @@ function visiblePanel() {
     "wardrobe",
     "shop",
     "trophies",
+    // (v1.5.49) and these six too - with one of them open the arrow keys and the controller had no buttons to move
+    // between (WHO'S PLAYING, HOW TO PLAY, WHAT'S NEW, CONTROLS, the GALAXY MAP and the CUP: the cursor stayed put)
+    "prof",
+    "howto",
+    "news",
+    "keys",
+    "galmap",
+    "cup",
     "settings",
     "more",
     "menu",
@@ -83849,6 +83868,20 @@ const panelNav = () =>
 window.addEventListener(
   "keydown",
   (e) => {
+    // (v1.5.49) A TEXT BOX DOESN'T TRAP THE KEYBOARD: with the focus in a name box (the CUP's eight players, a new
+    // profile's name) every key went to the box - Esc didn't close the panel and the arrows couldn't get out of it. Now
+    // Esc closes the panel and up / down leave the box for the buttons; left / right and the letters still type
+    if (panelNav() && e.target && (e.target          ).tagName === "INPUT") {
+      const t = e.target                    ;
+      if (e.code === "Escape" || e.code === "ArrowUp" || e.code === "ArrowDown") {
+        e.preventDefault();
+        e.stopImmediatePropagation();
+        t.blur();
+        if (e.code === "Escape") navBack();
+        else navDir(0, e.code === "ArrowUp" ? -1 : 1);
+      }
+      return;
+    }
     if (!panelNav() || (e.target && (e.target          ).tagName === "INPUT")) return;
     const k = e.code;
     if (k === "KeyO" && G.state === "menu" && !JB.open && !SB.open && !WD.open && !fpAny()) {
@@ -84146,6 +84179,14 @@ profWire();
 //  the game, and where the motion capture, the folk songs and the fonts come from. Both from the menu at any time.
 // =====================================================================================
 const NEWS = [
+  {
+    ver: "v1.5.49",
+    title: "KEYS EVERYWHERE",
+    items: [
+      "WITH THE KEYBOARD OR A CONTROLLER YOU CAN NOW MOVE THROUGH WHO'S PLAYING, CONTROLS, THE CUP AND THE OTHER PANELS THAT IGNORED THE ARROWS",
+      "IN A NAME BOX ESC CLOSES THE PANEL AND UP OR DOWN TAKES YOU BACK TO THE BUTTONS",
+    ],
+  },
   {
     ver: "v1.5.48",
     title: "BIG PRINT",

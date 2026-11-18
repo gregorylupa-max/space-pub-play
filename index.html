@@ -7562,6 +7562,17 @@ const DICT_ROWS                             = [
   ["CRISP AND CINEMATIC", "SKERP EN FILMIES", "OSTRO I FILMOWO"],
   ["SHINING WORLDS", "BLINKENDE WÊRELDE", "LŚNIĄCE ŚWIATY"],
   ["PERFECT TIMING", "PERFEKTE TYDSBEPLANNING", "IDEALNE WYCZUCIE"],
+  ["SMALL PRINT", "KLEINSKRIF", "DROBNY DRUK"],
+  [
+    "ON A PHONE THE PROTESTERS' PLACARDS CAN BE READ: THEIR WORDS SHRANK TO A FEW PIXELS - NOW THEY STAY BIG ENOUGH, ON A CARD OF THEIR OWN",
+    "OP 'N FOON KAN JY DIE BETOGERS SE PLAKKATE LEES: HUL WOORDE HET TOT 'N PAAR PIXELS GEKRIMP - NOU BLY HULLE GROOT GENOEG, OP HUL EIE KAART",
+    "NA TELEFONIE DA SIĘ PRZECZYTAĆ TRANSPARENTY PROTESTUJĄCYCH: ICH SŁOWA KURCZYŁY SIĘ DO KILKU PIKSELI - TERAZ ZOSTAJĄ DOŚĆ DUŻE, NA WŁASNEJ KARTCE",
+  ],
+  [
+    "THE STAGE'S LIVE CAPTION IS BIG ENOUGH TO READ ON EVERY PHONE",
+    "DIE VERHOOG SE OP DIE VERHOOG-OPSKRIF IS GROOT GENOEG OM OP ELKE FOON TE LEES",
+    "NAPIS NA ŻYWO NAD SCENĄ DA SIĘ PRZECZYTAĆ NA KAŻDYM TELEFONIE",
+  ],
   ["STAGE MANNERS", "VERHOOGMANIERE", "SCENICZNE MANIERY"],
   [
     "ON A PHONE HELD UPRIGHT THE COMEDIAN'S JOKES AND THE SHOUTS FROM THE STAGE NO LONGER LAND ON THE SHAKE FEVER METERS - THEY GO JUST BELOW THE LIVE SIGN",
@@ -68436,7 +68447,8 @@ function stageHud(g, s, t, fD, sx, sy) {
       sx0 = sx,
       sy0 = sy,
       fD0 = fD,
-      k = Math.max(0.8, P.sc * 1.3);
+      // (v1.5.46: never so small its words can't be read - the "LIVE:" caption was 4 pixels on a small phone; now at least 7)
+      k = Math.max(0.8, P.sc * 1.3, 7 / (8 * s));
     if (!P.ok) return;
     sx = (x) => sx0(P.x0 + (x - P.rx) * P.sc);
     sy = (y) => sy0(P.y0 + (y - P.ry) * P.sc);
@@ -68449,7 +68461,7 @@ function stageHud(g, s, t, fD, sx, sy) {
   if (G.state === "clear" && !G.demo && G.starsT >= 0) return;
   g.textAlign = "center";
   g.textBaseline = "middle";
-  g.font = fD(8);
+  g.font = fD(Math.max(8, 7 / s)); // (v1.5.46: at least 7 pixels - on a phone held sideways it was 6)
   const nm = "LIVE: " + showName(),
     nw = g.measureText(nm).width + 12 * s,
     ny = sy(STAGE.y + 15);
@@ -76732,7 +76744,7 @@ function levelOfTour(of) {
     inTour = ((lv - 1) % LAST_LEVEL) + 1;
   return (tour > 1 ? "TOUR " + tour + "  ·  " : "") + "LEVEL " + inTour + of + LAST_LEVEL;
 }
-const GAME_VERSION = "v1.5.45",
+const GAME_VERSION = "v1.5.46",
   GAME_DATE = "18.11.2026",
   VERSION_TEXT = GAME_VERSION + "  ·  " + GAME_DATE;
 const FB = '"Chakra Petch", "Segoe UI", sans-serif';
@@ -78222,6 +78234,27 @@ function drawSigns(g, s, t, sx, sy) {
     g.font = "800 " + px + "px " + FB;
     const wd = Math.max(...lines.map((l) => g.measureText(l).width));
     px = Math.max(4, Math.min((px * boxW) / wd, (15 * sc * u) / (lines.length * 1.1)));
+    // (v1.5.46) A PLACARD YOU CAN READ: on a phone the cardboard is only about 30 pixels wide, and its words shrank to 4
+    // pixels - a smudge. Below 7 pixels they now stay at 7, on a bigger card of their own over the sign (a protester
+    // with an oversized placard), so "BRING BACK BANANAS!" can be read on a phone too
+    if (px < 7) {
+      px = 7;
+      g.font = "800 " + px + "px " + FB;
+      const cw = Math.max(...lines.map((l) => g.measureText(l).width)) + 6,
+        ch = lines.length * px * 1.05 + 4;
+      g.fillStyle = "#ead7a8";
+      g.strokeStyle = "rgba(60,36,16,.9)";
+      g.lineWidth = 1;
+      g.beginPath();
+      g.rect(
+        Math.round(sx(x) - cw / 2) + 0.5,
+        Math.round(sy(y) - ch / 2) + 0.5,
+        Math.round(cw),
+        Math.round(ch)
+      );
+      g.fill();
+      g.stroke();
+    }
     g.font = "800 " + px.toFixed(1) + "px " + FB;
     g.fillStyle = c.protest.anger > 0.55 ? "#c0101a" : "#2a1a10";
     lines.forEach((l, i) =>
@@ -84069,6 +84102,14 @@ profWire();
 //  the game, and where the motion capture, the folk songs and the fonts come from. Both from the menu at any time.
 // =====================================================================================
 const NEWS = [
+  {
+    ver: "v1.5.46",
+    title: "SMALL PRINT",
+    items: [
+      "ON A PHONE THE PROTESTERS' PLACARDS CAN BE READ: THEIR WORDS SHRANK TO A FEW PIXELS - NOW THEY STAY BIG ENOUGH, ON A CARD OF THEIR OWN",
+      "THE STAGE'S LIVE CAPTION IS BIG ENOUGH TO READ ON EVERY PHONE",
+    ],
+  },
   {
     ver: "v1.5.45",
     title: "STAGE MANNERS",

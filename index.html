@@ -308,6 +308,13 @@ body.retro .table { font-size: 10px; gap: 5px; }
 /* (v1.4.77) a narrow phone held upright: smaller corner buttons - with Skip showing (a bonus round, a mini-game) the four
    of them used to stretch right across the top and cover the score */
 @media (max-width: 480px) { #topbtns { right: 8px; gap: 5px; } #topbtns button { min-height: 32px; padding: 5px 7px; font-size: 11px; } }
+/* (v1.5.42) with SKIP showing (a bonus round, a mini-game, the story) the four corner buttons still covered the score on a
+   phone 360-400 points wide - there FULL SCREEN steps aside until SKIP goes again (F still works, and it's in the menus) */
+@media (max-width: 420px) { #topbtns.withSkip #tFull { display: none; } }
+/* (v1.5.42) a small phone held sideways (an iPhone SE: 667 x 375): the same compact corner buttons - at full size the three
+   took up nearly half of the top edge, and the titles centred there (ON OUR WAY..., the mini-game's clock, the endings)
+   ran in under "Full screen" */
+@media (max-height: 420px) and (max-width: 760px) { #topbtns { right: 8px; top: calc(6px + env(safe-area-inset-top, 0px)); gap: 5px; } #topbtns button { min-height: 30px; padding: 4px 7px; font-size: 11px; } }
 @media (max-width: 620px) { .controls { grid-template-columns: 1fr; } }
 @media (max-width: 520px) { .panel { padding: 16px 14px 14px; gap: 10px; width: calc(100% - 20px); max-height: calc(100% - 20px); } .keys { font-size: 12px; }
   .buttons { gap: 8px; } button, .add { font-size: 12px; padding: 9px 6px; min-height: 42px; letter-spacing: .03em; } button.primary { font-size: 19px; } kbd { display: none; }
@@ -4595,7 +4602,8 @@ const DICT_ROWS                             = [
   ],
   ["UNICORN RAINBOW SHIELD!", "EENHORING-REËNBOOGSKILD!", "TĘCZOWA TARCZA JEDNOROŻCA!"],
   ["A CUSTOMER GOT TO YOU!", "'N KLANT HET BY JOU UITGEKOM!", "KLIENT DOTARŁ DO CIEBIE!"],
-  ["SLAM THE DOOR!", "KLAP DIE DEUR TOE!", "TRZAŚNIJ DRZWIAMI!"],
+  // (v1.5.42: read with "...AND DON'T" before it - "...EN MOENIE DIE / DEUR TOEKLAP NIE!", "...I NIE / TRZASKAJ DRZWIAMI!")
+  ["SLAM THE DOOR!", "DEUR TOEKLAP NIE!", "TRZASKAJ DRZWIAMI!"],
   [
     "LAST STOP DONE - NOW, TO THE HEART OF ANDROMEDA!",
     "LAASTE HALTE KLAAR - NOU, NA DIE HART VAN ANDROMEDA!",
@@ -6714,6 +6722,22 @@ const DICT_ROWS                             = [
 
   ["LAST ONE!", "DIE LAASTE EEN!", "OSTATNI!"],
 
+  // (v1.5.42) TRANSLATIONS: the endings' titles, being fired, and "skip"
+  ["BEST BARTENDER IN THE UNIVERSE", "BESTE KROEGMAN IN DIE HEELAL", "NAJLEPSZY BARMAN WE WSZECHŚWIECIE"],
+  ["BEST BARTENDERS IN THE UNIVERSE", "BESTE KROEGMANNE IN DIE HEELAL", "NAJLEPSI BARMANI WE WSZECHŚWIECIE"],
+  ["BEST BARTENDER IN THE MILKY WAY", "BESTE KROEGMAN IN DIE MELKWEG", "NAJLEPSZY BARMAN W DRODZE MLECZNEJ"],
+  [
+    "BEST BARTENDERS IN THE MILKY WAY",
+    "BESTE KROEGMANNE IN DIE MELKWEG",
+    "NAJLEPSI BARMANI W DRODZE MLECZNEJ",
+  ],
+  ["YOU'RE", "JY IS", "JESTEŚ"],
+  ["YOU'RE FIRED!", "JY IS AFGEDANK!", "JESTEŚ ZWOLNIONY!"],
+  ["...AND DON'T", "...EN MOENIE DIE", "...I NIE"],
+  ["tap to skip", "tik om oor te slaan", "stuknij, by pominąć"],
+  ["press A to skip", "druk A om oor te slaan", "naciśnij A, by pominąć"],
+  ["press any key to skip", "druk enige sleutel om oor te slaan", "naciśnij dowolny klawisz, by pominąć"],
+
   // (v1.4.79) TRANSLATIONS, v1.4.84: the game-over tip
   [
     "A CUSTOMER REACHED YOUR END OF THE BAR",
@@ -7522,6 +7546,27 @@ const DICT_ROWS                             = [
   ["CRISP AND CINEMATIC", "SKERP EN FILMIES", "OSTRO I FILMOWO"],
   ["SHINING WORLDS", "BLINKENDE WÊRELDE", "LŚNIĄCE ŚWIATY"],
   ["PERFECT TIMING", "PERFEKTE TYDSBEPLANNING", "IDEALNE WYCZUCIE"],
+  ["FAIR PLAY", "REGVERDIGE SPEL", "UCZCIWA GRA"],
+  [
+    "A BOSS WHO JUMPS TO ANOTHER BAR NO LONGER COSTS YOU A LIFE FOR THE SHAKE YOU'D ALREADY SENT HIM - IT FIZZLES OUT",
+    "'N BAAS WAT NA 'N ANDER TOONBANK SPRING, KOS JOU NIE MEER 'N LEWE VIR DIE MELKSKOMMEL WAT JY HOM AL GESTUUR HET NIE - DIT VERDWYN NET",
+    "BOSS, KTÓRY PRZESKOCZY NA INNĄ LADĘ, NIE KOSZTUJE CIĘ JUŻ ŻYCIA ZA KOKTAJL, KTÓRY JUŻ DO NIEGO WYSŁAŁEŚ - PO PROSTU ZNIKA",
+  ],
+  [
+    "ON SMALL PHONES NOTHING HIDES UNDER THE CORNER BUTTONS ANY MORE: TITLES, ANNOUNCEMENTS, THE SCORE AND THE MINI-GAME CLOCK ALL KEEP CLEAR",
+    "OP KLEIN FONE WEGSTEEK NIKS MEER ONDER DIE HOEKKNOPPIES NIE: OPSKRIFTE, AANKONDIGINGS, DIE TELLING EN DIE MINISPELETJIE SE HORLOSIE BLY WEG",
+    "NA MAŁYCH TELEFONACH NIC JUŻ NIE CHOWA SIĘ POD PRZYCISKAMI W ROGU: TYTUŁY, OGŁOSZENIA, WYNIK I ZEGAR MINIGRY TRZYMAJĄ SIĘ Z BOKU",
+  ],
+  [
+    "THE ENDINGS, THE TRIP TO ANDROMEDA AND BEING FIRED ARE NOW IN AFRIKAANS AND POLISH TOO",
+    "DIE EINDES, DIE REIS NA ANDROMEDA EN AFGEDANK WORD IS NOU OOK IN AFRIKAANS EN POOLS",
+    "ZAKOŃCZENIA, PODRÓŻ NA ANDROMEDĘ I ZWOLNIENIE SĄ TERAZ TEŻ PO AFRIKAANS I PO POLSKU",
+  ],
+  [
+    "SMALLER FIXES: THE MAGNIFYING GLASS HINT STAYS ON SCREEN, THE ENDLESS LINE IS CENTRED, AND THE WINDOW CLEANER IS EASIER TO READ",
+    "KLEINER REGSTELLINGS: DIE VERGROOTGLAS-WENK BLY OP DIE SKERM, DIE EINDLOSE REËL IS GESENTREER, EN DIE VENSTERWASSER IS MAKLIKER OM TE LEES",
+    "DROBNIEJSZE POPRAWKI: PODPOWIEDŹ Z LUPĄ ZOSTAJE NA EKRANIE, LINIA TRYBU BEZ KOŃCA JEST WYŚRODKOWANA, A MYJĄCEGO OKNA ŁATWIEJ PRZECZYTAĆ",
+  ],
   ["THUMBS UP", "DUIME OP", "KCIUKI W GÓRĘ"],
   [
     "THE FIRST TEN STOPS ARE HALF AS LONG AGAIN, EASING BACK TO THE USUAL LENGTH BY STOP 25 - AND HALFWAY THERE! AND LAST ONE! TELL YOU HOW FAR YOU'VE GOT",
@@ -8210,6 +8255,33 @@ const DICT_ROWS                             = [
 const DICT_PAT                             = [
   // (v1.5.41) the lives left, between stops
   [/^LIVES LEFT: (\d+)$/, "LEWENS OOR: $1", "POZOSTAŁE ŻYCIA: $1"],
+  // (v1.5.42) the endings' counts and credits, the trip to Andromeda, arriving at a stop
+  [
+    /^SOLAR SYSTEM STOPS SERVED: (\d+) \/ 12$/,
+    "SONNESTELSEL-STOPS BEDIEN: $1 / 12",
+    "OBSŁUŻONE PRZYSTANKI UKŁADU SŁONECZNEGO: $1 / 12",
+  ],
+  [
+    /^PA-99-N2 WORLDS SERVED: (\d+) \/ 12$/,
+    "PA-99-N2-WÊRELDE BEDIEN: $1 / 12",
+    "OBSŁUŻONE ŚWIATY PA-99-N2: $1 / 12",
+  ],
+  [
+    /^MILKY WAY STARS SERVED: (\d+) \/ 8$/,
+    "MELKWEG-STERRE BEDIEN: $1 / 8",
+    "OBSŁUŻONE GWIAZDY DROGI MLECZNEJ: $1 / 8",
+  ],
+  [
+    /^ANDROMEDA WONDERS SERVED: (\d+) \/ 8$/,
+    "ANDROMEDA-WONDERS BEDIEN: $1 / 8",
+    "OBSŁUŻONE CUDA ANDROMEDY: $1 / 8",
+  ],
+  [/^FINAL SCORE  (\d+)$/, "EINDTELLING  $1", "WYNIK KOŃCOWY  $1"],
+  [/^CUSTOMERS SERVED  (\d+)$/, "KLANTE BEDIEN  $1", "OBSŁUŻENI KLIENCI  $1"],
+  [/^DIFFICULTY  (.+)$/, "MOEILIKHEID  $1", "POZIOM TRUDNOŚCI  $1"],
+  [/^([\d,]+) LIGHT-YEARS TO GO$/, "NOG $1 LIGJARE", "JESZCZE $1 LAT ŚWIETLNYCH"],
+  [/^WARP TO (.+)$/, "KOERS NA $1", "KURS NA: $1"],
+  [/^HELLO, (.+)$/, "HALLO, $1", "WITAJ, $1"],
   // (v1.5.41) on the way through a stop
   [/^HALFWAY THERE!  (\d+) TO GO$/, "HALFPAD!  NOG $1", "POŁOWA ZA TOBĄ!  ZOSTAŁO $1"],
   // (v1.4.78) a wrong catch in Cherry Catch
@@ -11921,7 +11993,15 @@ function bindPointer(canvas) {
       return;
     }
     if (G.state === "bonus" && bonus && bonus.phase === "pick") {
-      if (Math.abs(wx - 80) < 70 && wy > 420) {
+      const hr = $("hud").getBoundingClientRect(),
+        pk = HUDHIT.peek,
+        onPeek =
+          !!pk &&
+          e.clientX - hr.left >= pk[0] &&
+          e.clientX - hr.left <= pk[0] + pk[2] &&
+          e.clientY - hr.top >= pk[1] &&
+          e.clientY - hr.top <= pk[1] + pk[3]; // (v1.5.42: on the words themselves, wherever they are - kids.ts)
+      if (onPeek || (Math.abs(wx - 80) < 70 && wy > 420)) {
         bonusPeek();
         return;
       }
@@ -47782,6 +47862,10 @@ function bossTricks(c, dt) {
       return;
     }
     dust(c.lane, c.x, 0, 8, true);
+    // (v1.5.42) A SHAKE ALREADY ON ITS WAY TO HIM IS NOT HELD AGAINST YOU: one slid at the boss a moment before he jumped
+    // used to sail on down the empty bar and cost a life - you aimed right, he moved. Now the shakes still coming at him
+    // on the bar he leaves fizzle out harmlessly at its end (like those on their way to protesters who have calmed down)
+    for (const s of shakes) if (s.lane === c.lane && s.x > c.x) s.extra = true;
     c.hopFrom = c.lane;
     c.hopAt = G.time;
     c.lane = to;
@@ -48380,20 +48464,30 @@ function kidHud(g, s, t, fD, sx, sy) {
     const n = bonus.peeks ?? 1;
     g.font = fD(12);
     g.fillStyle = n > 0 || (inv().peek | 0) > 0 ? "#ffd24d" : "rgba(255,255,255,.4)";
-    g.fillText(
+    const pt =
       n > 0
         ? "MAGNIFYING GLASS - PEEK: " +
-            (lastDev === "pad" ? "D-PAD UP" : lastDev === "touch" || coarse ? "TAP HERE" : "↑ OR E") +
-            "  (" +
-            (n + (inv().peek | 0)) +
-            " LEFT)"
+          (lastDev === "pad" ? "D-PAD UP" : lastDev === "touch" || coarse ? "TAP HERE" : "↑ OR E") +
+          "  (" +
+          (n + (inv().peek | 0)) +
+          " LEFT)"
         : (inv().peek | 0) > 0
           ? "PEEK AGAIN WITH YOUR SHOP PEEK"
-          : "NO PEEKS LEFT",
-      sx(80),
-      sy(470)
-    );
-  }
+          : "NO PEEKS LEFT";
+    // (v1.5.42) KEPT ON THE SCREEN: centred over the left-hand side of the stage, on a phone the first half of the line
+    // ("MAGNIFYING GLASS - PEEK: TAP HERE") was off the left edge. Now it slides in to fit - and a tap on the words,
+    // wherever they are, peeks (input.ts), as well as a tap on the old spot
+    g.textAlign = "center";
+    const pw = g.measureText(pt).width,
+      px = Math.max(sx(80), pw / 2 + 10 * s),
+      py = sy(470);
+    g.lineJoin = "round";
+    g.lineWidth = 3 * s;
+    g.strokeStyle = "rgba(8,4,16,.85)"; // (and a dark edge - yellow over the gold frame was hard to read)
+    g.strokeText(pt, px, py);
+    g.fillText(pt, px, py);
+    HUDHIT.peek = [px - pw / 2 - 10 * s, py - 16 * s, pw + 20 * s, 32 * s];
+  } else HUDHIT.peek = null;
   // the sticker book: the name of the chosen sticker
   if (SB.open) {
     const cat = stickerCats()[SB.tab],
@@ -60604,6 +60698,8 @@ function cwDrawMouse(t, b, dark) {
   pop();
 }
 // ---------------------------------------------------------------- the words (HUD)
+// (v1.5.42: where the corner buttons are - their left edge and bottom - for the title, see below)
+const CW_TB = { at: -1e9, w: 0, l: 0, b: 0 };
 function castawayHud(g, s) {
   const cx = cssW / 2;
   g.textAlign = "center";
@@ -60624,7 +60720,29 @@ function castawayHud(g, s) {
   };
   g.font = Math.round(20 * s) + "px " + FD;
   g.fillStyle = "#ffd24d";
-  g.fillText(T("CASTAWAY ISLAND"), cx, 26 * s);
+  {
+    // (v1.5.42) CLEAR OF THE CORNER BUTTONS: on a phone held upright the title sat right under "Full screen". Now, if the
+    // middle of the top is taken, it goes in the middle of the room left of the buttons - or, if it doesn't fit there,
+    // on a line of its own just below them (the buttons' place is measured at most twice a second)
+    const tt = T("CASTAWAY ISLAND"),
+      tw = g.measureText(tt).width / 2 + 8 * s,
+      now = performance.now();
+    if (now - CW_TB.at > 500 || CW_TB.w !== cssW) {
+      const tb = $("topbtns"),
+        r = tb && !tb.hidden ? tb.getBoundingClientRect() : null;
+      CW_TB.at = now;
+      CW_TB.w = cssW;
+      CW_TB.l = r ? r.left : cssW;
+      CW_TB.b = r ? r.bottom : 0;
+    }
+    let tx = cx,
+      ty = 26 * s;
+    if (cx + tw > CW_TB.l - 6) {
+      if (CW_TB.l - 12 >= tw * 2) tx = (CW_TB.l - 6) / 2;
+      else ty = CW_TB.b + 16 * s;
+    }
+    g.fillText(tt, tx, ty);
+  }
   {
     const A = CW_ACTS[CW.act % CW_ACTS.length];
     band(T(A[2]), cssH * 0.86, 13, "#fff3e2");
@@ -62721,11 +62839,12 @@ function funHud(g, s, t, fD, sx, sy) {
           "      TIME: " +
           Math.ceil(M.len - M.t),
         cssW / 2,
-        VERT ? Math.max(70 * s, fitCssY(0) - 14 * s) : 64 * s // (tall screen: just above the play area, clear of the buttons)
+        VERT ? Math.max(70 * s, fitCssY(0) - 14 * s) : Math.max(64 * s, topBtns().b + 14 * s) // (tall screen: just above the play area, clear of the buttons) (v1.5.42: and on a short one, below the corner buttons - with SKIP showing it ran in under "Full screen")
       );
       // (v1.4.94) THE TIME LEFT AS A BAR under the score - green, then orange, then red for the last few seconds
       {
-        const ty = (VERT ? Math.max(70 * s, fitCssY(0) - 14 * s) : 64 * s) + 18 * s,
+        const ty =
+            (VERT ? Math.max(70 * s, fitCssY(0) - 14 * s) : Math.max(64 * s, topBtns().b + 14 * s)) + 18 * s,
           bw = Math.min(260 * s, cssW * 0.6),
           f = clamp(1 - M.t / M.len, 0, 1),
           left = M.len - M.t;
@@ -62910,14 +63029,19 @@ function funHud(g, s, t, fD, sx, sy) {
     // "WARP TO ..." flashes in the middle, then GLIDES UP to the top and fades into the stop's name (v1.3.4 - it used
     // to jump there in one go)
     const mv = A0.orbit ? 1 : clamp((A0.t - 0.6) / 0.45, 0, 1),
-      ek = mv * mv * (3 - 2 * mv);
+      ek = mv * mv * (3 - 2 * mv),
+      // (v1.5.42) THE TITLES START BELOW THE CORNER BUTTONS: on a phone held sideways 7% of the height is the buttons'
+      // own height, and a long stop name ran in under "Full screen" - so the block starts just below them
+      tbe = $("topbtns"),
+      tbr = tbe && !tbe.hidden ? tbe.getBoundingClientRect() : null,
+      ty0 = tbr ? Math.max(cssH * 0.07, tbr.bottom + 10 * s) : cssH * 0.07;
     if (A0.t < 1.05 && !A0.orbit) {
       g.globalAlpha = (A0.t < 0.5 && Math.floor(A0.t * 6) % 2 ? 0.55 : 1) * (1 - ek);
       neon2(
         g,
         (G.level > 1 ? "WARP TO " : "HELLO, ") + (v.place || v.name),
         cssW / 2,
-        cssH * 0.5 + (cssH * 0.07 + 32 * s - cssH * 0.5) * ek,
+        cssH * 0.5 + (ty0 + 32 * s - cssH * 0.5) * ek,
         Math.min(34, cssW / 22 / s) * s * (1 - 0.15 * ek),
         "#ffd24d"
       );
@@ -62928,17 +63052,17 @@ function funHud(g, s, t, fD, sx, sy) {
       }
     }
     g.globalAlpha = Math.max(0, Math.min(a, ek));
-    neon2(g, "LEVEL " + G.level + " OF " + LAST_LEVEL, cssW / 2, cssH * 0.07, 14 * s, "#9fd0ff");
+    neon2(g, "LEVEL " + G.level + " OF " + LAST_LEVEL, cssW / 2, ty0, 14 * s, "#9fd0ff");
     neon2(
       g,
       v.name,
       cssW / 2,
-      cssH * 0.07 + 32 * s,
+      ty0 + 32 * s,
       Math.min(30 * s, ((cssW - 24) / Math.max(10, v.name.length)) * 1.25),
       "#ffc34d"
     );
-    fitText(g, v.region, cssW / 2, cssH * 0.07 + 62 * s, cssW - 24, "600 ", 13 * s, "#5ff5c8");
-    fitText(g, v.sub || "", cssW / 2, cssH * 0.07 + 82 * s, cssW - 24, "600 ", 13 * s, "#fff3e2");
+    fitText(g, v.region, cssW / 2, ty0 + 62 * s, cssW - 24, "600 ", 13 * s, "#5ff5c8");
+    fitText(g, v.sub || "", cssW / 2, ty0 + 82 * s, cssW - 24, "600 ", 13 * s, "#fff3e2");
     if (v.fact && A0.t > 1.0) {
       const fa = Math.min(1, (A0.t - 1.0) / 0.3);
       g.globalAlpha = Math.max(0, Math.min(a, fa));
@@ -63022,7 +63146,18 @@ function funHud(g, s, t, fD, sx, sy) {
             : "ORDER ON THIS BAR: " +
               FLAV_NAMES[o] +
               " - SWITCH WITH " +
-              (lastDev === "pad" ? "SELECT" : lastDev === "touch" || coarse ? "THE FLAVOUR BUTTON" : "E");
+              (lastDev === "pad"
+                ? "SELECT"
+                : lastDev === "touch" || coarse
+                  ? "\u{1F353}" // (v1.5.42: the strawberry on the FLAVOUR button - "THE FLAVOUR BUTTON" didn't fit on a phone)
+                  : "E");
+          // (v1.5.42) NEVER UNDER THE BUTTONS: on a phone held upright the long line ("...SWITCH WITH THE FLAVOUR BUTTON")
+          // reached past the left-hand buttons and ran in under RUN and POUR - now it shrinks to fit the room left of them
+          if (tbs) {
+            const room = tbs.rx - 16 * s - 8 * s,
+              ow = g.measureText(ot).width;
+            if (room > 40 && ow > room) g.font = fD(Math.max(7, (11 * room) / ow));
+          }
           // (v1.5.39) a dark edge round these letters too, like the FLAVOUR line above - over the front of a bright bar
           // the orange words were hard to make out
           g.lineWidth = 3 * s;
@@ -63037,6 +63172,7 @@ function funHud(g, s, t, fD, sx, sy) {
     if (G.endless) {
       g.font = fD(14);
       g.fillStyle = "#ff5fa8";
+      g.textAlign = "center"; // (v1.5.42: the FLAVOUR lines above leave it set to "left" - this line started at the middle and ran off the right edge)
       g.fillText("ENDLESS  ·  SERVED " + G.endServed + "  ·  SPEED " + G.endLvl, cssW / 2, 84 * s);
     }
     modesHud(g, s, fD);
@@ -75623,10 +75759,42 @@ const pressText = () =>
       ? "PRESS ANY BUTTON"
       : "PRESS ANY KEY";
 // the attract screens' text and boxes, drawn on top of the game picture
+// (v1.5.42) where the corner buttons are (screen pixels; measured at most twice a second) - for neon2 below
+const NEON_TB = { at: -1e9, w: 0, l: 0, t: 0, b: 0 };
+function topBtns() {
+  const now = performance.now();
+  if (now - NEON_TB.at > 500 || NEON_TB.w !== cssW) {
+    const tb = $("topbtns"),
+      r = tb && !tb.hidden ? tb.getBoundingClientRect() : null;
+    NEON_TB.at = now;
+    NEON_TB.w = cssW;
+    NEON_TB.l = r && r.width > 0 ? r.left : cssW;
+    NEON_TB.t = r ? r.top : 0;
+    NEON_TB.b = r && r.width > 0 ? r.bottom : 0;
+  }
+  return NEON_TB;
+}
 function neon2(g, txt, x, y, px, c) {
   g.font = Math.round(px) + "px " + FD;
   g.textAlign = "center";
   g.textBaseline = "middle";
+  // (v1.5.42) A BIG TITLE NEVER UNDER THE CORNER BUTTONS: on a small phone held sideways (an iPhone SE) the titles centred
+  // at the top - "DROPPING OUT OF HYPERSPACE...", "TO ANDROMEDA!", "THE HEART OF ANDROMEDA" - ran in under "Full screen".
+  // If one would reach them it slides left just enough (and, if the room left of them is too narrow, gets a little
+  // smaller) - it stays at its own height, so nothing under it has to move
+  if (g.canvas === hud) {
+    topBtns();
+    const w = g.measureText(txt).width + px * 0.4;
+    if (y - px * 0.6 < NEON_TB.b && y + px * 0.6 > NEON_TB.t && x + w / 2 > NEON_TB.l - 8) {
+      const room = NEON_TB.l - 16;
+      if (w <= room) x = Math.min(x, NEON_TB.l - 8 - w / 2);
+      else if (room > 80) {
+        px *= room / w;
+        g.font = Math.round(px) + "px " + FD;
+        x = room / 2 + 8;
+      }
+    }
+  }
   // (v1.4.93) a dark edge round the letters first, so they stand out over a bright planet or a white flash
   g.lineJoin = "round";
   g.lineWidth = Math.max(2.5, px * 0.16);
@@ -76459,18 +76627,24 @@ function levelOfTour(of) {
     inTour = ((lv - 1) % LAST_LEVEL) + 1;
   return (tour > 1 ? "TOUR " + tour + "  ·  " : "") + "LEVEL " + inTour + of + LAST_LEVEL;
 }
-const GAME_VERSION = "v1.5.41",
-  GAME_DATE = "17.11.2026",
+const GAME_VERSION = "v1.5.42",
+  GAME_DATE = "18.11.2026",
   VERSION_TEXT = GAME_VERSION + "  ·  " + GAME_DATE;
 const FB = '"Chakra Petch", "Segoe UI", sans-serif';
 let FD = '"Bungee", "Impact", sans-serif';
 // (where the clickable bits of the HUD are this frame, in screen pixels: [x, y, w, h] - the mouse can use them)
 // (v1.4.41) where the PLAY ON / MAIN MENU buttons are at the end of the game (screen pixels)
 const ENDHIT                                                   = { play: null, menu: null };
-const HUDHIT                                                                           = {
+const HUDHIT   
+                        
+                         
+                        
+                         
+  = {
   holy: null,
   cross: null,
   flav: null,
+  peek: null, // (v1.5.42: the bonus round's MAGNIFYING GLASS line, where it's drawn - kids.ts)
 };
 // (v1.4.78) the bottom of the HUD's top band this frame, and the floating words already placed this frame
 const HUD_TOP = { low: 0 },
@@ -76769,13 +76943,17 @@ function drawHud(fps) {
           ? [msg]
           : [ws.slice(0, Math.ceil(ws.length / 2)).join(" "), ws.slice(Math.ceil(ws.length / 2)).join(" ")];
       g.textAlign = "left";
-      lines.forEach((ln, i) =>
-        g.fillText(
-          ln,
-          Math.max(8 * s, JUMP_PAL.x * u - 30 * s),
-          JUMP_PAL.y * u - (lines.length - 1 - i) * 16 * s
-        )
-      );
+      // (v1.5.42) A DARK EDGE ROUND HIS WORDS: they hang over the ship's white hull, and the pale yellow letters faded
+      // into it ("...FIX THE SIGN!" was hard to read on a phone) - the same dark outline the other words have
+      g.lineJoin = "round";
+      g.lineWidth = 3.5 * s;
+      g.strokeStyle = "rgba(8,4,16,.9)";
+      lines.forEach((ln, i) => {
+        const lx = Math.max(8 * s, JUMP_PAL.x * u - 30 * s),
+          ly = JUMP_PAL.y * u - (lines.length - 1 - i) * 16 * s;
+        g.strokeText(ln, lx, ly);
+        g.fillText(ln, lx, ly);
+      });
       g.textAlign = "center";
       g.globalAlpha = 1;
     } // (the poor window cleaner)
@@ -76847,7 +77025,12 @@ function drawHud(fps) {
         ? (scoreW + btnL) / 2
         : cssW < 700
           ? (scoreW + cssW) / 2 // (v1.4.79: a phone with the corner buttons hidden - the middle of the screen, not of the zoomed bar)
-          : sx(PW / 2);
+          : // (v1.5.42) over the middle of the bar - but kept between the score and the LIVES: in Time Attack and Endless
+            // on a phone held sideways the camera zooms in and the bar's middle moved right, so the venue's name ran
+            // in under "Full screen")
+            HUDB.lives - scoreW > 200 * s
+            ? clamp(sx(PW / 2), scoreW + 100 * s, HUDB.lives - 100 * s)
+            : sx(PW / 2);
     HUDB.scoreW = scoreW;
     signY = drop ? HUDB.b + 4 * s : 0;
     const room = drop
@@ -76879,7 +77062,21 @@ function drawHud(fps) {
     const txt = T(txt0);
     let px = 24;
     g.font = fD(px);
-    const room = HUDB.room || Math.max(140, cssW - (cssW < 700 ? 200 * s : 330)),
+    // (v1.5.42) A LONG ANNOUNCEMENT ON A CRAMPED TOP ROW GETS A ROW OF ITS OWN: on a phone where the LIVES sit under the
+    // corner buttons, the announcement had only the gap between the score and the buttons - a long one ("A WEREWOLF! SHOW
+    // THE CROSS...", "THE SPACE PONTIFF HAS ARRIVED!...") shrank to a few pixels and ran in under "Full screen". If it
+    // would come out smaller than 13 points there, it goes on its own row under the buttons and the LIVES, the whole
+    // width of the screen (sgY: the row it uses - the usual signY, or that one)
+    const tight = (HUDB.room || Math.max(140, cssW - (cssW < 700 ? 200 * s : 330))) - (plate ? 30 * s : 0), // (less the glass's own edges)
+      cramp =
+        plate &&
+        !signY &&
+        HUDB.under &&
+        HUDB.b > 0 &&
+        // (each half of it on two lines, at 18 points: about this wide - and squeezed into the gap, this big)
+        (18 * tight) / ((g.measureText(txt).width * 18) / 24 / 2) < 13,
+      sgY = signY || (cramp ? HUDB.b + 30 * s : 0);
+    const room = cramp ? cssW - 24 * s : tight,
       wd = g.measureText(txt).width;
     // (v1.4.63) a long warning on a narrow phone shrank to tiny letters - now it breaks onto two lines instead
     const ws = txt.split(" ");
@@ -76911,25 +77108,30 @@ function drawHud(fps) {
       // (the letters hang DOWN from where they're drawn - the text's top edge is at y0, a line's height above the next)
       y00 = plate
         ? Math.max(
-            signY ? signY + ((lines.length - 1) / 2) * lh : sy(10), // (on a tall screen it grows down, clear of the buttons)
+            sgY ? sgY + ((lines.length - 1) / 2) * lh : sy(10), // (on a tall screen it grows down, clear of the buttons)
             ((lines.length - 1) / 2) * lh + 9 * s
           )
-        : signY || sy(10);
+        : sgY || sy(10);
     // (v1.4.79) a two-line announcement is wider than the venue name it replaces - keep it clear of the score on the left
     // and on the screen ("NUWE GESIG: 'N GORILLA!" ran into the score in Boss Rush)
     const wNow = Math.max(...lines.map((l) => g.measureText(l).width)) / 2 + 6 * s,
       // (v1.4.80: two lines reach down beside the "CO-OP  HI" line, with two players - keep right of that too)
       leftEdge =
-        lines.length > 1 && twoP() && !signY
+        lines.length > 1 && twoP() && !sgY
           ? Math.max(HUDB.scoreW || 0, 14 * s + coopW() + 8 * s)
           : HUDB.scoreW || 0,
-      rightEdge = signY || HUDB.under || !HUDB.lives ? cssW : HUDB.lives, // (v1.4.80: and of the LIVES on the right)
-      cx = Math.max(signY ? wNow : leftEdge + wNow, Math.min(rightEdge - wNow, signX)),
+      rightEdge =
+        sgY || !HUDB.lives
+          ? cssW
+          : HUDB.under
+            ? (HUDB.l || cssW) - 6 * s // (v1.5.42: on the top row beside the corner buttons - not under them)
+            : HUDB.lives, // (v1.4.80: and of the LIVES on the right)
+      cx = Math.max(sgY ? wNow : leftEdge + wNow, Math.min(rightEdge - wNow, cramp ? cssW / 2 : signX)),
       // (v1.5.33 "polish") on a phone the announcement drops to its own row under the buttons - where a wide one ran
       // right across the HOLY water bottles under the score. If it reaches over that corner, it now hangs just below it
       leftBot = 14 * s + (twoP() ? 96 : 66) * s,
       y0 =
-        plate && signY && cx - wNow < Math.max(HUDB.scoreW, G.level >= 2 ? HUDB.holyR : 0)
+        plate && sgY && cx - wNow < Math.max(HUDB.scoreW, G.level >= 2 ? HUDB.holyR : 0)
           ? Math.max(y00, leftBot + 5 * s + ((lines.length - 1) / 2) * lh)
           : y00;
     // (v1.5.12) AN ANNOUNCEMENT ON ITS OWN GLASS PLATE: a dark see-through panel with a thin neon edge in the
@@ -77095,6 +77297,19 @@ function drawHud(fps) {
       keepRightOf(14 * s + g.measureText(ml).width + 12 * s, my0, my0 + (ghostDiff() !== null ? 62 : 46) * s);
     }
     if (twoP() && inGame) keepRightOf(14 * s + Math.max(coopW(), 200 * s) + 12 * s, 0, 14 * s + 80 * s);
+    // (v1.5.42) AND LEFT OF THE CORNER BUTTONS: on a phone held sideways this line sits at the same height as "Full screen"
+    // and "Pause" - and with two players (pushed right of their scores) a "DID YOU KNOW?" ran in under them. When it would
+    // reach them, it keeps to the room left of the buttons (breaking onto more lines there if it must - see below)
+    if (
+      !$("topbtns").hidden &&
+      HUDB.l > 0 &&
+      lineY - 10 * s < HUDB.b &&
+      cx + Math.min(wd0, room) / 2 > HUDB.l - 8 * s
+    ) {
+      const lb = Math.max(12 * s, cx - Math.min(wd0, room) / 2);
+      room = Math.max(60 * s, Math.min(room, HUDB.l - 8 * s - lb));
+      cx = lb + room / 2;
+    }
     g.font = fB(13, 700);
     const wd = wd0;
     // (v1.4.79) a long "DID YOU KNOW?" fact on a phone shrank to a few pixels high, and in Afrikaans or Polish ran off the
@@ -83750,6 +83965,16 @@ profWire();
 // =====================================================================================
 const NEWS = [
   {
+    ver: "v1.5.42",
+    title: "FAIR PLAY",
+    items: [
+      "A BOSS WHO JUMPS TO ANOTHER BAR NO LONGER COSTS YOU A LIFE FOR THE SHAKE YOU'D ALREADY SENT HIM - IT FIZZLES OUT",
+      "ON SMALL PHONES NOTHING HIDES UNDER THE CORNER BUTTONS ANY MORE: TITLES, ANNOUNCEMENTS, THE SCORE AND THE MINI-GAME CLOCK ALL KEEP CLEAR",
+      "THE ENDINGS, THE TRIP TO ANDROMEDA AND BEING FIRED ARE NOW IN AFRIKAANS AND POLISH TOO",
+      "SMALLER FIXES: THE MAGNIFYING GLASS HINT STAYS ON SCREEN, THE ENDLESS LINE IS CENTRED, AND THE WINDOW CLEANER IS EASIER TO READ",
+    ],
+  },
+  {
     ver: "v1.5.41",
     title: "THUMBS UP",
     items: [
@@ -85586,6 +85811,7 @@ setInterval(() => {
     // (it re-measured once a second, so for up to a second "LIVES" sat behind the buttons at a bonus round's start)
     if (sk && sk.hidden !== hide) {
       sk.hidden = hide;
+      $("topbtns").classList.toggle("withSkip", !hide); // (v1.5.42: on a narrow phone FULL SCREEN steps aside for SKIP - head.html)
       HUDB.t = -9;
     }
   } // (the SKIP button only shows during a mini-game - and, v1.4.86, Bogdan's story)

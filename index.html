@@ -213,6 +213,11 @@ body.txt2 .panel { zoom: 1.25; }
 body.txt1 .panel, body.txt2 .panel { max-height: 80vh; overflow-y: auto; }
 body.lefty #touch { flex-direction: row-reverse; }
 body.lefty #touch .grp { flex-direction: row-reverse; }
+/* (v1.5.44) LEFT-HANDED, THE ARROWS STAY THE RIGHT WAY ROUND: mirroring the movement group put the right arrow on the left
+   of the left arrow (FLAVOUR, >, <) - now the arrows keep their order (<, >) and only FLAVOUR moves across, to the inside
+   (the other group stays mirrored, so POUR is at the left edge, under the left thumb) */
+body.lefty #touch .grp:first-child { flex-direction: row; }
+body.lefty #touch #tFlav { order: -1; }
 #news { max-height: 92vh; overflow-y: auto; }
 #newsBody h3 { font: 700 13px var(--body); letter-spacing: .08em; color: var(--amber); margin: 14px 0 4px; }
 #newsBody h3.cred { color: var(--cyan); margin-top: 20px; }
@@ -234,6 +239,14 @@ body.lefty #touch .grp { flex-direction: row-reverse; }
 #galmap, #cup { width: min(1000px, 96vw); max-height: 96vh; overflow-y: auto; box-sizing: border-box; }
 #gmCanvas { width: 100%; aspect-ratio: 16 / 8; display: block; border-radius: 12px; margin: 6px 0 12px; touch-action: none; }
 @media (max-aspect-ratio: 9/10) { #gmCanvas { aspect-ratio: 3 / 4; } }
+/* (v1.5.43) A PHONE HELD SIDEWAYS: the map was as tall as the screen, so the panel opened scrolled past its title and the
+   PLAY / DONE row sat over the bottom of the map (and the chosen stop's label) - now the map fits the room under the title,
+   and in the cup the eight name boxes are a little slimmer, so START THE CUP isn't half hidden behind DONE */
+@media (max-height: 520px) {
+  #gmCanvas { aspect-ratio: auto; height: max(140px, calc(100vh - 205px)); margin: 4px 0 6px; }
+  #cupList { gap: 6px; }
+  #cupList input { padding: 6px 10px; font-size: 14px; }
+}
 #cupCanvas { width: 100%; aspect-ratio: 16 / 6; display: block; border-radius: 12px; margin: 6px 0 12px; }
 #cupList { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 #cupList input { font: 600 15px var(--body); padding: 9px 10px; border-radius: 8px; border: 1px solid var(--line); background: rgba(10,6,20,.7); color: var(--ink); min-width: 0; }
@@ -7546,6 +7559,27 @@ const DICT_ROWS                             = [
   ["CRISP AND CINEMATIC", "SKERP EN FILMIES", "OSTRO I FILMOWO"],
   ["SHINING WORLDS", "BLINKENDE WÊRELDE", "LŚNIĄCE ŚWIATY"],
   ["PERFECT TIMING", "PERFEKTE TYDSBEPLANNING", "IDEALNE WYCZUCIE"],
+  ["STEADY HANDS", "VASTE HANDE", "PEWNE RĘCE"],
+  [
+    "ON A PHONE A QUICK TAP ON ANOTHER BAR STILL SWITCHES BAR EVEN IF YOUR FINGER SLIDES A LITTLE - IT USED TO MAKE THE BARMAN RUN INSTEAD",
+    "OP 'N FOON SKUIF 'N VINNIGE TIK OP 'N ANDER TOONBANK JOU STEEDS DAARHEEN, SELFS AS JOU VINGER 'N BIETJIE GLY - VROEËR HET DIE KROEGMAN EERDER GEHARDLOOP",
+    "NA TELEFONIE SZYBKIE STUKNIĘCIE W INNĄ LADĘ PRZENOSI CIĘ NA NIĄ, NAWET GDY PALEC TROCHĘ SIĘ PRZESUNIE - WCZEŚNIEJ BARMAN ZACZYNAŁ BIEC",
+  ],
+  [
+    "LEFT-HANDED TOUCH BUTTONS KEEP THE ARROWS THE RIGHT WAY ROUND, AND THE DAILY CHALLENGE LINE NO LONGER HIDES UNDER THE BUTTONS",
+    "LINKSHANDIGE RAAKKNOPPIES HOU DIE PYLTJIES DIE REGTE KANT TOE, EN DIE DAAGLIKSE UITDAGING SE REËL STEEK NIE MEER ONDER DIE KNOPPIES WEG NIE",
+    "PRZYCISKI DLA LEWORĘCZNYCH MAJĄ STRZAŁKI WE WŁAŚCIWEJ KOLEJNOŚCI, A LINIA CODZIENNEGO WYZWANIA NIE CHOWA SIĘ JUŻ POD PRZYCISKAMI",
+  ],
+  [
+    "ON A PHONE HELD SIDEWAYS THE GALAXY MAP FITS UNDER ITS TITLE, AND START THE CUP IS NO LONGER HALF HIDDEN BEHIND DONE",
+    "OP 'N FOON WAT DWARS GEHOU WORD, PAS DIE STERRESTELSELKAART ONDER SY OPSKRIF, EN BEGIN DIE BEKER IS NIE MEER HALF AGTER KLAAR VERSTEEK NIE",
+    "NA TELEFONIE TRZYMANYM POZIOMO MAPA GALAKTYKI MIEŚCI SIĘ POD TYTUŁEM, A ROZPOCZNIJ PUCHAR NIE CHOWA SIĘ JUŻ DO POŁOWY ZA GOTOWE",
+  ],
+  [
+    "WHAT'S NEW OPENS AT THE TOP, WITH THE NEWEST VERSION FIRST IN VIEW",
+    "NUWIGHEDE MAAK BO OOP, MET DIE NUUTSTE WEERGAWE EERSTE IN SIG",
+    "NOWOŚCI OTWIERAJĄ SIĘ NA GÓRZE, Z NAJNOWSZĄ WERSJĄ OD RAZU NA WIDOKU",
+  ],
   ["ONE SWIPE", "EEN VEEG", "JEDNO PRZESUNIĘCIE"],
   [
     "ON A PHONE ONE SWIPE MOVES ONE BAR: A NORMAL SWIPE USED TO JUMP TWO OR THREE BARS, AND PAST THE LAST BAR IT WRAPPED ROUND TO THE FIRST",
@@ -12105,7 +12139,10 @@ function bindPointer(canvas) {
       g.moved = true;
       touchHeld.barPour = false;
     }
-    if (Math.abs(dx) > 22 && Math.abs(other) > Math.abs(sw)) {
+    // (v1.5.44) A TAP MAY WOBBLE: a drag to run started after 22 game units - on a phone only about 11 pixels, so a quick tap
+    // on another bar that slid a little (14 pixels is common) ran the barman instead of jumping him there. Now a drag
+    // starts after about 18 pixels (more on a big tablet)
+    if (Math.abs(otherPx) > Math.max(18, 22 * u) && Math.abs(other) > Math.abs(sw)) {
       g.moved = true;
       touchHeld.barPour = false;
       touchHeld.dragL = dx < 0;
@@ -48469,13 +48506,22 @@ function kidHud(g, s, t, fD, sx, sy) {
     const D = G.daily;
     g.font = fD(11);
     g.fillStyle = D.done ? "#5ff5c8" : "#ff9fe0";
-    g.fillText(
-      D.done
+    // (v1.5.44) ABOVE THE TOUCH BUTTONS: on a phone this line was drawn right under the BAR, FLAVOUR and RUN buttons, where
+    // it couldn't be read - now, with the buttons showing, it sits above the taller group of them (and the tune's name),
+    // shrinks to fit a narrow screen, and has a dark edge like the other words over the bar
+    const dt0 = D.done
         ? "DAILY CHALLENGE DONE!  KEEP GOING"
         : "DAILY: " + D.goal.text + "   " + Math.min(D.prog, D.goal.n) + " / " + D.goal.n,
-      cssW / 2,
-      cssH - 40 * s
-    );
+      tbd = touchTops(),
+      dy = tbd ? Math.min(cssH - 40 * s, Math.min(tbd.l, tbd.r) - 30 * s) : cssH - 40 * s,
+      dw = g.measureText(dt0).width;
+    if (dw > cssW - 24) g.font = fD((11 * (cssW - 24)) / dw);
+    g.textAlign = "center";
+    g.lineJoin = "round";
+    g.lineWidth = 3 * s;
+    g.strokeStyle = "rgba(8,4,16,.85)";
+    g.strokeText(dt0, cssW / 2, dy);
+    g.fillText(dt0, cssW / 2, dy);
   }
   // kid mode: a friendly reminder
   if (kidOn() && G.state === "lost") {
@@ -63337,7 +63383,18 @@ function openFP(id) {
   setTimeout(() => {
     const box = $k(FP_FIRST[id]),
       el = box && (box.tagName === "BUTTON" ? box : box.children[0]);
-    if (el) el.focus();
+    // (v1.5.44) THE PANEL OPENS AT ITS TOP: putting the focus on its first button scrolled the panel to it - WHAT'S NEW
+    // (whose first button is DONE, pinned at the bottom) opened part-way down, its title and the newest version out of
+    // sight. Now the focus goes there without scrolling, and the panel only scrolls if that button can't be seen
+    if (el) {
+      el.focus({ preventScroll: true });
+      const pn = el.closest("section.panel");
+      if (pn) {
+        const a = el.getBoundingClientRect(),
+          b = pn.getBoundingClientRect();
+        if (a.top < b.top || a.bottom > b.bottom) el.scrollIntoView({ block: "nearest" });
+      }
+    }
   }, 30);
 }
 function closeFP(id) {
@@ -76651,7 +76708,7 @@ function levelOfTour(of) {
     inTour = ((lv - 1) % LAST_LEVEL) + 1;
   return (tour > 1 ? "TOUR " + tour + "  ·  " : "") + "LEVEL " + inTour + of + LAST_LEVEL;
 }
-const GAME_VERSION = "v1.5.43",
+const GAME_VERSION = "v1.5.44",
   GAME_DATE = "18.11.2026",
   VERSION_TEXT = GAME_VERSION + "  ·  " + GAME_DATE;
 const FB = '"Chakra Petch", "Segoe UI", sans-serif';
@@ -83988,6 +84045,16 @@ profWire();
 //  the game, and where the motion capture, the folk songs and the fonts come from. Both from the menu at any time.
 // =====================================================================================
 const NEWS = [
+  {
+    ver: "v1.5.44",
+    title: "STEADY HANDS",
+    items: [
+      "ON A PHONE A QUICK TAP ON ANOTHER BAR STILL SWITCHES BAR EVEN IF YOUR FINGER SLIDES A LITTLE - IT USED TO MAKE THE BARMAN RUN INSTEAD",
+      "LEFT-HANDED TOUCH BUTTONS KEEP THE ARROWS THE RIGHT WAY ROUND, AND THE DAILY CHALLENGE LINE NO LONGER HIDES UNDER THE BUTTONS",
+      "ON A PHONE HELD SIDEWAYS THE GALAXY MAP FITS UNDER ITS TITLE, AND START THE CUP IS NO LONGER HALF HIDDEN BEHIND DONE",
+      "WHAT'S NEW OPENS AT THE TOP, WITH THE NEWEST VERSION FIRST IN VIEW",
+    ],
+  },
   {
     ver: "v1.5.43",
     title: "ONE SWIPE",

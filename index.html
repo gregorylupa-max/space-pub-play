@@ -103,7 +103,7 @@ button.na:not(.navsel) { opacity: .45; border-style: dashed; filter: grayscale(.
 #jbList button { text-align: left; display: flex; flex-direction: column; gap: 3px; padding: 10px 14px; }
 #jbList button small { font-size: 11px; color: var(--muted, #b9a8b8); letter-spacing: .04em; text-transform: none; }
 #jbList button.on { border-color: var(--amber, #ffc34d); box-shadow: 0 0 16px rgba(255,195,77,.35); }
-#jbList button.on::before { content: "♪ NOW PLAYING"; font-size: 10px; color: var(--amber, #ffc34d); }
+#jbList button.on::before { content: attr(data-now); font-size: 10px; color: var(--amber, #ffc34d); }
 #jbList .jbHead { grid-column: 1 / -1; font: 700 14px/1.2 var(--body); letter-spacing: .12em; color: var(--amber, #ffc34d); padding: 14px 4px 4px; border-bottom: 1px solid rgba(255,195,77,.4); }
 #jbList .jbJump { grid-column: 1 / -1; }
 #jukebox .buttons:last-child { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); }
@@ -7667,6 +7667,169 @@ const DICT_ROWS                             = [
     "w twoim barze! (dotknij, by ukryć / pokazać)",
   ],
   ["next at level 3", "volgende by vlak 3", "następny na poziomie 3"],
+  // (v1.5.52) THE BARTENDERS' LINES AND THE JUKEBOX'S STYLES: the little line under each bartender in the picker and
+  // the style of each song in the music box ("Moon Diner · rock'n'roll" - the place names stay as names) were English
+  // in every language
+  [
+    "a smile that lights up the Milky Way",
+    "'n glimlag wat die Melkweg laat skyn",
+    "uśmiech, który rozświetla Drogę Mleczną",
+  ],
+  ["lekker quick on the taps", "lekker vinnig by die krane", "błyskawicznie szybka przy kranach"],
+  ["never spills a single drop", "mors nooit 'n enkele druppel nie", "nigdy nie rozleje ani kropli"],
+  [
+    "a bucket hat, sandals and a big heart",
+    "'n vissershoedjie, sandale en 'n groot hart",
+    "kapelusz rybacki, sandały i wielkie serce",
+  ],
+  ["big laugh, steady hands", "groot lag, vaste hande", "gromki śmiech, pewne ręce"],
+  ["reaches the top shelf", "bereik die boonste rak", "sięga najwyższej półki"],
+  [
+    "the calmest hands in the galaxy",
+    "die kalmste hande in die sterrestelsel",
+    "najspokojniejsze ręce w galaktyce",
+  ],
+  ["sings while she slides", "sing terwyl sy die skommels laat gly", "śpiewa, puszczając koktajle po ladzie"],
+  ["the queen of the counter", "die koningin van die toonbank", "królowa lady"],
+  ["never spills a drop", "mors nooit 'n druppel nie", "nigdy nie rozleje kropli"],
+  [
+    "the warmest welcome in the galaxy",
+    "die warmste welkom in die sterrestelsel",
+    "najcieplejsze powitanie w galaktyce",
+  ],
+  [
+    "tall, calm and never in a rush",
+    "lank, kalm en nooit haastig nie",
+    "wysoki, spokojny i nigdy się nie spieszy",
+  ],
+  [
+    "a big smile and a bigger handshake",
+    "'n groot glimlag en 'n nog groter handdruk",
+    "wielki uśmiech i jeszcze większy uścisk dłoni",
+  ],
+  [
+    "dressed in blue for a night among the stars",
+    "in blou geklee vir 'n aand tussen die sterre",
+    "w błękicie na wieczór wśród gwiazd",
+  ],
+  ["♪ NOW PLAYING", "♪ SPEEL NOU", "♪ TERAZ GRA"],
+  ["plays at the stops", "speel by die stops", "grane na przystankach"],
+  ["Afrikaans folk song", "Afrikaanse volkslied", "afrikanerska piosenka ludowa"],
+  ["South African folk song", "Suid-Afrikaanse volkslied", "południowoafrykańska piosenka ludowa"],
+  ["Polish folk song", "Poolse volkslied", "polska piosenka ludowa"],
+  ["B-movie theremin", "B-fliek-theremin", "theremin z filmu klasy B"],
+  ["arcade rush", "arkade-gejaag", "arcade'owy pęd"],
+  ["battle theme", "gevegstema", "motyw bitwy"],
+  ["big band swing", "bigband-swing", "swing big-bandowy"],
+  ["big-band swing", "bigband-swing", "swing big-bandowy"],
+  ["boeremusiek", "boeremusiek", "boeremusiek"],
+  ["bouncy ragtime", "huppelende ragtime", "skoczny ragtime"],
+  ["bubbly calypso", "bruisende calypso", "musujące calypso"],
+  ["calm and glassy", "kalm en glasig", "spokojnie i szkliście"],
+  ["calm, mysterious", "kalm, geheimsinnig", "spokojnie, tajemniczo"],
+  ["dark and driving", "donker en dwingend", "mrocznie i z napędem"],
+  ["dark and solemn", "donker en plegtig", "mrocznie i uroczyście"],
+  [
+    "dark cave ambient (Cavernosidad Vacía)",
+    "donker grot-ambient (Cavernosidad Vacía)",
+    "mroczny jaskiniowy ambient (Cavernosidad Vacía)",
+  ],
+  ["deep, still calm (深なる静寂)", "diep, stil kalmte (深なる静寂)", "głęboki, cichy spokój (深なる静寂)"],
+  ["desert caravan", "woestynkaravaan", "karawana na pustyni"],
+  ["dreamy and floaty", "dromerig en swewend", "marzycielsko i lekko"],
+  ["dreamy synthwave", "dromerige synthwave", "marzycielski synthwave"],
+  ["epic finale", "epiese finale", "epicki finał"],
+  ["full-throttle surf", "volspoed-surf", "surf na pełnym gazie"],
+  ["funny polka", "snaakse polka", "zabawna polka"],
+  ["galloping ride", "galop-rit", "galopująca jazda"],
+  ["glittering and quick", "glinsterend en vinnig", "błyszcząco i szybko"],
+  ["grand waltz", "groot wals", "wielki walc"],
+  ["heavy industrial march", "swaar industriële mars", "ciężki industrialny marsz"],
+  ["heroic", "heldhaftig", "bohatersko"],
+  ["hot surf rock", "warm surf-rock", "gorący surf rock"],
+  ["island lullaby", "eiland-slaapliedjie", "wyspiarska kołysanka"],
+  ["kwela jive", "kwela-jive", "kwela jive"],
+  ["late-night jazz", "laataand-jazz", "nocny jazz"],
+  ["lazy reggae", "lui reggae", "leniwe reggae"],
+  ["lonely and spacey", "eensaam en ruimtelik", "samotnie i kosmicznie"],
+  ["lounge bossa", "sitkamer-bossa", "bossa lounge"],
+  ["moody tango", "stemmige tango", "nastrojowe tango"],
+  ["music-box waltz", "speeldoos-wals", "walc z pozytywki"],
+  ["mysterious", "geheimsinnig", "tajemniczo"],
+  ["mysterious space ambient", "geheimsinnige ruimte-ambient", "tajemniczy kosmiczny ambient"],
+  ["mysterious, eerie", "geheimsinnig, grillerig", "tajemniczo, upiornie"],
+  ["neon groove", "neon-groove", "neonowy groove"],
+  ["neon pulse", "neon-puls", "neonowy puls"],
+  ["ominous", "onheilspellend", "złowieszczo"],
+  ["party ska", "partytjie-ska", "imprezowe ska"],
+  ["racing chip-tune", "jaag-chiptune", "wyścigowy chiptune"],
+  ["racing storm", "jaagstorm", "wyścigowa burza"],
+  ["rock'n'roll", "rock-'n-roll", "rock and roll"],
+  ["rolling sea song", "rollende seelied", "kołysząca pieśń morska"],
+  ["sea shanty", "matroselied", "szanta"],
+  ["slow and starry", "stadig en sterrerig", "powoli i gwieździście"],
+  ["slow shuffle blues", "stadige shuffle-blues", "powolny blues shuffle"],
+  ["slow smouldering groove", "stadige smeulende groove", "powolny, tlący się groove"],
+  ["space disco", "ruimte-disco", "kosmiczne disco"],
+  ["space funk", "ruimte-funk", "kosmiczny funk"],
+  ["space western", "ruimte-western", "kosmiczny western"],
+  ["sparkly disco", "vonkelende disco", "błyszczące disco"],
+  ["stomping rock", "stamp-rock", "tupiący rock"],
+  ["trucker shuffle", "vragmotordrywer-shuffle", "shuffle kierowców ciężarówek"],
+  ["twinkling music box", "flikkerende speeldoos", "migocząca pozytywka"],
+  ["victory fanfare", "oorwinningsfanfare", "fanfara zwycięstwa"],
+  ["down to the cafe", "af na die kafee", "w drodze do kawiarni"],
+  ["mysterious arrival", "geheimsinnige aankoms", "tajemnicze przybycie"],
+  ["16-bit quest", "16-bis-soektog", "16-bitowa wyprawa"],
+  ["adventure overture (冒険の序曲)", "avontuur-ouverture (冒険の序曲)", "uwertura przygody (冒険の序曲)"],
+  ["adventure theme (冒険の調べ)", "avontuurtema (冒険の調べ)", "motyw przygody (冒険の調べ)"],
+  ["arcade drive", "arkade-dryf", "arcade'owy napęd"],
+  ["arcade pulse", "arkade-puls", "arcade'owy puls"],
+  ["boss fight", "baasgeveg", "walka z bossem"],
+  ["bouncy platformer", "huppelende platformspel", "skoczna platformówka"],
+  ["bright adventure", "helder avontuur", "jasna przygoda"],
+  ["bright fanfare", "helder fanfare", "jasna fanfara"],
+  ["chiptune adventure", "chiptune-avontuur", "chiptune'owa przygoda"],
+  ["dark and stormy", "donker en stormagtig", "mrocznie i burzowo"],
+  ["dark chiptune", "donker chiptune", "mroczny chiptune"],
+  ["deep-space blips", "diep-ruimte-bliepies", "bipy z głębokiego kosmosu"],
+  ["epic battle", "epiese geveg", "epicka bitwa"],
+  ["epic quest", "epiese soektog", "epicka wyprawa"],
+  ["exploratory blips", "verkenningsbliepies", "odkrywcze bipy"],
+  ["full-speed neon", "volspoed-neon", "neon na pełnej prędkości"],
+  ["heist theme", "roof-tema", "motyw skoku"],
+  ["hero's fanfare", "held se fanfare", "fanfara bohatera"],
+  ["heroic arcade", "heldhaftige arkade", "bohaterski arcade"],
+  ["heroic march", "heldhaftige mars", "bohaterski marsz"],
+  ["island calypso", "eiland-calypso", "wyspiarskie calypso"],
+  ["minor-key groove", "mineur-groove", "groove w molowej tonacji"],
+  ["neon drive", "neon-rit", "neonowa jazda"],
+  ["night symphony", "nagsimfonie", "nocna symfonia"],
+  ["pirate tavern", "seerowertaverne", "piracka tawerna"],
+  ["racing synth (デジタルレース)", "jaag-synth (デジタルレース)", "wyścigowy syntezator (デジタルレース)"],
+  ["retro runner", "retro-hardloper", "retro biegacz"],
+  ["running groove", "hardloop-groove", "biegowy groove"],
+  ["slow-burn spy", "stadig-brandende spioen", "powoli tlący się szpieg"],
+  ["sly spy motif", "skelm spioenmotief", "chytry motyw szpiegowski"],
+  ["space battle", "ruimtegeveg", "kosmiczna bitwa"],
+  ["space shooter", "ruimteskietspel", "kosmiczna strzelanka"],
+  ["spy theme", "spioentema", "motyw szpiegowski"],
+  ["street fight", "straatgeveg", "walka uliczna"],
+  ["down the Vistula", "af met die Wisła", "w dół Wisły"],
+  ["a lively krakowiak", "'n lewendige krakowiak", "żywy krakowiak"],
+  ["the falcons' waltz", "die valke se wals", "walc sokołów"],
+  ["the birthday toast", "die verjaarsdag-heildronk", "toast urodzinowy"],
+  ["WHO'S WHO", "WIE IS WIE", "KTO JEST KIM"],
+  [
+    "IN AFRIKAANS AND POLISH EVERY BARTENDER'S LINE IN THE PICKER IS TRANSLATED",
+    "IN AFRIKAANS EN POOLS IS ELKE KROEGMAN SE REËL IN DIE KIESER VERTAAL",
+    "PO AFRIKAANS I PO POLSKU OPIS KAŻDEGO BARMANA W WYBORZE JEST PRZETŁUMACZONY",
+  ],
+  [
+    "THE MUSIC BOX TELLS EACH SONG'S STYLE IN YOUR LANGUAGE, AND SO DOES ITS NOW PLAYING TAG",
+    "DIE MUSIEKDOOS SÊ ELKE LIEDJIE SE STYL IN JOU TAAL, EN SO OOK DIE SPEEL NOU-ETIKET",
+    "SZAFA GRAJĄCA PODAJE STYL KAŻDEJ PIOSENKI W TWOIM JĘZYKU, PODOBNIE JAK NAPIS TERAZ GRA",
+  ],
   ["EVERY WORD", "ELKE WOORD", "KAŻDE SŁOWO"],
   [
     "IN AFRIKAANS AND POLISH THE SMALL LINES UNDER EVERY HAT, PET, SHOP ITEM AND TROPHY ARE TRANSLATED - THEY WERE STILL IN ENGLISH",
@@ -8799,7 +8962,10 @@ const DICT_PAT                             = [
     "PREZENT Z PODZIĘKOWANIEM!  +$1 MONET",
   ],
   [/^(\d+) SAVED IN A ROW!  \+(\d+)$/, "$1 GERED NA MEKAAR!  +$2", "$1 URATOWANYCH Z RZĘDU!  +$2"],
-  [/^\+1 HOLY WATER$/, "+1 WYWATER", "+1 WODA ŚWIĘCONA"], // (v1.5.51) the kids' panels' counts and markers: a lock or a star in front of a name, the stars a hat or pet
+  [/^\+1 HOLY WATER$/, "+1 WYWATER", "+1 WODA ŚWIĘCONA"],
+  // (v1.5.52) the jukebox's shortcut buttons: "♪ ASTRO CAFÉ RECORDS (46 SONGS) ▼" (the songbooks' own names stay)
+  [/^♪ (.+) \((\d+) SONGS\) ▼$/, "♪ $1 ($2 LIEDJIES) ▼", "♪ $1 ($2 UTWORÓW) ▼"],
+  // (v1.5.51) the kids' panels' counts and markers: a lock or a star in front of a name, the stars a hat or pet
   // needs, the sticker book's tabs, the shop's coins, the trophy room's level line and its list of perks - the words
   // inside are translated by their own rows (the general ones go last, so every more exact pattern above wins)
   [/^★ (\d+) to unlock$/, "★ $1 om oop te sluit", "★ $1, by odblokować"],
@@ -76943,7 +77109,7 @@ function levelOfTour(of) {
     inTour = ((lv - 1) % LAST_LEVEL) + 1;
   return (tour > 1 ? "TOUR " + tour + "  ·  " : "") + "LEVEL " + inTour + of + LAST_LEVEL;
 }
-const GAME_VERSION = "v1.5.51",
+const GAME_VERSION = "v1.5.52",
   GAME_DATE = "18.11.2026",
   VERSION_TEXT = GAME_VERSION + "  ·  " + GAME_DATE;
 const FB = '"Chakra Petch", "Segoe UI", sans-serif';
@@ -83552,6 +83718,9 @@ function buildJukebox() {
     const b = document.createElement("button");
     if (tr.group) b.dataset.g = tr.group;
     b.dataset.i = String(i);
+    // (v1.5.52) THE "NOW PLAYING" TAG, IN THE PLAYER'S LANGUAGE: the stylesheet draws it from this attribute - written
+    // straight into the stylesheet it never passed through the translation, so it stayed in English
+    b.dataset.now = T("♪ NOW PLAYING");
     b.innerHTML =
       String(i + 1).padStart(2, "0") + "  " + tr.title + "<small>" + tr.where + " · " + tr.mood + "</small>";
     b.onclick = () => {
@@ -84325,6 +84494,14 @@ profWire();
 //  the game, and where the motion capture, the folk songs and the fonts come from. Both from the menu at any time.
 // =====================================================================================
 const NEWS = [
+  {
+    ver: "v1.5.52",
+    title: "WHO'S WHO",
+    items: [
+      "IN AFRIKAANS AND POLISH EVERY BARTENDER'S LINE IN THE PICKER IS TRANSLATED",
+      "THE MUSIC BOX TELLS EACH SONG'S STYLE IN YOUR LANGUAGE, AND SO DOES ITS NOW PLAYING TAG",
+    ],
+  },
   {
     ver: "v1.5.51",
     title: "EVERY WORD",

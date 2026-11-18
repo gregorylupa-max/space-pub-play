@@ -7819,6 +7819,32 @@ const DICT_ROWS                             = [
   ["a lively krakowiak", "'n lewendige krakowiak", "żywy krakowiak"],
   ["the falcons' waltz", "die valke se wals", "walc sokołów"],
   ["the birthday toast", "die verjaarsdag-heildronk", "toast urodzinowy"],
+  // (v1.5.54) THE LAST OF SETTINGS > CONTROLS: the keys and buttons themselves were left as they are, but these lines
+  // say what they are in words ("P or Esc", "D-pad / stick") and the one-letter shortcuts' list was all English
+  [
+    "Skip the mini-game (Esc, or B on a controller)",
+    "Slaan die minispeletjie oor (Esc, of B op 'n beheerder)",
+    "Pomiń minigrę (Esc lub B na kontrolerze)",
+  ],
+  [
+    "Start again from the very beginning, like switching it on: back to the demo (F8). Your stars, coins and settings are kept.",
+    "Begin weer van heel voor af, soos om dit aan te skakel: terug na die demo (F8). Jou sterre, munte en instellings bly behou.",
+    "Zacznij od samego początku, jak po włączeniu: powrót do dema (F8). Twoje gwiazdki, monety i ustawienia zostają.",
+  ],
+  [
+    "Start over: back to the demo, like switching it on (F8)",
+    "Begin van voor af: terug na die demo, soos om dit aan te skakel (F8)",
+    "Od nowa: powrót do dema, jak po włączeniu (F8)",
+  ],
+  ["P or Esc", "P of Esc", "P lub Esc"],
+  ["Space · Enter · X · Ctrl", "Spasie · Enter · X · Ctrl", "Spacja · Enter · X · Ctrl"],
+  [
+    "full screen · sound · music · graphics · look · CRT screen · music box · bartender · wide/tall layout",
+    "volskerm · klank · musiek · grafika · voorkoms · CRT-skerm · musiekdoos · kroegman · wye/hoë uitleg",
+    "pełny ekran · dźwięk · muzyka · grafika · wygląd · ekran CRT · szafa grająca · barman · układ szeroki/wysoki",
+  ],
+  ["D-pad / stick ↑ ↓ · LB RB", "D-pad / stokkie ↑ ↓ · LB RB", "krzyżak / gałka ↑ ↓ · LB RB"],
+  ["D-pad / stick ← →", "D-pad / stokkie ← →", "krzyżak / gałka ← →"],
   // (v1.5.53) THE FOLK SONGS' STORIES: in the music box each folk song has a one-line story under its title ("an ox
   // wagon trekking across the plains") - they were English in every language
   ["a walk in the green woods", "'n wandeling in die groen woud", "spacer po zielonym lesie"],
@@ -8014,6 +8040,17 @@ const DICT_ROWS                             = [
     "a watch in the pocket and a chain round the neck",
     "'n horlosie in die sak en 'n ketting om die nek",
     "zegarek w kieszeni i łańcuszek na szyi",
+  ],
+  ["FINE PRINT", "FYN DRUK", "DROBNY DRUK"],
+  [
+    "IN AFRIKAANS AND POLISH THE TIPS THAT POP UP WHEN THE MOUSE RESTS ON A BUTTON ARE TRANSLATED",
+    "IN AFRIKAANS EN POOLS IS DIE WENKE WAT OPSPRING AS DIE MUIS OP 'N KNOPPIE RUS, VERTAAL",
+    "PO AFRIKAANS I PO POLSKU PODPOWIEDZI, KTÓRE WYSKAKUJĄ PO NAJECHANIU MYSZĄ NA PRZYCISK, SĄ PRZETŁUMACZONE",
+  ],
+  [
+    "SETTINGS - CONTROLS: THE ONE-LETTER SHORTCUTS AND THE CONTROLLER'S D-PAD LINES ARE TRANSLATED TOO",
+    "INSTELLINGS - KONTROLES: DIE EENLETTER-KORTPAAIE EN DIE BEHEERDER SE D-PAD-REËLS IS OOK VERTAAL",
+    "USTAWIENIA - STEROWANIE: SKRÓTY JEDNOLITEROWE I LINIJKI O KRZYŻAKU KONTROLERA SĄ TEŻ PRZETŁUMACZONE",
   ],
   ["SONG STORIES", "LIEDJIE-STORIES", "HISTORIE PIOSENEK"],
   [
@@ -9238,6 +9275,9 @@ function langPage() {
         t = T(v);
       if (t !== v) n.nodeValue = t;
     } else if (n.nodeType === 1) {
+      // (v1.5.54) TOOLTIPS TOO: the words that pop up when the mouse rests on a button (its title) stayed in English
+      const tt = n.getAttribute("title");
+      if (tt && T(tt) !== tt) n.setAttribute("title", T(tt));
       if (SKIP[n.nodeName]) {
         const ph = n.getAttribute("placeholder");
         if (ph && T(ph) !== ph) n.setAttribute("placeholder", T(ph));
@@ -9257,9 +9297,20 @@ function langPage() {
   new MutationObserver((ms) => {
     for (const m of ms) {
       if (m.type === "characterData") doNode(m.target);
-      else for (const n of m.addedNodes) doNode(n);
+      else if (m.type === "attributes") {
+        // (v1.5.54) a tooltip given later (the daily button's event) - translated as it's set
+        const el = m.target           ,
+          tt = el.getAttribute("title");
+        if (tt && T(tt) !== tt) el.setAttribute("title", T(tt));
+      } else for (const n of m.addedNodes) doNode(n);
     }
-  }).observe(document.body, { subtree: true, childList: true, characterData: true });
+  }).observe(document.body, {
+    subtree: true,
+    childList: true,
+    characterData: true,
+    attributes: true,
+    attributeFilter: ["title"],
+  });
   // ---- and everything the game draws as text ----
   const P = CanvasRenderingContext2D.prototype,
     f0 = P.fillText,
@@ -77311,7 +77362,7 @@ function levelOfTour(of) {
     inTour = ((lv - 1) % LAST_LEVEL) + 1;
   return (tour > 1 ? "TOUR " + tour + "  ·  " : "") + "LEVEL " + inTour + of + LAST_LEVEL;
 }
-const GAME_VERSION = "v1.5.53",
+const GAME_VERSION = "v1.5.54",
   GAME_DATE = "18.11.2026",
   VERSION_TEXT = GAME_VERSION + "  ·  " + GAME_DATE;
 const FB = '"Chakra Petch", "Segoe UI", sans-serif';
@@ -84696,6 +84747,14 @@ profWire();
 //  the game, and where the motion capture, the folk songs and the fonts come from. Both from the menu at any time.
 // =====================================================================================
 const NEWS = [
+  {
+    ver: "v1.5.54",
+    title: "FINE PRINT",
+    items: [
+      "IN AFRIKAANS AND POLISH THE TIPS THAT POP UP WHEN THE MOUSE RESTS ON A BUTTON ARE TRANSLATED",
+      "SETTINGS - CONTROLS: THE ONE-LETTER SHORTCUTS AND THE CONTROLLER'S D-PAD LINES ARE TRANSLATED TOO",
+    ],
+  },
   {
     ver: "v1.5.53",
     title: "SONG STORIES",

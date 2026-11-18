@@ -7836,6 +7836,12 @@ const DICT_ROWS                             = [
     "Begin van voor af: terug na die demo, soos om dit aan te skakel (F8)",
     "Od nowa: powrót do dema, jak po włączeniu (F8)",
   ],
+  // (v1.5.55) the cup's reminder when fewer than two names were typed
+  [
+    "Type at least two different names to start a cup!",
+    "Tik ten minste twee verskillende name om 'n beker te begin!",
+    "Wpisz co najmniej dwa różne imiona, by zacząć turniej!",
+  ],
   ["P or Esc", "P of Esc", "P lub Esc"],
   ["Space · Enter · X · Ctrl", "Spasie · Enter · X · Ctrl", "Spacja · Enter · X · Ctrl"],
   [
@@ -8040,6 +8046,17 @@ const DICT_ROWS                             = [
     "a watch in the pocket and a chain round the neck",
     "'n horlosie in die sak en 'n ketting om die nek",
     "zegarek w kieszeni i łańcuszek na szyi",
+  ],
+  ["COUCH CUP", "BANKIE-BEKER", "PUCHAR NA KANAPIE"],
+  [
+    "WITH CONTROLLERS AND NO KEYBOARD YOU CAN NOW START A CUP: THE EMPTY NAME BOXES PLAY AS ALPHA AND OMEGA",
+    "MET BEHEERDERS EN SONDER SLEUTELBORD KAN JY NOU 'N BEKER BEGIN: DIE LEË NAAMBLOKKIES SPEEL AS ALPHA EN OMEGA",
+    "Z KONTROLERAMI I BEZ KLAWIATURY MOŻNA TERAZ ZACZĄĆ TURNIEJ: PUSTE POLA Z IMIONAMI GRAJĄ JAKO ALPHA I OMEGA",
+  ],
+  [
+    "THE CUP'S REMINDER TO TYPE TWO NAMES IS NOW IN AFRIKAANS AND POLISH TOO",
+    "DIE BEKER SE HERINNERING OM TWEE NAME IN TE TIK IS NOU OOK IN AFRIKAANS EN POOLS",
+    "PRZYPOMNIENIE TURNIEJU, BY WPISAĆ DWA IMIONA, JEST TERAZ TEŻ PO AFRIKAANS I PO POLSKU",
   ],
   ["FINE PRINT", "FYN DRUK", "DROBNY DRUK"],
   [
@@ -74560,6 +74577,13 @@ function buildCup() {
             .toUpperCase();
           if (v && !names.includes(v)) names.push(v);
         }
+        // (v1.5.55) WITH A CONTROLLER, A CUP STARTS WITHOUT TYPING: a controller can't type, so with no keyboard nearby
+        // the cup could never start - now the missing names are filled with ALPHA and OMEGA (only up to two, so two
+        // friends on two controllers get a final straight away; typed names still win). Not "PLAYER 1 / 2": the draw
+        // is shuffled, and "PLAYER 2 (PLAYER 1)" read wrong
+        if (names.length < 2 && lastDev === "pad")
+          for (const d of ["ALPHA", "OMEGA", "NOVA"])
+            if (names.length < 2 && !names.includes(d)) names.push(d);
         store.set("cupNames", names);
         if (names.length < 2) {
           $k("cupTag").textContent = "Type at least two different names to start a cup!";
@@ -77362,7 +77386,7 @@ function levelOfTour(of) {
     inTour = ((lv - 1) % LAST_LEVEL) + 1;
   return (tour > 1 ? "TOUR " + tour + "  ·  " : "") + "LEVEL " + inTour + of + LAST_LEVEL;
 }
-const GAME_VERSION = "v1.5.54",
+const GAME_VERSION = "v1.5.55",
   GAME_DATE = "18.11.2026",
   VERSION_TEXT = GAME_VERSION + "  ·  " + GAME_DATE;
 const FB = '"Chakra Petch", "Segoe UI", sans-serif';
@@ -84747,6 +84771,14 @@ profWire();
 //  the game, and where the motion capture, the folk songs and the fonts come from. Both from the menu at any time.
 // =====================================================================================
 const NEWS = [
+  {
+    ver: "v1.5.55",
+    title: "COUCH CUP",
+    items: [
+      "WITH CONTROLLERS AND NO KEYBOARD YOU CAN NOW START A CUP: THE EMPTY NAME BOXES PLAY AS ALPHA AND OMEGA",
+      "THE CUP'S REMINDER TO TYPE TWO NAMES IS NOW IN AFRIKAANS AND POLISH TOO",
+    ],
+  },
   {
     ver: "v1.5.54",
     title: "FINE PRINT",

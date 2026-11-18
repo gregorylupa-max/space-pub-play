@@ -7569,6 +7569,17 @@ const DICT_ROWS                             = [
   ],
   ["STOMP!", "STAMP!", "TUP!"],
   ["JUMP!", "SPRING!", "SKOK!"],
+  ["LAST WORDS", "LAASTE WOORDE", "OSTATNIE SŁOWA"],
+  [
+    "TWO PLAYERS' RESULTS ON THE GAME OVER SCREEN (A DRAW, WHO WINS, THE TEAM SCORE) ARE NOW IN AFRIKAANS AND POLISH",
+    "TWEE SPELERS SE UITSLAE OP DIE SPEL VERBY-SKERM (GELYKOP, WIE WEN, DIE SPANTELLING) IS NOU IN AFRIKAANS EN POOLS",
+    "WYNIKI DWÓCH GRACZY NA EKRANIE KOŃCA GRY (REMIS, KTO WYGRYWA, WYNIK DRUŻYNY) SĄ TERAZ PO AFRIKAANS I PO POLSKU",
+  ],
+  [
+    "SO ARE THE CUP'S NEXT MATCH AND CHAMPION, THE CONTROLLER'S INITIALS HINT AND HARD RESET, AND YOUR OWN MUSIC'S MESSAGES",
+    "SO OOK DIE BEKER SE VOLGENDE WEDSTRYD EN KAMPIOEN, DIE BEHEERDER SE VOORLETTER-WENK EN VOLLE HERSTEL, EN JOU EIE MUSIEK SE BOODSKAPPE",
+    "PODOBNIE NASTĘPNY MECZ I MISTRZ TURNIEJU, PODPOWIEDŹ INICJAŁÓW I PEŁNY RESET NA KONTROLERZE ORAZ KOMUNIKATY TWOJEJ WŁASNEJ MUZYKI",
+  ],
   ["NEW FACES", "NUWE GESIGTE", "NOWE TWARZE"],
   ["A SOFT GLOW", "'N SAGTE GLOED", "MIĘKKI BLASK"],
   ["ALIVE", "LEWENDIG", "ŻYWI"],
@@ -7835,6 +7846,29 @@ const DICT_ROWS                             = [
     "Start over: back to the demo, like switching it on (F8)",
     "Begin van voor af: terug na die demo, soos om dit aan te skakel (F8)",
     "Od nowa: powrót do dema, jak po włączeniu (F8)",
+  ],
+  // (v1.5.57) THE LAST MESSAGES WRITTEN STRAIGHT INTO THE PAGE: two players' results on the game-over screen, the
+  // initials hint with a controller, the controller's hard reset and your own music's loading lines
+  ["A draw!", "Gelykop!", "Remis!"],
+  ["PLAYER 1 WINS!", "SPELER 1 WEN!", "WYGRYWA GRACZ 1!"],
+  ["PLAYER 2 WINS!", "SPELER 2 WEN!", "WYGRYWA GRACZ 2!"],
+  ["Team score:", "Spantelling:", "Wynik drużyny:"],
+  [
+    "YOU CONQUERED THE SOLAR SYSTEM AND THE GALAXY!",
+    "JY HET DIE SONNESTELSEL EN DIE STERRESTELSEL VEROWER!",
+    "UKŁAD SŁONECZNY I GALAKTYKA PODBITE!",
+  ],
+  [
+    "Your initials:  D-pad \u2191 \u2193 letter  \u00b7  \u2190 \u2192 move  \u00b7  A next  \u00b7  START save",
+    "Jou voorletters:  D-pad \u2191 \u2193 letter  \u00b7  \u2190 \u2192 skuif  \u00b7  A volgende  \u00b7  START stoor",
+    "Twoje inicjały:  krzyżak \u2191 \u2193 litera  \u00b7  \u2190 \u2192 ruch  \u00b7  A dalej  \u00b7  START zapisz",
+  ],
+  ["KEEP HOLDING START + SELECT", "HOU START + SELECT AAN DIE DRUK", "TRZYMAJ DALEJ START + SELECT"],
+  ["RESETTING...", "HERSTEL...", "RESETOWANIE..."],
+  [
+    "Those files couldn't be played. Try MP3, M4A, OGG or WAV.",
+    "Daardie lêers kon nie gespeel word nie. Probeer MP3, M4A, OGG of WAV.",
+    "Tych plików nie dało się odtworzyć. Spróbuj MP3, M4A, OGG lub WAV.",
   ],
   // (v1.5.56) WHO'S PLAYING?'s messages
   [
@@ -9236,6 +9270,22 @@ const DICT_PAT                             = [
   ],
   [/^(\d+) SAVED IN A ROW!  \+(\d+)$/, "$1 GERED NA MEKAAR!  +$2", "$1 URATOWANYCH Z RZĘDU!  +$2"],
   [/^\+1 HOLY WATER$/, "+1 WYWATER", "+1 WODA ŚWIĘCONA"],
+  // (v1.5.57) the galaxy conquered (all the bars served), the cup's next match and its champion, the hard reset's
+  // countdown and your own music being loaded
+  [/^All (\d+) bars served\.$/, "Al $1 kroeë bedien.", "Obsłużono wszystkie $1 barów."],
+  [
+    /^(.+):  (.+)  \(PLAYER 1\)  vs  (.+)  \(PLAYER 2\)$/,
+    "$1:  $2  (SPELER 1)  teen  $3  (SPELER 2)",
+    "$1:  $2  (GRACZ 1)  kontra  $3  (GRACZ 2)",
+  ],
+  [/^(.+) IS THE CHAMPION!$/, "$1 IS DIE KAMPIOEN!", "$1 ZOSTAJE MISTRZEM!"],
+  [/^HARD RESET IN ([\d.]+) s$/, "VOLLE HERSTEL OOR $1 s", "PEŁNY RESET ZA $1 s"],
+  [/^Loading (\d+) songs?…$/, "Laai $1 liedjie(s)…", "Wczytywanie utworów: $1…"],
+  [
+    /^(\d+) songs? of yours loaded\. They play shuffled, at a matched volume\.$/,
+    "$1 van jou liedjie(s) gelaai. Hulle speel deurmekaar, ewe hard.",
+    "Wczytano twoje utwory: $1. Grają w losowej kolejności, z wyrównaną głośnością.",
+  ],
   // (v1.5.56) WHO'S PLAYING?'s messages about moving progress (a player's name stays as it is)
   [
     /^COPIED! Paste this code on the other device: WHO'S PLAYING\? → IMPORT\. \((\d+) letters\)$/,
@@ -18049,18 +18099,24 @@ function gameOver() {
   }
   $("overScore").textContent = "SCORE " + String(G.score).padStart(6, "0");
   // the headline: who won (two players), or the whole galaxy conquered - the numbers go in the table below
+  // (v1.5.57) IN THE PLAYER'S LANGUAGE: each piece goes through the translation on its own (as one line, glued to the
+  // scores, the page's translation never recognised it - two players always read "A draw!" / "Team score" in English)
   $("overInfo").textContent =
     (twoP()
       ? G.versus
-        ? (P1.score === P2.score ? "A draw! " : "PLAYER " + (P1.score > P2.score ? 1 : 2) + " WINS!  ") +
+        ? (P1.score === P2.score
+            ? T("A draw!") + " "
+            : T("PLAYER " + (P1.score > P2.score ? 1 : 2) + " WINS!") + "  ") +
           "P1 " +
           P1.score +
           " · P2 " +
           P2.score +
           ".  "
-        : "Team score: P1 " + P1.score + " + P2 " + P2.score + ".  "
+        : T("Team score:") + " P1 " + P1.score + " + P2 " + P2.score + ".  "
       : "") +
-    (G.won ? "YOU CONQUERED THE SOLAR SYSTEM AND THE GALAXY! All " + LAST_LEVEL + " bars served." : "");
+    (G.won
+      ? T("YOU CONQUERED THE SOLAR SYSTEM AND THE GALAXY!") + " " + T("All " + LAST_LEVEL + " bars served.")
+      : "");
   {
     // THE RESULTS (v1.2.0: a little table instead of one long line) - and YOUR RECORDS (an idea from Paddle Wars'
     // record rally): best perfect-pour streak, best combo, most served in one game
@@ -77419,7 +77475,7 @@ function levelOfTour(of) {
     inTour = ((lv - 1) % LAST_LEVEL) + 1;
   return (tour > 1 ? "TOUR " + tour + "  ·  " : "") + "LEVEL " + inTour + of + LAST_LEVEL;
 }
-const GAME_VERSION = "v1.5.56",
+const GAME_VERSION = "v1.5.57",
   GAME_DATE = "18.11.2026",
   VERSION_TEXT = GAME_VERSION + "  ·  " + GAME_DATE;
 const FB = '"Chakra Petch", "Segoe UI", sans-serif';
@@ -84812,6 +84868,14 @@ profWire();
 //  the game, and where the motion capture, the folk songs and the fonts come from. Both from the menu at any time.
 // =====================================================================================
 const NEWS = [
+  {
+    ver: "v1.5.57",
+    title: "LAST WORDS",
+    items: [
+      "TWO PLAYERS' RESULTS ON THE GAME OVER SCREEN (A DRAW, WHO WINS, THE TEAM SCORE) ARE NOW IN AFRIKAANS AND POLISH",
+      "SO ARE THE CUP'S NEXT MATCH AND CHAMPION, THE CONTROLLER'S INITIALS HINT AND HARD RESET, AND YOUR OWN MUSIC'S MESSAGES",
+    ],
+  },
   {
     ver: "v1.5.56",
     title: "NEW FACES",

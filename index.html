@@ -7836,6 +7836,12 @@ const DICT_ROWS                             = [
     "Begin van voor af: terug na die demo, soos om dit aan te skakel (F8)",
     "Od nowa: powrót do dema, jak po włączeniu (F8)",
   ],
+  // (v1.5.56) WHO'S PLAYING?'s messages
+  [
+    "Type a name for the new player first.",
+    "Tik eers 'n naam vir die nuwe speler.",
+    "Najpierw wpisz imię nowego gracza.",
+  ],
   // (v1.5.55) the cup's reminder when fewer than two names were typed
   [
     "Type at least two different names to start a cup!",
@@ -8046,6 +8052,17 @@ const DICT_ROWS                             = [
     "a watch in the pocket and a chain round the neck",
     "'n horlosie in die sak en 'n ketting om die nek",
     "zegarek w kieszeni i łańcuszek na szyi",
+  ],
+  ["NEW FACES", "NUWE GESIGTE", "NOWE TWARZE"],
+  [
+    "WITH A CONTROLLER, + ADD IN WHO'S PLAYING? NOW MAKES A NEW PLAYER (PLAYER 2, PLAYER 3...) - RENAME THEM LATER",
+    "MET 'N BEHEERDER MAAK + VOEG BY IN WIE SPEEL? NOU 'N NUWE SPELER (SPELER 2, SPELER 3...) - HERNOEM HULLE LATER",
+    "Z KONTROLEREM + DODAJ W KTO GRA? TWORZY TERAZ NOWEGO GRACZA (GRACZ 2, GRACZ 3...) - ZMIEŃ IMIĘ PÓŹNIEJ",
+  ],
+  [
+    "WHO'S PLAYING?'S MESSAGES ABOUT MOVING YOUR PROGRESS ARE NOW IN AFRIKAANS AND POLISH TOO",
+    "WIE SPEEL? SE BOODSKAPPE OOR DIE SKUIF VAN JOU VORDERING IS NOU OOK IN AFRIKAANS EN POOLS",
+    "KOMUNIKATY KTO GRA? O PRZENOSZENIU POSTĘPÓW SĄ TERAZ TEŻ PO AFRIKAANS I PO POLSKU",
   ],
   ["COUCH CUP", "BANKIE-BEKER", "PUCHAR NA KANAPIE"],
   [
@@ -9219,6 +9236,22 @@ const DICT_PAT                             = [
   ],
   [/^(\d+) SAVED IN A ROW!  \+(\d+)$/, "$1 GERED NA MEKAAR!  +$2", "$1 URATOWANYCH Z RZĘDU!  +$2"],
   [/^\+1 HOLY WATER$/, "+1 WYWATER", "+1 WODA ŚWIĘCONA"],
+  // (v1.5.56) WHO'S PLAYING?'s messages about moving progress (a player's name stays as it is)
+  [
+    /^COPIED! Paste this code on the other device: WHO'S PLAYING\? → IMPORT\. \((\d+) letters\)$/,
+    "GEKOPIEER! Plak hierdie kode op die ander toestel: WIE SPEEL? → VOER 'N KODE IN. ($1 letters)",
+    "SKOPIOWANO! Wklej ten kod na drugim urządzeniu: KTO GRA? → IMPORTUJ KOD. ($1 znaków)",
+  ],
+  [
+    /^Paste this code on the other device: WHO'S PLAYING\? → IMPORT\. \((\d+) letters\)$/,
+    "Plak hierdie kode op die ander toestel: WIE SPEEL? → VOER 'N KODE IN. ($1 letters)",
+    "Wklej ten kod na drugim urządzeniu: KTO GRA? → IMPORTUJ KOD. ($1 znaków)",
+  ],
+  [
+    /^DONE! (.+)'s progress is in this profile now\.$/,
+    "KLAAR! $1 se vordering is nou in hierdie profiel.",
+    "ZROBIONE! Postępy gracza $1 są teraz w tym profilu.",
+  ],
   // (v1.5.52) the jukebox's shortcut buttons: "♪ ASTRO CAFÉ RECORDS (46 SONGS) ▼" (the songbooks' own names stay)
   [/^♪ (.+) \((\d+) SONGS\) ▼$/, "♪ $1 ($2 LIEDJIES) ▼", "♪ $1 ($2 UTWORÓW) ▼"],
   // (v1.5.51) the kids' panels' counts and markers: a lock or a star in front of a name, the stars a hat or pet
@@ -77386,7 +77419,7 @@ function levelOfTour(of) {
     inTour = ((lv - 1) % LAST_LEVEL) + 1;
   return (tour > 1 ? "TOUR " + tour + "  ·  " : "") + "LEVEL " + inTour + of + LAST_LEVEL;
 }
-const GAME_VERSION = "v1.5.55",
+const GAME_VERSION = "v1.5.56",
   GAME_DATE = "18.11.2026",
   VERSION_TEXT = GAME_VERSION + "  ·  " + GAME_DATE;
 const FB = '"Chakra Petch", "Segoe UI", sans-serif';
@@ -84640,13 +84673,21 @@ function buildProf() {
   $k("profMsg").textContent = "";
 }
 function profAdd() {
-  const L = profList(),
-    nm = profClean(($k("profNewName")                               ).value);
+  const L = profList();
+  let nm = profClean(($k("profNewName")                               ).value);
+  if (L.length >= 8) return;
+  // (v1.5.56) WITH A CONTROLLER, A NEW PLAYER WITHOUT TYPING: a controller can't fill in the name box, so "+ ADD" only
+  // ever asked for a name - now it makes PLAYER 2, PLAYER 3... (the first number not taken; RENAME it later with a
+  // keyboard or a phone). With the keyboard an empty box still asks for a name
+  if (!nm && lastDev === "pad") {
+    let k = 2;
+    while (L.some((p) => p.name === "PLAYER " + k)) k++;
+    nm = "PLAYER " + k;
+  }
   if (!nm) {
     $k("profMsg").textContent = "Type a name for the new player first.";
     return;
   }
-  if (L.length >= 8) return;
   const id = "u" + Date.now().toString(36);
   L.push({ id, name: nm });
   store.set("profiles", L);
@@ -84771,6 +84812,14 @@ profWire();
 //  the game, and where the motion capture, the folk songs and the fonts come from. Both from the menu at any time.
 // =====================================================================================
 const NEWS = [
+  {
+    ver: "v1.5.56",
+    title: "NEW FACES",
+    items: [
+      "WITH A CONTROLLER, + ADD IN WHO'S PLAYING? NOW MAKES A NEW PLAYER (PLAYER 2, PLAYER 3...) - RENAME THEM LATER",
+      "WHO'S PLAYING?'S MESSAGES ABOUT MOVING YOUR PROGRESS ARE NOW IN AFRIKAANS AND POLISH TOO",
+    ],
+  },
   {
     ver: "v1.5.55",
     title: "COUCH CUP",

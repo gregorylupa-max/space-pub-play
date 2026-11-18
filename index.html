@@ -7575,6 +7575,17 @@ const DICT_ROWS                             = [
   ["CRISP AND CINEMATIC", "SKERP EN FILMIES", "OSTRO I FILMOWO"],
   ["SHINING WORLDS", "BLINKENDE WÊRELDE", "LŚNIĄCE ŚWIATY"],
   ["PERFECT TIMING", "PERFEKTE TYDSBEPLANNING", "IDEALNE WYCZUCIE"],
+  ["ROUTE PLANNER", "ROETEBEPLANNER", "PLANER TRASY"],
+  [
+    "ON THE GALAXY MAP A CONTROLLER'S D-PAD NOW STEPS ALONG THE ROUTE LIKE THE ARROW KEYS, SO YOU CAN PICK ANY STOP ON IT",
+    "OP DIE STERRESTELSELKAART STAP 'N BEHEERDER SE D-PAD NOU LANGS DIE ROETE SOOS DIE PYLTJIESLEUTELS, SODAT JY ENIGE STOP DAAROP KAN KIES",
+    "NA MAPIE GALAKTYKI KRZYŻAK KONTROLERA PRZESUWA TERAZ PO TRASIE JAK STRZAŁKI, WIĘC MOŻESZ WYBRAĆ NA NIEJ DOWOLNY PRZYSTANEK",
+  ],
+  [
+    "THE MAP NO LONGER TICKS WHEN YOU ARE ALREADY AT THE FIRST OR LAST STOP",
+    "DIE KAART TIK NIE MEER AS JY REEDS BY DIE EERSTE OF LAASTE STOP IS NIE",
+    "MAPA NIE TYKA JUŻ, GDY JESTEŚ NA PIERWSZYM LUB OSTATNIM PRZYSTANKU",
+  ],
   ["KEYS EVERYWHERE", "SLEUTELS ORAL", "KLAWISZE WSZĘDZIE"],
   [
     "WITH THE KEYBOARD OR A CONTROLLER YOU CAN NOW MOVE THROUGH WHO'S PLAYING, CONTROLS, THE CUP AND THE OTHER PANELS THAT IGNORED THE ARROWS",
@@ -11801,17 +11812,20 @@ function readPads() {
               : held("right")
                 ? "right"
                 : "",
-        nowMs = performance.now();
+        nowMs = performance.now(),
+        // (v1.5.50) ON THE GALAXY MAP, LEFT / RIGHT STEP ALONG THE ROUTE (like the arrow keys; A plays, B closes as DONE
+        // does) - without this a controller could only ever play the stop the map opened on
+        padStep = (dx, dy) => (FP.map && dx && typeof gmStep === "function" ? gmStep(dx) : navDir(dx, dy));
       if (dir !== NAVT.padDir) {
         NAVT.padDir = dir;
         NAVT.padHeld = nowMs;
         if (dir && nowMs - NAVT.pad > 160) {
           NAVT.pad = nowMs;
-          navDir(dir === "left" ? -1 : dir === "right" ? 1 : 0, dir === "up" ? -1 : dir === "down" ? 1 : 0);
+          padStep(dir === "left" ? -1 : dir === "right" ? 1 : 0, dir === "up" ? -1 : dir === "down" ? 1 : 0);
         }
       } else if (dir && nowMs - NAVT.padHeld > 450 && nowMs - NAVT.pad > 170) {
         NAVT.pad = nowMs;
-        navDir(dir === "left" ? -1 : dir === "right" ? 1 : 0, dir === "up" ? -1 : dir === "down" ? 1 : 0);
+        padStep(dir === "left" ? -1 : dir === "right" ? 1 : 0, dir === "up" ? -1 : dir === "down" ? 1 : 0);
       }
     }
     if (e("b")) navBack();
@@ -73828,12 +73842,18 @@ window.addEventListener(
     if (!d) return;
     e.preventDefault();
     e.stopImmediatePropagation();
-    GMV.sel = clamp(GMV.sel + d, 0, VENUES.length - 1);
-    gmPlayText();
-    sfx("tick");
+    gmStep(d);
   },
   true
 );
+// (v1.5.50) ONE STEP ALONG THE ROUTE: shared by the arrow keys above and the controller's D-pad (input.ts), so both
+// move the map the same way - before, the D-pad only hopped between PLAY and DONE and couldn't pick a stop at all
+function gmStep(d) {
+  const was = GMV.sel;
+  GMV.sel = clamp(GMV.sel + d, 0, VENUES.length - 1);
+  gmPlayText();
+  if (GMV.sel !== was) sfx("tick");
+}
 // ---- after a level: the map slides in under the stars, and the ship hops on to the next stop ----
 function gmClearHud(g, s) {
   if (G.state !== "clear" || G.demo || !(G.starsT >= 0) || G.versus) return;
@@ -76797,7 +76817,7 @@ function levelOfTour(of) {
     inTour = ((lv - 1) % LAST_LEVEL) + 1;
   return (tour > 1 ? "TOUR " + tour + "  ·  " : "") + "LEVEL " + inTour + of + LAST_LEVEL;
 }
-const GAME_VERSION = "v1.5.49",
+const GAME_VERSION = "v1.5.50",
   GAME_DATE = "18.11.2026",
   VERSION_TEXT = GAME_VERSION + "  ·  " + GAME_DATE;
 const FB = '"Chakra Petch", "Segoe UI", sans-serif';
@@ -84179,6 +84199,14 @@ profWire();
 //  the game, and where the motion capture, the folk songs and the fonts come from. Both from the menu at any time.
 // =====================================================================================
 const NEWS = [
+  {
+    ver: "v1.5.50",
+    title: "ROUTE PLANNER",
+    items: [
+      "ON THE GALAXY MAP A CONTROLLER'S D-PAD NOW STEPS ALONG THE ROUTE LIKE THE ARROW KEYS, SO YOU CAN PICK ANY STOP ON IT",
+      "THE MAP NO LONGER TICKS WHEN YOU ARE ALREADY AT THE FIRST OR LAST STOP",
+    ],
+  },
   {
     ver: "v1.5.49",
     title: "KEYS EVERYWHERE",

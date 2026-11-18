@@ -211,6 +211,17 @@ button.na:not(.navsel) { opacity: .45; border-style: dashed; filter: grayscale(.
 body.txt1 .panel { zoom: 1.12; }
 body.txt2 .panel { zoom: 1.25; }
 body.txt1 .panel, body.txt2 .panel { max-height: 80vh; overflow-y: auto; }
+/* (v1.5.48) BIGGER TEXT, PANELS STILL ON THE SCREEN: these panels are sized by the screen itself (96% of its width, 92-96%
+   of its height) - and the TEXT SIZE zoom then made them 12% or 25% bigger than the screen: CONTROLS, the CUP and the
+   GALAXY MAP hung off both sides of a phone, their titles cut. Now their sizes are divided by the zoom, so they fit */
+body.txt1 #galmap, body.txt1 #cup { width: min(1000px, calc(96vw / 1.12)); max-height: calc(96vh / 1.12); }
+body.txt2 #galmap, body.txt2 #cup { width: min(1000px, calc(96vw / 1.25)); max-height: calc(96vh / 1.25); }
+body.txt1 #keys { width: min(860px, calc(96vw / 1.12)); max-height: calc(94vh / 1.12); }
+body.txt2 #keys { width: min(860px, calc(96vw / 1.25)); max-height: calc(94vh / 1.25); }
+body.txt1 #prof, body.txt1 #news { max-height: calc(92vh / 1.12); }
+body.txt2 #prof, body.txt2 #news { max-height: calc(92vh / 1.25); }
+body.txt1 #settings, body.txt1 #more { max-height: calc((100vh - 32px) / 1.12); }
+body.txt2 #settings, body.txt2 #more { max-height: calc((100vh - 32px) / 1.25); }
 body.lefty #touch { flex-direction: row-reverse; }
 body.lefty #touch .grp { flex-direction: row-reverse; }
 /* (v1.5.44) LEFT-HANDED, THE ARROWS STAY THE RIGHT WAY ROUND: mirroring the movement group put the right arrow on the left
@@ -340,6 +351,8 @@ body.retro .table { font-size: 10px; gap: 5px; }
 /* held upright, the bartender picker sits along the bottom so the dancing bartender stays in view */
 @media (orientation: portrait) and (max-width: 900px) {
   .panel.side { left: 50%; top: auto; bottom: 10px; transform: translateX(-50%); width: calc(100% - 20px); max-height: 46%; }
+  /* (v1.5.48: with bigger text the zoom made them taller than that, and the top went off the screen) */
+  body.txt1 .panel.side { max-height: calc(46vh / 1.12); } body.txt2 .panel.side { max-height: calc(46vh / 1.25); }
   #csList { grid-template-columns: repeat(3, minmax(0, 1fr)); } #csList button small { display: none; }
   #sbList, #wdHats, #wdPets { grid-template-columns: repeat(3, minmax(0, 1fr)); } #sbList button small { display: none; }
 }
@@ -7562,6 +7575,17 @@ const DICT_ROWS                             = [
   ["CRISP AND CINEMATIC", "SKERP EN FILMIES", "OSTRO I FILMOWO"],
   ["SHINING WORLDS", "BLINKENDE WÊRELDE", "LŚNIĄCE ŚWIATY"],
   ["PERFECT TIMING", "PERFEKTE TYDSBEPLANNING", "IDEALNE WYCZUCIE"],
+  ["BIG PRINT", "GROOT DRUK", "DUŻY DRUK"],
+  [
+    "WITH BIGGER TEXT (SETTINGS) THE CONTROLS, CUP AND GALAXY MAP PANELS FIT THE SCREEN - ON A PHONE THEY HUNG OFF BOTH SIDES, THEIR TITLES CUT",
+    "MET GROTER TEKS (INSTELLINGS) PAS DIE KONTROLES-, BEKER- EN STERRESTELSELKAART-PANELE OP DIE SKERM - OP 'N FOON HET HULLE AAN BEIDE KANTE AFGEHANG, HUL OPSKRIFTE AFGESNY",
+    "Z WIĘKSZYM TEKSTEM (USTAWIENIA) PANELE STEROWANIA, PUCHARU I MAPY GALAKTYKI MIESZCZĄ SIĘ NA EKRANIE - NA TELEFONIE WYSTAWAŁY Z OBU STRON, Z UCIĘTYMI TYTUŁAMI",
+  ],
+  [
+    "WITH BIGGER TEXT AND TWO PLAYERS ON A SMALL PHONE HELD SIDEWAYS, A LONG WARNING GETS A ROW OF ITS OWN INSTEAD OF RUNNING UNDER THE BUTTONS",
+    "MET GROTER TEKS EN TWEE SPELERS OP 'N KLEIN FOON WAT DWARS GEHOU WORD, KRY 'N LANG WAARSKUWING SY EIE RY IN PLAAS VAN ONDER DIE KNOPPIES IN TE LOOP",
+    "Z WIĘKSZYM TEKSTEM I DWOMA GRACZAMI NA MAŁYM TELEFONIE TRZYMANYM POZIOMO DŁUGIE OSTRZEŻENIE DOSTAJE WŁASNY WIERSZ, ZAMIAST WCHODZIĆ POD PRZYCISKI",
+  ],
   ["ONE AT A TIME", "EEN-EEN", "PO KOLEI"],
   [
     "WHEN A GROUP OF THE SAME KIND WALKS IN TOGETHER, ONLY ONE OF THEM WEARS A NAME TAG - FOUR IDENTICAL TAGS CROWDED THE BAR",
@@ -76762,7 +76786,7 @@ function levelOfTour(of) {
     inTour = ((lv - 1) % LAST_LEVEL) + 1;
   return (tour > 1 ? "TOUR " + tour + "  ·  " : "") + "LEVEL " + inTour + of + LAST_LEVEL;
 }
-const GAME_VERSION = "v1.5.47",
+const GAME_VERSION = "v1.5.48",
   GAME_DATE = "18.11.2026",
   VERSION_TEXT = GAME_VERSION + "  ·  " + GAME_DATE;
 const FB = '"Chakra Petch", "Segoe UI", sans-serif';
@@ -77209,7 +77233,12 @@ function drawHud(fps) {
         HUDB.under &&
         HUDB.b > 0 &&
         // (each half of it on two lines, at 18 points: about this wide - and squeezed into the gap, this big)
-        (18 * tight) / ((g.measureText(txt).width * 18) / 24 / 2) < 13,
+        ((18 * tight) / ((g.measureText(txt).width * 18) / 24 / 2) < 13 ||
+          // (v1.5.48: or, with two players, wider than the gap between the CO-OP line and the buttons - with LARGE
+          // text on a small phone held sideways a long warning ran in under "Full screen" there)
+          (twoP() &&
+            (g.measureText(txt).width * 18) / 24 / 2 + 30 * s >
+              (HUDB.l || cssW) - 6 * s - Math.max(HUDB.scoreW || 0, 14 * s + coopW() + 8 * s))),
       sgY = signY || (cramp ? HUDB.b + 30 * s : 0);
     const room = cramp ? cssW - 24 * s : tight,
       wd = g.measureText(txt).width;
@@ -84117,6 +84146,14 @@ profWire();
 //  the game, and where the motion capture, the folk songs and the fonts come from. Both from the menu at any time.
 // =====================================================================================
 const NEWS = [
+  {
+    ver: "v1.5.48",
+    title: "BIG PRINT",
+    items: [
+      "WITH BIGGER TEXT (SETTINGS) THE CONTROLS, CUP AND GALAXY MAP PANELS FIT THE SCREEN - ON A PHONE THEY HUNG OFF BOTH SIDES, THEIR TITLES CUT",
+      "WITH BIGGER TEXT AND TWO PLAYERS ON A SMALL PHONE HELD SIDEWAYS, A LONG WARNING GETS A ROW OF ITS OWN INSTEAD OF RUNNING UNDER THE BUTTONS",
+    ],
+  },
   {
     ver: "v1.5.47",
     title: "ONE AT A TIME",

@@ -321,6 +321,9 @@ body.retro .table { font-size: 10px; gap: 5px; }
 /* (v1.4.77) a narrow phone held upright: smaller corner buttons - with Skip showing (a bonus round, a mini-game) the four
    of them used to stretch right across the top and cover the score */
 @media (max-width: 480px) { #topbtns { right: 8px; gap: 5px; } #topbtns button { min-height: 32px; padding: 5px 7px; font-size: 11px; } }
+/* (v1.5.45) A BIG SCREEN: the game's own words grow with the screen, but the corner buttons stayed their phone size - on
+   a 1080p monitor "Full screen" was half the height of the LIVES beside it, and fiddly to hit. Now they grow a little too */
+@media (min-width: 1700px) and (min-height: 950px) { #topbtns { top: calc(14px + env(safe-area-inset-top, 0px)); right: 18px; gap: 10px; } #topbtns button { min-height: 44px; padding: 8px 15px; font-size: 16px; border-radius: 18px; } }
 /* (v1.5.42) with SKIP showing (a bonus round, a mini-game, the story) the four corner buttons still covered the score on a
    phone 360-400 points wide - there FULL SCREEN steps aside until SKIP goes again (F still works, and it's in the menus) */
 @media (max-width: 420px) { #topbtns.withSkip #tFull { display: none; } }
@@ -7559,6 +7562,22 @@ const DICT_ROWS                             = [
   ["CRISP AND CINEMATIC", "SKERP EN FILMIES", "OSTRO I FILMOWO"],
   ["SHINING WORLDS", "BLINKENDE WÊRELDE", "LŚNIĄCE ŚWIATY"],
   ["PERFECT TIMING", "PERFEKTE TYDSBEPLANNING", "IDEALNE WYCZUCIE"],
+  ["STAGE MANNERS", "VERHOOGMANIERE", "SCENICZNE MANIERY"],
+  [
+    "ON A PHONE HELD UPRIGHT THE COMEDIAN'S JOKES AND THE SHOUTS FROM THE STAGE NO LONGER LAND ON THE SHAKE FEVER METERS - THEY GO JUST BELOW THE LIVE SIGN",
+    "OP 'N FOON WAT REGOP GEHOU WORD, LAND DIE KOMEDIANT SE GRAPPE EN DIE UITROEPE VAN DIE VERHOOG NIE MEER OP DIE SKOMMELKOORS-METERS NIE - HULLE GAAN NET ONDER DIE OP DIE VERHOOG-BORD",
+    "NA TELEFONIE TRZYMANYM PIONOWO ŻARTY KOMIKA I OKRZYKI ZE SCENY NIE LĄDUJĄ JUŻ NA WSKAŹNIKACH GORĄCZKI KOKTAJLI - POJAWIAJĄ SIĘ TUŻ POD NAPISEM NA ŻYWO",
+  ],
+  [
+    "THE POINTS AND WORDS THAT FLOAT UP STEP ROUND THE JOKE'S SPEECH BUBBLE",
+    "DIE PUNTE EN WOORDE WAT OPDRYF, GAAN OM DIE GRAP SE PRAATBORREL",
+    "UNOSZĄCE SIĘ PUNKTY I SŁOWA OMIJAJĄ DYMEK Z ŻARTEM",
+  ],
+  [
+    "ON A BIG SCREEN THE CORNER BUTTONS GROW WITH THE GAME, SO THEY ARE EASIER TO READ AND TO CLICK",
+    "OP 'N GROOT SKERM GROEI DIE HOEKKNOPPIES SAAM MET DIE SPEL, SODAT HULLE MAKLIKER IS OM TE LEES EN TE KLIK",
+    "NA DUŻYM EKRANIE PRZYCISKI W ROGU ROSNĄ RAZEM Z GRĄ, WIĘC ŁATWIEJ JE PRZECZYTAĆ I KLIKNĄĆ",
+  ],
   ["STEADY HANDS", "VASTE HANDE", "PEWNE RĘCE"],
   [
     "ON A PHONE A QUICK TAP ON ANOTHER BAR STILL SWITCHES BAR EVEN IF YOUR FINGER SLIDES A LITTLE - IT USED TO MAKE THE BARMAN RUN INSTEAD",
@@ -68439,18 +68458,22 @@ function stageHud(g, s, t, fD, sx, sy) {
   g.fillStyle = "#ffe8a0";
   g.fillText(nm, cx, ny);
   hudObs(cx, ny, nw, 14 * s); // (v1.4.78: the floating words keep clear of the caption)
+  // (v1.5.45) WHERE THE ACT'S WORDS GO: just over the stage - but in the tall view (a phone held upright) the stage is
+  // small, up under the HUD, and the comedian's joke bubble (and the shouts) landed right on the SHAKE FEVER meters and
+  // the line under the sign. There they go just below the "LIVE:" caption instead, clear of the HUD
+  const wy = (d) => (VERT ? Math.max(sy(STAGE.top + d), ny + 20 * s + (d - 44) * s) : sy(STAGE.top + d));
   if (S.kind === "shaolin") {
     const ph = (t % 9) / 9,
       k = Math.floor(t / 9);
     if (ph < 0.33 && (t * 2.6) % 1 < 0.3) {
       g.font = fD(10);
       g.fillStyle = "#ffd24d";
-      g.fillText("HA!", cx + (Math.floor(t * 2.6) % 2 ? 50 : -50) * s, sy(STAGE.top + 46));
+      g.fillText("HA!", cx + (Math.floor(t * 2.6) % 2 ? 50 : -50) * s, wy(46));
     }
     if (ph > 0.86 && ph < 0.97) {
       g.font = fD(13);
       g.fillStyle = "#ff7a3d";
-      g.fillText("HAAAA!", cx + 20 * s, sy(STAGE.top + 46));
+      g.fillText("HAAAA!", cx + 20 * s, wy(46));
       if (G.kiaiK !== k && G.state === "play") {
         G.kiaiK = k;
         bgSfx("kiai");
@@ -68490,16 +68513,17 @@ function stageHud(g, s, t, fD, sx, sy) {
         lh = 12 * s,
         bh = 20 * s + (lines.length - 1) * lh,
         bx = cx,
-        by = sy(STAGE.top + 44); // (low enough to keep clear of the level line above the stage)
+        by = wy(44); // (low enough to keep clear of the level line above the stage)
       g.fillStyle = "rgba(255,250,240,.92)";
       roundRect(g, bx - w / 2, by - 10 * s, w, bh, 8 * s);
       g.fill();
+      hudObs(bx, by - 10 * s + bh / 2, w, bh); // (v1.5.45: and the floating words keep clear of the joke's bubble)
       g.fillStyle = "#1a0a1e";
       lines.forEach((l, i) => g.fillText(l, bx, by + i * lh, w - 10 * s));
     } else {
       g.font = fD(11);
       g.fillStyle = "#ffd24d";
-      g.fillText("HA HA HA!", cx + Math.sin(t * 20) * 3, sy(STAGE.top + 46));
+      g.fillText("HA HA HA!", cx + Math.sin(t * 20) * 3, wy(46));
       if (G.laughK !== k && G.state === "play") {
         G.laughK = k;
         bgSfx("laugh");
@@ -76708,7 +76732,7 @@ function levelOfTour(of) {
     inTour = ((lv - 1) % LAST_LEVEL) + 1;
   return (tour > 1 ? "TOUR " + tour + "  ·  " : "") + "LEVEL " + inTour + of + LAST_LEVEL;
 }
-const GAME_VERSION = "v1.5.44",
+const GAME_VERSION = "v1.5.45",
   GAME_DATE = "18.11.2026",
   VERSION_TEXT = GAME_VERSION + "  ·  " + GAME_DATE;
 const FB = '"Chakra Petch", "Segoe UI", sans-serif';
@@ -84045,6 +84069,15 @@ profWire();
 //  the game, and where the motion capture, the folk songs and the fonts come from. Both from the menu at any time.
 // =====================================================================================
 const NEWS = [
+  {
+    ver: "v1.5.45",
+    title: "STAGE MANNERS",
+    items: [
+      "ON A PHONE HELD UPRIGHT THE COMEDIAN'S JOKES AND THE SHOUTS FROM THE STAGE NO LONGER LAND ON THE SHAKE FEVER METERS - THEY GO JUST BELOW THE LIVE SIGN",
+      "THE POINTS AND WORDS THAT FLOAT UP STEP ROUND THE JOKE'S SPEECH BUBBLE",
+      "ON A BIG SCREEN THE CORNER BUTTONS GROW WITH THE GAME, SO THEY ARE EASIER TO READ AND TO CLICK",
+    ],
+  },
   {
     ver: "v1.5.44",
     title: "STEADY HANDS",

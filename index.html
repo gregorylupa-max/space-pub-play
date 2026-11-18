@@ -7562,6 +7562,17 @@ const DICT_ROWS                             = [
   ["CRISP AND CINEMATIC", "SKERP EN FILMIES", "OSTRO I FILMOWO"],
   ["SHINING WORLDS", "BLINKENDE WÊRELDE", "LŚNIĄCE ŚWIATY"],
   ["PERFECT TIMING", "PERFEKTE TYDSBEPLANNING", "IDEALNE WYCZUCIE"],
+  ["ONE AT A TIME", "EEN-EEN", "PO KOLEI"],
+  [
+    "WHEN A GROUP OF THE SAME KIND WALKS IN TOGETHER, ONLY ONE OF THEM WEARS A NAME TAG - FOUR IDENTICAL TAGS CROWDED THE BAR",
+    "AS 'N GROEP VAN DIESELFDE SOORT SAAM INSTAP, DRA NET EEN VAN HULLE 'N NAAMKAARTJIE - VIER DIESELFDE KAARTJIES HET DIE TOONBANK VOLGEPROP",
+    "GDY WCHODZI GRUPA TEGO SAMEGO RODZAJU, PLAKIETKĘ Z IMIENIEM NOSI TYLKO JEDNA OSOBA - CZTERY TAKIE SAME PLAKIETKI ZAGRACAŁY LADĘ",
+  ],
+  [
+    "ON A PHONE HELD SIDEWAYS A PROTESTER'S PLACARD STAYS ON THE SCREEN, EVEN RIGHT BY THE DOOR",
+    "OP 'N FOON WAT DWARS GEHOU WORD, BLY 'N BETOGER SE PLAKKAAT OP DIE SKERM, SELFS REG BY DIE DEUR",
+    "NA TELEFONIE TRZYMANYM POZIOMO TRANSPARENT PROTESTUJĄCEGO ZOSTAJE NA EKRANIE, NAWET TUŻ PRZY DRZWIACH",
+  ],
   ["SMALL PRINT", "KLEINSKRIF", "DROBNY DRUK"],
   [
     "ON A PHONE THE PROTESTERS' PLACARDS CAN BE READ: THEIR WORDS SHRANK TO A FEW PIXELS - NOW THEY STAY BIG ENOUGH, ON A CARD OF THEIR OWN",
@@ -50796,12 +50807,19 @@ function nameTagsHud(g, s, sx, sy) {
     return [sx(ox2), sy(oy2)];
   });
   const LEN = TAG_LEN();
+  // (v1.5.47) ONE TAG PER NAME AT A TIME: a group of the same kind walking in together (four NOVA DANCERS, a team of
+  // fans) put up four identical tags, crowding each other and the words floating up nearby - now only the first of them
+  // is labelled while its tag is up (the name is the same, so nothing is lost)
+  const named = new Set();
   for (const c of customers) {
     if (c.tagAt === undefined && c.state === "walk" && c.x >= X0 - 6 && c.type) c.tagAt = G.time; // (everyone, as they come in)
     if (c.tagAt === undefined) continue;
     const left = LEN - (G.time - c.tagAt); // (in game time - the same on every screen, at any frame rate)
     if (!(left > 0)) continue;
     if (c.state !== "walk" || c.x < X0 - 6 || c.alpha < 0.6 || n >= 8) continue;
+    const tagN = tagName(c);
+    if (named.has(tagN)) continue;
+    named.add(tagN);
     n++;
     const a0 = Math.min(1, left * 2, (LEN - left) * 4),
       // (v1.4.8) just over this customer's OWN head - measured as it was drawn - so a short one (a snake, a fox) has its
@@ -76744,7 +76762,7 @@ function levelOfTour(of) {
     inTour = ((lv - 1) % LAST_LEVEL) + 1;
   return (tour > 1 ? "TOUR " + tour + "  ·  " : "") + "LEVEL " + inTour + of + LAST_LEVEL;
 }
-const GAME_VERSION = "v1.5.46",
+const GAME_VERSION = "v1.5.47",
   GAME_DATE = "18.11.2026",
   VERSION_TEXT = GAME_VERSION + "  ·  " + GAME_DATE;
 const FB = '"Chakra Petch", "Segoe UI", sans-serif';
@@ -78237,29 +78255,26 @@ function drawSigns(g, s, t, sx, sy) {
     // (v1.5.46) A PLACARD YOU CAN READ: on a phone the cardboard is only about 30 pixels wide, and its words shrank to 4
     // pixels - a smudge. Below 7 pixels they now stay at 7, on a bigger card of their own over the sign (a protester
     // with an oversized placard), so "BRING BACK BANANAS!" can be read on a phone too
+    let tx = sx(x); // (v1.5.47: where the words go across - see below)
     if (px < 7) {
       px = 7;
       g.font = "800 " + px + "px " + FB;
       const cw = Math.max(...lines.map((l) => g.measureText(l).width)) + 6,
         ch = lines.length * px * 1.05 + 4;
+      // (v1.5.47) ...and the bigger card is kept on the screen: a protester by the door at the edge of a phone held
+      // sideways held it half off the side ("ROBOTS NEED..." was cut off)
+      tx = clamp(tx, cw / 2 + 2, cssW - cw / 2 - 2);
       g.fillStyle = "#ead7a8";
       g.strokeStyle = "rgba(60,36,16,.9)";
       g.lineWidth = 1;
       g.beginPath();
-      g.rect(
-        Math.round(sx(x) - cw / 2) + 0.5,
-        Math.round(sy(y) - ch / 2) + 0.5,
-        Math.round(cw),
-        Math.round(ch)
-      );
+      g.rect(Math.round(tx - cw / 2) + 0.5, Math.round(sy(y) - ch / 2) + 0.5, Math.round(cw), Math.round(ch));
       g.fill();
       g.stroke();
     }
     g.font = "800 " + px.toFixed(1) + "px " + FB;
     g.fillStyle = c.protest.anger > 0.55 ? "#c0101a" : "#2a1a10";
-    lines.forEach((l, i) =>
-      g.fillText(l, sx(x), sy(y) + px * 0.15 + (i - (lines.length - 1) / 2) * px * 1.05)
-    );
+    lines.forEach((l, i) => g.fillText(l, tx, sy(y) + px * 0.15 + (i - (lines.length - 1) / 2) * px * 1.05));
   }
   g.textBaseline = "top";
 }
@@ -84102,6 +84117,14 @@ profWire();
 //  the game, and where the motion capture, the folk songs and the fonts come from. Both from the menu at any time.
 // =====================================================================================
 const NEWS = [
+  {
+    ver: "v1.5.47",
+    title: "ONE AT A TIME",
+    items: [
+      "WHEN A GROUP OF THE SAME KIND WALKS IN TOGETHER, ONLY ONE OF THEM WEARS A NAME TAG - FOUR IDENTICAL TAGS CROWDED THE BAR",
+      "ON A PHONE HELD SIDEWAYS A PROTESTER'S PLACARD STAYS ON THE SCREEN, EVEN RIGHT BY THE DOOR",
+    ],
+  },
   {
     ver: "v1.5.46",
     title: "SMALL PRINT",

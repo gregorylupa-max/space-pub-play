@@ -7569,6 +7569,22 @@ const DICT_ROWS                             = [
   ],
   ["STOMP!", "STAMP!", "TUP!"],
   ["JUMP!", "SPRING!", "SKOK!"],
+  ["SMOOTH RIDE", "GLADDE RIT", "GŁADKA JAZDA"],
+  [
+    "ON NORMAL AND HARD, THREE STOPS THAT WERE MUCH HARDER THAN THE STOPS AROUND THEM ARE GENTLER NOW: JANUS, HALO RING RACEWAY AND THE S ANDROMEDAE SHACK",
+    "OP NORMAAL EN MOEILIK IS DRIE STOPS WAT BAIE MOEILIKER AS DIE STOPS RONDOM HULLE WAS NOU SAGTER: JANUS, HALO RING RACEWAY EN DIE S ANDROMEDAE-HUT",
+    "NA POZIOMIE NORMALNYM I TRUDNYM TRZY PRZYSTANKI, KTÓRE BYŁY DUŻO TRUDNIEJSZE OD SĄSIEDNICH, SĄ TERAZ ŁAGODNIEJSZE: JANUS, HALO RING RACEWAY I CHATA S ANDROMEDAE",
+  ],
+  [
+    "AT THOSE STOPS CUSTOMERS WALK IN A LITTLE SLOWER, A LITTLE LESS OFTEN AND FEWER AT A TIME",
+    "BY DIÉ STOPS STAP KLANTE 'N BIETJIE STADIGER EN 'N BIETJIE MINDER DIKWELS IN, EN MINDER GELYK",
+    "NA TYCH PRZYSTANKACH GOŚCIE WCHODZĄ TROCHĘ WOLNIEJ, TROCHĘ RZADZIEJ I MNIEJ NARAZ",
+  ],
+  [
+    "FOUND BY LETTING THE DEMO BARTENDER PLAY ALL 40 STOPS AND COUNTING THE LIVES LOST AT EACH",
+    "GEVIND DEUR DIE DEMO-KROEGMAN AL 40 STOPS TE LAAT SPEEL EN DIE LEWENS WAT BY ELKEEN VERLOOR IS TE TEL",
+    "ZNALEZIONE, GDY BARMAN Z DEMA ZAGRAŁ WSZYSTKIE 40 PRZYSTANKÓW, A MY LICZYLIŚMY STRACONE ŻYCIA NA KAŻDYM",
+  ],
   ["LOOSE ENDS", "LOS DRADE", "LUŹNE KOŃCE"],
   [
     "IN AFRIKAANS AND POLISH THE ANDROMEDA STOPS' LINE, THE WIND'S TAILWIND / HEADWIND, THE DECAF POWER-UP AND THE COWBOY'S LASSO ARE TRANSLATED",
@@ -11841,7 +11857,25 @@ const params = () => {
   K[5] = k5;
   K[6] = k6;
   K[7] = !!G.free;
-  return (PRM_C.p = longer(assisted(calmer(relaxed(paramsRaw())))));
+  return (PRM_C.p = longer(assisted(calmer(relaxed(evened(paramsRaw()))))));
+};
+// (v1.5.62) THE SPIKES SMOOTHED OUT: tools/dev/curve.py had the demo bartender play every stop of the tour on NORMAL,
+// and three stops cost far more lives than the stops either side of them - Janus (the ice floor: you glide, so you get
+// to the far end late), Halo Ring Raceway, and the S Andromedae shack (the stardust showers send everyone dashing in, on
+// top of the busiest part of the tour). Those three now walk their customers in a little slower, a little less often
+// and fewer at a time, so they sit in line with their neighbours again (NORMAL and HARD only - EASY and KID MODE had
+// no spikes). The number is how much gentler (0.2 = about a fifth)
+const STOP_EVEN = { JANUS: 0.2, HALO: 0.14, "S ANDROMEDAE": 0.45 };
+const evened = (p) => {
+  const a = G.demo || DF().easy || DF().kid ? 0 : STOP_EVEN[here().place] || 0;
+  return a
+    ? {
+        ...p,
+        speed: p.speed * (1 - a * 0.5),
+        spawn: p.spawn * (1 + a),
+        maxOn: Math.max(2, Math.round(p.maxOn * (1 - a))),
+      }
+    : p;
 };
 // (v1.5.9) LONGER STOPS: half as many customers again at every stop, so a stop lasts long enough to enjoy the music
 // (about 45 seconds to a minute and more, from about 30-45) - not in the demo, which moves on by the clock anyway
@@ -77626,7 +77660,7 @@ function levelOfTour(of) {
     inTour = ((lv - 1) % LAST_LEVEL) + 1;
   return (tour > 1 ? "TOUR " + tour + "  ·  " : "") + "LEVEL " + inTour + of + LAST_LEVEL;
 }
-const GAME_VERSION = "v1.5.61",
+const GAME_VERSION = "v1.5.62",
   GAME_DATE = "19.11.2026",
   VERSION_TEXT = GAME_VERSION + "  ·  " + GAME_DATE;
 const FB = '"Chakra Petch", "Segoe UI", sans-serif';
@@ -85024,6 +85058,15 @@ profWire();
 //  the game, and where the motion capture, the folk songs and the fonts come from. Both from the menu at any time.
 // =====================================================================================
 const NEWS = [
+  {
+    ver: "v1.5.62",
+    title: "SMOOTH RIDE",
+    items: [
+      "ON NORMAL AND HARD, THREE STOPS THAT WERE MUCH HARDER THAN THE STOPS AROUND THEM ARE GENTLER NOW: JANUS, HALO RING RACEWAY AND THE S ANDROMEDAE SHACK",
+      "AT THOSE STOPS CUSTOMERS WALK IN A LITTLE SLOWER, A LITTLE LESS OFTEN AND FEWER AT A TIME",
+      "FOUND BY LETTING THE DEMO BARTENDER PLAY ALL 40 STOPS AND COUNTING THE LIVES LOST AT EACH",
+    ],
+  },
   {
     ver: "v1.5.61",
     title: "LOOSE ENDS",

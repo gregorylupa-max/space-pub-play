@@ -7569,6 +7569,17 @@ const DICT_ROWS                             = [
   ],
   ["STOMP!", "STAMP!", "TUP!"],
   ["JUMP!", "SPRING!", "SKOK!"],
+  ["FERRY HOME", "VEERBOOT HUIS TOE", "PROM DO DOMU"],
+  [
+    "CASTAWAY ISLAND HAS A BACK BUTTON IN THE TOP CORNER - ON A PHONE THE ONLY WAY OFF WAS START OVER",
+    "SKIPBREUKELINGEILAND HET 'N TERUG-KNOPPIE IN DIE BOONSTE HOEK - OP 'N FOON WAS BEGIN VAN VOOR AF DIE ENIGSTE UITWEG",
+    "WYSPA ROZBITKA MA PRZYCISK WRÓĆ W GÓRNYM ROGU - NA TELEFONIE JEDYNYM WYJŚCIEM BYŁO OD NOWA",
+  ],
+  [
+    "THE ISLAND'S HINT NAMES THE CONTROLS YOU'RE USING: TAP ON A PHONE, A AND B ON A CONTROLLER",
+    "DIE EILAND SE WENK NOEM DIE KONTROLES WAT JY GEBRUIK: TIK OP 'N FOON, A EN B OP 'N BEHEERDER",
+    "PODPOWIEDŹ NA WYSPIE PODAJE STEROWANIE, KTÓREGO UŻYWASZ: DOTYK NA TELEFONIE, A I B NA KONTROLERZE",
+  ],
   ["WAY OUT", "UITWEG", "WYJŚCIE"],
   [
     "WITH A CONTROLLER YOU CAN NOW LEAVE CASTAWAY ISLAND: B OR START - BEFORE, ONLY ESC GOT YOU OFF THE ISLAND",
@@ -7882,6 +7893,19 @@ const DICT_ROWS                             = [
     "Start over: back to the demo, like switching it on (F8)",
     "Begin van voor af: terug na die demo, soos om dit aan te skakel (F8)",
     "Od nowa: powrót do dema, jak po włączeniu (F8)",
+  ],
+  // (v1.5.60) Castaway Island's "◀ Back" button, its tip, and the hint for a controller and for a phone
+  ["◀ Back", "◀ Terug", "◀ Wróć"],
+  [
+    "Back to the menu (Esc, or B on a controller)",
+    "Terug na die kieslys (Esc, of B op 'n beheerder)",
+    "Powrót do menu (Esc lub B na kontrolerze)",
+  ],
+  ["A: NEXT SCENE  ·  B: BACK", "A: VOLGENDE TONEEL  ·  B: TERUG", "A: NASTĘPNA SCENA  ·  B: WSTECZ"],
+  [
+    "TAP: NEXT SCENE  ·  ◀ BACK: TOP RIGHT",
+    "TIK: VOLGENDE TONEEL  ·  ◀ TERUG: REGS BO",
+    "DOTKNIJ: NASTĘPNA SCENA  ·  ◀ WRÓĆ: PRAWY GÓRNY RÓG",
   ],
   // (v1.5.57) THE LAST MESSAGES WRITTEN STRAIGHT INTO THE PAGE: two players' results on the game-over screen, the
   // initials hint with a controller, the controller's hard reset and your own music's loading lines
@@ -61622,7 +61646,19 @@ function castawayHud(g, s) {
     band(T(A[2]), cssH * 0.86, 13, "#fff3e2");
     if (CW.actT < 6) {
       g.globalAlpha = Math.min(1, (6 - CW.actT) / 1.5); // (the hint shows, then fades away - it's a screensaver)
-      band(T("FIRE / TAP: NEXT SCENE  ·  ESC: BACK"), cssH * 0.94, 10, "#5ff5c8");
+      // (v1.5.60) the hint names the controls you're using: a phone has no Esc, a controller no FIRE key
+      band(
+        T(
+          lastDev === "pad"
+            ? "A: NEXT SCENE  ·  B: BACK"
+            : lastDev === "touch"
+              ? "TAP: NEXT SCENE  ·  ◀ BACK: TOP RIGHT"
+              : "FIRE / TAP: NEXT SCENE  ·  ESC: BACK"
+        ),
+        cssH * 0.94,
+        10,
+        "#5ff5c8"
+      );
       g.globalAlpha = 1;
     }
   }
@@ -77558,7 +77594,7 @@ function levelOfTour(of) {
     inTour = ((lv - 1) % LAST_LEVEL) + 1;
   return (tour > 1 ? "TOUR " + tour + "  ·  " : "") + "LEVEL " + inTour + of + LAST_LEVEL;
 }
-const GAME_VERSION = "v1.5.59",
+const GAME_VERSION = "v1.5.60",
   GAME_DATE = "19.11.2026",
   VERSION_TEXT = GAME_VERSION + "  ·  " + GAME_DATE;
 const FB = '"Chakra Petch", "Segoe UI", sans-serif';
@@ -84102,6 +84138,11 @@ $("byeBack").onclick = () => {
 $("tPause").onclick = () => pause(true);
 $("tSkip").onclick = (e) => {
   e.stopPropagation();
+  // (v1.5.60) on Castaway Island it is the "◀ Back" button: back to the menu (the same as Esc)
+  if (G.state === "castaway") {
+    exitCastaway();
+    return;
+  }
   // (v1.4.86) in Bogdan's story it skips the rest of the story (the same as Esc)
   if (G.state === "story" && G.story) {
     G.story.skip = true;
@@ -84951,6 +84992,14 @@ profWire();
 //  the game, and where the motion capture, the folk songs and the fonts come from. Both from the menu at any time.
 // =====================================================================================
 const NEWS = [
+  {
+    ver: "v1.5.60",
+    title: "FERRY HOME",
+    items: [
+      "CASTAWAY ISLAND HAS A BACK BUTTON IN THE TOP CORNER - ON A PHONE THE ONLY WAY OFF WAS START OVER",
+      "THE ISLAND'S HINT NAMES THE CONTROLS YOU'RE USING: TAP ON A PHONE, A AND B ON A CONTROLLER",
+    ],
+  },
   {
     ver: "v1.5.59",
     title: "WAY OUT",
@@ -86930,7 +86979,20 @@ const PADRESET = { t: 0 };
 setInterval(() => {
   {
     const sk = $("tSkip");
-    const hide = G.state !== "mini" && G.state !== "bonus" && G.state !== "story";
+    const hide = G.state !== "mini" && G.state !== "bonus" && G.state !== "story" && G.state !== "castaway";
+    // (v1.5.60) ON CASTAWAY ISLAND THE SAME CORNER BUTTON SAYS "◀ Back": on a phone the island had no way back to the
+    // menu but "Start over" (all the way back to the demo) - its hint said "ESC: BACK", and a phone has no Esc
+    const isle = G.state === "castaway",
+      want = T(isle ? "◀ Back" : "Skip ▶▶");
+    if (sk && sk.textContent !== want) {
+      sk.textContent = want;
+      sk.title = T(
+        isle
+          ? "Back to the menu (Esc, or B on a controller)"
+          : "Skip the mini-game (Esc, or B on a controller)"
+      );
+      HUDB.t = -9;
+    }
     // (v1.5.41) when SKIP comes or goes the corner buttons change width - the HUD measures them again straight away
     // (it re-measured once a second, so for up to a second "LIVES" sat behind the buttons at a bonus round's start)
     if (sk && sk.hidden !== hide) {

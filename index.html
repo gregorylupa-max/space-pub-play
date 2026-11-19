@@ -7569,6 +7569,17 @@ const DICT_ROWS                             = [
   ],
   ["STOMP!", "STAMP!", "TUP!"],
   ["JUMP!", "SPRING!", "SKOK!"],
+  ["LOOSE ENDS", "LOS DRADE", "LUŹNE KOŃCE"],
+  [
+    "IN AFRIKAANS AND POLISH THE ANDROMEDA STOPS' LINE, THE WIND'S TAILWIND / HEADWIND, THE DECAF POWER-UP AND THE COWBOY'S LASSO ARE TRANSLATED",
+    "IN AFRIKAANS EN POOLS IS DIE ANDROMEDA-STOPS SE REËL, DIE WIND SE RUGWIND / TEENWIND, DIE KAFEÏENVRY-KRAGBOOS EN DIE COWBOY SE LASSO VERTAAL",
+    "PO AFRIKAANS I PO POLSKU PRZETŁUMACZONO LINIJKĘ PRZYSTANKÓW W ANDROMEDZIE, WIATR W PLECY / W TWARZ, BEZKOFEINOWE ULEPSZENIE I LASSO KOWBOJA",
+  ],
+  [
+    "THE ROBOT INVASION IN THE SPACE SHOW BEHIND THE MENU WORKS AGAIN (IT HAD BROKEN IN v1.5.58)",
+    "DIE ROBOT-INVAL IN DIE RUIMTEVERTONING AGTER DIE KIESLYS WERK WEER (DIT HET IN v1.5.58 STUKKEND GERAAK)",
+    "INWAZJA ROBOTÓW W KOSMICZNYM POKAZIE ZA MENU ZNÓW DZIAŁA (ZEPSUŁA SIĘ W v1.5.58)",
+  ],
   ["FERRY HOME", "VEERBOOT HUIS TOE", "PROM DO DOMU"],
   [
     "CASTAWAY ISLAND HAS A BACK BUTTON IN THE TOP CORNER - ON A PHONE THE ONLY WAY OFF WAS START OVER",
@@ -7893,6 +7904,12 @@ const DICT_ROWS                             = [
     "Start over: back to the demo, like switching it on (F8)",
     "Begin van voor af: terug na die demo, soos om dit aan te skakel (F8)",
     "Od nowa: powrót do dema, jak po włączeniu (F8)",
+  ],
+  // (v1.5.61) the far side of the tour's region line (the cowboy's lasso is in the patterns)
+  [
+    "2.5 MILLION LIGHT-YEARS FROM HOME",
+    "2,5 MILJOEN LIGJARE VAN DIE HUIS AF",
+    "2,5 MILIONA LAT ŚWIETLNYCH OD DOMU",
   ],
   // (v1.5.60) Castaway Island's "◀ Back" button, its tip, and the hint for a controller and for a phone
   ["◀ Back", "◀ Terug", "◀ Wróć"],
@@ -9330,6 +9347,13 @@ const DICT_PAT                             = [
   ],
   [/^(\d+) SAVED IN A ROW!  \+(\d+)$/, "$1 GERED NA MEKAAR!  +$2", "$1 URATOWANYCH Z RZĘDU!  +$2"],
   [/^\+1 HOLY WATER$/, "+1 WYWATER", "+1 WODA ŚWIĘCONA"],
+  // (v1.5.61) the cowboy's lasso pulling in the empty glasses
+  [
+    /^YEEHAW!  LASSOED (\d+) EMPTIES$/,
+    "JIEHA!  $1 LEË GLASE GEVANG",
+    "JIIIHAA!  ZŁAPANO NA LASSO PUSTE SZKLANKI: $1",
+  ],
+  [/^YEEHAW!  LASSOED 1 EMPTY$/, "JIEHA!  1 LEË GLAS GEVANG", "JIIIHAA!  ZŁAPANO NA LASSO 1 PUSTĄ SZKLANKĘ"],
   // (v1.5.57) the galaxy conquered (all the bars served), the cup's next match and its champion, the hard reset's
   // countdown and your own music being loaded
   [/^All (\d+) bars served\.$/, "Al $1 kroeë bedien.", "Obsłużono wszystkie $1 barów."],
@@ -13148,7 +13172,9 @@ function updatePowers(dt, demo) {
         by.dashT = 0;
         sfx("yawn", u.x);
       } else G.pw[u.type] = Math.min(P0.dur * 1.8, (G.pw[u.type] || 0) + P0.dur); // (grabbing one you already have adds more time)
-      if (!demo) callout(P0.name + "!", P0.c, 1.8);
+      // (v1.5.61) the power-up's name is translated before its "!" goes on - "DECAF! SO... TIRED..." has its own
+      // "!" and dots inside, so the general "WORD!" pattern never caught it and it stayed in English
+      if (!demo) callout(T(P0.name) + "!", P0.c, 1.8);
       sfx("power", u.x);
       buzz("power");
       sfx(u.type === "freeze" ? "freeze" : u.type === "shield" ? "shieldup" : "click", u.x);
@@ -16799,7 +16825,9 @@ function updateTwist(dt, demo) {
     if (W.next <= 0 && !W.g) {
       W.g = { t: 0, dir: Math.random() < 0.6 ? 1 : -1 };
       sfx("wind");
-      if (!demo) callout((say || "GUST!") + (W.g.dir > 0 ? "  TAILWIND!" : "  HEADWIND!"), "#c8e8ff", 1.4);
+      // (v1.5.61) each half translated on its own ("DUST DEVIL!" + "TAILWIND!" glued together matched no row)
+      if (!demo)
+        callout(T(say || "GUST!") + "  " + T(W.g.dir > 0 ? "TAILWIND!" : "HEADWIND!"), "#c8e8ff", 1.4);
     }
     if (W.g) {
       const g = W.g;
@@ -55207,6 +55235,10 @@ function moonRobot(x, y, s, t, ph, cheer, A) {
   disc(0, -65, 2, A(Math.sin(t * 7 + ph) > 0 ? 1 : 0.5)); // the antenna light, blinking
   pop();
 }
+// (v1.5.61) THE BANNER'S TRANSLATOR, UNDER ITS OWN NAME: drawInvasion's third parameter is called T (the top edge of
+// the screen), and inside it that hid the T() translator - so from v1.5.58 the robots' banner threw an error and the
+// invasion fly-past broke the drawing. This helper sits outside, where T is still the translator
+const invT = (s        ) => T(s);
 function drawInvasion(L, Rr, T, B, f, t) {
   const w = Rr - L,
     h = B - T,
@@ -55346,8 +55378,8 @@ function drawInvasion(L, Rr, T, B, f, t) {
     line(px, py, px, py - 60 * k, 2 * k, A(0.5));
     rect(px - 62 * k, py - 92 * k, 124 * k, 36 * k, A(0.9));
     // (v1.5.58) the robots' banner, in the player's language (the pixel font has the accents now)
-    pixText(T("WE COME IN PEACE"), px, py - 82 * k, 1.15 * k, A(0.08));
-    pixText(T("FOR SHAKES!"), px, py - 67 * k, 1.15 * k, A(0.08));
+    pixText(invT("WE COME IN PEACE"), px, py - 82 * k, 1.15 * k, A(0.08));
+    pixText(invT("FOR SHAKES!"), px, py - 67 * k, 1.15 * k, A(0.08));
   }
   // THE OLD FILM: flicker, grain, scratches, a dark vignette, the odd jump in the picture
   const fl = 0.06 + 0.05 * Math.sin(t * 37) * Math.sin(t * 13);
@@ -77594,7 +77626,7 @@ function levelOfTour(of) {
     inTour = ((lv - 1) % LAST_LEVEL) + 1;
   return (tour > 1 ? "TOUR " + tour + "  ·  " : "") + "LEVEL " + inTour + of + LAST_LEVEL;
 }
-const GAME_VERSION = "v1.5.60",
+const GAME_VERSION = "v1.5.61",
   GAME_DATE = "19.11.2026",
   VERSION_TEXT = GAME_VERSION + "  ·  " + GAME_DATE;
 const FB = '"Chakra Petch", "Segoe UI", sans-serif';
@@ -84992,6 +85024,14 @@ profWire();
 //  the game, and where the motion capture, the folk songs and the fonts come from. Both from the menu at any time.
 // =====================================================================================
 const NEWS = [
+  {
+    ver: "v1.5.61",
+    title: "LOOSE ENDS",
+    items: [
+      "IN AFRIKAANS AND POLISH THE ANDROMEDA STOPS' LINE, THE WIND'S TAILWIND / HEADWIND, THE DECAF POWER-UP AND THE COWBOY'S LASSO ARE TRANSLATED",
+      "THE ROBOT INVASION IN THE SPACE SHOW BEHIND THE MENU WORKS AGAIN (IT HAD BROKEN IN v1.5.58)",
+    ],
+  },
   {
     ver: "v1.5.60",
     title: "FERRY HOME",

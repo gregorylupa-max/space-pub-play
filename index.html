@@ -7616,6 +7616,22 @@ const DICT_ROWS                             = [
   ["where's my milkshake?", "WAAR'S MY MILKSHAKE?", "gdzie mój koktajl?"],
   ["we're still waiting!", "ONS WAG NOG!", "wciąż czekamy!"],
   ["oh my goodness!", "HAAI, JIRRE!", "o rany!"],
+  ["ALL MODES", "ALLE MODUSSE", "WSZYSTKIE TRYBY"],
+  [
+    "ENDLESS MODE NO LONGER SAYS YOU HAVE SERVED 21 OF 1000000000 - JUST HOW MANY YOU HAVE SERVED",
+    "DIE EINDLOSE SPEL SÊ NIE MEER JY HET 21 VAN 1000000000 BEDIEN NIE - NET HOEVEEL JY BEDIEN HET",
+    "TRYB BEZ KOŃCA NIE MÓWI JUŻ, ŻE OBSŁUŻYŁEŚ 21 Z 1000000000 - TYLKO ILU OBSŁUŻYŁEŚ",
+  ],
+  [
+    "TIME ATTACK, BOSS RUSH AND ENDLESS SHOW THEIR LINE IN THE TOP LEFT, WITH THE POWER-UP TIMERS BELOW IT INSTEAD OF ON TOP OF IT",
+    "TYDJAG, BAAS-STORMLOOP EN DIE EINDLOSE SPEL WYS HUL REËL BO LINKS, MET DIE KRAGTIMERS DAARONDER IN PLAAS VAN DAAROP",
+    "NA CZAS, SZTURM NA BOSSÓW I TRYB BEZ KOŃCA POKAZUJĄ SWÓJ WIERSZ W LEWYM GÓRNYM ROGU, A LICZNIKI WZMOCNIEŃ SĄ POD NIM, A NIE NA NIM",
+  ],
+  [
+    "ON A PHONE HELD UPRIGHT THE ENDLESS LINE NO LONGER RUNS ACROSS THE ANNOUNCEMENTS",
+    "OP 'N FOON WAT REGOP GEHOU WORD, LOOP DIE EINDLOSE SPEL SE REËL NIE MEER OOR DIE AANKONDIGINGS NIE",
+    "NA TELEFONIE TRZYMANYM PIONOWO WIERSZ TRYBU BEZ KOŃCA NIE NACHODZI JUŻ NA OGŁOSZENIA",
+  ],
   ["TWO OF US", "ONS TWEE", "WE DWOJE"],
   [
     "IN VERSUS THE ANNOUNCEMENTS AND THE COMBO NO LONGER COVER PLAYER 1'S LIVES",
@@ -9381,6 +9397,12 @@ const DICT_PAT                             = [
   [/^LEVEL (\d+) \/ (\d+)$/, "VLAK $1 / $2", "POZIOM $1 / $2"],
   [/^SERVED (\d+) \/ (\d+)$/, "BEDIEN $1 / $2", "OBSŁUŻONO $1 / $2"],
   [/^SERVED (\d+)$/, "BEDIEN $1", "OBSŁUŻONO $1"],
+  // (v1.5.71) the ENDLESS line, whole: "ENDLESS  ·  SERVED 12  ·  SPEED 2" (the mode's name and SPEED stayed English)
+  [
+    /^ENDLESS  ·  SERVED (\d+)  ·  SPEED (\d+)$/,
+    "EINDLOSE SPEL  ·  BEDIEN $1  ·  SPOED $2",
+    "BEZ KOŃCA  ·  OBSŁUŻONO $1  ·  TEMPO $2",
+  ],
   [/^LEVEL (\d+)$/, "VLAK $1", "POZIOM $1"],
   [/^COMBO x(\d+)$/, "KOMBO x$1", "KOMBO x$1"],
   [/^FLAWLESS x(.+)$/, "FOUTLOOS x$1", "BEZBŁĘDNIE x$1"],
@@ -64381,12 +64403,10 @@ function funHud(g, s, t, fD, sx, sy) {
         }
       } // (what this bar wants) g.textAlign = "center";
     } // (v1.4.5: none of this when flavour orders are off)
-    if (G.endless) {
-      g.font = fD(14);
-      g.fillStyle = "#ff5fa8";
-      g.textAlign = "center"; // (v1.5.42: the FLAVOUR lines above leave it set to "left" - this line started at the middle and ran off the right edge)
-      g.fillText("ENDLESS  ·  SERVED " + G.endServed + "  ·  SPEED " + G.endLvl, cssW / 2, 84 * s);
-    }
+    // (v1.5.71) the ENDLESS line is written with TIME ATTACK's and BOSS RUSH's now, in the top left (modes.ts modesTxt)
+    // - here in the middle it ran across the announcements on a phone held upright
+    // (v1.5.42: the FLAVOUR lines above leave it set to "left" - this line started at the middle and ran off the right edge)
+    g.textAlign = "center";
     modesHud(g, s, fD);
     freeHud(g, s, fD);
   }
@@ -75422,6 +75442,9 @@ function modesTxt() {
     return (
       "BOSS RUSH  ·  BOSS " + (G.brush.i + 1) + " / " + RUSH_LEVELS.length + "  ·  " + fmtTime(G.brush.t)
     );
+  // (v1.5.71) ENDLESS joins them up here, in the top left - it was written across the middle of the screen, where on
+  // a phone held upright it ran over the announcements on the sign
+  if (G.endless) return "ENDLESS  ·  SERVED " + G.endServed + "  ·  SPEED " + G.endLvl;
   return "";
 }
 function modesHud(g, s, fD) {
@@ -77909,7 +77932,7 @@ function levelOfTour(of) {
     inTour = ((lv - 1) % LAST_LEVEL) + 1;
   return (tour > 1 ? "TOUR " + tour + "  ·  " : "") + "LEVEL " + inTour + of + LAST_LEVEL;
 }
-const GAME_VERSION = "v1.5.70",
+const GAME_VERSION = "v1.5.71",
   GAME_DATE = "20.11.2026",
   VERSION_TEXT = GAME_VERSION + "  ·  " + GAME_DATE;
 const FB = '"Chakra Petch", "Segoe UI", sans-serif';
@@ -78681,7 +78704,8 @@ function drawHud(fps) {
       // (v1.4.92) THE PLANET OR STAR YOU ARE ON, AND WHICH STOP OF ITS GALAXY - always in sight, under the neon sign
       // (and under an announcement when one takes the sign)
       const lt = fitLine(
-        G.ta // (v1.4.76: Time Attack has no "of how many" - its customers keep coming, so just the count)
+        // (v1.5.71: nor has ENDLESS - its "of how many" is a billion, and the line read "SERVED 21 / 1000000000")
+        G.ta || G.endless // (v1.4.76: Time Attack has no "of how many" - its customers keep coming, so just the count)
           ? whereLine() + "   ·   SERVED " + G.served
           : whereLine() + "   ·   SERVED " + G.served + " / " + G.total
       );
@@ -78923,7 +78947,14 @@ function drawHud(fps) {
         const left = G.pw[k];
         if (left <= 0) continue;
         const P0 = POWERS[k],
-          y = pad + (twoP() ? 104 : 72) * s + (holyOn ? 20 * s : 0) + row * 22 * s;
+          // (v1.5.71: below the TIME ATTACK / BOSS RUSH / ENDLESS line, and the ghost's, when they're up - the
+          //  timers were written right over "TIME ATTACK  13 / 50")
+          y =
+            pad +
+            (twoP() ? 104 : 72) * s +
+            (holyOn ? 20 * s : 0) +
+            (modesTxt() ? (ghostDiff() !== null ? 36 : 20) * s : 0) +
+            row * 22 * s;
         g.fillStyle = P0.c;
         g.globalAlpha = left < 2 && Math.sin(t * 18) < 0 ? 0.4 : 1;
         g.font = fD(10);
@@ -85394,6 +85425,15 @@ profWire();
 //  the game, and where the motion capture, the folk songs and the fonts come from. Both from the menu at any time.
 // =====================================================================================
 const NEWS = [
+  {
+    ver: "v1.5.71",
+    title: "ALL MODES",
+    items: [
+      "ENDLESS MODE NO LONGER SAYS YOU HAVE SERVED 21 OF 1000000000 - JUST HOW MANY YOU HAVE SERVED",
+      "TIME ATTACK, BOSS RUSH AND ENDLESS SHOW THEIR LINE IN THE TOP LEFT, WITH THE POWER-UP TIMERS BELOW IT INSTEAD OF ON TOP OF IT",
+      "ON A PHONE HELD UPRIGHT THE ENDLESS LINE NO LONGER RUNS ACROSS THE ANNOUNCEMENTS",
+    ],
+  },
   {
     ver: "v1.5.70",
     title: "TWO OF US",

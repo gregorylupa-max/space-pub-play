@@ -102,6 +102,19 @@ body.calm .panel { animation: none; }
 #sbList button, #wdHats button, #wdPets button { text-align: left; display: flex; flex-direction: column; align-items: flex-start; gap: 3px; padding: 8px 10px; min-height: 42px; font-size: 13px; }
 #sbList button small, #wdHats button small, #wdPets button small { font-size: 11px; color: var(--muted, #b9a8b8); letter-spacing: .03em; }
 #sbList button.lock, #wdHats button.lock, #wdPets button.lock { opacity: .55; }
+/* (v1.5.77) A LONG WORD STAYS IN ITS BUTTON: in Afrikaans a hat or a sticker tab can be one long word ("KOEIWAGTERHOED",
+   "SEEROWERSHOED", "RUIMTEVERTONING"), and on a phone held upright it ran out over the button's edge. It now breaks onto
+   the next line instead - hyphenated where the browser knows the language */
+#sbList button, #wdHats button, #wdPets button, #sbTabs button, #shItems button, #shDecor button, #trList button {
+  min-width: 0; overflow-wrap: anywhere; hyphens: auto; -webkit-hyphens: auto; }
+/* (v1.5.77: and every panel's buttons and titles - with TEXT SIZE HUGE on a phone held upright "AGTERGRONDGELUIDE",
+   "STERRESTELSEL-KAART", "BEKERTOERNOOI" and the jukebox's "południowoafrykańska" ran out over the edge) */
+/*  - only with BIG / HUGE text and on the narrowest phones, where they need it: at the normal size elsewhere a word that
+      just fits ("OORSPRONKLIK") stays whole, as before */
+body.txt1 .panel :is(button, h2, button span, button small), body.txt2 .panel :is(button, h2, button span, button small) {
+  max-width: 100%; overflow-wrap: break-word; hyphens: auto; -webkit-hyphens: auto; }
+@media (max-width: 380px) { .panel :is(button, h2, button span, button small) {
+  max-width: 100%; overflow-wrap: break-word; hyphens: auto; -webkit-hyphens: auto; } }
 #sbList button.on, #sbTabs button.on, #wdHats button.on, #wdPets button.on, #wdWho button.on { border-color: var(--amber, #ffc34d); box-shadow: 0 0 16px rgba(255,195,77,.4); }
 .wdH { margin: 0; font-family: var(--display); font-weight: 400; color: var(--amber, #ffc34d); letter-spacing: .05em; font-size: 18px; }
 #csList button { text-align: left; display: flex; flex-direction: column; gap: 3px; padding: 9px 12px; }
@@ -7650,6 +7663,22 @@ const DICT_ROWS                             = [
   ["where's my milkshake?", "WAAR'S MY MILKSHAKE?", "gdzie mój koktajl?"],
   ["we're still waiting!", "ONS WAG NOG!", "wciąż czekamy!"],
   ["oh my goodness!", "HAAI, JIRRE!", "o rany!"],
+  ["LONG WORDS", "LANG WOORDE", "DŁUGIE SŁOWA"],
+  [
+    "LONG AFRIKAANS AND POLISH WORDS NO LONGER RUN OUT OF THEIR BUTTONS ON A PHONE - THEY BREAK ONTO THE NEXT LINE WITH A HYPHEN",
+    "LANG AFRIKAANSE EN POOLSE WOORDE LOOP NIE MEER BY HUL KNOPPIES UIT OP 'N FOON NIE - HULLE BREEK MET 'N KOPPELTEKEN OOR NA DIE VOLGENDE REËL",
+    "DŁUGIE SŁOWA PO AFRIKAANS I PO POLSKU NIE WYCHODZĄ JUŻ POZA PRZYCISKI NA TELEFONIE - PRZENOSZĄ SIĘ DO NASTĘPNEGO WIERSZA Z ŁĄCZNIKIEM",
+  ],
+  [
+    "THE SAME WITH BIG AND HUGE TEXT, IN EVERY MENU",
+    "NET SO MET GROOT EN BAIE GROOT TEKS, IN ELKE KIESLYS",
+    "TAK SAMO PRZY DUŻYM I OGROMNYM TEKŚCIE, W KAŻDYM MENU",
+  ],
+  [
+    "CHECKED IN ALL THREE LANGUAGES, ON THREE PHONE SIZES, IN EVERY MENU PANEL",
+    "NAGEGAAN IN AL DRIE TALE, OP DRIE FOONGROOTTES, IN ELKE KIESLYSPANEEL",
+    "SPRAWDZONE WE WSZYSTKICH TRZECH JĘZYKACH, NA TRZECH ROZMIARACH TELEFONU, W KAŻDYM PANELU MENU",
+  ],
   ["SIDE BY SIDE", "LANGS MEKAAR", "RAMIĘ W RAMIĘ"],
   [
     "ON A PHONE HELD SIDEWAYS THE BARTENDER'S MOTTO AND THE STICKER HINT NO LONGER RUN UNDER THE PANEL BESIDE THEM",
@@ -78126,8 +78155,8 @@ function levelOfTour(of) {
     inTour = ((lv - 1) % LAST_LEVEL) + 1;
   return (tour > 1 ? "TOUR " + tour + "  ·  " : "") + "LEVEL " + inTour + of + LAST_LEVEL;
 }
-const GAME_VERSION = "v1.5.76",
-  GAME_DATE = "20.11.2026",
+const GAME_VERSION = "v1.5.77",
+  GAME_DATE = "21.11.2026",
   VERSION_TEXT = GAME_VERSION + "  ·  " + GAME_DATE;
 const FB = '"Chakra Petch", "Segoe UI", sans-serif';
 let FD = '"Bungee", "Impact", sans-serif';
@@ -85633,6 +85662,15 @@ profWire();
 //  the game, and where the motion capture, the folk songs and the fonts come from. Both from the menu at any time.
 // =====================================================================================
 const NEWS = [
+  {
+    ver: "v1.5.77",
+    title: "LONG WORDS",
+    items: [
+      "LONG AFRIKAANS AND POLISH WORDS NO LONGER RUN OUT OF THEIR BUTTONS ON A PHONE - THEY BREAK ONTO THE NEXT LINE WITH A HYPHEN",
+      "THE SAME WITH BIG AND HUGE TEXT, IN EVERY MENU",
+      "CHECKED IN ALL THREE LANGUAGES, ON THREE PHONE SIZES, IN EVERY MENU PANEL",
+    ],
+  },
   {
     ver: "v1.5.76",
     title: "SIDE BY SIDE",

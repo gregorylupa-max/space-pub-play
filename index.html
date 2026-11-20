@@ -7616,6 +7616,22 @@ const DICT_ROWS                             = [
   ["where's my milkshake?", "WAAR'S MY MILKSHAKE?", "gdzie mój koktajl?"],
   ["we're still waiting!", "ONS WAG NOG!", "wciąż czekamy!"],
   ["oh my goodness!", "HAAI, JIRRE!", "o rany!"],
+  ["DOORSTEP", "DRUMPEL", "PRÓG"],
+  [
+    "A SHAKE SENT DOWN A BAR WHERE CUSTOMERS ARE QUEUEING AT THE DOOR NOW WAITS ON THE DOORSTEP - AND THE NEXT IN LINE HURRIES IN TO TAKE IT",
+    "'N SKOMMEL WAT AFGESTUUR WORD NA 'N TOONBANK WAAR KLANTE BY DIE DEUR TOU STAAN, WAG NOU OP DIE DRUMPEL - EN DIE VOLGENDE IN DIE RY HAAS HOM IN OM DIT TE VAT",
+    "KOKTAJL WYSŁANY NA LADĘ, PRZY KTÓREJ KLIENCI STOJĄ W KOLEJCE PRZY DRZWIACH, CZEKA TERAZ NA PROGU - A NASTĘPNY W KOLEJCE SPIESZY SIĘ, BY GO ODEBRAĆ",
+  ],
+  [
+    "NO MORE LOSING A LIFE WITH A CUSTOMER STANDING RIGHT THERE - IN KID MODE AND ON EASY THAT WAS ALMOST EVERY LIFE LOST",
+    "JY VERLOOR NIE MEER 'N LEWE MET 'N KLANT WAT REG DAAR STAAN NIE - IN KINDERMODUS EN OP MAKLIK WAS DIT AMPER ELKE LEWE WAT VERLOOR IS",
+    "KONIEC Z TRACENIEM ŻYCIA, GDY KLIENT STOI TUŻ OBOK - W TRYBIE DLA DZIECI I NA POZIOMIE ŁATWYM BYŁA TO PRAWIE KAŻDA UTRATA ŻYCIA",
+  ],
+  [
+    "IF NOBODY IS COMING, THE SHAKE STILL FALLS OFF THE END",
+    "AS NIEMAND KOM NIE, VAL DIE SKOMMEL STEEDS VAN DIE PUNT AF",
+    "JEŚLI NIKT NIE IDZIE, KOKTAJL WCIĄŻ SPADA Z KOŃCA LADY",
+  ],
   ["IN YOUR WORDS", "IN JOU WOORDE", "TWOIMI SŁOWAMI"],
   [
     "WHEN AN AFRIKAANS CUSTOMER GRUMBLES OR SAYS GOODBYE, THE SMALL WORDS UNDERNEATH NOW GIVE THE MEANING IN POLISH WHEN YOU PLAY IN POLISH",
@@ -15931,6 +15947,41 @@ function update(dt) {
           life: 1,
           max: 1,
         });
+    } else if (
+      s.x < X0 - 8 &&
+      (s.park || 0) < 4 &&
+      customers.some(
+        (c) =>
+          c.lane === s.lane &&
+          c.state === "walk" &&
+          c.x > X0 - 200 &&
+          c.x <= X0 - 120 &&
+          (!s.holy || c.type.evil) &&
+          !(c.bat > 0 && !s.holy)
+      )
+    ) {
+      // (v1.5.69) A SHAKE WAITS ON THE DOORSTEP FOR THE NEXT IN LINE: a group queues outside the door (in plain sight),
+      // and a shake sent down that bar fell off the end just before the next one in line stepped up - a life lost with
+      // customers standing right there (the demo bartender lost one or two a stop like that on EASY, where they walk in
+      // slower). Now it stops at the end of the bar and waits, up to four seconds, for them to step into the doorway -
+      // where the doorway catch (above) has them take it. Nobody coming: it falls off as before
+      s.x = X0 - 8;
+      s.park = (s.park || 0) + dt;
+      // (...and the next in line hurries in to get it - they'd otherwise amble up at their own pace, with stops)
+      let nx = null;
+      for (const c of customers)
+        if (
+          c.lane === s.lane &&
+          c.state === "walk" &&
+          c.x > X0 - 200 &&
+          c.x <= X0 - 120 &&
+          (!nx || c.x > nx.x)
+        )
+          nx = c;
+      if (nx) {
+        nx.x = Math.min(X0 - 110, nx.x + 150 * dt);
+        nx.walk = (nx.walk || 0) + 150 * dt * 0.25; // (their legs keep up)
+      }
     } else if (s.x < X0 - 8) {
       s.dead = true;
       const spare = s.extra || hasPwBatch(s); // a triple-shot shake whose batch already found a customer
@@ -77841,7 +77892,7 @@ function levelOfTour(of) {
     inTour = ((lv - 1) % LAST_LEVEL) + 1;
   return (tour > 1 ? "TOUR " + tour + "  ·  " : "") + "LEVEL " + inTour + of + LAST_LEVEL;
 }
-const GAME_VERSION = "v1.5.68",
+const GAME_VERSION = "v1.5.69",
   GAME_DATE = "20.11.2026",
   VERSION_TEXT = GAME_VERSION + "  ·  " + GAME_DATE;
 const FB = '"Chakra Petch", "Segoe UI", sans-serif';
@@ -85321,6 +85372,15 @@ profWire();
 //  the game, and where the motion capture, the folk songs and the fonts come from. Both from the menu at any time.
 // =====================================================================================
 const NEWS = [
+  {
+    ver: "v1.5.69",
+    title: "DOORSTEP",
+    items: [
+      "A SHAKE SENT DOWN A BAR WHERE CUSTOMERS ARE QUEUEING AT THE DOOR NOW WAITS ON THE DOORSTEP - AND THE NEXT IN LINE HURRIES IN TO TAKE IT",
+      "NO MORE LOSING A LIFE WITH A CUSTOMER STANDING RIGHT THERE - IN KID MODE AND ON EASY THAT WAS ALMOST EVERY LIFE LOST",
+      "IF NOBODY IS COMING, THE SHAKE STILL FALLS OFF THE END",
+    ],
+  },
   {
     ver: "v1.5.68",
     title: "IN YOUR WORDS",

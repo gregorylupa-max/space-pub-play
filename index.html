@@ -7599,6 +7599,39 @@ const DICT_ROWS                             = [
     "UIT DIE OU SLAWIESE VERHALE: HY HEERS OOR DIE MEULDAMME, STADIG EN BRUMMERIG",
     "Z DAWNYCH SŁOWIAŃSKICH PODAŃ: RZĄDZI MŁYŃSKIMI STAWAMI, POWOLNY I ZRZĘDLIWY",
   ],
+  // (v1.5.68) and the language named under a visitor's thank-you (Russian, Ukrainian, Japanese - the South African languages keep their own names)
+  ["Russian: thank you", "Russies: dankie", "rosyjski: dziękuję"],
+  ["Russian: thank you very much", "Russies: baie dankie", "rosyjski: dziękuję bardzo"],
+  ["Ukrainian: thank you", "Oekraïens: dankie", "ukraiński: dziękuję"],
+  ["Ukrainian: thanks", "Oekraïens: dankie", "ukraiński: dzięki"],
+  ["Japanese", "Japannees", "japoński"],
+  // (v1.5.68) the meaning under an Afrikaans customer's words (in Afrikaans it isn't shown at all)
+  ["goodbye", "TOTSIENS", "do widzenia"],
+  ["lovely, thanks", "LEKKER, DANKIE", "pycha, dzięki"],
+  ["see you again", "SIEN JULLE WEER", "do zobaczenia"],
+  ["go well", "MOOI LOOP", "szerokiej drogi"],
+  ["that's a lovely shake, mate", "DIS 'N LEKKER SHAKE, BOET", "świetny koktajl, kolego"],
+  ["oh no!", "AG NEE!", "o nie!"],
+  ["come on, mate!", "KOM NOU, BOET!", "no dalej, kolego!"],
+  ["where's my milkshake?", "WAAR'S MY MILKSHAKE?", "gdzie mój koktajl?"],
+  ["we're still waiting!", "ONS WAG NOG!", "wciąż czekamy!"],
+  ["oh my goodness!", "HAAI, JIRRE!", "o rany!"],
+  ["IN YOUR WORDS", "IN JOU WOORDE", "TWOIMI SŁOWAMI"],
+  [
+    "WHEN AN AFRIKAANS CUSTOMER GRUMBLES OR SAYS GOODBYE, THE SMALL WORDS UNDERNEATH NOW GIVE THE MEANING IN POLISH WHEN YOU PLAY IN POLISH",
+    "WANNEER 'N AFRIKAANSE KLANT KLA OF TOTSIENS SÊ, GEE DIE KLEIN WOORDJIES ONDERAAN NOU DIE BETEKENIS IN POOLS AS JY IN POOLS SPEEL",
+    "GDY KLIENT MÓWIĄCY PO AFRIKAANS NARZEKA ALBO SIĘ ŻEGNA, MAŁE SŁOWA POD SPODEM PODAJĄ TERAZ ZNACZENIE PO POLSKU",
+  ],
+  [
+    "IN AFRIKAANS THE ENGLISH WORDS UNDER YOUR OWN LANGUAGE ARE GONE",
+    "IN AFRIKAANS IS DIE ENGELSE WOORDE ONDER JOU EIE TAAL WEG",
+    "PO AFRIKAANS ZNIKNĘŁY ANGIELSKIE SŁOWA POD TWOIM WŁASNYM JĘZYKIEM",
+  ],
+  [
+    "THE RUSSIAN, UKRAINIAN AND JAPANESE THANK-YOUS NAME THEIR LANGUAGE IN YOURS",
+    "DIE RUSSIESE, OEKRAÏENSE EN JAPANNESE DANKIES NOEM HUL TAAL IN JOUNE",
+    "ROSYJSKIE, UKRAIŃSKIE I JAPOŃSKIE PODZIĘKOWANIA PODAJĄ NAZWĘ JĘZYKA PO TWOJEMU",
+  ],
   ["OLD TALES", "OU VERHALE", "DAWNE PODANIA"],
   [
     "THE LESHY, THE RUSALKA, THE DOMOVOI AND THE VODYANOY NOW ARRIVE WITH A LINE FROM THE OLD SLAVIC TALES - BEFORE, IT JUST SAID UNDEFINED",
@@ -14856,7 +14889,9 @@ function update(dt) {
         sfx("grumble", c.x, c.type.kind);
         if (!demo && isAf(c)) {
           const [w, en] = AF_GRUMBLE[Math.floor(Math.random() * AF_GRUMBLE.length)];
-          worldText(w, c, "#ff9a7a", en);
+          // (v1.5.68) THE MEANING IN YOUR OWN LANGUAGE: the small words under the Afrikaans were always English - in Polish
+          // they now say it in Polish, and in Afrikaans they're left off (it would only be English under your own words)
+          worldText(w, c, "#ff9a7a", LANG === "af" ? undefined : en);
         }
       }
       // DANGER: almost at your end of the bar - an urgent alarm, a red light on that counter, then a ticking pulse until it's dealt with
@@ -15093,7 +15128,7 @@ function update(dt) {
         }
         if (!demo && !c.refused && isAf(c)) {
           const [w, en] = AF_BYE[Math.floor(Math.random() * AF_BYE.length)];
-          worldText(w, { lane: c.lane, x: X0 + 40 }, "#ffd24d", en);
+          worldText(w, { lane: c.lane, x: X0 + 40 }, "#ffd24d", LANG === "af" ? undefined : en); // (v1.5.68: see the grumbles)
         } // a wave and a goodbye in Afrikaans at the door
         sfx("served", X0, demo ? 0 : G.servRun);
         sparkle(X0, LY(c.lane, X0) - 30, [1, 0.76, 0.3, 1], 10 + (G.servRun || 0) * 2, c.lane);
@@ -77806,7 +77841,7 @@ function levelOfTour(of) {
     inTour = ((lv - 1) % LAST_LEVEL) + 1;
   return (tour > 1 ? "TOUR " + tour + "  ·  " : "") + "LEVEL " + inTour + of + LAST_LEVEL;
 }
-const GAME_VERSION = "v1.5.67",
+const GAME_VERSION = "v1.5.68",
   GAME_DATE = "20.11.2026",
   VERSION_TEXT = GAME_VERSION + "  ·  " + GAME_DATE;
 const FB = '"Chakra Petch", "Segoe UI", sans-serif';
@@ -85286,6 +85321,15 @@ profWire();
 //  the game, and where the motion capture, the folk songs and the fonts come from. Both from the menu at any time.
 // =====================================================================================
 const NEWS = [
+  {
+    ver: "v1.5.68",
+    title: "IN YOUR WORDS",
+    items: [
+      "WHEN AN AFRIKAANS CUSTOMER GRUMBLES OR SAYS GOODBYE, THE SMALL WORDS UNDERNEATH NOW GIVE THE MEANING IN POLISH WHEN YOU PLAY IN POLISH",
+      "IN AFRIKAANS THE ENGLISH WORDS UNDER YOUR OWN LANGUAGE ARE GONE",
+      "THE RUSSIAN, UKRAINIAN AND JAPANESE THANK-YOUS NAME THEIR LANGUAGE IN YOURS",
+    ],
+  },
   {
     ver: "v1.5.67",
     title: "OLD TALES",

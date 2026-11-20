@@ -7639,6 +7639,27 @@ const DICT_ROWS                             = [
   ["where's my milkshake?", "WAAR'S MY MILKSHAKE?", "gdzie mój koktajl?"],
   ["we're still waiting!", "ONS WAG NOG!", "wciąż czekamy!"],
   ["oh my goodness!", "HAAI, JIRRE!", "o rany!"],
+  ["THE END", "DIE EINDE", "KONIEC"],
+  [
+    "AT THE VERY END THE CREDITS COME TO REST WITH THANK YOU FOR PLAYING IN THE MIDDLE - THEIR PANEL NO LONGER STANDS EMPTY",
+    "HEEL AAN DIE EINDE KOM DIE ERKENNINGS TOT RUS MET DANKIE DAT JY GESPEEL HET IN DIE MIDDEL - HUL PANEEL STAAN NIE MEER LEEG NIE",
+    "NA SAMYM KOŃCU NAPISY ZATRZYMUJĄ SIĘ Z PODZIĘKOWANIEM ZA GRĘ POŚRODKU - ICH PANEL NIE STOI JUŻ PUSTY",
+  ],
+  [
+    "ON A PHONE HELD UPRIGHT THE CREDITS NO LONGER ROLL UP UNDER THE CORNER BUTTONS",
+    "OP 'N FOON WAT REGOP GEHOU WORD, ROL DIE ERKENNINGS NIE MEER ONDER DIE HOEKKNOPPIES IN NIE",
+    "NA TELEFONIE TRZYMANYM PIONOWO NAPISY NIE PRZEWIJAJĄ SIĘ JUŻ POD PRZYCISKAMI W ROGU",
+  ],
+  [
+    "THE DEMO'S OUT OF THE WINDOW LINE IS TRANSLATED",
+    "DIE DEMO SE BY DIE VENSTER UIT-REËL IS VERTAAL",
+    "WIERSZ ZA OKNEM W POKAZIE JEST PRZETŁUMACZONY",
+  ],
+  [
+    "IN THE DIVE INTO ANDROMEDA'S HEART THE TUNE'S NAME NO LONGER RUNS UNDER THE GL",
+    "IN DIE DUIK NA ANDROMEDA SE HART LOOP DIE DEUNTJIE SE NAAM NIE MEER ONDER DIE GL IN NIE",
+    "W NURKOWANIU DO SERCA ANDROMEDY NAZWA MELODII NIE WCHODZI JUŻ POD GL",
+  ],
   ["PLAYER NAMES", "SPELERNAME", "IMIONA GRACZY"],
   [
     "IN AFRIKAANS AND POLISH EVERY PLAYER NUMBER IS TRANSLATED: PLAYER 3 TO 8 IN WHO'S PLAYING? AND IN THE CUP",
@@ -9468,6 +9489,9 @@ const DICT_PAT                             = [
   [/^LEVEL (\d+) \/ (\d+)$/, "VLAK $1 / $2", "POZIOM $1 / $2"],
   [/^SERVED (\d+) \/ (\d+)$/, "BEDIEN $1 / $2", "OBSŁUŻONO $1 / $2"],
   [/^SERVED (\d+)$/, "BEDIEN $1", "OBSŁUŻONO $1"],
+  // (v1.5.75) the caption under the demo's window - "OUT OF THE WINDOW:  " and the scene (the scene names had rows,
+  // but the whole caption didn't, so it stayed in English)
+  [/^OUT OF THE WINDOW:  (.+)$/, "BY DIE VENSTER UIT:  $1", "ZA OKNEM:  $1"],
   // (v1.5.74) any player's number - PLAYER 3 to PLAYER 8 in WHO'S PLAYING? and the CUP (only 1 and 2 had rows)
   [/^PLAYER (\d+)$/, "SPELER $1", "GRACZ $1"],
   // (...and the two-player messages that carry a number: out in VERSUS, back again, choosing a bartender)
@@ -78057,7 +78081,7 @@ function levelOfTour(of) {
     inTour = ((lv - 1) % LAST_LEVEL) + 1;
   return (tour > 1 ? "TOUR " + tour + "  ·  " : "") + "LEVEL " + inTour + of + LAST_LEVEL;
 }
-const GAME_VERSION = "v1.5.74",
+const GAME_VERSION = "v1.5.75",
   GAME_DATE = "20.11.2026",
   VERSION_TEXT = GAME_VERSION + "  ·  " + GAME_DATE;
 const FB = '"Chakra Petch", "Segoe UI", sans-serif';
@@ -79810,11 +79834,15 @@ function drawEndingHud(g, s, fD, fB) {
       ];
       // (v1.4.63) the credits used to roll straight over you and the trophy - now they roll up in a dark
       // glass panel off to the side (in a tall window: up top, above the podium), so you stay in the spotlight
-      const top = 14 * s,
+      // (v1.5.75) THE CREDITS COME TO REST: they used to roll on until every line had gone out of the top - on a phone
+      // held sideways that took seven seconds, and the dark panel then stood empty for as long as the PLAY ON / MAIN MENU
+      // choice waited. Now the roll stops with "THANK YOU FOR PLAYING!" resting in the middle of the panel. And in a
+      // tall window the panel starts below the corner buttons (the lines rolled up under "Full screen")
+      const top = tall ? Math.max(14 * s, (HUDB.b || 0) + 8 * s) : 14 * s,
         bot = tall ? cssH * 0.42 : cssH * 0.56,
         pw = tall ? cssW * 0.9 : Math.min(cssW * 0.3, 380 * s),
-        y0 = bot - (et - 25.5) * 55 * s,
-        step = 30 * s; // they roll up through the sky, above the party
+        step = 30 * s, // they roll up through the sky, above the party
+        y0 = Math.max(bot - (et - 25.5) * 55 * s, (top + bot) / 2 - (lines.length - 1) * step);
       cx = tall ? cssW / 2 : 18 * s + pw / 2;
       colW = pw - 24 * s;
       const pa = Math.min(1, (et - 25) * 2);
@@ -80058,10 +80086,11 @@ function roundRect(g, x, y, w, h, r) {
 function nowPlayingHud(g, s) {
   // (v1.4.53) the full-screen scenes (the trips between planets, the island, the mini-games, the shows) have no bottom
   // strip - so the tune's name sits quietly in their bottom-right corner instead, small and out of the way
-  const scene =
-    G.state === "castaway" ||
-    ["approach", "story", "mini"].includes(G.state) ||
-    (G.state === "jump" && G.jump && (G.jump.inter || G.jump.core));
+  // (v1.5.75: not on the jump between galaxies any more - the bottom strip is up there, with the tune's name beside
+  //  GL, so it was written twice; and in the dive into the core, where only GL is in the strip, it now keeps left of
+  //  the GL instead of running under it: "♪ OUT TH" + GL)
+  const core = G.state === "jump" && G.jump && G.jump.core,
+    scene = G.state === "castaway" || ["approach", "story", "mini"].includes(G.state) || core;
   if (scene && MY.mode !== "off" && curTrack >= 0 && TRACKS[curTrack]) {
     g.save();
     g.font = "500 " + Math.round(12 * Math.max(s, 0.8)) + "px " + FB;
@@ -80070,7 +80099,7 @@ function nowPlayingHud(g, s) {
     g.fillStyle = "rgba(255,195,77,.75)";
     g.fillText(
       "\u266A " + (MY.mode === "mine" && MY.now ? MY.now : TRACKS[curTrack].title),
-      cssW - 12,
+      cssW - 12 - (core ? 40 * s : 0),
       cssH - 10
     );
     g.restore();
@@ -85559,6 +85588,16 @@ profWire();
 //  the game, and where the motion capture, the folk songs and the fonts come from. Both from the menu at any time.
 // =====================================================================================
 const NEWS = [
+  {
+    ver: "v1.5.75",
+    title: "THE END",
+    items: [
+      "AT THE VERY END THE CREDITS COME TO REST WITH THANK YOU FOR PLAYING IN THE MIDDLE - THEIR PANEL NO LONGER STANDS EMPTY",
+      "ON A PHONE HELD UPRIGHT THE CREDITS NO LONGER ROLL UP UNDER THE CORNER BUTTONS",
+      "THE DEMO'S OUT OF THE WINDOW LINE IS TRANSLATED",
+      "IN THE DIVE INTO ANDROMEDA'S HEART THE TUNE'S NAME NO LONGER RUNS UNDER THE GL",
+    ],
+  },
   {
     ver: "v1.5.74",
     title: "PLAYER NAMES",

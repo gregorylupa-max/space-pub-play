@@ -4756,6 +4756,12 @@ const DICT_ROWS                             = [
     "PORA NA OBIAD... HEJ! TO BYŁA MOJA KANAPKA!",
   ],
   ["WISH YOU WERE HERE", "WENS JY WAS HIER", "SZKODA, ŻE CIĘ TU NIE MA"],
+  // (v1.5.73) ...and the whole line Koos reads out on Castaway Island (only the bottle's words had a row)
+  [
+    'A MESSAGE IN A BOTTLE! IT SAYS: "WISH YOU WERE HERE"',
+    "'N BOODSKAP IN 'N BOTTEL! DAAR STAAN: \"WENS JY WAS HIER\"",
+    'LIST W BUTELCE! JEST NAPISANE: "SZKODA, ŻE CIĘ TU NIE MA"',
+  ],
   ["OUCH! A CRAB PINCHES HIS TOE", "EINA! 'N KRAP KNYP SY TOON", "AU! KRAB SZCZYPIE GO W PALEC"],
   [
     "MUIS THE ISLAND MOUSE - KOOS SHARES HIS LAST CRUMB",
@@ -7627,6 +7633,22 @@ const DICT_ROWS                             = [
   ["where's my milkshake?", "WAAR'S MY MILKSHAKE?", "gdzie mój koktajl?"],
   ["we're still waiting!", "ONS WAG NOG!", "wciąż czekamy!"],
   ["oh my goodness!", "HAAI, JIRRE!", "o rany!"],
+  ["ISLAND LIFE", "EILANDLEWE", "ŻYCIE NA WYSPIE"],
+  [
+    "ON A PHONE HELD UPRIGHT, KOOS'S PORTRAIT ON CASTAWAY ISLAND NO LONGER COVERS THE WORDS AT THE BOTTOM",
+    "OP 'N FOON WAT REGOP GEHOU WORD, BEDEK KOOS SE PORTRET OP SKIPBREUKELINGEILAND NIE MEER DIE WOORDE ONDER NIE",
+    "NA TELEFONIE TRZYMANYM PIONOWO PORTRET KOOSA NA WYSPIE ROZBITKA NIE ZASŁANIA JUŻ NAPISÓW NA DOLE",
+  ],
+  [
+    "LONG NEWS ON THE ISLAND BREAKS ONTO TWO LINES INSTEAD OF SHRINKING TO TINY LETTERS",
+    "LANG NUUS OP DIE EILAND BREEK OOR TWEE REËLS IN PLAAS VAN OM TOT KLEIN LETTERTJIES TE KRIMP",
+    "DŁUGIE WIEŚCI NA WYSPIE DZIELĄ SIĘ NA DWA WIERSZE, ZAMIAST KURCZYĆ SIĘ DO MALUTKICH LITER",
+  ],
+  [
+    "THE MESSAGE IN A BOTTLE IS TRANSLATED TOO",
+    "DIE BOODSKAP IN 'N BOTTEL IS OOK VERTAAL",
+    "LIST W BUTELCE JEST TEŻ PRZETŁUMACZONY",
+  ],
   ["BOSS TALK", "BAASPRAATJIES", "MOWA BOSSÓW"],
   [
     "ENDLESS: THE BAR AT THE TOP NOW FILLS UP TOWARDS THE NEXT SPEED-UP, EVERY 12 SERVED",
@@ -60792,7 +60814,12 @@ function cwPortrait(t, b, dark) {
   const { L, B, h, k } = b,
     R0 = Math.min(58 * k, h * 0.12),
     px = L + 20 + R0 + 14 * k,
-    py = B - 20 - R0 - 40 * k + (1 - show) * 30 * k,
+    // (v1.5.73) ON A PHONE HELD UPRIGHT, ABOVE THE WORDS: there the portrait reached down over the scene's caption and the
+    // "TAP: NEXT SCENE" hint at the bottom (they sit at 86% and 94% of the screen) and hid their first words. On a tall
+    // screen it now sits just above the caption; on a wide one there's room beside it, as before
+    py =
+      (cssH > cssW ? Math.min(B - 20 - R0 - 40 * k, B - h * 0.14 - R0 - 44 * k) : B - 20 - R0 - 40 * k) +
+      (1 - show) * 30 * k,
     s2 = (R0 / 40) * (0.85 + 0.15 * show),
     a = show,
     A = (c) => withA(c, a),
@@ -61971,6 +61998,27 @@ function castawayHud(g, s) {
   const band = (txt, y, px, c) => {
     g.font = "800 " + Math.round(px * s) + "px " + FB;
     let w2 = g.measureText(txt).width + 24 * s;
+    // (v1.5.73) TWO LINES RATHER THAN TINY LETTERS: on a phone held upright a long line ("THE NAUTILUS! CAPTAIN NEMO,
+    // OUT ON HIS IRON SUBMARINE...") shrank to about 7 pixels to fit across. When it would shrink below 11 pixels it now
+    // breaks in two at the space nearest the middle instead, and keeps its size
+    if (w2 > cssW * 0.96 && (px * s * cssW * 0.96) / w2 < 11 && txt.includes(" ")) {
+      const ws = txt.split(" ");
+      let best = 1,
+        bd = 1e9;
+      for (let i = 1; i < ws.length; i++) {
+        const d = Math.abs(
+          g.measureText(ws.slice(0, i).join(" ")).width - g.measureText(ws.slice(i).join(" ")).width
+        );
+        if (d < bd) {
+          bd = d;
+          best = i;
+        }
+      }
+      const lh = px * s * 2;
+      band(ws.slice(0, best).join(" "), y - lh / 2, px, c);
+      band(ws.slice(best).join(" "), y + lh / 2, px, c);
+      return;
+    }
     if (w2 > cssW * 0.96) {
       // (too wide for a narrow screen: the words get a little smaller so the whole line fits)
       px *= (cssW * 0.96) / w2;
@@ -77977,7 +78025,7 @@ function levelOfTour(of) {
     inTour = ((lv - 1) % LAST_LEVEL) + 1;
   return (tour > 1 ? "TOUR " + tour + "  ·  " : "") + "LEVEL " + inTour + of + LAST_LEVEL;
 }
-const GAME_VERSION = "v1.5.72",
+const GAME_VERSION = "v1.5.73",
   GAME_DATE = "20.11.2026",
   VERSION_TEXT = GAME_VERSION + "  ·  " + GAME_DATE;
 const FB = '"Chakra Petch", "Segoe UI", sans-serif';
@@ -85476,6 +85524,15 @@ profWire();
 //  the game, and where the motion capture, the folk songs and the fonts come from. Both from the menu at any time.
 // =====================================================================================
 const NEWS = [
+  {
+    ver: "v1.5.73",
+    title: "ISLAND LIFE",
+    items: [
+      "ON A PHONE HELD UPRIGHT, KOOS'S PORTRAIT ON CASTAWAY ISLAND NO LONGER COVERS THE WORDS AT THE BOTTOM",
+      "LONG NEWS ON THE ISLAND BREAKS ONTO TWO LINES INSTEAD OF SHRINKING TO TINY LETTERS",
+      "THE MESSAGE IN A BOTTLE IS TRANSLATED TOO",
+    ],
+  },
   {
     ver: "v1.5.72",
     title: "BOSS TALK",

@@ -7579,6 +7579,42 @@ const DICT_ROWS                             = [
   ],
   ["STOMP!", "STAMP!", "TUP!"],
   ["JUMP!", "SPRING!", "SKOK!"],
+  [
+    "FROM THE OLD SLAVIC TALES: HE GUARDS THE FOREST AND LEADS LOST TRAVELLERS ASTRAY",
+    "UIT DIE OU SLAWIESE VERHALE: HY BEWAAK DIE WOUD EN LEI VERDWAALDE REISIGERS OP 'N DWAALSPOOR",
+    "Z DAWNYCH SŁOWIAŃSKICH PODAŃ: STRZEŻE LASU I SPROWADZA ZAGUBIONYCH WĘDROWCÓW NA MANOWCE",
+  ],
+  [
+    "FROM THE OLD SLAVIC TALES: SHE LIVES IN THE RIVER AND DANCES IN THE MOONLIGHT",
+    "UIT DIE OU SLAWIESE VERHALE: SY WOON IN DIE RIVIER EN DANS IN DIE MAANLIG",
+    "Z DAWNYCH SŁOWIAŃSKICH PODAŃ: MIESZKA W RZECE I TAŃCZY W ŚWIETLE KSIĘŻYCA",
+  ],
+  [
+    "FROM THE OLD SLAVIC TALES: HE LOOKS AFTER THE HOUSE - KEEP HIM HAPPY!",
+    "UIT DIE OU SLAWIESE VERHALE: HY PAS DIE HUIS OP - HOU HOM GELUKKIG!",
+    "Z DAWNYCH SŁOWIAŃSKICH PODAŃ: OPIEKUJE SIĘ DOMEM - DBAJ, BY BYŁ ZADOWOLONY!",
+  ],
+  [
+    "FROM THE OLD SLAVIC TALES: HE RULES THE MILL PONDS, SLOW AND GRUMPY",
+    "UIT DIE OU SLAWIESE VERHALE: HY HEERS OOR DIE MEULDAMME, STADIG EN BRUMMERIG",
+    "Z DAWNYCH SŁOWIAŃSKICH PODAŃ: RZĄDZI MŁYŃSKIMI STAWAMI, POWOLNY I ZRZĘDLIWY",
+  ],
+  ["OLD TALES", "OU VERHALE", "DAWNE PODANIA"],
+  [
+    "THE LESHY, THE RUSALKA, THE DOMOVOI AND THE VODYANOY NOW ARRIVE WITH A LINE FROM THE OLD SLAVIC TALES - BEFORE, IT JUST SAID UNDEFINED",
+    "DIE LESJI, DIE RUSALKA, DIE DOMOWOI EN DIE WODJANOI KOM NOU MET 'N REËL UIT DIE OU SLAWIESE VERHALE - VROEËR HET DIT NET UNDEFINED GESÊ",
+    "LESZY, RUSAŁKA, DOMOWIK I WODNIK PRZYCHODZĄ TERAZ Z ZDANIEM Z DAWNYCH SŁOWIAŃSKICH PODAŃ - WCZEŚNIEJ BYŁO TAM TYLKO UNDEFINED",
+  ],
+  [
+    "WITH BIG AND HUGE TEXT THE ANNOUNCEMENTS AT THE TOP KEEP CLEAR OF YOUR SCORE",
+    "MET GROOT EN BAIE GROOT TEKS BLY DIE AANKONDIGINGS BO WEG VAN JOU TELLING",
+    "PRZY DUŻYM I OGROMNYM TEKŚCIE OGŁOSZENIA NA GÓRZE NIE NACHODZĄ NA TWOJE PUNKTY",
+  ],
+  [
+    "THE COMBO COUNTER KEEPS CLEAR OF THE CAFE'S NAME TOO",
+    "DIE KOMBINASIE-TELLER BLY OOK WEG VAN DIE KAFEE SE NAAM",
+    "LICZNIK KOMBINACJI NIE NACHODZI TEŻ NA NAZWĘ KAWIARNI",
+  ],
   ["EASY READING", "MAKLIK LEES", "ŁATWE CZYTANIE"],
   [
     "ON PHONES THE STORY'S TAP TO GO ON IS BIGGER, DARKER AND EASY TO READ",
@@ -14147,6 +14183,12 @@ function update(dt) {
             jekyll: "FROM R. L. STEVENSON'S STORY, 1886: SERVE MR HYDE TO TURN HIM BACK",
             babayaga: "SERVE HER AND SHE FLIES AWAY ON HER BROOM",
             jetpack: "SERVE HIM AND HE BLASTS OFF!",
+            // (v1.5.67) THE FOUR FROM THE SLAVIC TALES HAD NO LINE HERE - so the first time one came in, the line under the
+            // sign said "undefined" for three seconds. Now each has its own, from the old stories
+            leshy: "FROM THE OLD SLAVIC TALES: HE GUARDS THE FOREST AND LEADS LOST TRAVELLERS ASTRAY",
+            rusalka: "FROM THE OLD SLAVIC TALES: SHE LIVES IN THE RIVER AND DANCES IN THE MOONLIGHT",
+            domovoi: "FROM THE OLD SLAVIC TALES: HE LOOKS AFTER THE HOUSE - KEEP HIM HAPPY!",
+            vodyanoy: "FROM THE OLD SLAVIC TALES: HE RULES THE MILL PONDS, SLOW AND GRUMPY",
           }[kd],
           c: "#ffe6a0",
           life: 3,
@@ -77764,7 +77806,7 @@ function levelOfTour(of) {
     inTour = ((lv - 1) % LAST_LEVEL) + 1;
   return (tour > 1 ? "TOUR " + tour + "  ·  " : "") + "LEVEL " + inTour + of + LAST_LEVEL;
 }
-const GAME_VERSION = "v1.5.66",
+const GAME_VERSION = "v1.5.67",
   GAME_DATE = "20.11.2026",
   VERSION_TEXT = GAME_VERSION + "  ·  " + GAME_DATE;
 const FB = '"Chakra Petch", "Segoe UI", sans-serif';
@@ -78146,7 +78188,9 @@ function drawHud(fps) {
     const livesTxtW = G.versus ? 0 : g.measureText(T("LIVES") + " 99").width + 20 * s;
     g.font = fD(px);
     HUDB.lives = HUDB.under ? cssW : HUDB.right - (G.versus ? 10 * s : Math.max(120 * s, livesTxtW));
-    const scoreW = (G.versus ? 172 : twoP() ? 104 : 92) * s; // (how much room the score block on the left takes)
+    // (v1.5.67) ...and with BIG or HUGE TEXT the score is that much wider, so the room it takes grows with it - the sign's
+    // announcement was placed as if the score were normal size and ran into a HUGE one
+    const scoreW = (G.versus ? 172 : twoP() ? 104 : 92) * s * TXT(); // (how much room the score block on the left takes)
     // (no room at all between the scores and the buttons - two players' scores on a phone: the sign drops to its own
     //  line just under the buttons)
     // (v1.4.77: the bonus round's long "BONUS · FIND THE ALIEN" too - with Skip showing there is hardly any room up there)
@@ -78194,7 +78238,7 @@ function drawHud(fps) {
   const liveHud =
     inGame && !ATTRACT.on && !G.demo && ["play", "lost", "clear", "bonus", "paused"].includes(G.state);
   const bigNow = liveHud ? G.callouts.find((c) => !c.world && !c.sub && c.life > 0) : null,
-    subNow = liveHud ? G.callouts.filter((c) => c.sub && c.life > 0) : [];
+    subNow = liveHud ? G.callouts.filter((c) => c.sub && c.life > 0 && c.text) : []; // (v1.5.67: and never an empty one - see update.ts)
   const readyNow = liveHud && G.state === "play" && G.readyT > 0;
   const signText = (txt0, colr, a, plate = false) => {
     // (v1.4.78) translated as a WHOLE first, then broken into lines - split first, each half was a piece of English
@@ -78396,6 +78440,13 @@ function drawHud(fps) {
       g.strokeText(nm, signX, signY || sy(10));
       g.restore();
       g.fillText(nm, signX, signY || sy(10));
+      // (v1.5.67: the cafe's own name takes up room too - the COMBO keeps out of it, as it does an announcement)
+      {
+        const hw = g.measureText(T(nm)).width / 2,
+          fy = signY || sy(10),
+          fh = parseFloat(g.font);
+        HUDB.sign = { l: signX - hw - 8 * s, r: signX + hw + 8 * s, t: fy - fh * 0.6, b: fy + fh * 0.6 };
+      }
     }
     g.shadowBlur = 0;
     g.globalAlpha = 1;
@@ -78809,12 +78860,12 @@ function drawHud(fps) {
           hits = (x, y, w) =>
             SB && x < SB.r && x + w > SB.l && y - 8 * s - ch / 2 < SB.b && y - 8 * s + ch / 2 > SB.t;
         if (hits(cxc, cyc, cw * 1.3)) {
-          // (the score's real width - HUDB.scoreW leaves out the TEXT SIZE, and BIG / HUGE numbers are wider)
+          // (the score's real width, measured - and never less than the room the score block is given)
           const fNow = g.font;
           g.font = fD(22);
           const sw = g.measureText("000000").width;
           g.font = fNow;
-          const gl = pad + Math.max((HUDB.scoreW || 0) * TXT(), sw) + 10 * s,
+          const gl = pad + Math.max(HUDB.scoreW || 0, sw) + 10 * s,
             gap = SB.l - 8 * s - gl;
           if (cssW >= 700 && gap >= cw * 0.75) {
             cxc = gl;
@@ -78857,7 +78908,7 @@ function drawHud(fps) {
   const headBig = G.callouts.find((c) => !c.world && !c.sub);
   // (v1.2.0: fewer words at once - only the three newest floating words over the bars, the two newest lines of a message)
   const liveW = new Set(G.callouts.filter((c) => c.world && c.life > 0).slice(-3)),
-    liveS = new Set(G.callouts.filter((c) => c.sub && c.life > 0).slice(0, 1)); // (v1.4.83: one at a time, in turn)
+    liveS = new Set(G.callouts.filter((c) => c.sub && c.life > 0 && c.text).slice(0, 1)); // (v1.4.83: one at a time, in turn)
   drawDanger(g, s, t, sx, sy);
   for (const c of G.callouts) {
     if (!c.world && !c.sub && c !== headBig) continue; // (only one big announcement at a time)
@@ -85235,6 +85286,15 @@ profWire();
 //  the game, and where the motion capture, the folk songs and the fonts come from. Both from the menu at any time.
 // =====================================================================================
 const NEWS = [
+  {
+    ver: "v1.5.67",
+    title: "OLD TALES",
+    items: [
+      "THE LESHY, THE RUSALKA, THE DOMOVOI AND THE VODYANOY NOW ARRIVE WITH A LINE FROM THE OLD SLAVIC TALES - BEFORE, IT JUST SAID UNDEFINED",
+      "WITH BIG AND HUGE TEXT THE ANNOUNCEMENTS AT THE TOP KEEP CLEAR OF YOUR SCORE",
+      "THE COMBO COUNTER KEEPS CLEAR OF THE CAFE'S NAME TOO",
+    ],
+  },
   {
     ver: "v1.5.66",
     title: "EASY READING",

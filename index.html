@@ -7525,6 +7525,12 @@ const DICT_ROWS                             = [
     "ONTHOU JY MY? EK WAS DIE DUIWEL - NOU IS EK TERUG AS 'N VRIEND!",
     "PAMIĘTASZ MNIE? BYŁEM DIABŁEM - TERAZ WRACAM JAKO PRZYJACIEL!",
   ],
+  // (v1.5.74) the cured werewolf, back to say thank you - the only one of the four whose line had no row
+  [
+    "IT'S ME - THE WEREWOLF YOU CURED! NO HOWLING, I PROMISE",
+    "DIS EK - DIE WEERWOLF WAT JY GENEES HET! GEEN GEHUIL NIE, EK BELOWE",
+    "TO JA - WILKOŁAK, KTÓREGO WYLECZYŁEŚ! ŻADNEGO WYCIA, OBIECUJĘ",
+  ],
   [
     "IT'S ME - THE VAMPIRE YOU SAVED! JUST A MILKSHAKE, PLEASE",
     "DIS EK - DIE VAMPIER WAT JY GERED HET! NET 'N MELKSKOMMEL, ASSEBLIEF",
@@ -7633,6 +7639,22 @@ const DICT_ROWS                             = [
   ["where's my milkshake?", "WAAR'S MY MILKSHAKE?", "gdzie mój koktajl?"],
   ["we're still waiting!", "ONS WAG NOG!", "wciąż czekamy!"],
   ["oh my goodness!", "HAAI, JIRRE!", "o rany!"],
+  ["PLAYER NAMES", "SPELERNAME", "IMIONA GRACZY"],
+  [
+    "IN AFRIKAANS AND POLISH EVERY PLAYER NUMBER IS TRANSLATED: PLAYER 3 TO 8 IN WHO'S PLAYING? AND IN THE CUP",
+    "IN AFRIKAANS EN POOLS IS ELKE SPELERNOMMER VERTAAL: SPELER 3 TOT 8 IN WIE SPEEL? EN IN DIE BEKER",
+    "PO AFRIKAANS I PO POLSKU KAŻDY NUMER GRACZA JEST PRZETŁUMACZONY: GRACZ 3 DO 8 W KTO GRA? I W TURNIEJU",
+  ],
+  [
+    "THE NAME BOX SHOWS THE DEFAULT NAME IN YOUR LANGUAGE - A NAME YOU TYPED STAYS JUST AS IT IS",
+    "DIE NAAMBLOKKIE WYS DIE VERSTEKNAAM IN JOU TAAL - 'N NAAM WAT JY GETIK HET, BLY NET SOOS DIT IS",
+    "POLE IMIENIA POKAZUJE DOMYŚLNE IMIĘ W TWOIM JĘZYKU - IMIĘ, KTÓRE WPISAŁEŚ, ZOSTAJE BEZ ZMIAN",
+  ],
+  [
+    "SO ARE THE TWO-PLAYER MESSAGES: PLAYER 2 IS OUT, PLAYER 1 IS BACK, AND CHOOSING A BARTENDER",
+    "NET SOOS DIE TWEESPELER-BOODSKAPPE: SPELER 2 IS UIT, SPELER 1 IS TERUG, EN DIE KIES VAN 'N KROEGMAN",
+    "TAK SAMO KOMUNIKATY DLA DWÓCH GRACZY: GRACZ 2 ODPADA, GRACZ 1 WRACA I WYBÓR BARMANA",
+  ],
   ["ISLAND LIFE", "EILANDLEWE", "ŻYCIE NA WYSPIE"],
   [
     "ON A PHONE HELD UPRIGHT, KOOS'S PORTRAIT ON CASTAWAY ISLAND NO LONGER COVERS THE WORDS AT THE BOTTOM",
@@ -9446,6 +9468,16 @@ const DICT_PAT                             = [
   [/^LEVEL (\d+) \/ (\d+)$/, "VLAK $1 / $2", "POZIOM $1 / $2"],
   [/^SERVED (\d+) \/ (\d+)$/, "BEDIEN $1 / $2", "OBSŁUŻONO $1 / $2"],
   [/^SERVED (\d+)$/, "BEDIEN $1", "OBSŁUŻONO $1"],
+  // (v1.5.74) any player's number - PLAYER 3 to PLAYER 8 in WHO'S PLAYING? and the CUP (only 1 and 2 had rows)
+  [/^PLAYER (\d+)$/, "SPELER $1", "GRACZ $1"],
+  // (...and the two-player messages that carry a number: out in VERSUS, back again, choosing a bartender)
+  [
+    /^PLAYER (\d+) IS OUT!  BACK AFTER (\d+) SERVES$/,
+    "SPELER $1 IS UIT!  TERUG NA $2 BEDIENINGS",
+    "GRACZ $1 ODPADA!  WRACA PO $2 OBSŁUŻONYCH",
+  ],
+  [/^PLAYER (\d+) IS BACK!$/, "SPELER $1 IS TERUG!", "GRACZ $1 WRACA!"],
+  [/^PLAYER (\d+): CHOOSE YOUR BARTENDER$/, "SPELER $1: KIES JOU KROEGMAN", "GRACZ $1: WYBIERZ BARMANA"],
   // (v1.5.72) THE BOSSES' WORDS: the label over a boss ("BOSS  ·  3 / 7 SHAKES") and a big eater's count, and the
   // boss's arrival ("BOSS!  THE JELLY QUEEN WANTS 7 SHAKES!") - found by playing BOSS RUSH in Afrikaans
   [/^BOSS  ·  (\d+) \/ (\d+) SHAKES$/, "BAAS  ·  $1 / $2 SKOMMELS", "BOSS  ·  $1 / $2 KOKTAJLI"],
@@ -75196,7 +75228,7 @@ function buildCup() {
     for (let i = 0; i < 8; i++) {
       const inp = document.createElement("input");
       inp.maxLength = 10;
-      inp.placeholder = "PLAYER " + (i + 1);
+      inp.placeholder = T("PLAYER " + (i + 1)); // (v1.5.74: in your language - "GRACZ 3" - an empty box's hint isn't translated with the page)
       inp.value = old[i] || "";
       inp.id = "cupN" + i;
       inp.autocomplete = "off";
@@ -78025,7 +78057,7 @@ function levelOfTour(of) {
     inTour = ((lv - 1) % LAST_LEVEL) + 1;
   return (tour > 1 ? "TOUR " + tour + "  ·  " : "") + "LEVEL " + inTour + of + LAST_LEVEL;
 }
-const GAME_VERSION = "v1.5.73",
+const GAME_VERSION = "v1.5.74",
   GAME_DATE = "20.11.2026",
   VERSION_TEXT = GAME_VERSION + "  ·  " + GAME_DATE;
 const FB = '"Chakra Petch", "Segoe UI", sans-serif';
@@ -85379,7 +85411,9 @@ function buildProf() {
     list.appendChild(b);
   }
   $k("profNew").hidden = L.length >= 8;
-  ($k("profName")                               ).value = me.name;
+  // (v1.5.74) the name box shows a default name ("PLAYER 2") in your language - a box's text isn't translated with the
+  // page, so in Polish it said "PLAYER 1" beside "GRACZ 1". A name someone typed is left just as it is
+  ($k("profName")                               ).value = /^PLAYER \d+$/.test(me.name) ? T(me.name) : me.name;
   $k("profDel").hidden = me.id === "main"; // (the first profile stays - it holds the save from before profiles)
   ($k("profCode")                                  ).value = "";
   $k("profMsg").textContent = "";
@@ -85409,6 +85443,7 @@ function profAdd() {
 function profRename() {
   const nm = profClean(($k("profName")                               ).value);
   if (!nm) return;
+  if (nm === T(profNow().name)) return; // (v1.5.74: the shown default, unchanged - nothing to rename)
   const L = profList();
   for (const p of L) if (p.id === profNow().id) p.name = nm;
   store.set("profiles", L);
@@ -85524,6 +85559,15 @@ profWire();
 //  the game, and where the motion capture, the folk songs and the fonts come from. Both from the menu at any time.
 // =====================================================================================
 const NEWS = [
+  {
+    ver: "v1.5.74",
+    title: "PLAYER NAMES",
+    items: [
+      "IN AFRIKAANS AND POLISH EVERY PLAYER NUMBER IS TRANSLATED: PLAYER 3 TO 8 IN WHO'S PLAYING? AND IN THE CUP",
+      "THE NAME BOX SHOWS THE DEFAULT NAME IN YOUR LANGUAGE - A NAME YOU TYPED STAYS JUST AS IT IS",
+      "SO ARE THE TWO-PLAYER MESSAGES: PLAYER 2 IS OUT, PLAYER 1 IS BACK, AND CHOOSING A BARTENDER",
+    ],
+  },
   {
     ver: "v1.5.73",
     title: "ISLAND LIFE",

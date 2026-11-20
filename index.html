@@ -82,6 +82,13 @@ button.primary:hover, button.primary:focus-visible { background: #a6ffe4; }
 button.wide { grid-column: 1 / -1; }
 button.na:not(.navsel) { opacity: .45; border-style: dashed; filter: grayscale(.8); }   /* (v1.4.47) a setting that does nothing in the current look */
 #jbList { grid-template-columns: repeat(2, minmax(0, 1fr)); max-height: 52vh; overflow-y: auto; }
+/* (v1.5.63) PANELS EASE IN: a menu panel used to snap onto the screen; now it fades in and rises a few pixels (a sixth of
+   a second). It moves the separate "translate" property, so each panel's own centring transform is never touched - and
+   with calm mode on (or the device asking for less motion) it simply appears, as before */
+.panel:not([hidden]) { animation: panelIn .17s ease-out; }
+@keyframes panelIn { from { opacity: 0; translate: 0 10px; } to { opacity: 1; translate: 0 0; } }
+body.calm .panel { animation: none; }
+@media (prefers-reduced-motion: reduce) { .panel { animation: none !important; } }
 .panel.side { left: 16px; transform: translateY(-50%); width: min(420px, 46vw); }
 .panel.side h2 { font-size: 34px; } /* (v1.4.77: the narrow side panels - so a title and its count fit on one line) */
 #sbList, #wdHats, #wdPets, #shItems, #shDecor, #trList { grid-template-columns: repeat(2, minmax(0, 1fr)); }
@@ -2511,6 +2518,7 @@ function comfortBody() {
   document.body.classList.toggle("txt1", COMFORT.txt === 1);
   document.body.classList.toggle("txt2", COMFORT.txt === 2);
   document.body.classList.toggle("lefty", COMFORT.lefty);
+  document.body.classList.toggle("calm", COMFORT.calm); // (v1.5.63) CALM MODE KEEPS THE MENUS STILL: no panel fade-in (head.html)
 }
 // the comfort settings, read once (they're switched in the menu)
 const COMFORT = {
@@ -7569,6 +7577,22 @@ const DICT_ROWS                             = [
   ],
   ["STOMP!", "STAMP!", "TUP!"],
   ["JUMP!", "SPRING!", "SKOK!"],
+  ["BALANCE", "BALANS", "RÓWNOWAGA"],
+  [
+    "ON HARD, FIVE STOPS THAT WERE MUCH HARDER THAN THE STOPS AROUND THEM ARE GENTLER NOW: THE COMET, JANUS, HALO RING, THE WANDERER AND NGC 206",
+    "OP MOEILIK IS VYF STOPS WAT BAIE MOEILIKER AS DIE STOPS RONDOM HULLE WAS NOU SAGTER: DIE KOMEET, JANUS, HALO RING, THE WANDERER EN NGC 206",
+    "NA POZIOMIE TRUDNYM PIĘĆ PRZYSTANKÓW, KTÓRE BYŁY DUŻO TRUDNIEJSZE OD SĄSIEDNICH, JEST TERAZ ŁAGODNIEJSZYCH: KOMETA, JANUS, HALO RING, THE WANDERER I NGC 206",
+  ],
+  [
+    "THE MENUS NOW FADE IN GENTLY INSTEAD OF SNAPPING ONTO THE SCREEN - IN CALM MODE THEY STAY STILL",
+    "DIE KIESLYSTE VERSKYN NOU SAGGIES IN PLAAS VAN OM SKIELIK OP DIE SKERM TE SPRING - IN RUSTIGE MODUS BLY HULLE STIL",
+    "MENU POJAWIA SIĘ TERAZ ŁAGODNIE, ZAMIAST WSKAKIWAĆ NA EKRAN - W TRYBIE SPOKOJNYM POZOSTAJE NIERUCHOME",
+  ],
+  [
+    "EASY, NORMAL AND KID MODE ARE UNCHANGED",
+    "MAKLIK, NORMAAL EN KINDERMODUS BLY DIESELFDE",
+    "POZIOM ŁATWY, NORMALNY I TRYB DLA DZIECI SIĘ NIE ZMIENIAJĄ",
+  ],
   ["SMOOTH RIDE", "GLADDE RIT", "GŁADKA JAZDA"],
   [
     "ON NORMAL AND HARD, THREE STOPS THAT WERE MUCH HARDER THAN THE STOPS AROUND THEM ARE GENTLER NOW: JANUS, HALO RING RACEWAY AND THE S ANDROMEDAE SHACK",
@@ -11866,8 +11890,23 @@ const params = () => {
 // and fewer at a time, so they sit in line with their neighbours again (NORMAL and HARD only - EASY and KID MODE had
 // no spikes). The number is how much gentler (0.2 = about a fifth)
 const STOP_EVEN = { JANUS: 0.2, HALO: 0.14, "S ANDROMEDAE": 0.45 };
+// (v1.5.63) HARD HAS ITS OWN SPIKES: the same measuring on HARD (customers 22% quicker there) found five stops far above
+// their neighbours - the Comet's tail wind (about 7 lives against 2 either side), Janus and Halo again (still 13 and 16
+// against 8-9, even with the easing above), the Wanderer (17 against 8-13) and the NGC 206 star nursery (21 against
+// 12-15). On HARD these numbers are used instead of the ones above
+const STOP_EVEN_HARD = {
+  "THE COMET": 0.3,
+  JANUS: 0.6,
+  HALO: 0.4,
+  "THE WANDERER": 0.3,
+  "NGC 206": 0.3,
+  "S ANDROMEDAE": 0.45,
+};
 const evened = (p) => {
-  const a = G.demo || DF().easy || DF().kid ? 0 : STOP_EVEN[here().place] || 0;
+  const a =
+    G.demo || DF().easy || DF().kid
+      ? 0
+      : (difficulty === "hard" ? STOP_EVEN_HARD : STOP_EVEN)[here().place] || 0;
   return a
     ? {
         ...p,
@@ -64487,6 +64526,7 @@ function funPanelsInit() {
   $k("bCalm").onclick = () => {
     COMFORT.calm = !COMFORT.calm;
     store.set("calm", COMFORT.calm);
+    comfortBody(); // (v1.5.63: so the menu panels stop - or start - easing in straight away)
     funMenuText();
     sfx("click");
   };
@@ -77660,8 +77700,8 @@ function levelOfTour(of) {
     inTour = ((lv - 1) % LAST_LEVEL) + 1;
   return (tour > 1 ? "TOUR " + tour + "  ·  " : "") + "LEVEL " + inTour + of + LAST_LEVEL;
 }
-const GAME_VERSION = "v1.5.62",
-  GAME_DATE = "19.11.2026",
+const GAME_VERSION = "v1.5.63",
+  GAME_DATE = "20.11.2026",
   VERSION_TEXT = GAME_VERSION + "  ·  " + GAME_DATE;
 const FB = '"Chakra Petch", "Segoe UI", sans-serif';
 let FD = '"Bungee", "Impact", sans-serif';
@@ -85058,6 +85098,15 @@ profWire();
 //  the game, and where the motion capture, the folk songs and the fonts come from. Both from the menu at any time.
 // =====================================================================================
 const NEWS = [
+  {
+    ver: "v1.5.63",
+    title: "BALANCE",
+    items: [
+      "ON HARD, FIVE STOPS THAT WERE MUCH HARDER THAN THE STOPS AROUND THEM ARE GENTLER NOW: THE COMET, JANUS, HALO RING, THE WANDERER AND NGC 206",
+      "THE MENUS NOW FADE IN GENTLY INSTEAD OF SNAPPING ONTO THE SCREEN - IN CALM MODE THEY STAY STILL",
+      "EASY, NORMAL AND KID MODE ARE UNCHANGED",
+    ],
+  },
   {
     ver: "v1.5.62",
     title: "SMOOTH RIDE",

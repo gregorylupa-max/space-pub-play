@@ -7525,6 +7525,17 @@ const DICT_ROWS                             = [
     "ONTHOU JY MY? EK WAS DIE DUIWEL - NOU IS EK TERUG AS 'N VRIEND!",
     "PAMIĘTASZ MNIE? BYŁEM DIABŁEM - TERAZ WRACAM JAKO PRZYJACIEL!",
   ],
+  // (v1.5.76) the sticker book's line under a sticker you haven't found yet
+  [
+    "Keep playing and watching to find it!",
+    "Hou aan speel en kyk mooi, dan vind jy dit!",
+    "Graj dalej i patrz uważnie, a znajdziesz ją!",
+  ],
+  [
+    "It hides somewhere on every level...",
+    "Dit kruip êrens op elke vlak weg...",
+    "Chowa się gdzieś na każdym poziomie...",
+  ],
   // (v1.5.74) the cured werewolf, back to say thank you - the only one of the four whose line had no row
   [
     "IT'S ME - THE WEREWOLF YOU CURED! NO HOWLING, I PROMISE",
@@ -7639,6 +7650,17 @@ const DICT_ROWS                             = [
   ["where's my milkshake?", "WAAR'S MY MILKSHAKE?", "gdzie mój koktajl?"],
   ["we're still waiting!", "ONS WAG NOG!", "wciąż czekamy!"],
   ["oh my goodness!", "HAAI, JIRRE!", "o rany!"],
+  ["SIDE BY SIDE", "LANGS MEKAAR", "RAMIĘ W RAMIĘ"],
+  [
+    "ON A PHONE HELD SIDEWAYS THE BARTENDER'S MOTTO AND THE STICKER HINT NO LONGER RUN UNDER THE PANEL BESIDE THEM",
+    "OP 'N FOON WAT DWARS GEHOU WORD, LOOP DIE KROEGMAN SE LEUSE EN DIE PLAKKERWENK NIE MEER ONDER DIE PANEEL LANGS HULLE IN NIE",
+    "NA TELEFONIE TRZYMANYM POZIOMO MOTTO BARMANA I PODPOWIEDŹ NAKLEJKI NIE WCHODZĄ JUŻ POD PANEL OBOK NICH",
+  ],
+  [
+    "THE STICKER BOOK'S HINTS FOR STICKERS YOU HAVEN'T FOUND ARE TRANSLATED",
+    "DIE PLAKBOEK SE WENKE VIR PLAKKERS WAT JY NOG NIE GEVIND HET NIE, IS VERTAAL",
+    "PODPOWIEDZI W ALBUMIE DLA NAKLEJEK, KTÓRYCH JESZCZE NIE ZNALAZŁEŚ, SĄ PRZETŁUMACZONE",
+  ],
   ["THE END", "DIE EINDE", "KONIEC"],
   [
     "AT THE VERY END THE CREDITS COME TO REST WITH THANK YOU FOR PLAYING IN THE MIDDLE - THEIR PANEL NO LONGER STANDS EMPTY",
@@ -49837,26 +49859,31 @@ function kidHud(g, s, t, fD, sx, sy) {
         g.fillStyle = "#ffd24d";
         g.fillText("STOP " + (it.idx + 1), x, y - 120 * u);
       }
-      const ty = it.kind === "space" && got ? cssH - 70 * s : y + 40 * s,
-        tx = it.kind === "space" && got ? cssW * 0.68 : x;
+      const ty = it.kind === "space" && got ? cssH - 70 * s : y + 40 * s;
+      let tx = it.kind === "space" && got ? cssW * 0.68 : x;
       g.font = Math.round(18 * s) + "px " + FD;
       g.fillStyle = got ? "#ffc34d" : "#9a8aa8";
       g.shadowColor = "#ffc34d";
       g.shadowBlur = got ? 10 * s : 0;
-      const nm = got ? it.name : "NOT FOUND YET";
+      const nm = got ? it.name : "NOT FOUND YET",
+        hint = got
+          ? it.sub || cat.name
+          : it.kind === "mouse"
+            ? "It hides somewhere on every level..."
+            : "Keep playing and watching to find it!";
+      {
+        // (v1.5.76: the name and the line under it, clear of the sticker book's panel - see clearOfSide)
+        const f0 = g.font;
+        g.font = "600 " + Math.round(13 * s) + "px " + FB;
+        const hx = clearOfSide(g, tx, ty + 26 * s, [hint]);
+        g.font = f0;
+        tx = Math.max(hx, clearOfSide(g, tx, ty, [nm.length > 40 ? nm.slice(0, 38) + "…" : nm]));
+      }
       g.fillText(nm.length > 40 ? nm.slice(0, 38) + "…" : nm, tx, ty);
       g.shadowBlur = 0;
       g.font = "600 " + Math.round(13 * s) + "px " + FB;
       g.fillStyle = "rgba(255,243,226,.8)";
-      g.fillText(
-        got
-          ? it.sub || cat.name
-          : it.kind === "mouse"
-            ? "It hides somewhere on every level..."
-            : "Keep playing and watching to find it!",
-        tx,
-        ty + 26 * s
-      );
+      g.fillText(hint, tx, ty + 26 * s);
       if (got) drawStickerFact(g, s, it, tx, (VERT ? 58 : 46) * s); // (at the top, above the spotlight)
     }
   }
@@ -77294,6 +77321,19 @@ function drawAttract(g, s, t) {
     g.restore();
   }
 }
+// (v1.5.76) PREVIEW WORDS BESIDE A SIDE PANEL, NOT UNDER IT: with the bartender choice, the wardrobe or the sticker
+// book open on a phone held sideways, the panel covers the left half of the screen - and the words under the preview
+// on the stage (the bartender's motto, "NOT FOUND YET...") were centred on it and ran in under the panel's edge
+// ("...kawicznie szybka"). This moves a line's middle right just far enough to clear the panel (and keeps it on the
+// screen); where the panel doesn't reach that line - a phone held upright, the panel at the bottom - nothing changes
+function clearOfSide(g, x, y, lines) {
+  const el = document.querySelector(".panel.side:not([hidden])");
+  if (!el) return x;
+  const r = el.getBoundingClientRect(),
+    hw = Math.max(...lines.map((l) => g.measureText(T(l)).width)) / 2 + 8;
+  if (y < r.top || y > r.bottom || x - hw >= r.right) return x;
+  return Math.min(Math.max(x, r.right + hw), cssW - hw);
+}
 function drawAttract0(g, s, t) {
   if (CS.open || WD.open) {
     // the bartender on stage: name and motto
@@ -77311,12 +77351,17 @@ function drawAttract0(g, s, t) {
     g.shadowBlur = 0;
     g.font = "600 " + Math.round(14 * s) + "px " + FB;
     g.fillStyle = "rgba(255,243,226,.85)";
-    g.fillText(b.line, x, y + 72 * s);
+    const xl = clearOfSide(g, x, y + 72 * s, [b.line]); // (v1.5.76: the motto, clear of a side panel)
+    g.fillText(b.line, xl, y + 72 * s);
     const ni = NATION_INFO[b.nation];
     if (ni) {
       g.font = Math.round(12 * s) + "px " + FD;
       g.fillStyle = "#5ff5c8";
-      g.fillText(ni.label + "  ·  " + ni.hi, x, y + 98 * s);
+      g.fillText(
+        ni.label + "  ·  " + ni.hi,
+        clearOfSide(g, x, y + 98 * s, [ni.label + "  ·  " + ni.hi]),
+        y + 98 * s
+      );
     }
     if (playMode) {
       g.font = Math.round(12 * s) + "px " + FD;
@@ -78081,7 +78126,7 @@ function levelOfTour(of) {
     inTour = ((lv - 1) % LAST_LEVEL) + 1;
   return (tour > 1 ? "TOUR " + tour + "  ·  " : "") + "LEVEL " + inTour + of + LAST_LEVEL;
 }
-const GAME_VERSION = "v1.5.75",
+const GAME_VERSION = "v1.5.76",
   GAME_DATE = "20.11.2026",
   VERSION_TEXT = GAME_VERSION + "  ·  " + GAME_DATE;
 const FB = '"Chakra Petch", "Segoe UI", sans-serif';
@@ -85588,6 +85633,14 @@ profWire();
 //  the game, and where the motion capture, the folk songs and the fonts come from. Both from the menu at any time.
 // =====================================================================================
 const NEWS = [
+  {
+    ver: "v1.5.76",
+    title: "SIDE BY SIDE",
+    items: [
+      "ON A PHONE HELD SIDEWAYS THE BARTENDER'S MOTTO AND THE STICKER HINT NO LONGER RUN UNDER THE PANEL BESIDE THEM",
+      "THE STICKER BOOK'S HINTS FOR STICKERS YOU HAVEN'T FOUND ARE TRANSLATED",
+    ],
+  },
   {
     ver: "v1.5.75",
     title: "THE END",

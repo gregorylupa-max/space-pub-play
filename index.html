@@ -239,6 +239,7 @@ body.lefty #touch #tFlav { order: -1; }
 #news { max-height: 92vh; overflow-y: auto; }
 #newsBody h3 { font: 700 13px var(--body); letter-spacing: .08em; color: var(--amber); margin: 14px 0 4px; }
 #newsBody h3.cred { color: var(--cyan); margin-top: 20px; }
+#newsBody h3 .fresh { margin-left: .6em; padding: .05em .5em; border: 1px solid rgba(95, 245, 200, .5); border-radius: 999px; color: var(--cyan); font-size: .85em; white-space: nowrap; } /* (v1.5.65: a version you haven't seen yet) */
 #newsBody ul { margin: 0; padding-left: 18px; font-size: 14px; line-height: 1.45; }
 #newsBody .credit { margin: 6px 0; font-size: 13px; line-height: 1.4; color: var(--ink); }
 #newsBody .credit b { display: block; font-size: 11px; letter-spacing: .1em; color: var(--magenta); }
@@ -3059,6 +3060,7 @@ const DICT_ROWS                             = [
   ],
   ["LOADING…", "LAAI…", "WCZYTYWANIE…"],
   ["★ NEW", "★ NUUT", "★ NOWOŚĆ"],
+  ["NEW IN", "NUUT IN", "NOWOŚCI W"], // (v1.5.65: the start of each heading in WHAT'S NEW - "NEW IN v1.5.65 - ...")
   [
     "A CUSTOMER IN A HURRY!  SERVE THEM QUICK FOR A BONUS",
     "'N KLANT WAT HAASTIG IS!  BEDIEN HULLE GOU VIR 'N BONUS",
@@ -7577,6 +7579,17 @@ const DICT_ROWS                             = [
   ],
   ["STOMP!", "STAMP!", "TUP!"],
   ["JUMP!", "SPRING!", "SKOK!"],
+  ["WELCOME BACK", "WELKOM TERUG", "WITAJ Z POWROTEM"],
+  [
+    "WHAT'S NEW NOW MARKS EVERY VERSION THAT CAME OUT SINCE YOU LAST LOOKED WITH ★ NEW",
+    "WAT IS NUUT MERK NOU ELKE WEERGAWE WAT UITGEKOM HET SEDERT JY LAAS GEKYK HET MET ★ NUUT",
+    "NOWOŚCI OZNACZAJĄ TERAZ ★ NOWOŚĆ KAŻDĄ WERSJĘ, KTÓRA WYSZŁA OD TWOJEJ OSTATNIEJ WIZYTY",
+  ],
+  [
+    "IN AFRIKAANS AND POLISH THE HEADINGS IN WHAT'S NEW ARE TRANSLATED TOO",
+    "IN AFRIKAANS EN POOLS WORD DIE OPSKRIFTE IN WAT IS NUUT OOK VERTAAL",
+    "PO AFRIKAANS I PO POLSKU NAGŁÓWKI W NOWOŚCIACH SĄ TEŻ PRZETŁUMACZONE",
+  ],
   ["CLEAR VIEW", "HELDER UITSIG", "CZYSTY WIDOK"],
   [
     "ON PHONES THE LIVE SIGN UNDER THE STAGE NO LONGER COVERS THE SHAKE FEVER METER",
@@ -77732,7 +77745,7 @@ function levelOfTour(of) {
     inTour = ((lv - 1) % LAST_LEVEL) + 1;
   return (tour > 1 ? "TOUR " + tour + "  ·  " : "") + "LEVEL " + inTour + of + LAST_LEVEL;
 }
-const GAME_VERSION = "v1.5.64",
+const GAME_VERSION = "v1.5.65",
   GAME_DATE = "20.11.2026",
   VERSION_TEXT = GAME_VERSION + "  ·  " + GAME_DATE;
 const FB = '"Chakra Petch", "Segoe UI", sans-serif';
@@ -85153,6 +85166,14 @@ profWire();
 // =====================================================================================
 const NEWS = [
   {
+    ver: "v1.5.65",
+    title: "WELCOME BACK",
+    items: [
+      "WHAT'S NEW NOW MARKS EVERY VERSION THAT CAME OUT SINCE YOU LAST LOOKED WITH ★ NEW",
+      "IN AFRIKAANS AND POLISH THE HEADINGS IN WHAT'S NEW ARE TRANSLATED TOO",
+    ],
+  },
+  {
     ver: "v1.5.64",
     title: "CLEAR VIEW",
     items: [
@@ -86797,8 +86818,24 @@ function buildNews() {
     box.appendChild(el);
     return el;
   };
-  for (const n of NEWS) {
-    h("h3", "NEW IN " + n.ver + " - " + n.title);
+  // (v1.5.65) WHAT'S NEW SINCE YOU LAST LOOKED: the list holds every version ever, and nothing showed where the new
+  // part ended - the versions that came out since the player last opened it now wear "★ NEW". And the headings are
+  // built from separate pieces ("NEW IN", the version, the title), so each piece is translated - "NEW IN v1.5.62 -
+  // SMOOTH RIDE" stayed in English in Afrikaans and Polish, because the page's translator saw it as one unknown line
+  const seen0 = store.get("seenVer", ""),
+    seenAt = NEWS.findIndex((n) => n.ver === seen0);
+  NEWS.forEach((n, i) => {
+    const hd = h("h3", "");
+    const part = (tag, txt, cls ) => {
+      const el = document.createElement(tag);
+      el.textContent = txt;
+      if (cls) el.className = cls;
+      hd.appendChild(el);
+    };
+    part("span", "NEW IN");
+    part("span", " " + n.ver + " - ");
+    part("span", n.title);
+    if (i < seenAt) part("span", "★ NEW", "fresh");
     const ul = document.createElement("ul");
     for (const it of n.items) {
       const li = document.createElement("li");
@@ -86806,7 +86843,7 @@ function buildNews() {
       ul.appendChild(li);
     }
     box.appendChild(ul);
-  }
+  });
   h("h3", "CREDITS", "cred");
   for (const [k, v] of CREDITS) {
     const p = document.createElement("p");

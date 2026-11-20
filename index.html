@@ -7616,6 +7616,22 @@ const DICT_ROWS                             = [
   ["where's my milkshake?", "WAAR'S MY MILKSHAKE?", "gdzie mój koktajl?"],
   ["we're still waiting!", "ONS WAG NOG!", "wciąż czekamy!"],
   ["oh my goodness!", "HAAI, JIRRE!", "o rany!"],
+  ["TWO OF US", "ONS TWEE", "WE DWOJE"],
+  [
+    "IN VERSUS THE ANNOUNCEMENTS AND THE COMBO NO LONGER COVER PLAYER 1'S LIVES",
+    "IN TEENSTRYD BEDEK DIE AANKONDIGINGS EN DIE KOMBINASIE NIE MEER SPELER 1 SE LEWES NIE",
+    "W POJEDYNKU OGŁOSZENIA I KOMBINACJA NIE ZASŁANIAJĄ JUŻ ŻYĆ GRACZA 1",
+  ],
+  [
+    "IN CO-OP THE COMBO NO LONGER COVERS PLAYER 1'S SCORE",
+    "IN SAAMSPEEL BEDEK DIE KOMBINASIE NIE MEER SPELER 1 SE TELLING NIE",
+    "W TRYBIE WSPÓŁPRACY KOMBINACJA NIE ZASŁANIA JUŻ PUNKTÓW GRACZA 1",
+  ],
+  [
+    "ON A PHONE HELD UPRIGHT WITH TWO PLAYERS, THE LIVE SIGN NO LONGER COVERS SHAKE FEVER",
+    "OP 'N FOON WAT REGOP GEHOU WORD MET TWEE SPELERS, BEDEK DIE LIVE-BORD NIE MEER SKOMMELKOORS NIE",
+    "NA TELEFONIE TRZYMANYM PIONOWO, PRZY DWÓCH GRACZACH, NAPIS LIVE NIE ZASŁANIA JUŻ GORĄCZKI KOKTAJLI",
+  ],
   ["DOORSTEP", "DRUMPEL", "PRÓG"],
   [
     "A SHAKE SENT DOWN A BAR WHERE CUSTOMERS ARE QUEUEING AT THE DOOR NOW WAITS ON THE DOORSTEP - AND THE NEXT IN LINE HURRIES IN TO TAKE IT",
@@ -69593,7 +69609,8 @@ function stageHud(g, s, t, fD, sx, sy) {
     // right on top of "SHAKE FEVER x2". Now the caption steps down just below the HUD when they would meet (by no more
     // than a caption's height and a half, so it never wanders far from the stage)
     ny0 = sy(STAGE.y + 15),
-    ny = HUD_TOP.low > ny0 - 9 * s ? Math.min(HUD_TOP.low + 9 * s, ny0 + 21 * s) : ny0;
+    // (v1.5.70: on a phone held upright, with two players, the HUD above is taller - there it may step down further)
+    ny = HUD_TOP.low > ny0 - 9 * s ? Math.min(HUD_TOP.low + 9 * s, ny0 + (VERT ? 40 : 21) * s) : ny0;
   g.fillStyle = "rgba(20,8,24,.85)";
   g.fillRect(cx - nw / 2, ny - 7 * s, nw, 14 * s);
   g.fillStyle = "#ffe8a0";
@@ -77892,7 +77909,7 @@ function levelOfTour(of) {
     inTour = ((lv - 1) % LAST_LEVEL) + 1;
   return (tour > 1 ? "TOUR " + tour + "  ·  " : "") + "LEVEL " + inTour + of + LAST_LEVEL;
 }
-const GAME_VERSION = "v1.5.69",
+const GAME_VERSION = "v1.5.70",
   GAME_DATE = "20.11.2026",
   VERSION_TEXT = GAME_VERSION + "  ·  " + GAME_DATE;
 const FB = '"Chakra Petch", "Segoe UI", sans-serif';
@@ -78276,7 +78293,10 @@ function drawHud(fps) {
     HUDB.lives = HUDB.under ? cssW : HUDB.right - (G.versus ? 10 * s : Math.max(120 * s, livesTxtW));
     // (v1.5.67) ...and with BIG or HUGE TEXT the score is that much wider, so the room it takes grows with it - the sign's
     // announcement was placed as if the score were normal size and ran into a HUGE one
-    const scoreW = (G.versus ? 172 : twoP() ? 104 : 92) * s * TXT(); // (how much room the score block on the left takes)
+    // (v1.5.70) in VERSUS the room includes each player's lives - the little bars after the score reach out to about 230
+    // units, and an announcement on the sign used to cover player 1's
+    // (and in CO-OP the two scores start further in, after "1UP" / "2UP" - about 116 units to the end of the digits)
+    const scoreW = (G.versus ? 230 : twoP() ? 116 : 92) * s * TXT(); // (how much room the score block on the left takes)
     // (no room at all between the scores and the buttons - two players' scores on a phone: the sign drops to its own
     //  line just under the buttons)
     // (v1.4.77: the bonus round's long "BONUS · FIND THE ALIEN" too - with Skip showing there is hardly any room up there)
@@ -78936,7 +78956,9 @@ function drawHud(fps) {
       // two would meet, the combo fits itself into the gap between the score and the sign if there's room enough (a
       // little smaller if need be), or else drops to just below the meters at the left - stepping past anything already
       // there (the power-up timers, the LIVE caption) - and the floating words keep clear of it too
-      let cxc = cssW < 700 ? pad : pad + 150 * s,
+      // (v1.5.70: and in the wide view it starts after the whole score block - in VERSUS that reaches past the lives
+      //  bars, which it used to sit right on top of)
+      let cxc = cssW < 700 ? pad : Math.max(pad + 150 * s, pad + (HUDB.scoreW || 0) + 10 * s),
         cyc = cssW < 700 ? pad + 96 * s : pad + 4 * s + 8 * s,
         fit = 1;
       const cw = g.measureText(txt).width,
@@ -85372,6 +85394,15 @@ profWire();
 //  the game, and where the motion capture, the folk songs and the fonts come from. Both from the menu at any time.
 // =====================================================================================
 const NEWS = [
+  {
+    ver: "v1.5.70",
+    title: "TWO OF US",
+    items: [
+      "IN VERSUS THE ANNOUNCEMENTS AND THE COMBO NO LONGER COVER PLAYER 1'S LIVES",
+      "IN CO-OP THE COMBO NO LONGER COVERS PLAYER 1'S SCORE",
+      "ON A PHONE HELD UPRIGHT WITH TWO PLAYERS, THE LIVE SIGN NO LONGER COVERS SHAKE FEVER",
+    ],
+  },
   {
     ver: "v1.5.69",
     title: "DOORSTEP",

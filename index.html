@@ -5040,6 +5040,17 @@ const DICT_ROWS                             = [
   ["BABY ALIEN FREEZES A CUSTOMER!", "BABA-RUIMTEWESE VRIES 'N KLANT!", "MAŁY KOSMITA ZAMRAŻA KLIENTA!"],
   ["BABY DRAGON PUFF!  BACK YOU GO", "BABADRAKIE BLAAS!  TERUG IS JY", "DMUCHNIĘCIE SMOCZKA!  WRACAJ"],
   ["THE SHAKE MIXER", "DIE SKOMMELMENGER", "MIKSER KOKTAJLI"],
+  // (v1.5.72) the other two mini-games' how-to lines (only the cherry catch had one)
+  [
+    "Up and down to fly. Collect the stars - and don't hit an asteroid, or the delivery is over!",
+    "Op en af om te vlieg. Versamel die sterre - en moenie 'n asteroïde raak nie, anders is die aflewering verby!",
+    "W górę i w dół, by lecieć. Zbieraj gwiazdy - i nie uderz w asteroidę, bo dostawa się skończy!",
+  ],
+  [
+    "Catch only what the recipe needs. Wrong thing? Start that shake again!",
+    "Vang net wat die resep nodig het. Iets verkeerd? Begin daardie skommel weer!",
+    "Łap tylko to, czego potrzebuje przepis. Coś nie tak? Zacznij ten koktajl od nowa!",
+  ],
   [
     "Move the glass left and right. Catch ONLY the cherries! Catch anything else and it lands in your glass - and the round is over.",
     "Skuif die glas links en regs. Vang NET die kersies! Vang iets anders en dit land in jou glas - en die rondte is verby.",
@@ -7616,6 +7627,22 @@ const DICT_ROWS                             = [
   ["where's my milkshake?", "WAAR'S MY MILKSHAKE?", "gdzie mój koktajl?"],
   ["we're still waiting!", "ONS WAG NOG!", "wciąż czekamy!"],
   ["oh my goodness!", "HAAI, JIRRE!", "o rany!"],
+  ["BOSS TALK", "BAASPRAATJIES", "MOWA BOSSÓW"],
+  [
+    "ENDLESS: THE BAR AT THE TOP NOW FILLS UP TOWARDS THE NEXT SPEED-UP, EVERY 12 SERVED",
+    "EINDLOSE SPEL: DIE STAAF BO VUL NOU OP TOT DIE VOLGENDE VERSNELLING, ELKE 12 BEDIEN",
+    "TRYB BEZ KOŃCA: PASEK NA GÓRZE NAPEŁNIA SIĘ TERAZ DO KOLEJNEGO PRZYSPIESZENIA, CO 12 OBSŁUŻONYCH",
+  ],
+  [
+    "IN AFRIKAANS AND POLISH THE BOSSES' WORDS ARE TRANSLATED: HOW MANY SHAKES THEY WANT, AND WHEN THEY ARE BEATEN",
+    "IN AFRIKAANS EN POOLS IS DIE BASE SE WOORDE VERTAAL: HOEVEEL SKOMMELS HULLE WIL HÊ, EN WANNEER HULLE GEKLOP IS",
+    "PO AFRIKAANS I PO POLSKU SŁOWA BOSSÓW SĄ PRZETŁUMACZONE: ILE KOKTAJLI CHCĄ I KIEDY SĄ POKONANI",
+  ],
+  [
+    "SO ARE ENDLESS'S FASTER!, ITS LINE ON THE GAME-OVER CARD, AND THE HOW-TO LINES OF TWO MINI-GAMES",
+    "NET SOOS DIE EINDLOSE SPEL SE VINNIGER!, SY REËL OP DIE SPEL-VERBY-KAART EN DIE HOE-OM-TE-SPEEL-REËLS VAN TWEE MINISPELETJIES",
+    "TAK SAMO SZYBCIEJ! W TRYBIE BEZ KOŃCA, JEGO WIERSZ NA KARCIE KOŃCA GRY I INSTRUKCJE DWÓCH MINIGIER",
+  ],
   ["ALL MODES", "ALLE MODUSSE", "WSZYSTKIE TRYBY"],
   [
     "ENDLESS MODE NO LONGER SAYS YOU HAVE SERVED 21 OF 1000000000 - JUST HOW MANY YOU HAVE SERVED",
@@ -9397,6 +9424,24 @@ const DICT_PAT                             = [
   [/^LEVEL (\d+) \/ (\d+)$/, "VLAK $1 / $2", "POZIOM $1 / $2"],
   [/^SERVED (\d+) \/ (\d+)$/, "BEDIEN $1 / $2", "OBSŁUŻONO $1 / $2"],
   [/^SERVED (\d+)$/, "BEDIEN $1", "OBSŁUŻONO $1"],
+  // (v1.5.72) THE BOSSES' WORDS: the label over a boss ("BOSS  ·  3 / 7 SHAKES") and a big eater's count, and the
+  // boss's arrival ("BOSS!  THE JELLY QUEEN WANTS 7 SHAKES!") - found by playing BOSS RUSH in Afrikaans
+  [/^BOSS  ·  (\d+) \/ (\d+) SHAKES$/, "BAAS  ·  $1 / $2 SKOMMELS", "BOSS  ·  $1 / $2 KOKTAJLI"],
+  [/^(\d+) \/ (\d+) SHAKES$/, "$1 / $2 SKOMMELS", "$1 / $2 KOKTAJLI"],
+  [/^BOSS!  (.+) WANTS (\d+) SHAKES!$/, "BAAS!  $1 WIL $2 SKOMMELS HÊ!", "BOSS!  $1 CHCE $2 KOKTAJLI!"],
+  [/^BOSS!  (.+)$/, "BAAS!  $1", "BOSS!  $1"],
+  [
+    /^(.+) IS FULL!  BOSS BEATEN  \+(\d+)$/,
+    "$1 IS VOL!  BAAS GEKLOP  +$2",
+    "$1 MA DOŚĆ!  BOSS POKONANY  +$2",
+  ],
+  // (v1.5.72) ENDLESS speeding up, and its line on the game-over card
+  [/^FASTER!  SPEED (\d+)$/, "VINNIGER!  SPOED $1", "SZYBCIEJ!  TEMPO $1"],
+  [
+    /^ENDLESS: SERVED (\d+)  \(BEST (\d+)\)$/,
+    "EINDLOSE SPEL: $1 BEDIEN  (BESTE $2)",
+    "BEZ KOŃCA: OBSŁUŻONO $1  (REKORD $2)",
+  ],
   // (v1.5.71) the ENDLESS line, whole: "ENDLESS  ·  SERVED 12  ·  SPEED 2" (the mode's name and SPEED stayed English)
   [
     /^ENDLESS  ·  SERVED (\d+)  ·  SPEED (\d+)$/,
@@ -77932,7 +77977,7 @@ function levelOfTour(of) {
     inTour = ((lv - 1) % LAST_LEVEL) + 1;
   return (tour > 1 ? "TOUR " + tour + "  ·  " : "") + "LEVEL " + inTour + of + LAST_LEVEL;
 }
-const GAME_VERSION = "v1.5.71",
+const GAME_VERSION = "v1.5.72",
   GAME_DATE = "20.11.2026",
   VERSION_TEXT = GAME_VERSION + "  ·  " + GAME_DATE;
 const FB = '"Chakra Petch", "Segoe UI", sans-serif';
@@ -78739,7 +78784,13 @@ function drawHud(fps) {
     const pl = 6 * s,
       plB = fy + (fv ? 17 : 3) * s + 3 * s;
     rb(bx - pl, by - 3 * s, bw + pl * 2, plB - (by - 3 * s), "rgba(8,5,20,.42)"); // (light enough to see the act through)
-    const sk = G.ta ? Math.min(1, G.ta.served / TA_GOAL) : G.served / Math.max(1, G.total); // (Time Attack: towards its fifty)
+    // (v1.5.72: ENDLESS: towards the next "FASTER!" - every twelve served. It was served out of a billion, so the bar
+    //  never moved)
+    const sk = G.ta
+      ? Math.min(1, G.ta.served / TA_GOAL)
+      : G.endless
+        ? ((G.endServed || 0) % 12) / 12
+        : G.served / Math.max(1, G.total); // (Time Attack: towards its fifty)
     rb(bx, by, bw, 4 * s, "rgba(255,255,255,.15)");
     rb(bx, by, Math.max(4 * s, bw * sk), 4 * s, "#5ff5c8");
     rb(bx + 2 * s, by + 0.5 * s, Math.max(0, bw * sk - 4 * s), 1.2 * s, "rgba(255,255,255,.45)");
@@ -85425,6 +85476,15 @@ profWire();
 //  the game, and where the motion capture, the folk songs and the fonts come from. Both from the menu at any time.
 // =====================================================================================
 const NEWS = [
+  {
+    ver: "v1.5.72",
+    title: "BOSS TALK",
+    items: [
+      "ENDLESS: THE BAR AT THE TOP NOW FILLS UP TOWARDS THE NEXT SPEED-UP, EVERY 12 SERVED",
+      "IN AFRIKAANS AND POLISH THE BOSSES' WORDS ARE TRANSLATED: HOW MANY SHAKES THEY WANT, AND WHEN THEY ARE BEATEN",
+      "SO ARE ENDLESS'S FASTER!, ITS LINE ON THE GAME-OVER CARD, AND THE HOW-TO LINES OF TWO MINI-GAMES",
+    ],
+  },
   {
     ver: "v1.5.71",
     title: "ALL MODES",

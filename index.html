@@ -7577,6 +7577,27 @@ const DICT_ROWS                             = [
   ],
   ["STOMP!", "STAMP!", "TUP!"],
   ["JUMP!", "SPRING!", "SKOK!"],
+  ["CLEAR VIEW", "HELDER UITSIG", "CZYSTY WIDOK"],
+  [
+    "ON PHONES THE LIVE SIGN UNDER THE STAGE NO LONGER COVERS THE SHAKE FEVER METER",
+    "OP FONE BEDEK DIE LIVE-BORD ONDER DIE VERHOOG NIE MEER DIE SKOMMELKOORS-METER NIE",
+    "NA TELEFONACH NAPIS LIVE POD SCENĄ NIE ZASŁANIA JUŻ WSKAŹNIKA GORĄCZKI KOKTAJLI",
+  ],
+  [
+    "THE COMEDIAN'S JOKES NO LONGER LAND ON THE PROGRESS AND SHAKE FEVER METERS",
+    "DIE KOMEDIANT SE GRAPPE BELAND NIE MEER OP DIE VORDERING- EN SKOMMELKOORS-METERS NIE",
+    "ŻARTY KOMIKA NIE LĄDUJĄ JUŻ NA WSKAŹNIKACH POSTĘPU I GORĄCZKI KOKTAJLI",
+  ],
+  [
+    "PROTEST PLACARDS NO LONGER COVER YOUR SCORE, YOUR COMBO OR YOUR HOLY WATER",
+    "BETOGINGSBORDE BEDEK NIE MEER JOU TELLING, JOU KOMBINASIE OF JOU HEILIGE WATER NIE",
+    "TRANSPARENTY PROTESTUJĄCYCH NIE ZASŁANIAJĄ JUŻ TWOICH PUNKTÓW, KOMBINACJI ANI WODY ŚWIĘCONEJ",
+  ],
+  [
+    "ON PHONES THE MARCHERS' PLACARDS NO LONGER COVER EACH OTHER",
+    "OP FONE BEDEK DIE OPTOGGANGERS SE PLAKKATE MEKAAR NIE MEER NIE",
+    "NA TELEFONACH TRANSPARENTY MASZERUJĄCYCH NIE ZASŁANIAJĄ JUŻ SIEBIE NAWZAJEM",
+  ],
   ["BALANCE", "BALANS", "RÓWNOWAGA"],
   [
     "ON HARD, FIVE STOPS THAT WERE MUCH HARDER THAN THE STOPS AROUND THEM ARE GENTLER NOW: THE COMET, JANUS, HALO RING, THE WANDERER AND NGC 206",
@@ -69407,7 +69428,12 @@ function stageHud(g, s, t, fD, sx, sy) {
   g.font = fD(Math.max(8, 7 / s)); // (v1.5.46: at least 7 pixels - on a phone held sideways it was 6)
   const nm = "LIVE: " + showName(),
     nw = g.measureText(nm).width + 12 * s,
-    ny = sy(STAGE.y + 15);
+    // (v1.5.63) CLEAR OF THE METERS: on a small screen (a phone held sideways) the top of the HUD - the progress bar and
+    // the SHAKE FEVER meter with its label - reaches further down than the stage's caption, and the "LIVE:" plate sat
+    // right on top of "SHAKE FEVER x2". Now the caption steps down just below the HUD when they would meet (by no more
+    // than a caption's height and a half, so it never wanders far from the stage)
+    ny0 = sy(STAGE.y + 15),
+    ny = HUD_TOP.low > ny0 - 9 * s ? Math.min(HUD_TOP.low + 9 * s, ny0 + 21 * s) : ny0;
   g.fillStyle = "rgba(20,8,24,.85)";
   g.fillRect(cx - nw / 2, ny - 7 * s, nw, 14 * s);
   g.fillStyle = "#ffe8a0";
@@ -69416,7 +69442,13 @@ function stageHud(g, s, t, fD, sx, sy) {
   // (v1.5.45) WHERE THE ACT'S WORDS GO: just over the stage - but in the tall view (a phone held upright) the stage is
   // small, up under the HUD, and the comedian's joke bubble (and the shouts) landed right on the SHAKE FEVER meters and
   // the line under the sign. There they go just below the "LIVE:" caption instead, clear of the HUD
-  const wy = (d) => (VERT ? Math.max(sy(STAGE.top + d), ny + 20 * s + (d - 44) * s) : sy(STAGE.top + d));
+  // (v1.5.63) AND IN THE WIDE VIEW, OFF THE METERS: on a phone held sideways the comedian's joke bubble could sit right
+  // on the progress and SHAKE FEVER meters, hiding "SHAKE FEVER x2". When the words would land on the meters' plate,
+  // they go just below it instead (and stay where they always were when they don't)
+  const offPlate = (y) =>
+    HUD_TOP.plate && y + 12 * s > HUD_TOP.plate && y - 12 * s < HUD_TOP.low ? HUD_TOP.low + 13 * s : y;
+  const wy = (d) =>
+    VERT ? Math.max(sy(STAGE.top + d), ny + 20 * s + (d - 44) * s) : offPlate(sy(STAGE.top + d));
   if (S.kind === "shaolin") {
     const ph = (t % 9) / 9,
       k = Math.floor(t / 9);
@@ -77700,7 +77732,7 @@ function levelOfTour(of) {
     inTour = ((lv - 1) % LAST_LEVEL) + 1;
   return (tour > 1 ? "TOUR " + tour + "  ·  " : "") + "LEVEL " + inTour + of + LAST_LEVEL;
 }
-const GAME_VERSION = "v1.5.63",
+const GAME_VERSION = "v1.5.64",
   GAME_DATE = "20.11.2026",
   VERSION_TEXT = GAME_VERSION + "  ·  " + GAME_DATE;
 const FB = '"Chakra Petch", "Segoe UI", sans-serif';
@@ -77720,7 +77752,7 @@ const HUDHIT
   peek: null, // (v1.5.42: the bonus round's MAGNIFYING GLASS line, where it's drawn - kids.ts)
 };
 // (v1.4.78) the bottom of the HUD's top band this frame, and the floating words already placed this frame
-const HUD_TOP = { low: 0 },
+const HUD_TOP = { low: 0, plate: 0 }, // (v1.5.63: "plate" - where the meters' plate starts, see stageHud)
   WBOX                                                    = [];
 // (v1.4.78) OTHER WORDS ON THE SCREEN THE FLOATING WORDS STEER AROUND: name tags, the coach's tip bubble, the stage's
 // "LIVE:" caption, a sign over a customer. Each puts its box in here as it's drawn (hudObs), and the floating words keep
@@ -77893,6 +77925,7 @@ function drawHud(fps) {
   }
   HUDHIT.holy = HUDHIT.cross = HUDHIT.flav = null; // (filled in again as they are drawn)
   HUD_TOP.low = 0; // (v1.4.78: set again below if the level line and meters are drawn this frame)
+  HUD_TOP.plate = 0;
   HUD_OBS.prev = HUD_OBS.cur;
   HUD_OBS.cur = [];
   const g = hg;
@@ -78469,6 +78502,7 @@ function drawHud(fps) {
       fk = Math.min(1, fv ? G.fever / FEVER_LEN : (G.streak || 0) / FEVER_AT), // (v1.4.76: a fed fever can run past full)
       fy = by + 7 * s;
     HUD_TOP.low = fy + (fv ? 18 : 6) * s; // (v1.4.78: where the top of the HUD ends - the floating words stay below it)
+    HUD_TOP.plate = by - 3 * s;
     // (v1.5.37) THE METERS ON A PLATE: the two thin bars used to be drawn straight over the stage, cutting through the
     // band's heads and the act's words. Now they sit on a small dark rounded plate (taller while the fever label shows),
     // with rounded ends, and the full part of each has a soft shine along its top
@@ -78508,6 +78542,13 @@ function drawHud(fps) {
     g.strokeRect(3, 3, cssW - 6, cssH - 6);
     g.restore();
   }
+  // (v1.5.63) THE PLACARDS UNDER THE SCORE: the protesters' placards (and the glutton's and the VIPs' labels) are part
+  // of the pub, but they were written last, over the whole HUD - a protest at the door of the top bar covered the
+  // COMBO counter and the floating words in the top corner. Now they're written before the score corner, the combo
+  // and the floating words, so those always stay on top (save/restore: the drawing settings carry on as before)
+  g.save();
+  drawSigns(g, s, t, sx, sy);
+  g.restore();
   if (inGame) juiceHud(g, cssW, cssH, s, t); // (v1.5.5: the warm glow of a hot run, the red pulse of a life lost)
   if (inGame) clearBloom(g, cssW, cssH, s); // (v1.5.7: the golden bloom of a cleared stop)
   if (inGame) {
@@ -78842,7 +78883,6 @@ function drawHud(fps) {
     }
     g.globalAlpha = 1;
   }
-  drawSigns(g, s, t, sx, sy);
   if (G.lsBanner) {
     // SPACEKOM LOAD SHEDDING - in BIG letters, buzzing like a dying fluorescent tube
     const B = G.lsBanner;
@@ -79182,6 +79222,12 @@ function drawSigns(g, s, t, sx, sy) {
   }
   g.textAlign = "center";
   g.textBaseline = "middle";
+  // (v1.5.64) THE BIG CARDS DON'T PILE UP: on a phone the marchers' bigger placard cards (below) are wider than the
+  // gap between two marchers, so one card covered half of the next ("ONS WIL MILKSHAKES!" over "ALL PLANETS UNITE").
+  // A card that would land on one already drawn is now held up just above it. Whether it goes up is judged from where
+  // the marcher stands (not the bobbing sign), and it only comes back down once the two are clearly apart - so the
+  // cards don't hop up and down with every step
+  const cards = [];
   for (const c of customers) {
     if (!c.protest || c.protest.calm || !c.protest.sign || c.state === "out" || c.alpha < 0.5) continue;
     const sc = (VERT ? pS(c.lane, c.x, VSIDE.c) : LS(c.lane)) * 1.12;
@@ -79199,6 +79245,7 @@ function drawSigns(g, s, t, sx, sy) {
     // pixels - a smudge. Below 7 pixels they now stay at 7, on a bigger card of their own over the sign (a protester
     // with an oversized placard), so "BRING BACK BANANAS!" can be read on a phone too
     let tx = sx(x); // (v1.5.47: where the words go across - see below)
+    let ty = sy(y); // (v1.5.64: and up and down - a big card can be held up above another, see above)
     if (px < 7) {
       px = 7;
       g.font = "800 " + px + "px " + FB;
@@ -79207,17 +79254,24 @@ function drawSigns(g, s, t, sx, sy) {
       // (v1.5.47) ...and the bigger card is kept on the screen: a protester by the door at the edge of a phone held
       // sideways held it half off the side ("ROBOTS NEED..." was cut off)
       tx = clamp(tx, cw / 2 + 2, cssW - cw / 2 - 2);
+      {
+        const bx = sx(projL(c.lane, c.x + at[0] * 1.12, LY(c.lane, c.x), VSIDE.c)[0]),
+          hits = cards.filter((o) => Math.abs(o.bx - bx) < (o.w + cw) / 2 + (c.cardUp ? 6 : 0));
+        c.cardUp = hits.length > 0;
+        for (const o of hits) ty = Math.min(ty, o.y - (o.h + ch) / 2 - 1); // (above the highest one it meets)
+        cards.push({ bx, y: ty, w: cw, h: ch });
+      }
       g.fillStyle = "#ead7a8";
       g.strokeStyle = "rgba(60,36,16,.9)";
       g.lineWidth = 1;
       g.beginPath();
-      g.rect(Math.round(tx - cw / 2) + 0.5, Math.round(sy(y) - ch / 2) + 0.5, Math.round(cw), Math.round(ch));
+      g.rect(Math.round(tx - cw / 2) + 0.5, Math.round(ty - ch / 2) + 0.5, Math.round(cw), Math.round(ch));
       g.fill();
       g.stroke();
     }
     g.font = "800 " + px.toFixed(1) + "px " + FB;
     g.fillStyle = c.protest.anger > 0.55 ? "#c0101a" : "#2a1a10";
-    lines.forEach((l, i) => g.fillText(l, tx, sy(y) + px * 0.15 + (i - (lines.length - 1) / 2) * px * 1.05));
+    lines.forEach((l, i) => g.fillText(l, tx, ty + px * 0.15 + (i - (lines.length - 1) / 2) * px * 1.05));
   }
   g.textBaseline = "top";
 }
@@ -85098,6 +85152,16 @@ profWire();
 //  the game, and where the motion capture, the folk songs and the fonts come from. Both from the menu at any time.
 // =====================================================================================
 const NEWS = [
+  {
+    ver: "v1.5.64",
+    title: "CLEAR VIEW",
+    items: [
+      "ON PHONES THE LIVE SIGN UNDER THE STAGE NO LONGER COVERS THE SHAKE FEVER METER",
+      "THE COMEDIAN'S JOKES NO LONGER LAND ON THE PROGRESS AND SHAKE FEVER METERS",
+      "PROTEST PLACARDS NO LONGER COVER YOUR SCORE, YOUR COMBO OR YOUR HOLY WATER",
+      "ON PHONES THE MARCHERS' PLACARDS NO LONGER COVER EACH OTHER",
+    ],
+  },
   {
     ver: "v1.5.63",
     title: "BALANCE",

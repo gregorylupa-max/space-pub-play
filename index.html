@@ -7665,6 +7665,22 @@ const DICT_ROWS                             = [
   ["where's my milkshake?", "WAAR'S MY MILKSHAKE?", "gdzie mój koktajl?"],
   ["we're still waiting!", "ONS WAG NOG!", "wciąż czekamy!"],
   ["oh my goodness!", "HAAI, JIRRE!", "o rany!"],
+  ["BIG SCREEN", "GROOT SKERM", "DUŻY EKRAN"],
+  [
+    "ON A COMPUTER WITH BIG OR HUGE TEXT THE COMBO COUNTER NO LONGER RUNS INTO YOUR SCORE",
+    "OP 'N REKENAAR MET GROOT OF BAIE GROOT TEKS LOOP DIE KOMBINASIE-TELLER NIE MEER IN JOU TELLING VAS NIE",
+    "NA KOMPUTERZE PRZY DUŻYM LUB OGROMNYM TEKŚCIE LICZNIK KOMBINACJI NIE WCHODZI JUŻ NA TWOJE PUNKTY",
+  ],
+  [
+    "AND IT KEEPS A GAP BEFORE THE ANNOUNCEMENT BESIDE IT",
+    "EN DIT HOU 'N GAPING VOOR DIE AANKONDIGING LANGS DIT",
+    "I ZACHOWUJE ODSTĘP OD OGŁOSZENIA OBOK",
+  ],
+  [
+    "EVERY MENU CHECKED ON COMPUTER SCREENS TOO, IN ALL THREE LANGUAGES",
+    "ELKE KIESLYS OOK OP REKENAARSKERMS NAGEGAAN, IN AL DRIE TALE",
+    "KAŻDE MENU SPRAWDZONE TEŻ NA EKRANACH KOMPUTERA, WE WSZYSTKICH TRZECH JĘZYKACH",
+  ],
   ["COMBO CORNER", "KOMBO-HOEK", "KĄCIK KOMBINACJI"],
   [
     "ON A PHONE HELD UPRIGHT THE COMBO COUNTER NOW WAITS BELOW THE LINES UNDER THE SIGN, AND BELOW THE STAGE'S LIVE SIGN - NOT ON TOP OF THEM",
@@ -78216,7 +78232,7 @@ function levelOfTour(of) {
     inTour = ((lv - 1) % LAST_LEVEL) + 1;
   return (tour > 1 ? "TOUR " + tour + "  ·  " : "") + "LEVEL " + inTour + of + LAST_LEVEL;
 }
-const GAME_VERSION = "v1.5.80",
+const GAME_VERSION = "v1.5.81",
   GAME_DATE = "21.11.2026",
   VERSION_TEXT = GAME_VERSION + "  ·  " + GAME_DATE;
 const FB = '"Chakra Petch", "Segoe UI", sans-serif';
@@ -79286,7 +79302,19 @@ function drawHud(fps) {
       // there (the power-up timers, the LIVE caption) - and the floating words keep clear of it too
       // (v1.5.70: and in the wide view it starts after the whole score block - in VERSUS that reaches past the lives
       //  bars, which it used to sit right on top of)
-      let cxc = cssW < 700 ? pad : Math.max(pad + 150 * s, pad + (HUDB.scoreW || 0) + 10 * s),
+      // (v1.5.81) ...and after the score as it is really drawn: on a big screen with TEXT SIZE HUGE the digits are much
+      // wider than the room kept for them, and "008009KOMBO X3" ran together
+      const scoreTextW = () => {
+        const f0 = g.font;
+        g.font = fD(22);
+        const w = g.measureText("000000").width * 1.13; // (and the score's bounce - up to 13% bigger as it ticks up)
+        g.font = f0;
+        return w;
+      };
+      let cxc =
+          cssW < 700
+            ? pad
+            : Math.max(pad + 150 * s, pad + (HUDB.scoreW || 0) + 10 * s, pad + scoreTextW() + 18 * s),
         // (v1.5.80: on a phone, never up in the lines under the sign - "KOMBO X3" sat across "NOWA NAKLEJKA: ..." with
         //  big letters - but just below the meters' plate, where the top of the HUD ends)
         cyc = cssW < 700 ? Math.max(pad + 96 * s, (HUD_TOP.low || 0) + 6 * s + 8 * s) : pad + 4 * s + 8 * s,
@@ -79295,15 +79323,15 @@ function drawHud(fps) {
         ch = parseFloat(g.font) * 1.2;
       {
         const SB = HUDB.sign,
-          hits = (x, y, w) =>
-            SB && x < SB.r && x + w > SB.l && y - 8 * s - ch / 2 < SB.b && y - 8 * s + ch / 2 > SB.t;
+          // (v1.5.81: the words hang down from y - 8*s - the baseline is "top" here - so they span ch below that)
+          hits = (x, y, w) => SB && x < SB.r && x + w > SB.l && y - 8 * s < SB.b && y - 8 * s + ch > SB.t;
         if (hits(cxc, cyc, cw * 1.3)) {
           // (the score's real width, measured - and never less than the room the score block is given)
           const fNow = g.font;
           g.font = fD(22);
-          const sw = g.measureText("000000").width;
+          const sw = g.measureText("000000").width * 1.13; // (v1.5.81: with its bounce)
           g.font = fNow;
-          const gl = pad + Math.max(HUDB.scoreW || 0, sw) + 10 * s,
+          const gl = pad + Math.max(HUDB.scoreW || 0, sw) + 18 * s, // (v1.5.81: a clear gap after the digits - 10 was tight)
             gap = SB.l - 8 * s - gl;
           if (cssW >= 700 && gap >= cw * 0.75) {
             cxc = gl;
@@ -85746,6 +85774,15 @@ profWire();
 //  the game, and where the motion capture, the folk songs and the fonts come from. Both from the menu at any time.
 // =====================================================================================
 const NEWS = [
+  {
+    ver: "v1.5.81",
+    title: "BIG SCREEN",
+    items: [
+      "ON A COMPUTER WITH BIG OR HUGE TEXT THE COMBO COUNTER NO LONGER RUNS INTO YOUR SCORE",
+      "AND IT KEEPS A GAP BEFORE THE ANNOUNCEMENT BESIDE IT",
+      "EVERY MENU CHECKED ON COMPUTER SCREENS TOO, IN ALL THREE LANGUAGES",
+    ],
+  },
   {
     ver: "v1.5.80",
     title: "COMBO CORNER",

@@ -109,12 +109,14 @@ body.calm .panel { animation: none; }
   min-width: 0; overflow-wrap: anywhere; hyphens: auto; -webkit-hyphens: auto; }
 /* (v1.5.77: and every panel's buttons and titles - with TEXT SIZE HUGE on a phone held upright "AGTERGRONDGELUIDE",
    "STERRESTELSEL-KAART", "BEKERTOERNOOI" and the jukebox's "południowoafrykańska" ran out over the edge) */
-/*  - only with BIG / HUGE text and on the narrowest phones, where they need it: at the normal size elsewhere a word that
+/*  (v1.5.79: "anywhere" here too - a name straight inside a button ("MARIANNA", "⚙ USTAWIENIA" with HUGE text on a
+     360-wide phone) can't shrink with "break-word"; and a button's bold value - the pause screen's "GPU · HIGH PERFORMANCE" with HUGE text)
+    - only with BIG / HUGE text and on the narrowest phones, where they need it: at the normal size elsewhere a word that
       just fits ("OORSPRONKLIK") stays whole, as before */
-body.txt1 .panel :is(button, h2, button span, button small), body.txt2 .panel :is(button, h2, button span, button small) {
-  max-width: 100%; overflow-wrap: break-word; hyphens: auto; -webkit-hyphens: auto; }
-@media (max-width: 380px) { .panel :is(button, h2, button span, button small) {
-  max-width: 100%; overflow-wrap: break-word; hyphens: auto; -webkit-hyphens: auto; } }
+body.txt1 .panel :is(button, h2, button span, button small, button b), body.txt2 .panel :is(button, h2, button span, button small, button b) {
+  max-width: 100%; overflow-wrap: anywhere; hyphens: auto; -webkit-hyphens: auto; }
+@media (max-width: 380px) { .panel :is(button, h2, button span, button small, button b) {
+  max-width: 100%; overflow-wrap: anywhere; hyphens: auto; -webkit-hyphens: auto; } }
 #sbList button.on, #sbTabs button.on, #wdHats button.on, #wdPets button.on, #wdWho button.on { border-color: var(--amber, #ffc34d); box-shadow: 0 0 16px rgba(255,195,77,.4); }
 .wdH { margin: 0; font-family: var(--display); font-weight: 400; color: var(--amber, #ffc34d); letter-spacing: .05em; font-size: 18px; }
 #csList button { text-align: left; display: flex; flex-direction: column; gap: 3px; padding: 9px 12px; }
@@ -7663,6 +7665,17 @@ const DICT_ROWS                             = [
   ["where's my milkshake?", "WAAR'S MY MILKSHAKE?", "gdzie mój koktajl?"],
   ["we're still waiting!", "ONS WAG NOG!", "wciąż czekamy!"],
   ["oh my goodness!", "HAAI, JIRRE!", "o rany!"],
+  ["PAUSE AND BREAK", "POUSE EN BREUK", "PAUZA I PODZIAŁ"],
+  [
+    "WITH HUGE TEXT ON A PHONE HELD UPRIGHT THE PAUSE SCREEN'S GRAPHICS BUTTON NO LONGER RUNS OVER ITS EDGE",
+    "MET BAIE GROOT TEKS OP 'N FOON WAT REGOP GEHOU WORD, LOOP DIE POUSESKERM SE GRAFIKA-KNOPPIE NIE MEER OOR SY RAND NIE",
+    "PRZY OGROMNYM TEKŚCIE NA TELEFONIE TRZYMANYM PIONOWO PRZYCISK GRAFIKI NA EKRANIE PAUZY NIE WYCHODZI JUŻ POZA SWOJĄ KRAWĘDŹ",
+  ],
+  [
+    "ON THE NARROWEST PHONES A BARTENDER'S NAME AND MOTTO STAY INSIDE THEIR BUTTON",
+    "OP DIE SMALSTE FONE BLY 'N KROEGMAN SE NAAM EN LEUSE BINNE HUL KNOPPIE",
+    "NA NAJWĘŻSZYCH TELEFONACH IMIĘ I MOTTO BARMANA ZOSTAJĄ W SWOIM PRZYCISKU",
+  ],
   ["HUGE AND CLEAR", "GROOT EN DUIDELIK", "DUŻE I WYRAŹNE"],
   [
     "WITH HUGE TEXT, FLOATING WORDS NO LONGER LAND ON THE END OF A LONG POWER-UP NAME LIKE DRIEDUBBELE SKOOT",
@@ -78181,7 +78194,7 @@ function levelOfTour(of) {
     inTour = ((lv - 1) % LAST_LEVEL) + 1;
   return (tour > 1 ? "TOUR " + tour + "  ·  " : "") + "LEVEL " + inTour + of + LAST_LEVEL;
 }
-const GAME_VERSION = "v1.5.78",
+const GAME_VERSION = "v1.5.79",
   GAME_DATE = "21.11.2026",
   VERSION_TEXT = GAME_VERSION + "  ·  " + GAME_DATE;
 const FB = '"Chakra Petch", "Segoe UI", sans-serif';
@@ -85695,6 +85708,14 @@ profWire();
 //  the game, and where the motion capture, the folk songs and the fonts come from. Both from the menu at any time.
 // =====================================================================================
 const NEWS = [
+  {
+    ver: "v1.5.79",
+    title: "PAUSE AND BREAK",
+    items: [
+      "WITH HUGE TEXT ON A PHONE HELD UPRIGHT THE PAUSE SCREEN'S GRAPHICS BUTTON NO LONGER RUNS OVER ITS EDGE",
+      "ON THE NARROWEST PHONES A BARTENDER'S NAME AND MOTTO STAY INSIDE THEIR BUTTON",
+    ],
+  },
   {
     ver: "v1.5.78",
     title: "HUGE AND CLEAR",

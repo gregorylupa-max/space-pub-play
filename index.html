@@ -4771,6 +4771,7 @@ const DICT_ROWS                             = [
     "PORA NA OBIAD... HEJ! TO BYŁA MOJA KANAPKA!",
   ],
   ["WISH YOU WERE HERE", "WENS JY WAS HIER", "SZKODA, ŻE CIĘ TU NIE MA"],
+  ["TEAM SPIRIT", "SPANGEES", "DUCH DRUŻYNY"], // (v1.5.84: the reason for the coins)
   // (v1.5.73) ...and the whole line Koos reads out on Castaway Island (only the bottle's words had a row)
   [
     'A MESSAGE IN A BOTTLE! IT SAYS: "WISH YOU WERE HERE"',
@@ -7665,6 +7666,22 @@ const DICT_ROWS                             = [
   ["where's my milkshake?", "WAAR'S MY MILKSHAKE?", "gdzie mój koktajl?"],
   ["we're still waiting!", "ONS WAG NOG!", "wciąż czekamy!"],
   ["oh my goodness!", "HAAI, JIRRE!", "o rany!"],
+  ["HIGH FIVE", "HOË VYF", "PIĄTKA"],
+  [
+    "IN CO-OP, WHEN BOTH OF YOU SERVE A CUSTOMER AT ALMOST THE SAME MOMENT IT'S A HIGH FIVE - POINTS FOR BOTH AND A LITTLE SHAKE FEVER",
+    "IN SAAMSPEEL, AS JULLE ALBEI AMPER GELYKTYDIG 'N KLANT BEDIEN, IS DIT 'N HOË VYF - PUNTE VIR ALBEI EN 'N BIETJIE SKOMMELKOORS",
+    "W TRYBIE WSPÓŁPRACY, GDY OBOJE OBSŁUŻYCIE KLIENTA NIEMAL W TEJ SAMEJ CHWILI, TO PIĄTKA - PUNKTY DLA OBOJGA I TROCHĘ GORĄCZKI KOKTAJLI",
+  ],
+  [
+    "EVERY FIFTH HIGH FIVE IN A STOP IS TEAM SPIRIT - A CHEER AND COINS",
+    "ELKE VYFDE HOË VYF IN 'N STOP IS SPANGEES - 'N GEJUIG EN MUNTE",
+    "CO PIĄTA PIĄTKA NA PRZYSTANKU TO DUCH DRUŻYNY - OKRZYKI I MONETY",
+  ],
+  [
+    "AT THE END OF EACH STOP A TEAM REPORT: WHO SERVED HOW MANY, YOUR HIGH FIVES, AND THE STAR OF THE STOP",
+    "AAN DIE EINDE VAN ELKE STOP 'N SPANVERSLAG: WIE HOEVEEL BEDIEN HET, JULLE HOË VYWE EN DIE STER VAN DIE STOP",
+    "NA KOŃCU KAŻDEGO PRZYSTANKU RAPORT DRUŻYNY: KTO OBSŁUŻYŁ ILU, WASZE PIĄTKI I GWIAZDA PRZYSTANKU",
+  ],
   ["OWN CONTROLLER", "EIE BEHEERDER", "WŁASNY KONTROLER"],
   [
     "WITH TWO CONTROLLERS, EACH PLAYER CHOOSES THEIR BARTENDER ON THEIR OWN CONTROLLER",
@@ -9618,6 +9635,15 @@ const DICT_PAT                             = [
   [/^LEVEL (\d+) \/ (\d+)$/, "VLAK $1 / $2", "POZIOM $1 / $2"],
   [/^SERVED (\d+) \/ (\d+)$/, "BEDIEN $1 / $2", "OBSŁUŻONO $1 / $2"],
   [/^SERVED (\d+)$/, "BEDIEN $1", "OBSŁUŻONO $1"],
+  // (v1.5.84) co-op teamwork: the high five, team spirit, and the team report at the end of a stop
+  [/^HIGH FIVE!  \+(\d+)$/, "HOË VYF!  +$1", "PIĄTKA!  +$1"],
+  [/^TEAM SPIRIT!  (\d+) HIGH FIVES$/, "SPANGEES!  $1 HOË VYWE", "DUCH DRUŻYNY!  $1 PIĄTEK"],
+  [
+    /^TEAM REPORT:  (.+) (\d+)  ·  (.+) (\d+)  ·  (\d+) HIGH FIVES$/,
+    "SPANVERSLAG:  $1 $2  ·  $3 $4  ·  $5 HOË VYWE",
+    "RAPORT DRUŻYNY:  $1 $2  ·  $3 $4  ·  $5 PIĄTEK",
+  ],
+  [/^STAR OF THE STOP: (.+)$/, "STER VAN DIE STOP: $1", "GWIAZDA PRZYSTANKU: $1"],
   // (v1.5.75) the caption under the demo's window - "OUT OF THE WINDOW:  " and the scene (the scene names had rows,
   // but the whole caption didn't, so it stayed in English)
   [/^OUT OF THE WINDOW:  (.+)$/, "BY DIE VENSTER UIT:  $1", "ZA OKNEM:  $1"],
@@ -16252,6 +16278,9 @@ function update(dt) {
           life: 1,
           max: 1,
         });
+      // (v1.5.84) HIGH FIVES in co-op (twists.ts) - last, after the serve's own points, so its words are among the newest
+      // on the screen (only the three newest floating words show)
+      coopServe(catcher, s, demo);
     } else if (
       s.x < X0 - 8 &&
       (s.park || 0) < 4 &&
@@ -16443,6 +16472,7 @@ function update(dt) {
     if (!demo) {
       kidLevelClear();
       funLevelClear();
+      coopLevelClear(demo); // (v1.5.84: the TEAM REPORT in co-op)
       G.clearT = G.versus ? 4.2 : 4.8; // (time to see the stars - and the galaxy map, as the ship hops on)
       const bonusPts = 1000 * G.level + (G.perfect ? 2000 : 0);
       // (v1.5.40: the sign shows the bonus you really got - with FLAWLESS x1.1 it said "+6000" and gave 6600)
@@ -17638,6 +17668,78 @@ function chainServe(c, s, demo) {
   const many = Math.round((n >= 50 ? 40 : n >= 25 ? 26 : 16) * (COMFORT.calm ? 0.5 : 1));
   for (let k = 0; k < many; k++) confetti(rnd(0, PW), -10, 1);
   addCoins(coinsN, n + " IN A ROW");
+}
+// =====================================================================================
+//  (v1.5.84) TEAMWORK IN CO-OP: two bartenders working the bar together get something for it together. When both serve a
+//  customer within a moment of each other it's a HIGH FIVE - points for both, a little fever, a cheer - and every fifth
+//  high five in a stop is TEAM SPIRIT (coins). At the end of the stop a TEAM REPORT says who served how many and names
+//  the star of the stop, for a little friendly rivalry. Co-op only (not versus, not the demo)
+// =====================================================================================
+const HIFIVE_WIN = 1.5, // (seconds between the two serves)
+  HIFIVE_PTS = 150;
+const coopOn = () => twoP() && !G.versus && !G.demo;
+function coopLevelStart() {
+  for (const p of PL) {
+    p.lvServed = 0;
+    p.lastServeT = -9;
+  }
+  G.hiFives = 0;
+}
+function coopServe(c, s, demo) {
+  if (demo || !coopOn()) return;
+  const me = PL[s.owner || 0],
+    mate = PL[s.owner || 0 ? 0 : 1];
+  me.lvServed = (me.lvServed || 0) + 1;
+  const now = G.time;
+  if (mate && mate.alive !== false && now - (mate.lastServeT ?? -9) < HIFIVE_WIN && !mate.hiUsed) {
+    // a high five: both get the points, once per pair of serves
+    mate.hiUsed = true;
+    me.lastServeT = now;
+    me.hiUsed = true;
+    G.hiFives = (G.hiFives || 0) + 1;
+    for (const p of [me, mate]) {
+      SCORER = p;
+      addScore(HIFIVE_PTS);
+      SCORER = null;
+    }
+    feverAdd(0.5, demo);
+    sfx("clink", c.x);
+    const [px, py] = [(me.x + mate.x) / 2, Math.min(me.lane, mate.lane)];
+    worldText("HIGH FIVE!  +" + HIFIVE_PTS, { lane: py, x: px }, "#ffd24d");
+    if (!COMFORT.calm) sparkle(px, LY(py, px) - 60, [1, 0.85, 0.3, 1], 10, py);
+    if (G.hiFives % 5 === 0) {
+      callout("TEAM SPIRIT!  " + G.hiFives + " HIGH FIVES", "#ffd24d", 2);
+      sfx("cheer", c.x);
+      addCoins(3, "TEAM SPIRIT");
+    }
+    return;
+  }
+  me.lastServeT = now;
+  me.hiUsed = false;
+}
+function coopLevelClear(demo) {
+  if (demo || !coopOn()) return;
+  const [a, b] = PL,
+    na = barShort(a.char),
+    nb = barShort(b.char),
+    sa = a.lvServed || 0,
+    sb = b.lvServed || 0;
+  G.callouts.push({
+    text:
+      "TEAM REPORT:  " + na + " " + sa + "  ·  " + nb + " " + sb + "  ·  " + (G.hiFives || 0) + " HIGH FIVES",
+    c: "#ffe6a0",
+    life: 4,
+    max: 4,
+    sub: true,
+  });
+  if (sa !== sb && sa + sb >= 4)
+    G.callouts.push({
+      text: "STAR OF THE STOP: " + (sa > sb ? na : nb),
+      c: "#ffd24d",
+      life: 3,
+      max: 3,
+      sub: true,
+    });
 }
 // DRAGON FIRE: a rainbow of flame rolls down the dragon's bar and blows everybody on it back to the door
 // four kinds: JADE (the mystic one), GOLD (its fire is worth double), SILVER (it blesses you: holy water full, cross ready)
@@ -49056,6 +49158,7 @@ const bossFor = (lv) => {
 // ---- hooks called from the game ----
 function kidLevelStart() {
   mechLevelStart();
+  coopLevelStart(); // (v1.5.84: co-op's per-stop counts - twists.ts)
   kids2LevelStart();
   G.nfIntro = false;
   G.style = 0;
@@ -78274,7 +78377,7 @@ function levelOfTour(of) {
     inTour = ((lv - 1) % LAST_LEVEL) + 1;
   return (tour > 1 ? "TOUR " + tour + "  ·  " : "") + "LEVEL " + inTour + of + LAST_LEVEL;
 }
-const GAME_VERSION = "v1.5.83",
+const GAME_VERSION = "v1.5.84",
   GAME_DATE = "21.11.2026",
   VERSION_TEXT = GAME_VERSION + "  ·  " + GAME_DATE;
 const FB = '"Chakra Petch", "Segoe UI", sans-serif';
@@ -85823,6 +85926,15 @@ profWire();
 //  the game, and where the motion capture, the folk songs and the fonts come from. Both from the menu at any time.
 // =====================================================================================
 const NEWS = [
+  {
+    ver: "v1.5.84",
+    title: "HIGH FIVE",
+    items: [
+      "IN CO-OP, WHEN BOTH OF YOU SERVE A CUSTOMER AT ALMOST THE SAME MOMENT IT'S A HIGH FIVE - POINTS FOR BOTH AND A LITTLE SHAKE FEVER",
+      "EVERY FIFTH HIGH FIVE IN A STOP IS TEAM SPIRIT - A CHEER AND COINS",
+      "AT THE END OF EACH STOP A TEAM REPORT: WHO SERVED HOW MANY, YOUR HIGH FIVES, AND THE STAR OF THE STOP",
+    ],
+  },
   {
     ver: "v1.5.83",
     title: "OWN CONTROLLER",

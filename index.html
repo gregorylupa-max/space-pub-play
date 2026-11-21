@@ -2679,12 +2679,14 @@ const DICT_ROWS                             = [
   ["PLAYERS:", "SPELERS:", "GRACZE:"],
   ["1 PLAYER", "1 SPELER", "1 GRACZ"],
   ["2 · CO-OP", "2 · SAAM", "2 · RAZEM"],
+  ["CO-OP", "SAAM", "RAZEM"], // (v1.6.6: on its own - the HUD's "CO-OP  HI" line and a team's line in the high scores)
   ["2 · VERSUS", "2 · TEEN MEKAAR", "2 · POJEDYNEK"],
   ["DIFFICULTY:", "MOEILIKHEID:", "POZIOM TRUDNOŚCI:"],
   ["EASY", "MAKLIK", "ŁATWY"],
   ["NORMAL", "NORMAAL", "NORMALNY"],
   ["HARD", "MOEILIK", "TRUDNY"],
   ["KIDS", "KINDERS", "DZIECI"],
+  ["KID MODE", "KINDERMODUS", "TRYB DZIECIĘCY"], // (v1.6.6: the difficulty's name, in a high score's line)
   ["START AT LEVEL:", "BEGIN BY VLAK:", "START OD POZIOMU:"],
   ["BARTENDER:", "KROEGMAN:", "BARMAN:"],
   ["DAILY CHALLENGE:", "DAAGLIKSE UITDAGING:", "WYZWANIE DNIA:"],
@@ -4804,6 +4806,23 @@ const DICT_ROWS                             = [
   ["50 high fives in co-op", "50 hoë vywe in saamspeel", "50 piątek we współpracy"],
   ["DOUBLE TROUBLE", "DUBBEL MOEILIKHEID", "PODWÓJNE KŁOPOTY"],
   ["serve 10 pairs of twins together", "bedien 10 pare tweelinge saam", "obsłużcie razem 10 par bliźniaków"],
+  // (v1.6.5) four more for two players
+  ["GOAL GETTERS", "DOELBEREIKERS", "ŁOWCY CELÓW"],
+  [
+    "reach 10 team goals in co-op",
+    "bereik 10 spandoele in saamspeel",
+    "osiągnijcie 10 celów drużyny we współpracy",
+  ],
+  ["GOOD MATES", "GOEIE MAATS", "DOBRZY KUMPLE"],
+  ["lend 20 helping hands", "gee 20 keer 'n helpende hand", "podaj 20 razy pomocną dłoń"],
+  ["DUEL CHAMPION", "TWEEGEVEG-KAMPIOEN", "MISTRZ POJEDYNKÓW"],
+  [
+    "win 3 mini-game duels or races",
+    "wen 3 mini-speletjie-tweegevegte of -wedrenne",
+    "wygraj 3 pojedynki lub wyścigi w minigrach",
+  ],
+  ["WELCOME ABOARD", "WELKOM AAN BOORD", "WITAJ NA POKŁADZIE"],
+  ["a friend joins your game", "'n vriend sluit by jou spel aan", "przyjaciel dołącza do twojej gry"],
   // (v1.5.73) ...and the whole line Koos reads out on Castaway Island (only the bottle's words had a row)
   [
     'A MESSAGE IN A BOTTLE! IT SAYS: "WISH YOU WERE HERE"',
@@ -7733,6 +7752,28 @@ const DICT_ROWS                             = [
     "EN AS DIE FOOIEPOT-DIEF WEGKOM, WORD DIE VERLIES OOK GEDEEL - DIT HET ALLES VAN SPELER 1 AFGEGAAN",
     "A GDY ZŁODZIEJ SŁOIKA NA NAPIWKI UCIEKNIE, STRATA TEŻ JEST DZIELONA - CAŁA SZŁA Z KONTA GRACZA 1",
   ],
+  ["HANDS UP", "HANDE OP", "RĘCE W GÓRĘ"],
+  [
+    "A HIGH FIVE IN CO-OP NOW PUTS A HAND UP BESIDE EACH OF YOU, SO YOU SEE IT HAPPEN",
+    "'N HOË VYF IN SAAMSPEEL SIT NOU 'N HAND OP LANGS ELKEEN VAN JULLE, SODAT JULLE DIT SIEN GEBEUR",
+    "PIĄTKA W KOOPERACJI POKAZUJE TERAZ RĘKĘ W GÓRZE OBOK KAŻDEGO Z WAS, ŻEBYŚCIE JĄ WIDZIELI",
+  ],
+  [
+    "A TEAM'S HIGH SCORE SAYS CO-OP OR VERSUS IN THE TABLE, AND THE TABLE'S DIFFICULTY WORDS ARE TRANSLATED",
+    "'N SPAN SE HOOGSTE TELLING SÊ SAAM OF TEEN IN DIE TABEL, EN DIE TABEL SE MOEILIKHEIDSWOORDE WORD VERTAAL",
+    "WYNIK DRUŻYNY MA W TABELI DOPISEK RAZEM ALBO POJEDYNEK, A SŁOWA O POZIOMIE TRUDNOŚCI SĄ PRZETŁUMACZONE",
+  ],
+  ["MORE TEAM TROPHIES", "MEER SPANTROFEË", "WIĘCEJ TROFEÓW DRUŻYNY"],
+  [
+    "FOUR NEW TROPHIES FOR TWO PLAYERS: GOAL GETTERS (10 TEAM GOALS) AND GOOD MATES (20 HELPING HANDS)",
+    "VIER NUWE TROFEË VIR TWEE SPELERS: DOELBEREIKERS (10 SPANDOELE) EN GOEIE MAATS (20 HELPENDE HANDE)",
+    "CZTERY NOWE TROFEA DLA DWÓCH GRACZY: ŁOWCY CELÓW (10 CELÓW DRUŻYNY) I DOBRZY KUMPLE (20 POMOCNYCH DŁONI)",
+  ],
+  [
+    "DUEL CHAMPION (WIN 3 MINI-GAME DUELS OR RACES) AND WELCOME ABOARD (A FRIEND JOINS YOUR GAME)",
+    "TWEEGEVEG-KAMPIOEN (WEN 3 MINI-SPELETJIE-TWEEGEVEGTE OF -WEDRENNE) EN WELKOM AAN BOORD ('N VRIEND SLUIT BY JOU SPEL AAN)",
+    "MISTRZ POJEDYNKÓW (WYGRAJ 3 POJEDYNKI LUB WYŚCIGI W MINIGRACH) I WITAJ NA POKŁADZIE (PRZYJACIEL DOŁĄCZA DO GRY)",
+  ],
   ["SMOOTHER JOINING", "GLADDER AANSLUIT", "PŁYNNIEJSZE DOŁĄCZANIE"],
   [
     "JOINING WITH START ON A SECOND CONTROLLER NO LONGER PAUSES THE GAME A MOMENT LATER",
@@ -9953,6 +9994,7 @@ const DICT_PAT                             = [
     "POZIOM $1 / $2$3·$4OBSŁUŻONO $5",
   ], // (v1.4.76: Time Attack)
   [/^LEVEL (\d+) OF (\d+)$/, "VLAK $1 VAN $2", "POZIOM $1 Z $2"],
+  [/^LEVEL (\d+) (EASY|HARD|KID MODE)$/, "VLAK $1 $2", "POZIOM $1 $2"], // (v1.6.6: a high score's line, played on another difficulty)
   // (v1.4.77) the second tour and after: "TOUR 2  ·  LEVEL 7 / 40  ·  SERVED 3 / 38", translated piece by piece
   [/^TOUR (\d+)$/, "TOER $1", "TRASA $1"],
   [/^LEVEL (\d+) \/ (\d+)$/, "VLAK $1 / $2", "POZIOM $1 / $2"],
@@ -18200,6 +18242,7 @@ function coopServe(c, s, demo) {
   if (mate && mate.alive !== false && now - (mate.lastServeT ?? -9) < HIFIVE_WIN && !mate.hiUsed) {
     // a high five: both get the points, once per pair of serves
     mate.hiUsed = true;
+    me.h5At = mate.h5At = now; // (v1.6.6: a hand goes up over each of you - hud.ts drawHelp)
     me.lastServeT = now;
     me.hiUsed = true;
     G.hiFives = (G.hiFives || 0) + 1;
@@ -18494,6 +18537,7 @@ function coopHelp(demo) {
     worldText("HELPING HAND!  +" + got, { lane: p.lane, x: (p.x + mate.x) / 2 }, "#7dffc8");
     sfx("boing", p.x);
     G.helps = (G.helps || 0) + 1;
+    fStat("helps"); // (v1.6.5: the GOOD MATES trophy)
     if (G.coopG) G.coopG.helps[mate.id ? 1 : 0]++; // (v1.5.93)
   }
 }
@@ -63329,6 +63373,11 @@ const TROPHIES = [
   // (v1.5.86) two for the co-op team (twists.ts counts them)
   { id: "t22", name: "DREAM TEAM", line: "50 high fives in co-op", k: "hiFives", n: 50 },
   { id: "t23", name: "DOUBLE TROUBLE", line: "serve 10 pairs of twins together", k: "twins", n: 10 },
+  // (v1.6.5) four more for two players: team goals, helping hands, a duel or race won, and a friend dropping in
+  { id: "t24", name: "GOAL GETTERS", line: "reach 10 team goals in co-op", k: "teamGoals", n: 10 },
+  { id: "t25", name: "GOOD MATES", line: "lend 20 helping hands", k: "helps", n: 20 },
+  { id: "t26", name: "DUEL CHAMPION", line: "win 3 mini-game duels or races", k: "duelWins", n: 3 },
+  { id: "t27", name: "WELCOME ABOARD", line: "a friend joins your game", k: "dropIns", n: 1 },
   {
     id: "t20",
     name: "GALACTIC CHAMPION",
@@ -64249,6 +64298,7 @@ function funMiniUpdate(dt) {
       const [a, b] = M.gl;
       if (!M.team) M.score = a.score + b.score; // (the team mixer counts its shakes as it goes)
       M.duelWin = M.team ? -2 : a.score > b.score ? 0 : b.score > a.score ? 1 : -1;
+      if (M.duelWin >= 0) fStat("duelWins"); // (v1.6.5: the DUEL CHAMPION trophy - whichever of you won)
       M.reward = Math.max(3, M.kind === "stork" ? M.score * 2 : M.kind === "mixer" ? M.score * 4 : M.score); // (v1.5.96: a star is worth two, as alone) (v1.5.97: a shake four)
       addCoins(M.reward);
       fStat("minis");
@@ -79706,7 +79756,7 @@ function levelOfTour(of) {
     inTour = ((lv - 1) % LAST_LEVEL) + 1;
   return (tour > 1 ? "TOUR " + tour + "  ·  " : "") + "LEVEL " + inTour + of + LAST_LEVEL;
 }
-const GAME_VERSION = "v1.6.4",
+const GAME_VERSION = "v1.6.6",
   GAME_DATE = "21.11.2026",
   VERSION_TEXT = GAME_VERSION + "  ·  " + GAME_DATE;
 const FB = '"Chakra Petch", "Segoe UI", sans-serif';
@@ -81201,6 +81251,19 @@ function drawHelp(g, s, t, fD, fB, sx, sy) {
     }
     g.globalAlpha = 1;
   }
+  // (v1.6.6) HANDS UP: a high five in co-op - a hand pops up over each bartender for a moment, so you see it happen
+  // between the two of you (in calm mode it just fades, without the pop)
+  if (coopOn())
+    for (const p of PL) {
+      const k = (G.time - (p.h5At ?? -9)) / 0.9;
+      if (k < 0 || k >= 1) continue;
+      const [x, y] = projL(p.lane, p.x - 30, LY(p.lane, p.x) - 76 - k * 14, VSIDE.p), // (beside the head - above it the HIGH FIVE words float)
+        pop = COMFORT.calm ? 1 : 0.6 + 0.6 * Math.sin(Math.min(1, k * 4) * Math.PI * 0.75);
+      g.globalAlpha = Math.min(1, (1 - k) * 3);
+      g.font = Math.round(26 * s * pop) + "px sans-serif";
+      g.fillText("\u270B", sx(x), sy(y));
+      g.globalAlpha = 1;
+    }
   // (the NO SERVICE sign over every devil, demon and vampire is drawn in the room itself now, as a NO ENTRY road sign -
   //  see drawNoServe in kids2.ts, v1.4.38b - so there's just the one sign)
   // pouring a shake for a bar with nobody on it? it will smash at the far end
@@ -86266,7 +86329,12 @@ $("nameForm").addEventListener("submit", (e) => {
   table.push({
     n,
     s: G.score,
-    sec: "LEVEL " + G.level + (difficulty !== "normal" ? " " + DIFFS[difficulty].name : ""),
+    // (v1.6.6: and a team's score says so - CO-OP or VERSUS - so it isn't taken for one player's)
+    sec:
+      "LEVEL " +
+      G.level +
+      (difficulty !== "normal" ? " " + DIFFS[difficulty].name : "") +
+      (twoP() ? (G.versus ? "  ·  VERSUS" : "  ·  CO-OP") : ""),
   });
   table.sort((a, b) => b.s - a.s);
   table.length = Math.min(20, table.length);
@@ -87287,6 +87355,22 @@ profWire();
 //  the game, and where the motion capture, the folk songs and the fonts come from. Both from the menu at any time.
 // =====================================================================================
 const NEWS = [
+  {
+    ver: "v1.6.6",
+    title: "HANDS UP",
+    items: [
+      "A HIGH FIVE IN CO-OP NOW PUTS A HAND UP BESIDE EACH OF YOU, SO YOU SEE IT HAPPEN",
+      "A TEAM'S HIGH SCORE SAYS CO-OP OR VERSUS IN THE TABLE, AND THE TABLE'S DIFFICULTY WORDS ARE TRANSLATED",
+    ],
+  },
+  {
+    ver: "v1.6.5",
+    title: "MORE TEAM TROPHIES",
+    items: [
+      "FOUR NEW TROPHIES FOR TWO PLAYERS: GOAL GETTERS (10 TEAM GOALS) AND GOOD MATES (20 HELPING HANDS)",
+      "DUEL CHAMPION (WIN 3 MINI-GAME DUELS OR RACES) AND WELCOME ABOARD (A FRIEND JOINS YOUR GAME)",
+    ],
+  },
   {
     ver: "v1.6.4",
     title: "SMOOTHER JOINING",

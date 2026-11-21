@@ -620,6 +620,10 @@ body.touch2p #touch .tp button.holy { width: 60px; height: 60px; font-size: 11px
     <p data-tr>Some customers show the flavour they'd like in a bubble over their head - strawberry, chocolate or mint. Switch your flavour (<b>E</b>, a <b>right-click</b>, SELECT on a controller, or the FLAVOUR words / button) and serve the one they asked for: <b>+150</b>. The wrong flavour is still fine - just no bonus. Don't want to bother? Turn <b>FLAVOUR ORDERS</b> off in SETTINGS: then nobody asks, and there's just one flavour to pour.</p>
     <h3>SPECIAL GUESTS</h3>
     <p data-tr>Don't serve <b>devils, demons or vampires</b>: run up the bar and show them the door, or send HOLY WATER (H) / show the CROSS (Q). <b>Angels</b> are worth triple points. Customers with a <b>stopwatch</b> are in a hurry - serve them fast for a bonus. A <b>protest</b> calms down when you serve the marchers.</p>
+    <!-- (v1.6.9) TWO PLAYERS: how to play together, and what co-op has in it (all of it was only in the news) -->
+    <h3>TWO PLAYERS</h3>
+    <p data-tr>Choose <b>2 · CO-OP</b> (or VERSUS) on the menu. Player 1 plays on W A S D + Space, player 2 on the arrow keys + Enter - or a controller each, or a pad each on a touch screen. A friend can <b>join a game already going</b>: START on a second controller, or + PLAYER 2 JOINS in the pause menu.</p>
+    <p data-tr>In co-op you share the lives and play as a team. Serve at the same moment for a <b>HIGH FIVE</b>; serve the <b>TWINS</b> on two bars together; run to a partner who slips for a <b>HELPING HAND</b>. Every stop has a <b>TEAM GOAL</b> (in the corner) - meet them stop after stop for a goal streak. Whoever is three serves ahead wears the <b>CROWN</b>, and the mini-games are played together: a cherry duel, a stork race and a team mixer.</p>
     <h3>POWER-UPS, STARS AND COINS</h3>
     <p data-tr>Grab the <b>power-ups</b> that appear on the bar when it's quiet. Each level gives up to three <b>stars</b>, and you earn <b>coins</b> to spend in the COIN SHOP (PLAY MORE). FREE PLAY mode has no losing and no timer.</p>
   </div>
@@ -6615,6 +6619,17 @@ const DICT_ROWS                             = [
     "Party klante wys die geur wat hulle wil hê in 'n borrel bo hul kop - aarbei, sjokolade of kruisement. Wissel jou geur (<b>E</b>, 'n <b>regsklik</b>, SELECT op 'n beheerder, of die GEUR-woorde / -knoppie) en bedien die een waarvoor hulle gevra het: <b>+150</b>. Die verkeerde geur is ook reg - net geen bonus nie. Wil jy nie pla nie? Skakel <b>GEURBESTELLINGS</b> af in INSTELLINGS: dan vra niemand nie, en daar is net een geur om te skink.",
     "Niektórzy klienci pokazują w dymku nad głową smak, na który mają ochotę - truskawkowy, czekoladowy albo miętowy. Zmień smak (<b>E</b>, <b>prawy przycisk myszy</b>, SELECT na kontrolerze albo napis / przycisk SMAK) i podaj ten, o który prosili: <b>+150</b>. Zły smak też jest w porządku - tylko bez premii. Nie chcesz się tym przejmować? Wyłącz <b>ZAMÓWIENIA SMAKÓW</b> w USTAWIENIACH: wtedy nikt nie prosi i jest tylko jeden smak do nalewania.",
   ],
+  ["TWO PLAYERS", "TWEE SPELERS", "DWÓCH GRACZY"], // (v1.6.9: HOW TO PLAY)
+  [
+    "Choose <b>2 · CO-OP</b> (or VERSUS) on the menu. Player 1 plays on W A S D + Space, player 2 on the arrow keys + Enter - or a controller each, or a pad each on a touch screen. A friend can <b>join a game already going</b>: START on a second controller, or + PLAYER 2 JOINS in the pause menu.",
+    "Kies <b>2 · SAAM</b> (of TEEN) op die kieslys. Speler 1 speel met W A S D + Spasie, speler 2 met die pyltjiesleutels + Enter - of 'n beheerder elk, of 'n beheerbord elk op 'n raakskerm. 'n Vriend kan <b>by 'n spel aansluit wat reeds aan die gang is</b>: START op 'n tweede beheerder, of + SPELER 2 SLUIT AAN in die pousekieslys.",
+    "Wybierz <b>2 · RAZEM</b> (albo POJEDYNEK) w menu. Gracz 1 gra na W A S D + Spacja, gracz 2 na strzałkach + Enter - albo każdy na swoim kontrolerze, albo każdy na swoim panelu na ekranie dotykowym. Przyjaciel może <b>dołączyć do trwającej gry</b>: START na drugim kontrolerze albo + GRACZ 2 DOŁĄCZA w menu pauzy.",
+  ],
+  [
+    "In co-op you share the lives and play as a team. Serve at the same moment for a <b>HIGH FIVE</b>; serve the <b>TWINS</b> on two bars together; run to a partner who slips for a <b>HELPING HAND</b>. Every stop has a <b>TEAM GOAL</b> (in the corner) - meet them stop after stop for a goal streak. Whoever is three serves ahead wears the <b>CROWN</b>, and the mini-games are played together: a cherry duel, a stork race and a team mixer.",
+    "In saamspeel deel julle die lewes en speel as 'n span. Bedien op dieselfde oomblik vir 'n <b>HOË VYF</b>; bedien die <b>TWEELINGE</b> op twee toonbanke saam; hardloop na 'n maat wat gly vir 'n <b>HELPENDE HAND</b>. Elke stop het 'n <b>SPANDOEL</b> (in die hoek) - bereik hulle stop na stop vir 'n doelreeks. Wie drie bedienings voor is, dra die <b>KROON</b>, en die mini-speletjies word saam gespeel: 'n kersie-tweegeveg, 'n ooievaar-wedren en 'n spanmenger.",
+    "W kooperacji dzielicie życia i gracie jako drużyna. Obsłużcie w tej samej chwili, by przybić <b>PIĄTKĘ</b>; obsłużcie razem <b>BLIŹNIAKI</b> przy dwóch ladach; podbiegnij do partnera, który się poślizgnie, by podać <b>POMOCNĄ DŁOŃ</b>. Każdy przystanek ma <b>CEL DRUŻYNY</b> (w rogu) - osiągajcie je przystanek po przystanku, by zbudować serię. Kto wyprzedzi o trzy obsłużenia, nosi <b>KORONĘ</b>, a w minigry gracie razem: wiśniowy pojedynek, wyścig bocianów i mikser drużyny.",
+  ],
   [
     "Don't serve <b>devils, demons or vampires</b>: run up the bar and show them the door, or send HOLY WATER (H) / show the CROSS (Q). <b>Angels</b> are worth triple points. Customers with a <b>stopwatch</b> are in a hurry - serve them fast for a bonus. A <b>protest</b> calms down when you serve the marchers.",
     "Moenie <b>duiwels, demone of vampiere</b> bedien nie: hardloop op met die toonbank en wys hulle die deur, of stuur WYWATER (H) / wys die KRUIS (Q). <b>Engele</b> is drie keer soveel punte werd. Klante met 'n <b>stophorlosie</b> is haastig - bedien hulle vinnig vir 'n bonus. 'n <b>Betoging</b> bedaar as jy die optoggangers bedien.",
@@ -7767,6 +7782,12 @@ const DICT_ROWS                             = [
     "AND WHEN THE TIP-JAR THIEF GETS AWAY, THE LOSS IS SHARED TOO - IT ALL CAME OFF PLAYER 1",
     "EN AS DIE FOOIEPOT-DIEF WEGKOM, WORD DIE VERLIES OOK GEDEEL - DIT HET ALLES VAN SPELER 1 AFGEGAAN",
     "A GDY ZŁODZIEJ SŁOIKA NA NAPIWKI UCIEKNIE, STRATA TEŻ JEST DZIELONA - CAŁA SZŁA Z KONTA GRACZA 1",
+  ],
+  ["PLAYING TOGETHER", "SAAM SPEEL", "GRAMY RAZEM"],
+  [
+    "HOW TO PLAY HAS A NEW PART, TWO PLAYERS: HOW TO START AND JOIN, AND WHAT CO-OP HAS IN IT - HIGH FIVES, TWINS, TEAM GOALS, THE CROWN",
+    "HOE OM TE SPEEL HET 'N NUWE DEEL, TWEE SPELERS: HOE OM TE BEGIN EN AAN TE SLUIT, EN WAT IN SAAMSPEEL IS - HOË VYWE, TWEELINGE, SPANDOELE, DIE KROON",
+    "JAK GRAĆ MA NOWĄ CZĘŚĆ, DWÓCH GRACZY: JAK ZACZĄĆ I DOŁĄCZYĆ ORAZ CO JEST W KOOPERACJI - PIĄTKI, BLIŹNIAKI, CELE DRUŻYNY, KORONA",
   ],
   ["TWO ON A TABLET", "TWEE OP 'N TABLET", "DWOJE NA TABLECIE"],
   [
@@ -79864,7 +79885,7 @@ function levelOfTour(of) {
     inTour = ((lv - 1) % LAST_LEVEL) + 1;
   return (tour > 1 ? "TOUR " + tour + "  ·  " : "") + "LEVEL " + inTour + of + LAST_LEVEL;
 }
-const GAME_VERSION = "v1.6.8",
+const GAME_VERSION = "v1.6.9",
   GAME_DATE = "21.11.2026",
   VERSION_TEXT = GAME_VERSION + "  ·  " + GAME_DATE;
 const FB = '"Chakra Petch", "Segoe UI", sans-serif';
@@ -87469,6 +87490,13 @@ profWire();
 //  the game, and where the motion capture, the folk songs and the fonts come from. Both from the menu at any time.
 // =====================================================================================
 const NEWS = [
+  {
+    ver: "v1.6.9",
+    title: "PLAYING TOGETHER",
+    items: [
+      "HOW TO PLAY HAS A NEW PART, TWO PLAYERS: HOW TO START AND JOIN, AND WHAT CO-OP HAS IN IT - HIGH FIVES, TWINS, TEAM GOALS, THE CROWN",
+    ],
+  },
   {
     ver: "v1.6.8",
     title: "TWO ON A TABLET",

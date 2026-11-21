@@ -660,6 +660,7 @@ body.retro .table { font-size: 10px; gap: 5px; }
   <p class="info" id="pAfk" hidden>STILL THERE? The game paused itself so you don't lose a life while you're away. Press FIRE or RESUME to carry on.</p>
   <div class="buttons">
     <button id="pResume" class="primary">RESUME</button>
+    <button id="pJoin" hidden>+ PLAYER 2 JOINS</button>
     <h3 class="sec">SOUND AND CONTROLS</h3>
     <button id="pSound" class="opt"><span>SOUND</span><b id="vSound2"></b></button>
     <button id="pMusic" class="opt"><span>MUSIC</span><b id="vMusic2"></b></button>
@@ -4071,6 +4072,12 @@ const DICT_ROWS                             = [
   ["SERVED", "BEDIEN", "OBSŁUŻONO"],
   ["NEW HIGH SCORE!", "NUWE BESTE TELLING!", "NOWY REKORD!"],
   ["NEW RECORD!", "NUWE REKORD!", "NOWY REKORD!"],
+  // (v1.5.93) the co-op team awards on the game-over card
+  ["TOP SERVER", "TOP-BEDIENER", "NAJLEPSZY W OBSŁUDZE"],
+  ["TOP CATCHER", "TOP-VANGER", "NAJLEPSZY W ŁAPANIU"],
+  ["HELPING HANDS", "HELPENDE HANDE", "POMOCNE DŁONIE"],
+  ["CROWNS WON", "KRONE GEWEN", "ZDOBYTE KORONY"],
+  ["TIED", "GELYKOP", "REMIS"],
   // the simpler menu (v2026.10.05d)
   ["★ PLAY MORE", "★ SPEEL MEER", "★ WIĘCEJ GRANIA"],
   ["⚙ SETTINGS", "⚙ INSTELLINGS", "⚙ USTAWIENIA"],
@@ -4771,6 +4778,13 @@ const DICT_ROWS                             = [
     "PORA NA OBIAD... HEJ! TO BYŁA MOJA KANAPKA!",
   ],
   ["WISH YOU WERE HERE", "WENS JY WAS HIER", "SZKODA, ŻE CIĘ TU NIE MA"],
+  [
+    "TEAM GOAL: SERVE A PAIR OF TWINS TOGETHER",
+    "SPANDOEL: BEDIEN 'N PAAR TWEELINGE SAAM",
+    "CEL DRUŻYNY: OBSŁUŻCIE RAZEM PARĘ BLIŹNIAKÓW",
+  ], // (v1.5.91)
+  ["TEAM GOAL DONE!", "SPANDOEL BEREIK!", "CEL DRUŻYNY OSIĄGNIĘTY!"], // (v1.5.91)
+  ["✔ TEAM GOAL DONE!", "✔ SPANDOEL BEREIK!", "✔ CEL DRUŻYNY OSIĄGNIĘTY!"], // (v1.6.2)
   ["TEAM SPIRIT", "SPANGEES", "DUCH DRUŻYNY"], // (v1.5.84: the reason for the coins)
   ["PLAYER 2: PICK ANOTHER CUP", "SPELER 2: KIES 'N ANDER KOPPIE", "GRACZ 2: WYBIERZ INNY KUBEK"],
   // (v1.5.89) the team tips on the first co-op stops
@@ -5090,6 +5104,25 @@ const DICT_ROWS                             = [
     "Catch only what the recipe needs. Wrong thing? Start that shake again!",
     "Vang net wat die resep nodig het. Iets verkeerd? Begin daardie skommel weer!",
     "Łap tylko to, czego potrzebuje przepis. Coś nie tak? Zacznij ten koktajl od nowa!",
+  ],
+  ["CHERRY DUEL", "KERSIE-TWEEGEVEG", "WIŚNIOWY POJEDYNEK"], // (v1.5.95)
+  ["TEAMWORK!", "SPANWERK!", "PRACA ZESPOŁOWA!"], // (v1.5.97)
+  ["VS", "TEEN", "VS"], // (v1.6.4: the cherry duel's and stork race's intro)
+  [
+    "Two glasses, one recipe: catch what the recipe needs in either glass - together! Anything else spoils the shake for both of you.",
+    "Twee glase, een resep: vang wat die resep nodig het in enige glas - saam! Enigiets anders bederf die skommel vir julle albei.",
+    "Dwie szklanki, jeden przepis: łapcie to, czego potrzeba, do dowolnej szklanki - razem! Cokolwiek innego psuje koktajl wam obojgu.",
+  ],
+  [
+    "Two storks: pink is player 1, blue is player 2. Up and down to fly - the most stars wins! Hit an asteroid and your delivery is over.",
+    "Twee ooievaars: pienk is speler 1, blou is speler 2. Op en af om te vlieg - die meeste sterre wen! Tref 'n asteroïde en jou aflewering is verby.",
+    "Dwa bociany: różowy to gracz 1, niebieski to gracz 2. W górę i w dół, by lecieć - kto zbierze więcej gwiazdek, wygrywa! Uderzysz w asteroidę i twoja dostawa się kończy.",
+  ],
+  ["A DRAW!", "GELYKOP!", "REMIS!"], // (v1.5.95)
+  [
+    "Two glasses: pink is player 1, blue is player 2. Catch ONLY the cherries - the most cherries wins! Catch anything else and your glass is out.",
+    "Twee glase: pienk is speler 1, blou is speler 2. Vang NET die kersies - die meeste kersies wen! Vang enigiets anders en jou glas is uit.",
+    "Dwie szklanki: różowa to gracz 1, niebieska to gracz 2. Łapcie TYLKO wiśnie - kto złapie więcej, wygrywa! Złapiesz coś innego i twoja szklanka odpada.",
   ],
   [
     "Move the glass left and right. Catch ONLY the cherries! Catch anything else and it lands in your glass - and the round is over.",
@@ -7684,6 +7717,207 @@ const DICT_ROWS                             = [
   ["where's my milkshake?", "WAAR'S MY MILKSHAKE?", "gdzie mój koktajl?"],
   ["we're still waiting!", "ONS WAG NOG!", "wciąż czekamy!"],
   ["oh my goodness!", "HAAI, JIRRE!", "o rany!"],
+  ["FAIR SHARES", "BILLIKE DELE", "SPRAWIEDLIWY PODZIAŁ"],
+  [
+    "WITH TWO PLAYERS, THE BONUSES FOR THE VIP AND THE FASTEST POUR IN THE WEST NOW GO TO WHOEVER SERVED THEM",
+    "MET TWEE SPELERS GAAN DIE BONUSSE VIR DIE BBP EN DIE VINNIGSTE SKINK IN DIE WESTE NOU NA WIE HULLE BEDIEN HET",
+    "W DWÓCH GRACZY PREMIE ZA VIP-A I NAJSZYBSZE NALEWANIE NA DZIKIM ZACHODZIE TRAFIAJĄ TERAZ DO TEGO, KTO ICH OBSŁUŻYŁ",
+  ],
+  [
+    "THE UFO'S VISITORS, THE FAN PARTY AND A PROTEST CALMED DOWN ARE SHARED HALF AND HALF - THEY ALWAYS WENT TO PLAYER 1",
+    "DIE VVV SE BESOEKERS, DIE AANHANGERSPARTYTJIE EN 'N BETOGING WAT BEDAAR HET WORD HALF-HALF GEDEEL - HULLE HET ALTYD NA SPELER 1 GEGAAN",
+    "GOŚCIE Z UFO, IMPREZA KIBICÓW I USPOKOJONY PROTEST SĄ DZIELONE PO POŁOWIE - ZAWSZE TRAFIAŁY DO GRACZA 1",
+  ],
+  [
+    "AND WHEN THE TIP-JAR THIEF GETS AWAY, THE LOSS IS SHARED TOO - IT ALL CAME OFF PLAYER 1",
+    "EN AS DIE FOOIEPOT-DIEF WEGKOM, WORD DIE VERLIES OOK GEDEEL - DIT HET ALLES VAN SPELER 1 AFGEGAAN",
+    "A GDY ZŁODZIEJ SŁOIKA NA NAPIWKI UCIEKNIE, STRATA TEŻ JEST DZIELONA - CAŁA SZŁA Z KONTA GRACZA 1",
+  ],
+  ["SMOOTHER JOINING", "GLADDER AANSLUIT", "PŁYNNIEJSZE DOŁĄCZANIE"],
+  [
+    "JOINING WITH START ON A SECOND CONTROLLER NO LONGER PAUSES THE GAME A MOMENT LATER",
+    "AANSLUIT MET START OP 'N TWEEDE BEHEERDER POUSEER NIE MEER DIE SPEL 'N OOMBLIK LATER NIE",
+    "DOŁĄCZENIE PRZEZ START NA DRUGIM KONTROLERZE NIE WSTRZYMUJE JUŻ GRY CHWILĘ PÓŹNIEJ",
+  ],
+  [
+    "JOIN A FRIEND IN FROM THE PAUSE MENU WHILE PLAYING ON THE ONLY CONTROLLER, AND IT STAYS YOURS - THEY TAKE THE ARROW KEYS",
+    "LAAT 'N VRIEND UIT DIE POUSEKIESLYS AANSLUIT TERWYL JY OP DIE ENIGSTE BEHEERDER SPEEL, EN DIT BLY JOUNE - HULLE NEEM DIE PYLTJIESLEUTELS",
+    "GDY DOŁĄCZYSZ PRZYJACIELA Z MENU PAUZY, GRAJĄC NA JEDYNYM KONTROLERZE, ZOSTAJE ON TWÓJ - PRZYJACIEL BIERZE STRZAŁKI",
+  ],
+  [
+    "IN THE CHERRY DUEL THE RED CROSS STAYS OVER THE GLASS THAT CAUGHT THE WRONG THING",
+    "IN DIE KERSIE-TWEEGEVEG BLY DIE ROOI KRUIS BO DIE GLAS WAT DIE VERKEERDE DING GEVANG HET",
+    "W WIŚNIOWYM POJEDYNKU CZERWONY KRZYŻYK ZOSTAJE NAD SZKLANKĄ, KTÓRA ZŁAPAŁA COŚ NIE TAK",
+  ],
+  ["TWO FLAVOURS", "TWEE GEURE", "DWA SMAKI"],
+  [
+    "WITH TWO PLAYERS, PLAYER 2'S FLAVOUR IS NOW SHOWN TOO, IN THE CORNER ABOVE PLAYER 1'S - BEFORE, THEY POURED BLIND",
+    "MET TWEE SPELERS WORD SPELER 2 SE GEUR NOU OOK GEWYS, IN DIE HOEK BO SPELER 1 S'N - VROEËR HET HULLE BLIND GESKINK",
+    "W DWÓCH GRACZY WIDAĆ TERAZ TEŻ SMAK GRACZA 2, W ROGU NAD SMAKIEM GRACZA 1 - WCZEŚNIEJ NALEWAŁ NA ŚLEPO",
+  ],
+  [
+    "EACH CONTROLLER'S SELECT CHANGES ITS OWN PLAYER'S FLAVOUR - A SINGLE CONTROLLER (PLAYER 2'S) CHANGED PLAYER 1'S",
+    "ELKE BEHEERDER SE SELECT VERANDER SY EIE SPELER SE GEUR - 'N ENKEL BEHEERDER (SPELER 2 S'N) HET SPELER 1 S'N VERANDER",
+    "SELECT NA KAŻDYM KONTROLERZE ZMIENIA SMAK JEGO GRACZA - POJEDYNCZY KONTROLER (GRACZA 2) ZMIENIAŁ SMAK GRACZA 1",
+  ],
+  ["GOAL STREAK", "DOELREEKS", "SERIA CELÓW"],
+  [
+    "IN CO-OP THE TEAM GOAL NOW STAYS IN SIGHT: HOW FAR ALONG YOU ARE, IN GOLD IN THE CORNER",
+    "IN SAAMSPEEL BLY DIE SPANDOEL NOU IN SIG: HOE VER JULLE IS, IN GOUD IN DIE HOEK",
+    "W KOOPERACJI CEL DRUŻYNY JEST TERAZ CIĄGLE WIDOCZNY: ILE JUŻ MACIE, ZŁOTYMI LITERAMI W ROGU",
+  ],
+  [
+    "GOALS MET STOP AFTER STOP MAKE A GOAL STREAK - EACH ONE PAYS TWO COINS MORE, UP TO 15",
+    "DOELE WAT STOP NA STOP BEREIK WORD, MAAK 'N DOELREEKS - ELKEEN BETAAL TWEE MUNTE MEER, TOT 15",
+    "CELE OSIĄGANE PRZYSTANEK PO PRZYSTANKU TWORZĄ SERIĘ - KAŻDY DAJE O DWIE MONETY WIĘCEJ, AŻ DO 15",
+  ],
+  ["WHOSE IS IT?", "WIE S'N EEN?", "CZYJE TO?"],
+  [
+    "IN CO-OP THE RED WARNING ARROW AT A BAR WITH NOBODY ON IT NOW SAYS WHO SHOULD RUN THERE: P1 OR P2, IN THEIR COLOUR",
+    "IN SAAMSPEEL SÊ DIE ROOI WAARSKUWINGSPYL BY 'N TOONBANK SONDER IEMAND NOU WIE DAAR MOET GAAN: P1 OF P2, IN HUL KLEUR",
+    "W KOOPERACJI CZERWONA STRZAŁKA PRZY PUSTEJ LADZIE MÓWI TERAZ, KTO MA TAM BIEC: P1 ALBO P2, W SWOIM KOLORZE",
+  ],
+  [
+    "THE FIRST DEVIL OR WEREWOLF'S HINT GIVES BOTH PLAYERS' KEYS ON A SHARED KEYBOARD",
+    "DIE WENK BY DIE EERSTE DUIWEL OF WEERWOLF GEE ALBEI SPELERS SE SLEUTELS OP 'N GEDEELDE SLEUTELBORD",
+    "PODPOWIEDŹ PRZY PIERWSZYM DIABLE CZY WILKOŁAKU PODAJE KLAWISZE OBU GRACZY NA WSPÓLNEJ KLAWIATURZE",
+  ],
+  ["DROP-IN", "INSPRING", "DOŁĄCZ W LOCIE"],
+  [
+    "A FRIEND CAN JOIN YOUR GAME ANY TIME: PRESS START ON A SECOND CONTROLLER, OR CHOOSE + PLAYER 2 JOINS IN THE PAUSE MENU",
+    "'N VRIEND KAN ENIGE TYD BY JOU SPEL AANSLUIT: DRUK START OP 'N TWEEDE BEHEERDER, OF KIES + SPELER 2 SLUIT AAN IN DIE POUSEKIESLYS",
+    "PRZYJACIEL MOŻE DOŁĄCZYĆ DO GRY W KAŻDEJ CHWILI: WCIŚNIJ START NA DRUGIM KONTROLERZE ALBO WYBIERZ + GRACZ 2 DOŁĄCZA W MENU PAUZY",
+  ],
+  [
+    "PLAYER 2 COMES IN AS CO-OP, ON A BAR OF THEIR OWN, AND BRINGS TWO MORE LIVES FOR THE TEAM",
+    "SPELER 2 KOM IN AS SAAMSPEEL, OP HUL EIE TOONBANK, EN BRING NOG TWEE LEWES VIR DIE SPAN",
+    "GRACZ 2 WCHODZI W KOOPERACJI, PRZY WŁASNEJ LADZIE, I PRZYNOSI DRUŻYNIE DWA ŻYCIA WIĘCEJ",
+  ],
+  ["+ PLAYER 2 JOINS", "+ SPELER 2 SLUIT AAN", "+ GRACZ 2 DOŁĄCZA"],
+  ["PLAYER 2 JOINS THE TEAM!", "SPELER 2 SLUIT BY DIE SPAN AAN!", "GRACZ 2 DOŁĄCZA DO DRUŻYNY!"],
+  ["TEAM TAKEDOWN", "SPANOORWINNING", "WSPÓLNE ZWYCIĘSTWO"],
+  [
+    "THE BIG BONUS FOR FILLING A BOSS OR THE GALACTIC GLUTTON ALWAYS WENT TO PLAYER 1 - NOW IT GOES BY WHO FED IT",
+    "DIE GROOT BONUS VIR 'N BAAS OF DIE GALAKTIESE VRAAT VOL MAAK HET ALTYD NA SPELER 1 GEGAAN - NOU GAAN DIT NA WIE HOM GEVOER HET",
+    "DUŻA PREMIA ZA NAKARMIENIE BOSSA ALBO GALAKTYCZNEGO ŻARŁOKA ZAWSZE TRAFIAŁA DO GRACZA 1 - TERAZ ZALEŻY OD TEGO, KTO GO KARMIŁ",
+  ],
+  [
+    "IN CO-OP IT'S SHARED BY THE SHAKES EACH OF YOU SERVED IT - AND IF YOU BOTH FED IT, A TEAM TAKEDOWN WITH COINS",
+    "IN SAAMSPEEL WORD DIT GEDEEL VOLGENS DIE SKOMMELS WAT ELKEEN VAN JULLE HOM BEDIEN HET - EN AS JULLE HOM ALBEI GEVOER HET, 'N SPANOORWINNING MET MUNTE",
+    "W KOOPERACJI DZIELI SIĘ JĄ WEDŁUG KOKTAJLI PODANYCH PRZEZ KAŻDE Z WAS - A JEŚLI KARMILIŚCIE GO OBOJE, WSPÓLNE ZWYCIĘSTWO Z MONETAMI",
+  ],
+  [
+    "IN VERSUS WHOEVER FED IT MOST TAKES IT ALL",
+    "IN TEENSPEL VAT WIE HOM DIE MEESTE GEVOER HET ALLES",
+    "W POJEDYNKU WSZYSTKO BIERZE TEN, KTO KARMIŁ GO NAJWIĘCEJ",
+  ],
+  ["TEAM MIXER", "SPANMENGER", "MIKSER DRUŻYNY"],
+  [
+    "WITH TWO PLAYERS, THE SHAKE MIXER IS NOW TEAMWORK: TWO GLASSES, ONE RECIPE, AND WHAT IT NEEDS COUNTS IN EITHER GLASS",
+    "MET TWEE SPELERS IS DIE SKOMMELMENGER NOU SPANWERK: TWEE GLASE, EEN RESEP, EN WAT DIT NODIG HET TEL IN ENIGE GLAS",
+    "W DWÓCH GRACZY MIKSER KOKTAJLI TO TERAZ PRACA ZESPOŁOWA: DWIE SZKLANKI, JEDEN PRZEPIS, A TO, CZEGO TRZEBA, LICZY SIĘ W KAŻDEJ SZKLANCE",
+  ],
+  [
+    "ANYTHING ELSE SPOILS THE SHAKE FOR BOTH OF YOU - SO WATCH EACH OTHER'S BACK",
+    "ENIGIETS ANDERS BEDERF DIE SKOMMEL VIR JULLE ALBEI - PAS DUS MEKAAR OP",
+    "COKOLWIEK INNEGO PSUJE KOKTAJL WAM OBOJGU - WIĘC PILNUJCIE SIĘ NAWZAJEM",
+  ],
+  [
+    "SO ALL THREE MINI-GAMES ARE NOW PLAYED TOGETHER: A CHERRY DUEL, A STORK RACE AND A TEAM MIXER",
+    "SO WORD AL DRIE MINI-SPELETJIES NOU SAAM GESPEEL: 'N KERSIE-TWEEGEVEG, 'N OOIEVAAR-WEDREN EN 'N SPANMENGER",
+    "TAK WIĘC WSZYSTKIE TRZY MINIGRY GRA SIĘ TERAZ RAZEM: WIŚNIOWY POJEDYNEK, WYŚCIG BOCIANÓW I MIKSER DRUŻYNY",
+  ],
+  ["STORK RACE", "OOIEVAAR-WEDREN", "WYŚCIG BOCIANÓW"],
+  [
+    "WITH TWO PLAYERS, BOGDAN'S SPACE DELIVERY IS NOW A RACE: TWO STORKS, PINK AND BLUE, FLYING AT ONCE",
+    "MET TWEE SPELERS IS BOGDAN SE RUIMTE-AFLEWERING NOU 'N WEDREN: TWEE OOIEVAARS, PIENK EN BLOU, WAT GELYK VLIEG",
+    "W DWÓCH GRACZY KOSMICZNA DOSTAWA BOGDANA TO TERAZ WYŚCIG: DWA BOCIANY, RÓŻOWY I NIEBIESKI, LECĄ NARAZ",
+  ],
+  [
+    "A STAR GOES TO WHOEVER REACHES IT FIRST. HIT AN ASTEROID AND YOUR DELIVERY IS OVER - THE MOST STARS WINS",
+    "'N STER GAAN NA WIE OOK AL DIT EERSTE BEREIK. TREF 'N ASTEROÏDE EN JOU AFLEWERING IS VERBY - DIE MEESTE STERRE WEN",
+    "GWIAZDKA TRAFIA DO TEGO, KTO DOLECI DO NIEJ PIERWSZY. UDERZYSZ W ASTEROIDĘ I TWOJA DOSTAWA SIĘ KOŃCZY - WYGRYWA, KTO MA WIĘCEJ GWIAZDEK",
+  ],
+  [
+    "EITHER PLAYER CAN NOW MOVE THE STORIES ON, SKIP THE ARRIVAL, AND START OR LEAVE A DUEL",
+    "ENIGE SPELER KAN NOU DIE STORIES AANSKUIF, DIE AANKOMS OORSLAAN, EN 'N TWEEGEVEG BEGIN OF VERLAAT",
+    "KAŻDY Z GRACZY MOŻE TERAZ PRZEWIJAĆ OPOWIEŚCI, POMIJAĆ PRZYLOT ORAZ ZACZĄĆ LUB ZAKOŃCZYĆ POJEDYNEK",
+  ],
+  [
+    "WITH TWO PLAYERS, CHERRY CATCH IS NOW A DUEL: TWO GLASSES, PINK AND BLUE, BOTH PLAYING AT ONCE",
+    "MET TWEE SPELERS IS KERSIEVANG NOU 'N TWEEGEVEG: TWEE GLASE, PIENK EN BLOU, ALBEI SPEEL GELYK",
+    "W DWÓCH GRACZY ŁAPANIE WIŚNI TO TERAZ POJEDYNEK: DWIE SZKLANKI, RÓŻOWA I NIEBIESKA, OBOJE GRAJĄ NARAZ",
+  ],
+  [
+    "CATCH THE WRONG THING AND YOUR GLASS IS OUT - THE OTHER PLAYS ON. THE MOST CHERRIES WINS",
+    "VANG DIE VERKEERDE DING EN JOU GLAS IS UIT - DIE ANDER SPEEL VOORT. DIE MEESTE KERSIES WEN",
+    "ZŁAP COŚ NIE TAK, A TWOJA SZKLANKA ODPADA - DRUGI GRA DALEJ. WYGRYWA, KTO MA WIĘCEJ WIŚNI",
+  ],
+  [
+    "THE MINI-GAMES' SCORE LINE IS NOW IN AFRIKAANS AND POLISH, AND ON AN UPRIGHT PHONE THE +1S RISE FROM THE GLASS",
+    "DIE MINI-SPELETJIES SE TELLINGLYN IS NOU IN AFRIKAANS EN POOLS, EN OP 'N REGOP FOON STYG DIE +1'E UIT DIE GLAS OP",
+    "WYNIK W MINIGRACH JEST TERAZ PO AFRIKAANS I PO POLSKU, A NA PIONOWYM TELEFONIE +1 UNOSZĄ SIĘ ZE SZKLANKI",
+  ],
+  ["WHO'S GOING?", "WIE GAAN?", "KTO IDZIE?"],
+  [
+    "IN CO-OP, WHEN A CUSTOMER OR AN EMPTY GLASS IS ABOUT TO REACH A BAR WITH NOBODY ON IT, THE GAME CALLS WHO SHOULD GO",
+    "IN SAAMSPEEL, WANNEER 'N KLANT OF 'N LEË GLAS AMPER BY 'N TOONBANK IS WAAR NIEMAND STAAN, ROEP DIE SPEL WIE MOET GAAN",
+    "W KOOPERACJI, GDY KLIENT ALBO PUSTA SZKLANKA ZARAZ DOTRZE DO LADY, PRZY KTÓREJ NIKOGO NIE MA, GRA WOŁA, KTO MA IŚĆ",
+  ],
+  [
+    'THE ONE NEARER THAT BAR, AND NOT BUSY AT A TAP - IN THEIR COLOUR: "PLAYER 2: BAR 3!"',
+    'DIE EEN NADER AAN DAARDIE TOONBANK, EN NIE BESIG BY \'N KRAAN NIE - IN HUL KLEUR: "SPELER 2: TOONBANK 3!"',
+    'TEN, KTO JEST BLIŻEJ TEJ LADY I NIE STOI PRZY KRANIE - W SWOIM KOLORZE: "GRACZ 2: LADA 3!"',
+  ],
+  ["TEAM AWARDS", "SPANTOEKENNINGS", "NAGRODY DRUŻYNY"],
+  [
+    "AFTER A CO-OP GAME THE RESULTS HAND OUT TEAM AWARDS: TOP SERVER, TOP CATCHER, HELPING HANDS AND CROWNS WON",
+    "NA 'N SAAMSPEEL-SPEL DEEL DIE UITSLAE SPANTOEKENNINGS UIT: TOP-BEDIENER, TOP-VANGER, HELPENDE HANDE EN KRONE GEWEN",
+    "PO GRZE W KOOPERACJI WYNIKI ROZDAJĄ NAGRODY DRUŻYNY: NAJLEPSZY W OBSŁUDZE, NAJLEPSZY W ŁAPANIU, POMOCNE DŁONIE I ZDOBYTE KORONY",
+  ],
+  [
+    "EACH ONE NAMES THE WINNER AND SHOWS BOTH PLAYERS' COUNTS",
+    "ELKEEN NOEM DIE WENNER EN WYS ALBEI SPELERS SE GETALLE",
+    "KAŻDA PODAJE ZWYCIĘZCĘ I WYNIKI OBU GRACZY",
+  ],
+  ["THE CROWN", "DIE KROON", "KORONA"],
+  [
+    "IN CO-OP, WHOEVER GETS THREE SERVES AHEAD IN A STOP WEARS A LITTLE GOLD CROWN OVER THEIR MARKER",
+    "IN SAAMSPEEL DRA WIE OOK AL DRIE BEDIENINGS VOOR KOM IN 'N STOP 'N KLEIN GOUE KROON BO HUL MERKER",
+    "W KOOPERACJI TEN, KTO NA PRZYSTANKU WYPRZEDZI DRUGIEGO O TRZY OBSŁUŻENIA, NOSI NAD ZNACZNIKIEM MAŁĄ ZŁOTĄ KORONĘ",
+  ],
+  [
+    "IT ONLY CHANGES HANDS WHEN THE OTHER GETS THREE AHEAD - A RACE TO WIN IT BACK",
+    "DIT WISSEL NET VAN HANDE AS DIE ANDER DRIE VOOR KOM - 'N RES OM DIT TERUG TE WEN",
+    "PRZECHODZI DALEJ DOPIERO, GDY DRUGI WYPRZEDZI O TRZY - WYŚCIG, BY JĄ ODZYSKAĆ",
+  ],
+  ["TEAM GOAL", "SPANDOEL", "CEL DRUŻYNY"],
+  [
+    "EVERY CO-OP STOP NOW HAS A TEAM GOAL: A NUMBER OF HIGH FIVES, A FAIR SHARE OF THE SERVING EACH, OR A PAIR OF TWINS SERVED TOGETHER",
+    "ELKE SAAMSPEEL-STOP HET NOU 'N SPANDOEL: 'N AANTAL HOË VYWE, ELKEEN 'N BILLIKE DEEL VAN DIE BEDIENING, OF 'N PAAR TWEELINGE SAAM BEDIEN",
+    "KAŻDY PRZYSTANEK W KOOPERACJI MA TERAZ CEL DRUŻYNY: KILKA PIĄTEK, UCZCIWY PODZIAŁ OBSŁUGI ALBO PARĘ BLIŹNIAKÓW OBSŁUŻONYCH RAZEM",
+  ],
+  [
+    "REACH IT FOR A FANFARE AND FIVE COINS. EACH HIGH FIVE SHOWS HOW FAR YOU ARE",
+    "BEREIK DIT VIR 'N FANFARE EN VYF MUNTE. ELKE HOË VYF WYS HOE VER JULLE IS",
+    "OSIĄGNIJCIE GO, A BĘDZIE FANFARA I PIĘĆ MONET. KAŻDA PIĄTKA POKAZUJE, ILE JUŻ MACIE",
+  ],
+  [
+    "MISSED IT? THE END OF THE STOP SAYS HOW CLOSE YOU CAME",
+    "GEMIS? DIE EINDE VAN DIE STOP SÊ HOE NABY JULLE GEKOM HET",
+    "NIE UDAŁO SIĘ? NA KOŃCU PRZYSTANKU ZOBACZYCIE, JAK BLISKO BYLIŚCIE",
+  ],
+  ["YOUR TURN", "JOU BEURT", "TWOJA KOLEJ"],
+  [
+    "WITH TWO PLAYERS THE MINI-GAMES TAKE TURNS - PLAYER 1 PLAYS THE FIRST, PLAYER 2 THE NEXT, AND SO ON",
+    "MET TWEE SPELERS SPEEL JULLE DIE MINI-SPELETJIES OM DIE BEURT - SPELER 1 SPEEL DIE EERSTE, SPELER 2 DIE VOLGENDE, EN SO AAN",
+    "W DWÓCH GRACZY MINIGRY ROZGRYWA SIĘ NA ZMIANĘ - GRACZ 1 GRA W PIERWSZĄ, GRACZ 2 W NASTĘPNĄ I TAK DALEJ",
+  ],
+  [
+    "THE MINI-GAME'S TITLE SAYS WHOSE TURN IT IS. BEFORE, ONLY PLAYER 1 COULD PLAY THEM",
+    "DIE MINI-SPELETJIE SE TITEL SÊ WIE SE BEURT DIT IS. VROEËR KON NET SPELER 1 HULLE SPEEL",
+    "TYTUŁ MINIGRY MÓWI, CZYJA JEST KOLEJ. WCZEŚNIEJ GRAĆ W NIE MÓGŁ TYLKO GRACZ 1",
+  ],
   ["TEAM TIPS", "SPANWENKE", "PORADY DLA DRUŻYNY"],
   [
     "A NEW CO-OP TEAM GETS TWO TIPS ON ITS FIRST THREE STOPS: SPLIT THE BARS, SERVE TOGETHER, AND HELP A PARTNER WHO SLIPS",
@@ -9598,6 +9832,14 @@ const DICT_PAT                             = [
   // (v1.5.41) on the way through a stop
   [/^HALFWAY THERE!  (\d+) TO GO$/, "HALFPAD!  NOG $1", "POŁOWA ZA TOBĄ!  ZOSTAŁO $1"],
   // (v1.4.78) a wrong catch in Cherry Catch
+  // (v1.5.95) the mini-games' score line (it was never translated) and the cherry duel's words
+  [/^CAUGHT: (\d+)(\s+)TIME: (\d+)$/, "GEVANG: $1$2TYD: $3", "ZŁAPANE: $1$2CZAS: $3"],
+  [/^STARS: (\d+)(\s+)TIME: (\d+)$/, "STERRE: $1$2TYD: $3", "GWIAZDKI: $1$2CZAS: $3"],
+  [/^SHAKES MADE: (\d+)(\s+)TIME: (\d+)$/, "SKOMMELS GEMAAK: $1$2TYD: $3", "ZROBIONE KOKTAJLE: $1$2CZAS: $3"],
+  [/^P1 (\d+)  ·  P2 (\d+)(\s+)TIME: (\d+)$/, "P1 $1  ·  P2 $2$3TYD: $4", "P1 $1  ·  P2 $2$3CZAS: $4"],
+  [/^PLAYER (\d+) IS OUT - (.+)!$/, "SPELER $1 IS UIT - $2!", "GRACZ $1 ODPADA - $2!"],
+  [/^PLAYER (\d+) HIT AN ASTEROID!$/, "SPELER $1 HET 'N ASTEROÏDE GETREF!", "GRACZ $1 UDERZYŁ W ASTEROIDĘ!"], // (v1.5.96)
+  [/^PLAYER (\d+) WINS THE DUEL!$/, "SPELER $1 WEN DIE TWEEGEVEG!", "GRACZ $1 WYGRYWA POJEDYNEK!"],
   [/^OOPS - YOU CAUGHT (.+)!$/, "OEPS - JY HET $1 GEVANG!", "UPS - ZŁAPAŁEŚ: $1!"],
   // (v1.4.76) in a row, and the Time Attack ghost
   [/^(\d+) IN A ROW!$/, "$1 AGTER MEKAAR!", "$1 Z RZĘDU!"],
@@ -9716,6 +9958,50 @@ const DICT_PAT                             = [
   [/^LEVEL (\d+) \/ (\d+)$/, "VLAK $1 / $2", "POZIOM $1 / $2"],
   [/^SERVED (\d+) \/ (\d+)$/, "BEDIEN $1 / $2", "OBSŁUŻONO $1 / $2"],
   [/^SERVED (\d+)$/, "BEDIEN $1", "OBSŁUŻONO $1"],
+  // (v1.5.91) the co-op team goal
+  [
+    /^TEAM GOAL: (\d+) HIGH FIVES THIS STOP$/,
+    "SPANDOEL: $1 HOË VYWE HIERDIE STOP",
+    "CEL DRUŻYNY: $1 PIĄTEK NA TYM PRZYSTANKU",
+  ],
+  [
+    /^TEAM GOAL: EACH OF YOU SERVES (\d+)$/,
+    "SPANDOEL: ELKEEN VAN JULLE BEDIEN $1",
+    "CEL DRUŻYNY: KAŻDE Z WAS OBSŁUŻY $1",
+  ],
+  // (v1.6.2) the team goal's tracker in the corner, and the goal streak
+  [/^TEAM GOAL: (\d+) \/ (\d+) HIGH FIVES$/, "SPANDOEL: $1 / $2 HOË VYWE", "CEL DRUŻYNY: $1 / $2 PIĄTEK"],
+  [
+    /^TEAM GOAL: EACH SERVES (\d+)  ·  P1 (\d+)  ·  P2 (\d+)$/,
+    "SPANDOEL: ELKEEN BEDIEN $1  ·  P1 $2  ·  P2 $3",
+    "CEL DRUŻYNY: KAŻDE OBSŁUŻY $1  ·  P1 $2  ·  P2 $3",
+  ],
+  [
+    /^TEAM GOAL: A PAIR OF TWINS - (\d+) \/ (\d+)$/,
+    "SPANDOEL: 'N PAAR TWEELINGE - $1 / $2",
+    "CEL DRUŻYNY: PARA BLIŹNIAKÓW - $1 / $2",
+  ],
+  [
+    /^GOAL STREAK: (\d+) STOPS IN A ROW$/,
+    "DOELREEKS: $1 STOPS AGTER MEKAAR",
+    "SERIA CELÓW: $1 PRZYSTANKI Z RZĘDU",
+  ],
+  [/^TEAM GOAL MISSED: (\d+) \/ (\d+)$/, "SPANDOEL GEMIS: $1 / $2", "CEL DRUŻYNY NIEOSIĄGNIĘTY: $1 / $2"],
+  [/^HIGH FIVE!  \+(\d+)  \((\d+)\/(\d+)\)$/, "HOË VYF!  +$1  ($2/$3)", "PIĄTKA!  +$1  ($2/$3)"],
+  // (v1.5.98) who fed a boss or the glutton
+  [
+    /^PLAYER (\d+) FED IT MOST:  \+(\d+)$/,
+    "SPELER $1 HET DIT DIE MEESTE GEVOER:  +$2",
+    "GRACZ $1 NAKARMIŁ GO NAJWIĘCEJ:  +$2",
+  ],
+  [
+    /^TEAM TAKEDOWN!  P1 (\d+)  ·  P2 (\d+) SHAKES$/,
+    "SPANOORWINNING!  P1 $1  ·  P2 $2 SKOMMELS",
+    "WSPÓLNE ZWYCIĘSTWO!  P1 $1  ·  P2 $2 KOKTAJLI",
+  ],
+  [/^PLAYER (\d+): BAR (\d+)!$/, "SPELER $1: TOONBANK $2!", "GRACZ $1: LADA $2!"], // (v1.5.94)
+  [/^PLAYER (\d+) TAKES THE CROWN!$/, "SPELER $1 VAT DIE KROON!", "GRACZ $1 ZDOBYWA KORONĘ!"], // (v1.5.92)
+  [/^PLAYER (\d+) DID THEIR SHARE!$/, "SPELER $1 HET HUL DEEL GEDOEN!", "GRACZ $1: SWOJA CZĘŚĆ ZROBIONA!"],
   // (v1.5.88) the bonus round's two picks in co-op
   [/^PLAYER (\d+) FOUND IT!  \+(\d+)$/, "SPELER $1 HET DIT GEKRY!  +$2", "GRACZ $1 GO ZNALAZŁ!  +$2"],
   // (v1.5.87) a helping hand in co-op
@@ -9760,6 +10046,7 @@ const DICT_PAT                             = [
     "SPELER $1 IS UIT!  TERUG NA $2 BEDIENINGS",
     "GRACZ $1 ODPADA!  WRACA PO $2 OBSŁUŻONYCH",
   ],
+  [/^PLAYER (\d+)'S TURN$/, "SPELER $1 SE BEURT", "KOLEJ GRACZA $1"], // (v1.5.90: whose turn at a mini-game)
   [/^PLAYER (\d+) IS BACK!$/, "SPELER $1 IS TERUG!", "GRACZ $1 WRACA!"],
   [/^PLAYER (\d+): CHOOSE YOUR BARTENDER$/, "SPELER $1: KIES JOU KROEGMAN", "GRACZ $1: WYBIERZ BARMANA"],
   // (v1.5.72) THE BOSSES' WORDS: the label over a boss ("BOSS  ·  3 / 7 SHAKES") and a big eater's count, and the
@@ -9825,6 +10112,7 @@ const DICT_PAT                             = [
     "KTOŚ TU CZEKA! ZMIEŃ BAR: $1",
   ],
   [/^FLAVOUR: (\w+)(.*)$/, "GEUR: $1$2", "SMAK: $1$2"],
+  [/^P(\d) FLAVOUR: (\w+)(.*)$/, "P$1 GEUR: $2$3", "P$1 SMAK: $2$3"], // (v1.6.3: each player's, with two)
   [/^✔ ORDER ON THIS BAR: (\w+)$/, "✔ BESTELLING BY HIERDIE TOONBANK: $1", "✔ ZAMÓWIENIE NA TYM BARZE: $1"],
   [
     /^ORDER ON THIS BAR: (\w+) - SWITCH WITH (.+)$/,
@@ -13065,6 +13353,7 @@ window.addEventListener("blur", () => {
   if (G.state === "play") pause(true);
 });
 const anyKey = (...ks) => ks.some((k) => keys.has(k));
+const DROPIN = { w: false, hold: false }; // (v1.6.0: was the second controller's START held last frame) (v1.6.4: hold - still held since it joined)
 function readPads() {
   const wasAttract = typeof ATTRACT !== "undefined" && ATTRACT.on;
   let list = [];
@@ -13073,6 +13362,14 @@ function readPads() {
   } catch (e) {}
   // with two players, a single controller goes to player 2 (player 1 keeps the keyboard); two controllers = one each
   const two = G.players === 2 && G.state !== "menu";
+  // (v1.6.0) DROP-IN: in a one-player game, START on a second controller brings player 2 in (twists.ts)
+  if (!two && list.length >= 2 && G.state === "play") {
+    const st = !!(list[1].buttons[9] && list[1].buttons[9].pressed);
+    // (v1.6.4: and that START counts as already held for player 2's controller - from the next frame it's read as
+    // player 2's, and a fresh press there means PAUSE, so the game paused the moment they joined)
+    if (st && !DROPIN.w && joinP2()) DROPIN.hold = true;
+    DROPIN.w = st;
+  }
   // (v1.5.83) EACH PLAYER PICKS A BARTENDER ON THEIR OWN CONTROLLER: in the menus only the first controller was read, so
   // with two players the second had to borrow the first one's pad to choose. While the two-player bartender choice is
   // open and two controllers are connected, both are read - and each player's turn answers only to their own pad
@@ -13083,7 +13380,9 @@ function readPads() {
     ? [list[0], list[1]]
     : two
       ? list.length === 1
-        ? [null, list[0]]
+        ? G.padP1
+          ? [list[0], null] // (v1.6.4: player 1 joined a friend in from the pause menu while playing on it - it stays theirs)
+          : [null, list[0]]
         : [list[0], list[1]]
       : [list[0], null];
   const read = (pd, gp, edge) => {
@@ -13152,7 +13451,8 @@ function readPads() {
     return;
   } // that press just woke up the menu
   const pourW = pad.pourW || pad2.pourW;
-  if (pad2.start && !pad2.startW) pad.start = true;
+  if (two && !pad2.start) DROPIN.hold = false; // (v1.6.4: let go since joining - from the frame player 2's pad is read)
+  if (pad2.start && !pad2.startW && !DROPIN.hold) pad.start = true;
   // high-score initials with a controller, the arcade way: D-pad up / down changes the letter, left / right moves,
   // A goes to the next letter (and saves after the last), START saves straight away, B goes back a letter
   if (G.state === "over" && !$("nameForm").hidden && typeof padName === "function") {
@@ -14542,9 +14842,10 @@ function update(dt) {
         "A " +
           type.kind.toUpperCase() +
           "! SHOW THE CROSS (" +
-          (lastDev === "pad" ? "B" : lastDev === "touch" ? "CROSS" : "Q") +
+          // (v1.6.1: with two players on the keyboard, both players' keys - player 2's are , and .)
+          (lastDev === "pad" ? "B" : lastDev === "touch" ? "CROSS" : twoP() ? "Q / ," : "Q") +
           "), SEND HOLY WATER (" +
-          (lastDev === "pad" ? "Y" : lastDev === "touch" ? "HOLY" : "H") +
+          (lastDev === "pad" ? "Y" : lastDev === "touch" ? "HOLY" : twoP() ? "H / ." : "H") +
           ") OR RUN UP TO IT",
         "#ff3b4f",
         3.4
@@ -15106,9 +15407,7 @@ function update(dt) {
       if (!F.group.some((c) => c.state === "walk" || c.state === "drink")) {
         // all served (or gone)
         if (!demo && F.group.every((c) => c.served)) {
-          SCORER = P1;
-          addScore(1000);
-          SCORER = null;
+          fairBonus(1000); // (v1.5.99: shared, with two players - twists.ts)
           callout("FAN PARTY!  +1000", "#5ff5c8", 2.4);
           G.showT = 3.6;
           sfx("tip");
@@ -15189,9 +15488,7 @@ function update(dt) {
     if (!angry.length) {
       // everybody's calmed down (or gone): the protest is over
       if (!demo && pr.group.every((c) => c.protest.calm)) {
-        SCORER = P1;
-        addScore(1000);
-        SCORER = null;
+        fairBonus(1000); // (v1.5.99: shared, with two players - twists.ts)
         callout("PROTEST OVER!  +1000", "#5ff5c8", 2.2);
         sfx("tip");
         for (let i = 0; i < 20; i++) confetti(PW / 2 + rnd(-200, 200), 60, 1);
@@ -15352,6 +15649,7 @@ function update(dt) {
         if (!c.alarmed) {
           c.alarmed = true;
           sfx("danger", c.x);
+          coopCall(c.lane, c.x, demo); // (v1.5.94: in co-op, who should go)
           lightFx(lx, ly, 170, [1, 0.15, 0.2, 1], 0.6);
           G.dangerTickT = G.time;
         } else if (G.time - (G.dangerTickT || 0) > 0.5) {
@@ -15566,9 +15864,7 @@ function update(dt) {
         if (c.type.boss && !demo) kidBossDone(c);
         else if (c.type.glutton) G.gluttonDone = true;
         if (c.type.glutton && !c.type.boss && !demo) {
-          SCORER = P1;
-          addScore(5000);
-          SCORER = null;
+          feedersBonus(c, 5000); // (v1.5.98: to whoever fed it, with two players - twists.ts)
           callout("THE GALACTIC GLUTTON IS FULL!  +5000", "#ff5fd8", 2.6);
           for (let i = 0; i < 40; i++) confetti(rnd(0, PW), -10, 1);
           fireworks(4);
@@ -16467,6 +16763,7 @@ function update(dt) {
       by.grabT = 0;
       feverAdd(0.5, demo);
       coachCaught(demo);
+      if (G.coopG && !demo && coopOn()) G.coopG.caught[by.id ? 1 : 0]++; // (v1.5.93: the team awards)
       SCORER = by;
       // (v1.4.29) RUNNING CATCH: run up the bar to meet an empty glass well before it reaches the taps - double points;
       // and a CATCH CHAIN: every empty caught in a row (without one smashing) adds a little more, up to +250
@@ -16501,7 +16798,10 @@ function update(dt) {
     if (m.danger !== undefined) m.saved = true; // (if you get there now: JUST IN TIME!)
     if (m.danger !== undefined && G.time - (m.dTick ?? -9) > 0.35) {
       const [lx, ly] = at(m.lane, TAPX, LY(m.lane, TAPX) - 30);
-      if (m.dTick === undefined) sfx("dangertick", m.x);
+      if (m.dTick === undefined) {
+        sfx("dangertick", m.x);
+        coopCall(m.lane, m.x, demo); // (v1.5.94: in co-op, who should go)
+      }
       m.dTick = G.time;
       lightFx(lx, ly, 130, [1, 0.15, 0.2, 1], 0.3);
     }
@@ -17125,9 +17425,7 @@ function ufoVisit(dt, demo) {
   if (!U.go && (done || U.t > UFO_WAIT)) {
     U.go = U.t;
     if (U.served === UFO_DROP.length && !demo) {
-      SCORER = P1;
-      addScore(1000, U.x, LY(U.lane, U.x) - 200);
-      SCORER = null;
+      fairBonus(1000, undefined, U.x, LY(U.lane, U.x) - 200); // (v1.5.99: shared, with two players)
       coins(U.lane, U.x + 30, LY(U.lane, U.x) - 60, 20);
       sfx("tip", U.x);
       callout("THE VISITORS SAY THANK YOU!  +1000", "#9fffd0", 2.2);
@@ -17179,6 +17477,7 @@ function updateTwist(dt, demo) {
   loadShedding(dt, demo); // (Spacekom doesn't care which planet you're on)
   coopTwins(dt, demo); // (v1.5.85: twins in co-op)
   coopHelp(demo); // (v1.5.87: a helping hand in co-op)
+  tgUpdate(dt, demo); // (v1.5.91: the co-op team goal)
   if (G.tipAt > 0 && G.state === "play" && !demo) {
     G.tipAt -= dt;
     if (G.tipAt <= 0 && G.callouts.filter((c) => c.sub && c.life > 0).length <= 1) {
@@ -17313,9 +17612,7 @@ function updateTwist(dt, demo) {
         if (c.state === "pushed") {
           c.left = 9999;
           if (!demo) {
-            SCORER = P1;
-            addScore(1000, c.x + 20, LY(c.lane, c.x) - 100);
-            SCORER = null;
+            fairBonus(1000, c.servedBy, c.x + 20, LY(c.lane, c.x) - 100); // (v1.5.99: to whoever served him)
             callout("FASTEST POUR IN THE WEST!  +1000", "#ffd24d", 2);
           }
         }
@@ -17469,9 +17766,7 @@ function updateTwist(dt, demo) {
         c.vipDone = true;
         c.left = 9999;
         if (!demo) {
-          SCORER = P1;
-          addScore(1500, c.x + 20, LY(c.lane, c.x) - 100);
-          SCORER = null;
+          fairBonus(1500, c.servedBy, c.x + 20, LY(c.lane, c.x) - 100); // (v1.5.99: to whoever served them)
           callout("THE VIP IS DELIGHTED!  +1500", "#ffd24d", 2);
         }
         sfx("tip");
@@ -17689,9 +17984,11 @@ function endCore(W) {
 }
 // called whenever a customer catches a shake
 function twistServed(c, s, demo) {
+  c.servedBy = s.owner ? 1 : 0; // (v1.5.99: who served them - for a bonus that's theirs, see fairBonus)
   if (c.ufo) ufoServed(c, s, demo); // (v1.5.16: a little green visitor from the UFO)
   if (c.type.glutton) {
     c.fed = (c.fed || 0) + 1;
+    if (twoP()) (c.fedBy || (c.fedBy = [0, 0]))[s.owner ? 1 : 0]++; // (v1.5.98: who fed it, for its big bonus)
     c.gulpT = 0.6;
     c.fedAt = G.time;
     if (c.fed >= (c.type.need || GLUTTON_FED)) c.left = 9999; // full at last: off he waddles
@@ -17809,18 +18106,96 @@ function coopLevelStart() {
   }
   G.hiFives = 0;
   G.twin = null; // (v1.5.85)
+  G.crown = undefined; // (v1.5.92: nobody wears it at the start of a stop)
   G.twinT = rnd(15, 25);
   // (v1.5.89) TEAM TIPS: the coach stays quiet with two players, so a new team got no hint how to play together. On the
   // first three co-op stops ever played, two short tips go under the sign about nine seconds into the stop - once the
   // place, the fun fact and the twist have had their turn (only four lines may wait at once, so at the start they'd
   // have pushed those out, and been pushed out themselves)
   G.tipAt = coopOn() && (store.get("coopTips", 0) | 0) < 3 ? 9 : -1;
+  // (v1.5.91) A TEAM GOAL EVERY STOP: something to aim for together, set under the sign a few seconds in - a number of
+  // high fives, a fair share of the serving each, or a pair of twins served together - and coins when it's done
+  G.tg = null;
+  if (coopOn() && !G.endless && !G.free && !G.ta && (G.total || 0) < 500) {
+    const tot = G.total || 20,
+      kinds = ["hifive", "each", "twins"];
+    let kind = kinds[(G.level || 1) % 3];
+    if (kind === "twins" && tot < 24) kind = "hifive"; // (a short stop may not see a pair of twins at all)
+    const n =
+      kind === "hifive"
+        ? clamp(Math.round(tot / 12), 3, 6) // (high fives come by luck as much as by plan: a modest number)
+        : kind === "each"
+          ? clamp(Math.round(tot * 0.3), 4, 30)
+          : 1;
+    G.tg = { kind, n, sayAt: 4, done: false };
+  }
+}
+function tgText(g) {
+  return g.kind === "hifive"
+    ? "TEAM GOAL: " + g.n + " HIGH FIVES THIS STOP"
+    : g.kind === "each"
+      ? "TEAM GOAL: EACH OF YOU SERVES " + g.n
+      : "TEAM GOAL: SERVE A PAIR OF TWINS TOGETHER";
+}
+// (how far along the team goal is, 0..n)
+function tgProg(g) {
+  return g.kind === "hifive"
+    ? G.hiFives || 0
+    : g.kind === "each"
+      ? Math.min(PL[0].lvServed || 0, PL[1].lvServed || 0)
+      : g.twins || 0;
+}
+function tgUpdate(dt, demo) {
+  const g = G.tg;
+  if (!g || demo || !coopOn() || G.state !== "play") return;
+  if (g.sayAt > 0) {
+    g.sayAt -= dt;
+    // (a big announcement, not a line under the sign: those queue up behind the place and the fun fact at the start of
+    // a stop, and the goal came after the team had already started on it)
+    if (g.sayAt <= 0) callout(tgText(g), "#ffd24d", 2.6);
+  }
+  if (!g.done && tgProg(g) >= g.n) {
+    g.done = true;
+    g.doneT = G.time; // (v1.6.2: for the tracker in the corner - fun.ts)
+    fStat("teamGoals");
+    callout("TEAM GOAL DONE!", "#ffd24d", 2.2);
+    sfx("fanfare", PW / 2);
+    if (!COMFORT.calm) for (let k = 0; k < 14; k++) confetti(rnd(0, PW), -10, 1);
+    // (v1.6.2) A GOAL STREAK: goals met stop after stop pay a little more each time (5 coins, then 7, 9... up to 15) -
+    // missing one starts the streak again
+    G.tgStreak = (G.tgStreak || 0) + 1;
+    addCoins(5 + Math.min(10, (G.tgStreak - 1) * 2), "TEAM GOAL");
+    if (G.tgStreak >= 2)
+      G.callouts.push({
+        text: "GOAL STREAK: " + G.tgStreak + " STOPS IN A ROW",
+        c: "#ffd24d",
+        life: 2.4,
+        max: 2.4,
+        sub: true,
+      });
+  }
 }
 function coopServe(c, s, demo) {
   if (demo || !coopOn()) return;
   const me = PL[s.owner || 0],
     mate = PL[s.owner || 0 ? 0 : 1];
   me.lvServed = (me.lvServed || 0) + 1;
+  if (G.coopG) G.coopG.served[me.id ? 1 : 0]++; // (v1.5.93: the team awards)
+  // (v1.5.91) a fair share each: a word when one of you has done theirs
+  if (G.tg && G.tg.kind === "each" && !G.tg.done && me.lvServed === G.tg.n)
+    worldText(
+      "PLAYER " + (me.id + 1) + " DID THEIR SHARE!",
+      { lane: me.lane, x: me.x },
+      me.id ? "#5fb0ff" : "#ff5fa8"
+    );
+  // (v1.5.92) THE CROWN: whoever is three serves ahead this stop wears a little gold crown over their marker - and
+  // it changes hands only when the other gets three ahead, so there's a race to win it back
+  if (mate && G.crown !== me.id && me.lvServed >= 5 && me.lvServed - (mate.lvServed || 0) >= 3) {
+    G.crown = me.id;
+    if (G.coopG) G.coopG.crowns[me.id ? 1 : 0]++; // (v1.5.93)
+    worldText("PLAYER " + (me.id + 1) + " TAKES THE CROWN!", { lane: me.lane, x: me.x }, "#ffd24d");
+    sfx("chime", me.x, 1.5);
+  }
   const now = G.time;
   if (mate && mate.alive !== false && now - (mate.lastServeT ?? -9) < HIFIVE_WIN && !mate.hiUsed) {
     // a high five: both get the points, once per pair of serves
@@ -17839,7 +18214,12 @@ function coopServe(c, s, demo) {
     feverAdd(0.5, demo);
     sfx("clink", c.x);
     const [px, py] = [(me.x + mate.x) / 2, Math.min(me.lane, mate.lane)];
-    worldText("HIGH FIVE!  +" + got, { lane: py, x: px }, "#ffd24d");
+    // (v1.5.91: with a high-five team goal, how far along it is)
+    const tg =
+      G.tg && G.tg.kind === "hifive" && !G.tg.done
+        ? "  (" + Math.min(G.hiFives, G.tg.n) + "/" + G.tg.n + ")"
+        : "";
+    worldText("HIGH FIVE!  +" + got + tg, { lane: py, x: px }, "#ffd24d");
     if (!COMFORT.calm) sparkle(px, LY(py, px) - 60, [1, 0.85, 0.3, 1], 10, py);
     if (G.hiFives % 5 === 0) {
       callout("TEAM SPIRIT!  " + G.hiFives + " HIGH FIVES", "#ffd24d", 2);
@@ -17866,6 +18246,16 @@ function coopLevelClear(demo) {
     max: 4,
     sub: true,
   });
+  // (v1.5.91) a team goal not reached: how close you came
+  if (G.tg && !G.tg.done) G.tgStreak = 0; // (v1.6.2: and the goal streak starts again)
+  if (G.tg && !G.tg.done)
+    G.callouts.push({
+      text: "TEAM GOAL MISSED: " + Math.min(tgProg(G.tg), G.tg.n) + " / " + G.tg.n,
+      c: "#ffb08a",
+      life: 3,
+      max: 3,
+      sub: true,
+    });
   if (sa !== sb && sa + sb >= 4)
     G.callouts.push({
       text: "STAR OF THE STOP: " + (sa > sb ? na : nb),
@@ -17941,12 +18331,151 @@ function coopTwinServed(c, s, demo) {
   }
   addCoins(5, "TWINS");
   G.twinsAll = (G.twinsAll || 0) + 1; // (v1.5.86: for the whole game, and the DOUBLE TROUBLE trophy)
+  if (G.tg) G.tg.twins = (G.tg.twins || 0) + 1; // (v1.5.91: the team goal)
   fStat("twins");
   callout("TWINS SERVED TOGETHER!  +500 EACH", "#ffd24d", 2.4);
   sfx("fanfare", c.x);
   if (!COMFORT.calm) for (let k = 0; k < 18; k++) confetti(rnd(0, PW), -10, 1);
   for (const t of G.twin.cs) t.twin = false;
   G.twin = null;
+}
+// (v1.6.0) DROP-IN CO-OP: a friend sits down in the middle of a one-player game - they press START on a second
+// controller (or choose PLAYER 2 JOINS in the pause menu) and they're in, behind the bar, as player 2 in co-op: with
+// their own bartender, on a bar of their own, bringing two more lives to the team's pool. Not in the demo, the Cup or
+// versus (those are chosen at the start)
+const canJoin = () => !G.demo && !twoP() && !CUP.match && ["play", "paused"].includes(G.state);
+function joinP2() {
+  if (!canJoin()) return false;
+  G.players = 2;
+  G.versus = false;
+  playMode = 1; // (PLAY AGAIN after this game: the two of you again)
+  $("vPlayers").textContent = MODES[playMode]; // (and the menu says so)
+  const p = P2;
+  p.char = myChar(1);
+  p.score = 0;
+  p.lives = 3;
+  p.alive = true;
+  p.nextLife = 25000;
+  p.splat = [];
+  p.lane = P1.lane === 2 ? 1 : 2;
+  p.x = TAPX;
+  p.pour = 0;
+  p.pouring = false;
+  p.throwT = 0;
+  p.autoPour = false;
+  p.fullT = 0;
+  p.fired = null;
+  p.stunT = 0;
+  p.slipT = 0;
+  p.holy = DF().holy;
+  p.crossCD = 0;
+  p.crossT = 0;
+  p.lvServed = 0;
+  p.lastServeT = -9;
+  G.lives += 2; // (as a co-op game starts with two more)
+  G.coopG = G.coopG || { served: [0, 0], caught: [0, 0], helps: [0, 0], crowns: [0, 0] };
+  G.score = P1.score + P2.score;
+  if ((store.get("coopTips", 0) | 0) < 3) G.tipAt = 4; // (the team tips, for a new team)
+  callout("PLAYER 2 JOINS THE TEAM!", "#5fb0ff", 2.6);
+  sfx("chime", TAPX, 2);
+  fStat("dropIns");
+  return true;
+}
+// (v1.5.99) FAIR SHARES: with two players, the bonuses for an event always went to player 1 - the UFO's visitors, the fan
+// party, a protest calmed down, the fastest pour, the VIP - and the tip-jar thief's -300 came off player 1 alone. Now a
+// bonus for one customer goes to whoever served them, and one for a whole group (or the thief's loss) is shared half and
+// half. One player alone: as before
+function fairBonus(pts, who , x , y ) {
+  if (!twoP()) {
+    SCORER = P1;
+    const got = addScore(pts, x, y);
+    SCORER = null;
+    return got;
+  }
+  if (who === 0 || who === 1) {
+    SCORER = PL[who];
+    const got = addScore(pts, x, y);
+    SCORER = null;
+    return got;
+  }
+  let got = 0;
+  PL.forEach((p, i) => {
+    SCORER = p;
+    got += addScore(Math.round(pts / 2), i ? undefined : x, i ? undefined : y) || 0;
+    SCORER = null;
+  });
+  return got;
+}
+// (v1.5.98) WHO FED IT: the big bonus for filling a boss or the Galactic Glutton always went to player 1 - even when
+// player 2 did all the feeding. Now, with two players, it goes by the shakes each of you served it: in co-op it's
+// shared in proportion (and if you both fed it, a TEAM TAKEDOWN - coins too); in versus whoever fed it most takes it all
+function feedersBonus(c, pts) {
+  const fb = c.fedBy;
+  if (!twoP() || !fb || fb[0] + fb[1] <= 0) {
+    SCORER = P1;
+    addScore(pts);
+    SCORER = null;
+    return;
+  }
+  const [a, b] = fb,
+    give = (p, n) => {
+      if (n <= 0) return 0;
+      SCORER = p;
+      const got = addScore(n) || n; // (the points really given - the difficulty and SHAKE FEVER change them)
+      SCORER = null;
+      return got;
+    };
+  if (G.versus) {
+    if (a === b) {
+      give(P1, Math.round(pts / 2));
+      give(P2, Math.round(pts / 2));
+      return;
+    }
+    const w = a > b ? 0 : 1,
+      got = give(PL[w], pts);
+    G.callouts.push({
+      text: "PLAYER " + (w + 1) + " FED IT MOST:  +" + got,
+      c: w ? "#5fb0ff" : "#ff5fa8",
+      life: 2.6,
+      max: 2.6,
+      sub: true,
+    });
+    return;
+  }
+  give(P1, Math.round((pts * a) / (a + b)));
+  give(P2, Math.round((pts * b) / (a + b)));
+  if (a > 0 && b > 0) {
+    G.callouts.push({
+      text: "TEAM TAKEDOWN!  P1 " + a + "  ·  P2 " + b + " SHAKES",
+      c: "#ffd24d",
+      life: 2.8,
+      max: 2.8,
+      sub: true,
+    });
+    addCoins(5, "TEAM TAKEDOWN");
+  }
+}
+// (v1.5.94) WHO'S GOING? In co-op, a red alarm on a bar with neither bartender on it left both players looking at
+// each other. Now the game calls the one better placed - nearer that bar, and not busy at a tap - in their colour:
+// "PLAYER 2: BAR 3!". Once per customer (or empty glass) in danger
+// (who's better placed for a bar: nearer it, and not busy at a tap - or null if somebody's on it already)
+function coopWho(lane) {
+  const free = PL.filter((p) => p.alive !== false);
+  if (!free.length || free.some((p) => p.lane === lane)) return null;
+  free.sort(
+    (a, b) => Math.abs(a.lane - lane) - Math.abs(b.lane - lane) || (a.pouring ? 1 : 0) - (b.pouring ? 1 : 0)
+  );
+  return free[0];
+}
+function coopCall(lane, x, demo) {
+  if (demo || !coopOn() || G.state !== "play") return;
+  const by = coopWho(lane);
+  if (!by) return; // (somebody's on it already)
+  worldText(
+    "PLAYER " + (by.id + 1) + ": BAR " + (lane + 1) + "!",
+    { lane, x: x - 30 },
+    by.id ? "#5fb0ff" : "#ff5fa8"
+  );
 }
 // (v1.5.87) A HELPING HAND IN CO-OP: slipped on a banana or knocked dizzy, a bartender is stuck for a second or so - and if
 // the partner is right there on the same bar, they pull them straight back up: HELPING HAND (+100 for the helper). Run over
@@ -17965,6 +18494,7 @@ function coopHelp(demo) {
     worldText("HELPING HAND!  +" + got, { lane: p.lane, x: (p.x + mate.x) / 2 }, "#7dffc8");
     sfx("boing", p.x);
     G.helps = (G.helps || 0) + 1;
+    if (G.coopG) G.coopG.helps[mate.id ? 1 : 0]++; // (v1.5.93)
   }
 }
 // DRAGON FIRE: a rainbow of flame rolls down the dragon's bar and blows everybody on it back to the door
@@ -19123,6 +19653,24 @@ function gameOver() {
       rows.push([label, String(now[k]), nw ? "NEW RECORD!" : "RECORD " + (R0[k] || 0), nw]);
     }
     store.set("records", R1);
+    // (v1.5.93) THE TEAM AWARDS: after a co-op game, a little friendly rivalry in the results - who served the most,
+    // caught the most empty glasses, lent the most helping hands and won the crown most often, with both counts
+    if (coopOn() && G.coopG)
+      for (const [k, label] of [
+        ["served", "TOP SERVER"],
+        ["caught", "TOP CATCHER"],
+        ["helps", "HELPING HANDS"],
+        ["crowns", "CROWNS WON"],
+      ]) {
+        const [a, b] = G.coopG[k];
+        if (a + b <= 0) continue;
+        rows.push([
+          label,
+          a === b ? "TIED" : (a > b ? "P1 · " : "P2 · ") + barShort(PL[a > b ? 0 : 1].char),
+          a + " : " + b,
+          false,
+        ]);
+      }
     const box = $("overStats");
     box.innerHTML = "";
     for (const [l, v, n, nw] of rows)
@@ -20253,6 +20801,12 @@ function miniFit() {
 function fitCssY(ly) {
   const F = miniFit();
   return F ? (F.y + oy + ly * F.s) * u : (ly + oy) * u;
+}
+// (v1.5.95) ...and where a point across it is (the "+1"s over the mini-games used the pub's mapping, so on an upright
+// phone they floated up far from the glass - and the cherry duel's P1 / P2 tags need it too)
+function fitCssX(lx) {
+  const F = miniFit();
+  return F ? (F.x + ox + lx * F.s) * u : (lx + ox) * u;
 }
 function withFit(fn) {
   const F = miniFit();
@@ -31189,6 +31743,19 @@ function drawPlayer(t) {
     R.setAdd(true);
     glow(x, hy + 1, 8, withA(c, 0.5));
     R.setAdd(false);
+    // (v1.5.92) the leader's crown in co-op, over the marker (see coopServe in twists.ts)
+    if (G.crown === P.id && coopOn() && G.state === "play") {
+      const gold = col("#ffd24d"),
+        cy = hy - 4;
+      rect(x - 8, cy - 4, 16, 4, gold);
+      tri(x - 8, cy - 4, x - 3, cy - 4, x - 8, cy - 12, gold);
+      tri(x - 4, cy - 4, x + 4, cy - 4, x, cy - 14, gold);
+      tri(x + 3, cy - 4, x + 8, cy - 4, x + 8, cy - 12, gold);
+      disc(x, cy - 14, 1.6, col("#ff5f7a")); // (a jewel on top)
+      R.setAdd(true);
+      glow(x, cy - 6, 13, withA(gold, 0.45));
+      R.setAdd(false);
+    }
   }
 }
 function playerBody(t, flying) {
@@ -49740,9 +50307,7 @@ function kidBossDone(c) {
   if (!c.type.boss) return;
   G.bossDone = true;
   funBoss();
-  SCORER = P1;
-  addScore(3000);
-  SCORER = null;
+  feedersBonus(c, 3000); // (v1.5.98: to whoever fed it, with two players - twists.ts)
   callout(NICE[c.type.kind] + " IS FULL!  BOSS BEATEN  +3000", "#ff5fd8", 2.6);
   for (let i = 0; i < 40; i++) confetti(rnd(0, PW), -10, 1);
   fireworks(4);
@@ -62966,6 +63531,9 @@ function funGameStart() {
   G.endLvl = 1;
   G.endServed = 0;
   G.hiFivesAll = G.twinsAll = 0; // (v1.5.86: co-op's whole-game counts start again)
+  G.tgStreak = 0; // (v1.6.2: the team's goal streak)
+  G.padP1 = false; // (v1.6.4: a single controller is player 2's again in a new two-player game)
+  G.coopG = { served: [0, 0], caught: [0, 0], helps: [0, 0], crowns: [0, 0] }; // (v1.5.93: for the team awards)
   G.after = [];
   if (!G.demo) {
     if (invUse("life")) {
@@ -63227,15 +63795,21 @@ function funUpdate(dt, demo) {
   if (G.event === "newyear" && Math.random() < dt * 0.15) fireworks(1);
   if (G.tw && G.tw.kind === "mystery") funMystery(dt);
   // the flavour button on a controller: SELECT / L3 / R3
+  // (v1.6.3) WITH TWO PLAYERS, EACH CONTROLLER ITS OWN PLAYER'S FLAVOUR: only the first controller was read, and it always
+  // changed player 1's flavour - though with two players a single controller is player 2's (input.ts readPads)
   try {
-    const gp = (navigator.getGamepads ? Array.from(navigator.getGamepads()) : []).filter(
-      (p) => p && p.connected
-    )[0];
-    if (gp) {
-      const on = [8, 10, 11].some((i) => gp.buttons[i] && gp.buttons[i].pressed);
-      if (on && !G.flavPad) funCycleFlav(P1);
-      G.flavPad = on;
-    }
+    const gps = (navigator.getGamepads ? Array.from(navigator.getGamepads()) : []).filter(
+        (p) => p && p.connected
+      ),
+      owners = twoP() ? (gps.length === 1 ? [G.padP1 ? P1 : P2] : [P1, P2]) : [P1]; // (v1.6.4: G.padP1 - see readPads)
+    G.flavPads = G.flavPads || [];
+    owners.forEach((who, i) => {
+      const gp = gps[i];
+      if (!gp) return;
+      const on = [8, 10, 11].some((k) => gp.buttons[k] && gp.buttons[k].pressed);
+      if (on && !G.flavPads[i]) funCycleFlav(who);
+      G.flavPads[i] = on;
+    });
   } catch (e) {}
 }
 function funOneButton(inp) {
@@ -63507,6 +64081,13 @@ function breakRefresh() {
 const MINI_TALL = () => VERT;
 const MINI_KINDS = ["cherry", "stork", "mixer"],
   MINI_NAMES = { cherry: "CHERRY CATCH", stork: "BOGDAN'S SPACE DELIVERY", mixer: "THE SHAKE MIXER" };
+// (v1.5.95) the cherry duel's own instructions
+const TEAM_MIX_HELP =
+  "Two glasses, one recipe: catch what the recipe needs in either glass - together! Anything else spoils the shake for both of you.";
+const STORK_RACE_HELP =
+  "Two storks: pink is player 1, blue is player 2. Up and down to fly - the most stars wins! Hit an asteroid and your delivery is over.";
+const DUEL_HELP =
+  "Two glasses: pink is player 1, blue is player 2. Catch ONLY the cherries - the most cherries wins! Catch anything else and your glass is out.";
 const MINI_HELP = {
   cherry:
     "Move the glass left and right. Catch ONLY the cherries! Catch anything else and it lands in your glass - and the round is over.",
@@ -63541,7 +64122,45 @@ function startMiniGame() {
     len: kind === "mixer" ? 26 : 22,
     recipe: null,
     have: [],
+    // (v1.5.90) TAKING TURNS WITH TWO PLAYERS: the mini-games only listened to player 1, so player 2 never got to play
+    // one. Now they take turns - player 1 plays the first mini-game, player 2 the next, and so on
+    // (v1.5.95: CHERRY CATCH is played by both at once - see below - so the turns are only for the other two)
+    // (v1.5.96: ...and BOGDAN'S SPACE DELIVERY too, so only the mixer takes turns)
+    // (v1.5.97: ...and THE SHAKE MIXER is the team's, together - so nobody waits for a turn any more)
+    who: 0,
   };
+  // (v1.5.95) THE CHERRY DUEL: with two players CHERRY CATCH has two glasses on the counter - pink for player 1, blue for
+  // player 2 - and both play at once, racing for the same falling cherries. Catch anything else and your glass is out
+  // (the other plays on); the most cherries wins. Each glass is its own little object on top of the mini-game, so the
+  // glass drawing works on it unchanged
+  // (v1.5.97) THE TEAM MIXER: with two players THE SHAKE MIXER has the two glasses too - but it's teamwork, not a duel:
+  // one recipe for the team, and what it needs counts in either glass. A wrong thing in either spoils the shake for both
+  if (twoP() && (kind === "cherry" || kind === "mixer")) {
+    const M = G.mini,
+      tall = MINI_TALL(),
+      mk = (id, x) =>
+        Object.assign(Object.create(M), {
+          id,
+          x,
+          pile: [],
+          score: 0,
+          wrong: null,
+          hurt: 0,
+          splash: null,
+          pop: null,
+        });
+    M.gl = [mk(0, tall ? 330 : 300), mk(1, tall ? 630 : 660)];
+    M.team = kind === "mixer";
+  }
+  // (v1.5.96) THE STORK RACE: with two players BOGDAN'S SPACE DELIVERY has two storks in the sky - pink for player 1, blue
+  // for player 2 - each flying on their own controls. A star goes to whoever reaches it first; an asteroid ends that
+  // stork's delivery (the other flies on). The most stars wins. (Kept in the same list as the cherry duel's glasses)
+  if (twoP() && kind === "stork") {
+    const M = G.mini,
+      mk = (id, x, y) =>
+        Object.assign(Object.create(M), { id, x, y, vy: 0, crashed: false, spin: 0, hurt: 0, score: 0 });
+    M.gl = [mk(0, 200, 200), mk(1, 330, 360)];
+  }
   G.callouts = [];
   customers = [];
   shakes = [];
@@ -63596,15 +64215,19 @@ function funMiniUpdate(dt) {
   M.t += dt;
   if (M.pops) M.pops = M.pops.filter((p) => (p.t += dt) < 1);
   M.hurt = Math.max(0, M.hurt - dt);
-  const inp = playerInput(0),
-    go = M.phase === "go";
-  if (M.phase === "intro" && (M.t > 3.2 || (inp.pour && M.t > 0.8))) {
+  const inp = playerInput(M.who || 0), // (v1.5.90: whoever's turn it is)
+    go = M.phase === "go",
+    // (v1.5.96) in a duel or race either player may start it early or move on from the result (player 2 read only
+    // then: reading the controls uses up a key press, and in play each duel step reads its own player)
+    p2 = M.gl && !go ? playerInput(1) : null,
+    pour = inp.pour || !!(p2 && p2.pour);
+  if (M.phase === "intro" && (M.t > 3.2 || (pour && M.t > 0.8))) {
     M.phase = "go";
     M.t = 0;
     sfx("start");
   }
   if (M.phase === "done") {
-    if (M.t > 3.4 || (inp.pour && M.t > 1.2)) {
+    if (M.t > 3.4 || (pour && M.t > 1.2)) {
       G.mini = null;
       funNext();
     }
@@ -63621,6 +64244,18 @@ function funMiniUpdate(dt) {
   if (M.t >= M.len) {
     M.phase = "done";
     M.t = 0;
+    if (M.gl) {
+      // (v1.5.95) the duel's result: both glasses' cherries count for the coins
+      const [a, b] = M.gl;
+      if (!M.team) M.score = a.score + b.score; // (the team mixer counts its shakes as it goes)
+      M.duelWin = M.team ? -2 : a.score > b.score ? 0 : b.score > a.score ? 1 : -1;
+      M.reward = Math.max(3, M.kind === "stork" ? M.score * 2 : M.kind === "mixer" ? M.score * 4 : M.score); // (v1.5.96: a star is worth two, as alone) (v1.5.97: a shake four)
+      addCoins(M.reward);
+      fStat("minis");
+      sfx(M.duelWin < 0 ? "tip" : "fanfare");
+      fireworks(3);
+      return;
+    }
     const reward = M.kind === "cherry" ? M.score : M.kind === "stork" ? M.score * 2 : M.score * 4;
     M.reward = Math.max(3, reward);
     addCoins(M.reward);
@@ -63639,7 +64274,8 @@ function funMiniUpdate(dt) {
     }
     return;
   }
-  if (M.kind === "stork") {
+  if (M.kind === "stork" && M.gl) storkDuelStep(M, dt, inp);
+  else if (M.kind === "stork") {
     const up = !M.crashed && (inp.upHeld || inp.up || (M.ptr && M.py < M.y - 12)),
       dn = !M.crashed && (inp.downHeld || inp.down || (M.ptr && M.py > M.y + 12));
     if (M.crashed) {
@@ -63687,7 +64323,8 @@ function funMiniUpdate(dt) {
         }
       }
     } // CRASH! the round is over
-  } else {
+  } else if (M.gl) miniDuelStep(M, dt, inp);
+  else {
     const L = inp.left || (M.ptr && M.px < M.x - 10),
       Rt = inp.right || (M.ptr && M.px > M.x + 10);
     // (v1.4.78: after a wrong catch in CHERRY CATCH the glass stands still, so you can see what landed in it)
@@ -63833,6 +64470,212 @@ function funMiniUpdate(dt) {
   if (M.made) M.made = Math.max(0, M.made - dt);
   if (M.yuck) M.yuck = Math.max(0, M.yuck - dt);
 }
+// (v1.5.96) THE STORK RACE, one step: each stork flies on its own player's controls (player 1's also by touch); the
+// stars and asteroids are shared
+function storkDuelStep(M, dt, inp0) {
+  for (const b of M.gl) {
+    const inp = b.id ? playerInput(1) : inp0, // (player 1's controls were read already this frame)
+      ptr = b.id === 0 && M.ptr,
+      up = !b.crashed && (inp.upHeld || inp.up || (ptr && M.py < b.y - 12)),
+      dn = !b.crashed && (inp.downHeld || inp.down || (ptr && M.py > b.y + 12));
+    if (b.crashed) {
+      b.vy += 520 * dt;
+      b.spin += dt * 9;
+    } else b.vy += ((up ? -1 : 0) + (dn ? 1 : 0)) * 1400 * dt;
+    b.vy *= Math.exp(-dt * (b.crashed ? 0.5 : 4));
+    b.y = clamp(b.y + b.vy * dt, 60, b.crashed ? 620 : 480);
+    b.hurt = Math.max(0, b.hurt - dt);
+  }
+  M.fx = (M.fx || []).filter((f) => (f.t += dt) < 0.9);
+  M.spawn -= dt;
+  if (M.spawn <= 0 && M.endIn === undefined) {
+    M.spawn = rnd(0.4, 0.7); // (a little busier: there are two of you)
+    const star = Math.random() < 0.5;
+    M.items.push({
+      kind: star ? "star" : "rock",
+      x: 1000,
+      y: rnd(60, 480),
+      r: star ? 12 : rnd(18, 34),
+      vx: -rnd(220, 320) - M.t * 6,
+      rot: rnd(0, 6),
+    });
+  }
+  for (const it of M.items) {
+    it.x += it.vx * dt;
+    it.rot += dt;
+    if (it.dead) continue;
+    for (const b of M.gl) {
+      if (b.crashed || Math.hypot(it.x - b.x, it.y - b.y) >= it.r + 22) continue;
+      it.dead = true;
+      if (it.kind === "star") {
+        b.score++;
+        sfx("chime", b.x, b.score % 4);
+        M.fx.push({ kind: "star", x: it.x, y: it.y, t: 0 });
+        miniPop(M, it.x, it.y, "+1");
+      } else {
+        b.crashed = true;
+        b.hurt = 2.4;
+        b.vy = -160;
+        sfx("boom", b.x);
+        sfx("bonk");
+        G.shake = 10;
+        M.fx.push({ kind: "boom", x: it.x, y: it.y, t: 0, r: it.r, bx: b.x, by: b.y });
+        if (M.gl.every((o) => o.crashed)) M.endIn = 1.8; // (both down: the delivery is over)
+      }
+      break;
+    }
+  }
+}
+// (v1.5.95) THE CHERRY DUEL, one step: each glass moves on its own player's controls (player 1's also by touch), the
+// two can't pass through each other, and a falling thing goes into whichever glass it drops into
+function miniDuelStep(M, dt, inp0) {
+  const lo = MINI_TALL() ? 190 : 70,
+    hi = MINI_TALL() ? 770 : 890;
+  for (const gl of M.gl) {
+    const inp = gl.id ? playerInput(1) : inp0; // (player 1's controls were read already this frame)
+    if (!gl.wrong) {
+      if (gl.id === 0 && M.ptr && !inp.left && !inp.right) gl.x += (M.px - gl.x) * Math.min(1, dt * 12);
+      else gl.x += ((inp.right ? 1 : 0) - (inp.left ? 1 : 0)) * 560 * dt;
+    }
+    gl.x = clamp(gl.x, lo, hi);
+    gl.hurt = Math.max(0, gl.hurt - dt);
+    if (gl.splash && (gl.splash.t -= dt) <= 0) gl.splash = null;
+    if (gl.pop && (gl.pop.t -= dt) <= 0) gl.pop = null;
+  }
+  {
+    // (shoulder to shoulder: pushed apart, each by half)
+    const [a, b] = M.gl,
+      gap = MINI_HW * 2 + 18;
+    if (Math.abs(a.x - b.x) < gap) {
+      const m = (a.x + b.x) / 2,
+        sg = a.x <= b.x ? -1 : 1;
+      a.x = clamp(m + (sg * gap) / 2, lo, hi);
+      b.x = clamp(m - (sg * gap) / 2, lo, hi);
+    }
+  }
+  M.spawn -= dt;
+  if (M.spawn <= 0 && M.endIn === undefined) {
+    M.spawn = rnd(0.3, 0.5) * (M.team ? 1.1 : 1); // (a little busier: there are two of you)
+    const need = M.team ? M.recipe.filter((x) => !M.have.includes(x)) : [],
+      k = M.team
+        ? Math.random() < 0.5 && need.length
+          ? need[Math.floor(Math.random() * need.length)]
+          : ["strawberry", "banana", "choc", "icecream", "mint", "chili", "sock"][
+              Math.floor(Math.random() * 7)
+            ]
+        : Math.random() < 0.7
+          ? "cherry"
+          : ["strawberry", "sock", "banana", "star", "chili"][Math.floor(Math.random() * 5)];
+    M.items.push({
+      kind: k,
+      x: MINI_TALL() ? rnd(200, 760) : rnd(80, 880),
+      y: -20,
+      vy: rnd(150, 230) + M.t * 5,
+      rot: rnd(0, 6),
+      spin: rnd(-3, 3),
+    });
+  }
+  const rim = MINI_GY - MINI_RIM;
+  for (const it of M.items) {
+    const py = it.y;
+    it.vy += (it.vx !== undefined ? 700 : 0) * dt;
+    it.y += it.vy * dt;
+    it.rot += it.spin * dt;
+    if (it.vx) it.x += it.vx * dt;
+    if (it.inG) {
+      const gl = M.gl[it.g],
+        ni = gl.pile.length,
+        slot = clamp(it.gx0 * 0.6 + ((ni % 3) - 1) * 9, -6 * MINI_S + 6, 6 * MINI_S - 6);
+      it.gx += (slot - it.gx) * Math.min(1, dt * 7);
+      it.x = gl.x + it.gx;
+      if (it.y >= MINI_GY - 2 * MINI_S - 6 - pileTop(gl)) {
+        it.dead = true;
+        gl.pile.push({ kind: it.kind, gx: it.gx0, rot: it.rot, bad: it.bad });
+      }
+      continue;
+    }
+    if (it.dead || it.vx !== undefined) continue;
+    for (const gl of M.gl) {
+      const dx = it.x - gl.x;
+      if (py < rim && it.y >= rim && Math.abs(dx) < MINI_HW + 11) {
+        if (gl.wrong) continue; // (that glass is out - it falls on past)
+        if (M.team) {
+          teamMixCatch(M, gl, it, dx);
+          break;
+        }
+        it.inG = true;
+        it.g = gl.id;
+        it.gx = clamp(dx, -MINI_HW + 7, MINI_HW - 7);
+        it.gx0 = it.gx;
+        gl.splash = { t: 0.35, x: dx };
+        if (it.kind !== "cherry") {
+          it.bad = true;
+          it.vy = 150;
+          gl.wrong = it.kind;
+          gl.hurt = 2.4;
+          G.shake = Math.max(G.shake || 0, 5);
+          sfx("bonk");
+          sfx("aww");
+          if (M.gl.every((o) => o.wrong)) M.endIn = 2.2; // (both out: the round is over)
+        } else {
+          it.vy = 190;
+          gl.pop = { x: it.x, t: 0.4, c: ING.cherry };
+          gl.score++;
+          sfx("chime", it.x, gl.score % 4);
+          miniPop(M, it.x, it.y - 30, "+1");
+        }
+        break;
+      }
+      if (it.y > rim && it.y < MINI_GY && Math.abs(Math.abs(dx) - (MINI_HW + 14)) < 7) {
+        it.vx = (dx >= 0 ? 1 : -1) * rnd(120, 200);
+        it.vy = -rnd(140, 220);
+        it.spin = rnd(-8, 8);
+        sfx("clink");
+        break;
+      } // clink! off the side of a glass
+    }
+  }
+}
+// (v1.5.97) THE TEAM MIXER: something drops into one of the two glasses
+function teamMixCatch(M, gl, it, dx) {
+  const empty = () => {
+    for (const o of M.gl) o.pile = [];
+    for (const o of M.items) if (o.inG) o.dead = true;
+  };
+  if (!(M.recipe.includes(it.kind) && !M.have.includes(it.kind))) {
+    // not in the recipe (or the team has it already): it bounces off - and spoils the shake for both
+    it.vx = (dx >= 0 ? 1 : -1) * rnd(160, 260);
+    it.vy = -rnd(320, 420);
+    it.spin = rnd(-9, 9);
+    sfx("boing");
+    sfx("clink");
+    gl.hurt = 0.8;
+    M.yuck = 1.3;
+    M.yuckWhat = it.kind;
+    M.have = [];
+    empty();
+    sfx("aww");
+    return;
+  }
+  it.inG = true;
+  it.g = gl.id;
+  it.gx = clamp(dx, -MINI_HW + 7, MINI_HW - 7);
+  it.gx0 = it.gx;
+  it.vy = 190;
+  gl.pop = { x: it.x, t: 0.4, c: ING[it.kind] };
+  gl.splash = { t: 0.35, x: dx };
+  gl.score++; // (what each of you caught for the team)
+  M.have.push(it.kind);
+  sfx("chime", it.x, M.have.length);
+  if (M.have.length === M.recipe.length) {
+    M.score++;
+    sfx("tip");
+    M.made = 1;
+    miniPop(M, it.x, it.y - 40, "+1 SHAKE");
+    newRecipe(M);
+    empty();
+  }
+}
 // the mini-game glass: where it stands, how deep and wide it is, and how high the pile inside has grown
 const MINI_GY = 466,
   MINI_S = 3.1,
@@ -63884,7 +64727,7 @@ function drawMiniGlassBig(M, t, inside) {
       ly = gy - 2 * s - 6 - Math.min(row, 6) * 11,
       lx = gx + clamp(p.gx * 0.6 + ((i % 3) - 1) * 9, -6 * s + 6, 6 * s - 6);
     drawIngredient(p.kind, lx, ly, p.bad ? 1.15 : 0.85, p.rot);
-    if (p.bad) badMark(lx, ly, t); // (v1.4.78: the wrong thing, ringed in red)
+    if (p.bad) badMark(lx, ly, t, gx); // (v1.4.78: the wrong thing, ringed in red) (v1.6.4: the cross over this glass - in the cherry duel it jumped to the middle)
   } // everything you caught, piled up
   inside(); // (and whatever is sinking in right now)
   quad4(
@@ -63917,13 +64760,13 @@ function drawMiniGlassBig(M, t, inside) {
   } // a little splash at the rim
 }
 // (v1.4.78) the wrong thing in the glass: a pulsing red ring round it, and a red cross over the top of the glass
-function badMark(x, y, t) {
+function badMark(x, y, t, gx ) {
   const p = 0.5 + 0.5 * Math.sin(t * 9);
   R.setAdd(true);
   glow(x, y, 30, withA(col("#ff3b4f"), 0.35 + 0.25 * p));
   R.setAdd(false);
   arc(x, y, 17 + p * 2, 0, 6.283, 3, withA(col("#ff3b4f"), 0.95), 24);
-  const cx = G.mini ? G.mini.x : x,
+  const cx = gx ?? (G.mini ? G.mini.x : x), // (v1.5.95: in the cherry duel, over the glass it's in)
     cy = MINI_GY - MINI_RIM - 30;
   line(cx - 13, cy - 13, cx + 13, cy + 13, 6, withA(col("#ff3b4f"), 0.95));
   line(cx - 13, cy + 13, cx + 13, cy - 13, 6, withA(col("#ff3b4f"), 0.95));
@@ -64032,24 +64875,38 @@ function drawMini(t) {
             const a = i * 1.05,
               dd = k * 70;
             push();
-            translate(200 + Math.cos(a) * dd, M.y + Math.sin(a) * dd - k * 20);
+            translate((f.bx ?? 200) + Math.cos(a) * dd, (f.by ?? M.y) + Math.sin(a) * dd - k * 20); // (v1.5.96: whose)
             rotate(a + k * 4);
             disc(0, 0, 4, withA(C.white, 1 - k), 1.6);
             pop();
           }
       } // and a few feathers
     }
-    if (!(M.hurt > 0 && Math.floor(t * 12) % 2)) {
-      push();
-      translate(200, M.y);
-      rotate(M.crashed ? M.spin : clamp(M.vy * 0.0008, -0.4, 0.4));
-      scaleXY(-1, 1);
-      drawBocian(0, 0, 1.6, t, (c) => c);
-      pop();
-    } // (Bogdan faces the way he flies: to the right)
-    for (let i = 0; i < 6; i++) {
-      const f = (t * 0.7 + i / 6) % 1;
-      disc(150 - f * 120, M.y + 10 + Math.sin(i) * 6, 2 * (1 - f), withA(col("#fff4c0"), 0.6 * (1 - f)));
+    // (v1.5.96: in the stork race, two storks - each with a pink or blue glow round it, whose is whose)
+    for (const b of M.gl || [M]) {
+      const bx = M.gl ? b.x : 200;
+      if (M.gl) {
+        R.setAdd(true);
+        glow(bx, b.y, 58, withA(col(b.id ? "#5fb0ff" : "#ff5fa8"), b.crashed ? 0.12 : 0.3));
+        R.setAdd(false);
+      }
+      if (!((M.gl ? b.hurt > 1.6 : M.hurt > 0) && Math.floor(t * 12) % 2)) {
+        push();
+        translate(bx, b.y);
+        rotate(b.crashed ? b.spin : clamp(b.vy * 0.0008, -0.4, 0.4));
+        scaleXY(-1, 1);
+        drawBocian(0, 0, 1.6, t, (c) => c);
+        pop();
+      } // (Bogdan faces the way he flies: to the right)
+      for (let i = 0; i < 6; i++) {
+        const f = (t * 0.7 + i / 6) % 1;
+        disc(
+          bx - 50 - f * 120,
+          b.y + 10 + Math.sin(i) * 6,
+          2 * (1 - f),
+          withA(col("#fff4c0"), 0.6 * (1 - f))
+        );
+      }
     }
   } else {
     // a diner counter at the bottom, the glass sliding along it, things falling from the stars
@@ -64101,7 +64958,15 @@ function drawMini(t) {
     rect(L, 466, Rr - L, 2, col("#ffffff"));
     rect(L, 472, Rr - L, 2, col("#8a8ea0"));
     R.setAdd(true);
-    disc(M.x, 474, 70, withA(col("#fff0c8"), 0.08), 8);
+    // (v1.5.95: in the cherry duel, a pink and a blue glow - whose glass is whose)
+    for (const gl of M.gl || [M])
+      disc(
+        gl.x,
+        474,
+        70,
+        withA(col(M.gl ? (gl.id ? "#5fb0ff" : "#ff5fa8") : "#fff0c8"), M.gl ? 0.2 : 0.08),
+        8
+      );
     R.setAdd(false); // the glass's reflection-glow on the chrome
     const gx = M.x,
       gy = MINI_GY;
@@ -64142,22 +65007,26 @@ function drawMini(t) {
       R.setAdd(false);
     }
     for (const it of M.items) if (!it.inG) drawIngredient(it.kind, it.x, it.y, 1.3, it.rot);
-    drawMiniGlassBig(M, t, () => {
-      for (const it of M.items)
-        if (it.inG) {
-          drawIngredient(it.kind, it.x, it.y, it.bad ? 1.15 : 0.85, it.rot);
-          if (it.bad) badMark(it.x, it.y, t); // (v1.4.78)
-        }
-    });
-    if (M.hurt > 0) {
-      R.setAdd(true);
-      glow(gx, gy - 40, 60, withA(col("#ff3b4f"), M.hurt * 0.5));
-      R.setAdd(false);
-    }
-    if (M.pop) {
-      R.setAdd(true);
-      glow(M.x, MINI_GY - MINI_RIM, 34, withA(col("#fff4c0"), M.pop.t));
-      R.setAdd(false);
+    // (v1.5.95: the cherry duel has two glasses, each with what's in it)
+    for (const gl of M.gl || [M]) {
+      drawMiniGlassBig(gl, t, () => {
+        for (const it of M.items)
+          if (it.inG && (!M.gl || it.g === gl.id)) {
+            drawIngredient(it.kind, it.x, it.y, it.bad ? 1.15 : 0.85, it.rot);
+            if (it.bad) badMark(it.x, it.y, t, gl.x); // (v1.4.78)
+          }
+      });
+      const hurt = M.gl ? Math.min(1, gl.hurt) : M.hurt;
+      if (hurt > 0) {
+        R.setAdd(true);
+        glow(M.gl ? gl.x : gx, gy - 40, 60, withA(col("#ff3b4f"), hurt * 0.5));
+        R.setAdd(false);
+      }
+      if (gl.pop) {
+        R.setAdd(true);
+        glow(gl.x, MINI_GY - MINI_RIM, 34, withA(col("#fff4c0"), gl.pop.t));
+        R.setAdd(false);
+      }
     }
     if (M.kind === "mixer") {
       // the recipe card
@@ -64201,7 +65070,10 @@ function funStoryUpdate(dt) {
     return;
   }
   S0.t += dt;
-  const inp = playerInput(0);
+  // (v1.5.96: with two players either of you can move Bogdan's words on)
+  const inp = playerInput(0),
+    i2 = twoP() ? playerInput(1) : null;
+  if (i2 && i2.pour) inp.pour = true;
   const per = 3.2,
     total = S0.lines.length * per + 1.2;
   if (inp.pour && !S0.held && S0.t > 0.6) {
@@ -64745,6 +65617,20 @@ function funHud(g, s, t, fD, sx, sy) {
   }
   if (G.state === "mini" && G.mini) {
     const M = G.mini;
+    // (v1.5.95) the cherry duel: "P1" and "P2" on the counter under the glasses, in pink and blue
+    if (M.gl)
+      for (const gl of M.gl) {
+        g.globalAlpha = gl.wrong || gl.crashed ? 0.45 : 1;
+        neon2(
+          g,
+          "P" + (gl.id + 1),
+          fitCssX(gl.x),
+          fitCssY(M.kind === "stork" ? gl.y - 62 : MINI_GY + 30), // (v1.5.96: over a stork's head)
+          15 * s,
+          gl.id ? "#5fb0ff" : "#ff5fa8"
+        );
+        g.globalAlpha = 1;
+      }
     if (M.phase !== "done") {
       g.save();
       g.font = "600 " + Math.round(12 * s * TXT()) + "px " + FB;
@@ -64754,10 +65640,51 @@ function funHud(g, s, t, fD, sx, sy) {
     }
     if (M.phase === "intro") {
       neon2(g, "MINI-GAME!", cssW / 2, cssH * 0.22, 30 * s, "#ff5fa8");
-      neon2(g, MINI_NAMES[M.kind], cssW / 2, cssH * 0.32, 22 * s, "#ffc34d");
+      neon2(
+        g,
+        M.gl
+          ? M.kind === "stork"
+            ? "STORK RACE"
+            : M.team
+              ? "TEAM MIXER"
+              : "CHERRY DUEL"
+          : MINI_NAMES[M.kind],
+        cssW / 2,
+        cssH * 0.32,
+        22 * s,
+        "#ffc34d"
+      );
+      // (v1.5.90) whose turn it is, with two players - (v1.5.95) or, in the cherry duel, the two of you head to head
+      if (M.gl) {
+        const hy = cssH * 0.13,
+          off = Math.min(cssW * 0.22, 130 * s);
+        neon2(g, "PLAYER 1", cssW / 2 - off, hy, 16 * s, "#ff5fa8");
+        neon2(g, M.team ? "&" : "VS", cssW / 2, hy, 16 * s, "#fff3e2"); // (v1.5.97: a team, not a duel)
+        neon2(g, "PLAYER 2", cssW / 2 + off, hy, 16 * s, "#5fb0ff");
+      } else if (twoP())
+        neon2(
+          g,
+          "PLAYER " + ((M.who || 0) + 1) + "'S TURN",
+          cssW / 2,
+          cssH * 0.13,
+          16 * s,
+          M.who ? "#5fb0ff" : "#ff5fa8"
+        );
       g.font = "600 " + Math.round(15 * s) + "px " + FB;
       g.fillStyle = "#fff3e2";
-      wrapLines(g, T(MINI_HELP[M.kind]), cssW * (VERT ? 0.86 : 0.56)).forEach((ln, i, a) =>
+      wrapLines(
+        g,
+        T(
+          M.gl
+            ? M.kind === "stork"
+              ? STORK_RACE_HELP
+              : M.team
+                ? TEAM_MIX_HELP
+                : DUEL_HELP
+            : MINI_HELP[M.kind]
+        ),
+        cssW * (VERT ? 0.86 : 0.56)
+      ).forEach((ln, i, a) =>
         g.fillText(ln, cssW / 2, cssH * 0.42 + (i - (a.length - 1) / 2) * 19 * s * TXT())
       ); // (wrapped to fit the screen)
       // (v1.4.95) the countdown, big and bouncing: 3... 2... 1...
@@ -64779,8 +65706,9 @@ function funHud(g, s, t, fD, sx, sy) {
       g.font = fD(18);
       g.fillStyle = "#ffc34d";
       g.fillText(
-        (M.kind === "mixer" ? "SHAKES MADE: " : M.kind === "stork" ? "STARS: " : "CAUGHT: ") +
-          M.score +
+        (M.gl && !M.team
+          ? "P1 " + M.gl[0].score + "  ·  P2 " + M.gl[1].score // (v1.5.95: the duel's score)
+          : (M.kind === "mixer" ? "SHAKES MADE: " : M.kind === "stork" ? "STARS: " : "CAUGHT: ") + M.score) +
           "      TIME: " +
           Math.ceil(M.len - M.t),
         cssW / 2,
@@ -64810,7 +65738,14 @@ function funHud(g, s, t, fD, sx, sy) {
       // (v1.4.94) and the "+1"s floating up from the catches
       for (const p of M.pops || []) {
         g.globalAlpha = Math.min(1, (1 - p.t) * 3);
-        neon2(g, p.txt, sx(p.x), sy(p.y) - p.t * 46 * s, (16 + 8 * Math.min(1, p.t * 6)) * s, "#ffe066");
+        neon2(
+          g,
+          p.txt,
+          fitCssX(p.x),
+          fitCssY(p.y) - p.t * 46 * s,
+          (16 + 8 * Math.min(1, p.t * 6)) * s,
+          "#ffe066"
+        );
         g.globalAlpha = 1;
       }
       // (v1.4.78) where the messages go: on a tall screen in the middle of the play area - at 40% of the screen they
@@ -64835,6 +65770,44 @@ function funHud(g, s, t, fD, sx, sy) {
         }
       } // (v1.4.71: and what it was)
       if (M.made > 0) neon2(g, "SHAKE MADE!", cssW / 2, msgY, 26 * s, "#5ff5c8");
+      // (v1.5.96) in the stork race: whose stork hit an asteroid
+      if (M.gl && M.kind === "stork")
+        for (const b of M.gl)
+          if (b.crashed && b.hurt > 0) {
+            g.globalAlpha = Math.min(1, b.hurt * 2);
+            neon2(
+              g,
+              "PLAYER " + (b.id + 1) + " HIT AN ASTEROID!",
+              cssW / 2,
+              msgY + b.id * 34 * s,
+              (VERT ? 17 : 22) * s,
+              b.id ? "#5fb0ff" : "#ff5fa8"
+            );
+            g.globalAlpha = 1;
+          }
+      // (v1.5.95) in the cherry duel: whose glass is out, and with what
+      if (M.gl)
+        for (const gl of M.gl)
+          if (gl.wrong && gl.hurt > 0) {
+            const wn =
+              {
+                strawberry: "A STRAWBERRY",
+                sock: "A SOCK",
+                banana: "A BANANA",
+                star: "A STAR",
+                chili: "A CHILLI",
+              }[gl.wrong] || "THE WRONG THING";
+            g.globalAlpha = Math.min(1, gl.hurt * 2);
+            neon2(
+              g,
+              "PLAYER " + (gl.id + 1) + " IS OUT - " + wn + "!",
+              cssW / 2,
+              msgY + gl.id * 34 * s,
+              (VERT ? 17 : 22) * s,
+              gl.id ? "#5fb0ff" : "#ff5fa8"
+            );
+            g.globalAlpha = 1;
+          }
       if (M.kind === "cherry" && M.wrong) {
         // (v1.4.78) straight away, while you can still see it in the glass: what you caught
         const wn =
@@ -64847,6 +65820,29 @@ function funHud(g, s, t, fD, sx, sy) {
           }[M.wrong] || "THE WRONG THING";
         neon2(g, "OOPS - YOU CAUGHT " + wn + "!", cssW / 2, msgY, (VERT ? 18 : 26) * s, "#ff5fa8");
       }
+    } else if (M.gl) {
+      // (v1.5.95) the cherry duel's result
+      const w = M.duelWin;
+      neon2(
+        g,
+        w === -2 ? "TEAMWORK!" : w < 0 ? "A DRAW!" : "PLAYER " + (w + 1) + " WINS THE DUEL!", // (v1.5.97: the team mixer)
+        cssW / 2,
+        cssH * 0.26,
+        (VERT ? 22 : 30) * s,
+        w < 0 ? "#5ff5c8" : w ? "#5fb0ff" : "#ff5fa8"
+      );
+      g.font = fD(18);
+      g.fillStyle = "#ffd24d";
+      g.fillText(
+        (M.team
+          ? M.score + (M.score === 1 ? " SHAKE" : " SHAKES")
+          : "P1 " + M.gl[0].score + "  ·  P2 " + M.gl[1].score) +
+          "  ·  +" +
+          (M.reward || 0) +
+          " COINS",
+        cssW / 2,
+        cssH * 0.42
+      );
     } else if (M.crashed) {
       neon2(g, "OUCH! AN ASTEROID!", cssW / 2, cssH * 0.26, 28 * s, "#ff9a5a");
       g.font = fD(15);
@@ -65068,7 +66064,7 @@ function funHud(g, s, t, fD, sx, sy) {
       g.textAlign = "left";
       HUDHIT.flav = [8 * s, fy0 - 10 * s, 260 * s, 22 * s]; // (click it - or right-click anywhere - to change flavour)
       const ft =
-        "FLAVOUR: " +
+        (twoP() ? "P1 FLAVOUR: " : "FLAVOUR: ") + // (v1.6.3: whose, with two players)
         FLAV_NAMES[f] +
         (oneBtn() || DF().kid
           ? "  (AUTO)"
@@ -65084,6 +66080,20 @@ function funHud(g, s, t, fD, sx, sy) {
       g.fillStyle = FLAV_TXT[f];
       g.fillText(ft, 16 * s, fy0);
       hudObs(16 * s + g.measureText(ft).width / 2, fy0, g.measureText(ft).width + 12 * s, 20 * s); // (v1.5.39: the floating words keep clear of it)
+      // (v1.6.3) PLAYER 2'S FLAVOUR TOO: with two players only player 1's was shown, so player 2 poured blind. Their own
+      // line, just above, in their flavour's colour - with their key (R) or SELECT on their controller
+      if (twoP()) {
+        const f2 = P2.flav ?? 0,
+          ft2 =
+            "P2 FLAVOUR: " +
+            FLAV_NAMES[f2] +
+            (oneBtn() || DF().kid ? "  (AUTO)" : lastDev === "pad" ? "  (SELECT)" : "  (R)"),
+          fy2 = fy0 - 16 * s;
+        g.strokeText(ft2, 16 * s, fy2);
+        g.fillStyle = FLAV_TXT[f2];
+        g.fillText(ft2, 16 * s, fy2);
+        hudObs(16 * s + g.measureText(ft2).width / 2, fy2, g.measureText(ft2).width + 12 * s, 20 * s);
+      }
       {
         const o = laneOrder(P1.lane);
         if (o !== null && !(oneBtn() || DF().kid)) {
@@ -65117,6 +66127,34 @@ function funHud(g, s, t, fD, sx, sy) {
         }
       } // (what this bar wants) g.textAlign = "center";
     } // (v1.4.5: none of this when flavour orders are off)
+    // (v1.6.2) THE TEAM GOAL, ALWAYS IN SIGHT: in co-op, how far along this stop's goal you are, in gold in the corner
+    // above the FLAVOUR line - it only showed now and then before (on a high five). Ticked off for a few seconds once done
+    if (G.tg && coopOn() && (!G.tg.done || G.time - (G.tg.doneT ?? G.time) < 4)) {
+      const tg = G.tg,
+        tbs = touchTops(),
+        fy = tbs ? Math.min(cssH - 40 * s, tbs.l - 12 * s) : cssH - 40 * s,
+        gy = fy - (COMFORT.flav ? (twoP() ? 50 : 34) : 0) * s, // (v1.6.3: above player 2's flavour line too)
+        txt = tg.done
+          ? "✔ TEAM GOAL DONE!"
+          : tg.kind === "hifive"
+            ? "TEAM GOAL: " + Math.min(G.hiFives || 0, tg.n) + " / " + tg.n + " HIGH FIVES"
+            : tg.kind === "each"
+              ? "TEAM GOAL: EACH SERVES " +
+                tg.n +
+                "  ·  P1 " +
+                (P1.lvServed || 0) +
+                "  ·  P2 " +
+                (P2.lvServed || 0)
+              : "TEAM GOAL: A PAIR OF TWINS - " + (tg.twins || 0) + " / 1";
+      g.font = fD(11);
+      g.textAlign = "left";
+      g.lineWidth = 3 * s;
+      g.strokeStyle = "rgba(8,4,16,.8)";
+      g.strokeText(txt, 16 * s, gy);
+      g.fillStyle = tg.done ? "#5ff5c8" : "#ffd24d";
+      g.fillText(txt, 16 * s, gy);
+      hudObs(16 * s + g.measureText(txt).width / 2, gy, g.measureText(txt).width + 12 * s, 18 * s); // (floating words keep clear)
+    }
     // (v1.5.71) the ENDLESS line is written with TIME ATTACK's and BOSS RUSH's now, in the top left (modes.ts modesTxt)
     // - here in the middle it ran across the announcements on a phone held upright
     // (v1.5.42: the FLAVOUR lines above leave it set to "left" - this line started at the middle and ran off the right edge)
@@ -65697,7 +66735,10 @@ function funApproachUpdate(dt) {
     return;
   }
   A0.t += dt;
-  const inp = playerInput(0);
+  // (v1.5.96: with two players either of you can skip the arrival)
+  const inp = playerInput(0),
+    i2 = twoP() ? playerInput(1) : null;
+  if (i2 && i2.pour) inp.pour = true;
   if ((inp.pour && !A0.held && A0.t > 0.5) || A0.skip || A0.t >= APPROACH_LEN) {
     G.appr = null;
     G.state = "play";
@@ -66518,9 +67559,7 @@ function funMystery(dt) {
   if (th.thiefT <= 0) {
     th.thief = false;
     M.next = rnd(14, 20);
-    SCORER = P1;
-    addScore(-300);
-    SCORER = null;
+    fairBonus(-300); // (v1.5.99: with two players the loss is shared - not all off player 1 - twists.ts)
     callout("THE THIEF SLIPPED AWAY WITH THE TIP JAR...  -300", "#c0a0c0", 2);
   }
 }
@@ -78667,7 +79706,7 @@ function levelOfTour(of) {
     inTour = ((lv - 1) % LAST_LEVEL) + 1;
   return (tour > 1 ? "TOUR " + tour + "  ·  " : "") + "LEVEL " + inTour + of + LAST_LEVEL;
 }
-const GAME_VERSION = "v1.5.89",
+const GAME_VERSION = "v1.6.4",
   GAME_DATE = "21.11.2026",
   VERSION_TEXT = GAME_VERSION + "  ·  " + GAME_DATE;
 const FB = '"Chakra Petch", "Segoe UI", sans-serif';
@@ -80153,6 +81192,13 @@ function drawHelp(g, s, t, fD, fB, sx, sy) {
     g.font = fD(9);
     g.fillStyle = "#ffffff";
     g.fillText("!", X, Y - r * 0.15);
+    // (v1.6.1) in co-op, whose bar to run to: "P1" or "P2" under the arrow, in their colour (as the call - twists.ts)
+    const who = coopOn() ? coopWho(l) : null;
+    if (who) {
+      g.font = fD(10);
+      g.fillStyle = who.id ? "#5fb0ff" : "#ff5fa8";
+      g.fillText("P" + (who.id + 1), X, Y + r + 8 * s);
+    }
     g.globalAlpha = 1;
   }
   // (the NO SERVICE sign over every devil, demon and vampire is drawn in the room itself now, as a NO ENTRY road sign -
@@ -85073,6 +86119,7 @@ function showPanels() {
   $("wardrobe").hidden = !WD.open;
   kidMenuText();
   $("pause").hidden = G.state !== "paused" || BRK.open;
+  $("pJoin").hidden = !(G.state === "paused" && G.prev === "play" && canJoin()); // (v1.6.0)
   $("over").hidden = G.state !== "over";
   $("touch").hidden = !((lastDev === "touch" || (coarse && lastDev !== "pad")) && G.state === "play");
   $("tHoly").hidden = G.level < 2;
@@ -85296,6 +86343,18 @@ function pressTwice(id, sureText, action) {
   };
 }
 $("pResume").onclick = () => pause(false);
+// (v1.6.0) DROP-IN CO-OP from the pause menu: player 2 joins, and the game carries on (twists.ts)
+$("pJoin").onclick = () => {
+  // (v1.6.4) if you were playing on the only controller, it stays yours - your friend takes the arrow keys and Enter
+  const one =
+    lastDev === "pad" &&
+    (navigator.getGamepads ? Array.from(navigator.getGamepads()) : []).filter((p) => p && p.connected)
+      .length === 1;
+  if (joinP2()) {
+    G.padP1 = one;
+    pause(false);
+  }
+};
 pressTwice("pQuit", "PRESS AGAIN TO QUIT TO THE MENU", toMenu);
 $("oAgain").onclick = startGame;
 $("oMenu").onclick = toMenu;
@@ -86228,6 +87287,133 @@ profWire();
 //  the game, and where the motion capture, the folk songs and the fonts come from. Both from the menu at any time.
 // =====================================================================================
 const NEWS = [
+  {
+    ver: "v1.6.4",
+    title: "SMOOTHER JOINING",
+    items: [
+      "JOINING WITH START ON A SECOND CONTROLLER NO LONGER PAUSES THE GAME A MOMENT LATER",
+      "JOIN A FRIEND IN FROM THE PAUSE MENU WHILE PLAYING ON THE ONLY CONTROLLER, AND IT STAYS YOURS - THEY TAKE THE ARROW KEYS",
+      "IN THE CHERRY DUEL THE RED CROSS STAYS OVER THE GLASS THAT CAUGHT THE WRONG THING",
+    ],
+  },
+  {
+    ver: "v1.6.3",
+    title: "TWO FLAVOURS",
+    items: [
+      "WITH TWO PLAYERS, PLAYER 2'S FLAVOUR IS NOW SHOWN TOO, IN THE CORNER ABOVE PLAYER 1'S - BEFORE, THEY POURED BLIND",
+      "EACH CONTROLLER'S SELECT CHANGES ITS OWN PLAYER'S FLAVOUR - A SINGLE CONTROLLER (PLAYER 2'S) CHANGED PLAYER 1'S",
+    ],
+  },
+  {
+    ver: "v1.6.2",
+    title: "GOAL STREAK",
+    items: [
+      "IN CO-OP THE TEAM GOAL NOW STAYS IN SIGHT: HOW FAR ALONG YOU ARE, IN GOLD IN THE CORNER",
+      "GOALS MET STOP AFTER STOP MAKE A GOAL STREAK - EACH ONE PAYS TWO COINS MORE, UP TO 15",
+    ],
+  },
+  {
+    ver: "v1.6.1",
+    title: "WHOSE IS IT?",
+    items: [
+      "IN CO-OP THE RED WARNING ARROW AT A BAR WITH NOBODY ON IT NOW SAYS WHO SHOULD RUN THERE: P1 OR P2, IN THEIR COLOUR",
+      "THE FIRST DEVIL OR WEREWOLF'S HINT GIVES BOTH PLAYERS' KEYS ON A SHARED KEYBOARD",
+    ],
+  },
+  {
+    ver: "v1.6.0",
+    title: "DROP-IN",
+    items: [
+      "A FRIEND CAN JOIN YOUR GAME ANY TIME: PRESS START ON A SECOND CONTROLLER, OR CHOOSE + PLAYER 2 JOINS IN THE PAUSE MENU",
+      "PLAYER 2 COMES IN AS CO-OP, ON A BAR OF THEIR OWN, AND BRINGS TWO MORE LIVES FOR THE TEAM",
+    ],
+  },
+  {
+    ver: "v1.5.99",
+    title: "FAIR SHARES",
+    items: [
+      "WITH TWO PLAYERS, THE BONUSES FOR THE VIP AND THE FASTEST POUR IN THE WEST NOW GO TO WHOEVER SERVED THEM",
+      "THE UFO'S VISITORS, THE FAN PARTY AND A PROTEST CALMED DOWN ARE SHARED HALF AND HALF - THEY ALWAYS WENT TO PLAYER 1",
+      "AND WHEN THE TIP-JAR THIEF GETS AWAY, THE LOSS IS SHARED TOO - IT ALL CAME OFF PLAYER 1",
+    ],
+  },
+  {
+    ver: "v1.5.98",
+    title: "TEAM TAKEDOWN",
+    items: [
+      "THE BIG BONUS FOR FILLING A BOSS OR THE GALACTIC GLUTTON ALWAYS WENT TO PLAYER 1 - NOW IT GOES BY WHO FED IT",
+      "IN CO-OP IT'S SHARED BY THE SHAKES EACH OF YOU SERVED IT - AND IF YOU BOTH FED IT, A TEAM TAKEDOWN WITH COINS",
+      "IN VERSUS WHOEVER FED IT MOST TAKES IT ALL",
+    ],
+  },
+  {
+    ver: "v1.5.97",
+    title: "TEAM MIXER",
+    items: [
+      "WITH TWO PLAYERS, THE SHAKE MIXER IS NOW TEAMWORK: TWO GLASSES, ONE RECIPE, AND WHAT IT NEEDS COUNTS IN EITHER GLASS",
+      "ANYTHING ELSE SPOILS THE SHAKE FOR BOTH OF YOU - SO WATCH EACH OTHER'S BACK",
+      "SO ALL THREE MINI-GAMES ARE NOW PLAYED TOGETHER: A CHERRY DUEL, A STORK RACE AND A TEAM MIXER",
+    ],
+  },
+  {
+    ver: "v1.5.96",
+    title: "STORK RACE",
+    items: [
+      "WITH TWO PLAYERS, BOGDAN'S SPACE DELIVERY IS NOW A RACE: TWO STORKS, PINK AND BLUE, FLYING AT ONCE",
+      "A STAR GOES TO WHOEVER REACHES IT FIRST. HIT AN ASTEROID AND YOUR DELIVERY IS OVER - THE MOST STARS WINS",
+      "EITHER PLAYER CAN NOW MOVE THE STORIES ON, SKIP THE ARRIVAL, AND START OR LEAVE A DUEL",
+    ],
+  },
+  {
+    ver: "v1.5.95",
+    title: "CHERRY DUEL",
+    items: [
+      "WITH TWO PLAYERS, CHERRY CATCH IS NOW A DUEL: TWO GLASSES, PINK AND BLUE, BOTH PLAYING AT ONCE",
+      "CATCH THE WRONG THING AND YOUR GLASS IS OUT - THE OTHER PLAYS ON. THE MOST CHERRIES WINS",
+      "THE MINI-GAMES' SCORE LINE IS NOW IN AFRIKAANS AND POLISH, AND ON AN UPRIGHT PHONE THE +1S RISE FROM THE GLASS",
+    ],
+  },
+  {
+    ver: "v1.5.94",
+    title: "WHO'S GOING?",
+    items: [
+      "IN CO-OP, WHEN A CUSTOMER OR AN EMPTY GLASS IS ABOUT TO REACH A BAR WITH NOBODY ON IT, THE GAME CALLS WHO SHOULD GO",
+      'THE ONE NEARER THAT BAR, AND NOT BUSY AT A TAP - IN THEIR COLOUR: "PLAYER 2: BAR 3!"',
+    ],
+  },
+  {
+    ver: "v1.5.93",
+    title: "TEAM AWARDS",
+    items: [
+      "AFTER A CO-OP GAME THE RESULTS HAND OUT TEAM AWARDS: TOP SERVER, TOP CATCHER, HELPING HANDS AND CROWNS WON",
+      "EACH ONE NAMES THE WINNER AND SHOWS BOTH PLAYERS' COUNTS",
+    ],
+  },
+  {
+    ver: "v1.5.92",
+    title: "THE CROWN",
+    items: [
+      "IN CO-OP, WHOEVER GETS THREE SERVES AHEAD IN A STOP WEARS A LITTLE GOLD CROWN OVER THEIR MARKER",
+      "IT ONLY CHANGES HANDS WHEN THE OTHER GETS THREE AHEAD - A RACE TO WIN IT BACK",
+    ],
+  },
+  {
+    ver: "v1.5.91",
+    title: "TEAM GOAL",
+    items: [
+      "EVERY CO-OP STOP NOW HAS A TEAM GOAL: A NUMBER OF HIGH FIVES, A FAIR SHARE OF THE SERVING EACH, OR A PAIR OF TWINS SERVED TOGETHER",
+      "REACH IT FOR A FANFARE AND FIVE COINS. EACH HIGH FIVE SHOWS HOW FAR YOU ARE",
+      "MISSED IT? THE END OF THE STOP SAYS HOW CLOSE YOU CAME",
+    ],
+  },
+  {
+    ver: "v1.5.90",
+    title: "YOUR TURN",
+    items: [
+      "WITH TWO PLAYERS THE MINI-GAMES TAKE TURNS - PLAYER 1 PLAYS THE FIRST, PLAYER 2 THE NEXT, AND SO ON",
+      "THE MINI-GAME'S TITLE SAYS WHOSE TURN IT IS. BEFORE, ONLY PLAYER 1 COULD PLAY THEM",
+    ],
+  },
   {
     ver: "v1.5.89",
     title: "TEAM TIPS",

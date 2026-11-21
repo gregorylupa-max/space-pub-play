@@ -7663,6 +7663,17 @@ const DICT_ROWS                             = [
   ["where's my milkshake?", "WAAR'S MY MILKSHAKE?", "gdzie mój koktajl?"],
   ["we're still waiting!", "ONS WAG NOG!", "wciąż czekamy!"],
   ["oh my goodness!", "HAAI, JIRRE!", "o rany!"],
+  ["HUGE AND CLEAR", "GROOT EN DUIDELIK", "DUŻE I WYRAŹNE"],
+  [
+    "WITH HUGE TEXT, FLOATING WORDS NO LONGER LAND ON THE END OF A LONG POWER-UP NAME LIKE DRIEDUBBELE SKOOT",
+    "MET BAIE GROOT TEKS BELAND SWEWENDE WOORDE NIE MEER OP DIE PUNT VAN 'N LANG KRAGNAAM SOOS DRIEDUBBELE SKOOT NIE",
+    "PRZY OGROMNYM TEKŚCIE UNOSZĄCE SIĘ SŁOWA NIE LĄDUJĄ JUŻ NA KOŃCU DŁUGIEJ NAZWY WZMOCNIENIA",
+  ],
+  [
+    "ON A PHONE HELD UPRIGHT A CUSTOMER'S NAME TAG NO LONGER COVERS THE STAGE'S LIVE SIGN",
+    "OP 'N FOON WAT REGOP GEHOU WORD, BEDEK 'N KLANT SE NAAMPLAATJIE NIE MEER DIE VERHOOG SE LIVE-BORD NIE",
+    "NA TELEFONIE TRZYMANYM PIONOWO PLAKIETKA Z IMIENIEM KLIENTA NIE ZASŁANIA JUŻ NAPISU LIVE NAD SCENĄ",
+  ],
   ["LONG WORDS", "LANG WOORDE", "DŁUGIE SŁOWA"],
   [
     "LONG AFRIKAANS AND POLISH WORDS NO LONGER RUN OUT OF THEIR BUTTONS ON A PHONE - THEY BREAK ONTO THE NEXT LINE WITH A HYPHEN",
@@ -52126,6 +52137,18 @@ function nameTagsHud(g, s, sx, sy) {
           y = Math.min(y, b.y - b.h / 2 - 11 * s);
     }
     y = Math.max(y, (HUD_TOP.low || 0) + 10 * s); // (but never up into the score and the sign)
+    // (v1.5.78) ...nor onto the stage's "LIVE:" caption: on a phone held upright it sits just under the top of the HUD, and a
+    // tag held down there landed right on it ("YSTERGEBORENE" across "OP DIE VERHOOG: VOLKSPELE...") - it goes just below
+    {
+      const C = STAGE_CAP.box;
+      if (
+        C &&
+        performance.now() - C.t < 500 &&
+        Math.abs(C.x - x) < C.hw + w / 2 &&
+        Math.abs(C.y - y) < C.h / 2 + 9 * s
+      )
+        y = C.y + C.h / 2 + 11 * s;
+    }
     if (used.some((r) => Math.abs(r[0] - x) < (r[2] + w) / 2 && Math.abs(r[1] - y) < 20 * s)) continue; // (never one on top of another)
     used.push([x, y, w]);
     const near = busy.some(([bx, by]) => Math.abs(bx - x) < w / 2 + 24 * s && Math.abs(by - y) < 26 * s),
@@ -69803,6 +69826,8 @@ function drawStage(t) {
     outlined(() => drawShowAct(t), withA(INK, 0.85 * (1 - 0.6 * (G.dark || 0))));
   }); // (a crisp ink outline round every performer, like everyone else in the pub)
 }
+// (v1.5.78) where the "LIVE:" caption was last drawn - the customers' name tags keep off it (kids2.ts nameTagsHud)
+const STAGE_CAP = { box: null                                                                      };
 // ---- the words: the name of tonight's act on a board at the front of the stage, the Shaolin shouts, the comedian's jokes ----
 function stageHud(g, s, t, fD, sx, sy) {
   if (!["play", "lost", "clear"].includes(G.state)) return;
@@ -69841,6 +69866,7 @@ function stageHud(g, s, t, fD, sx, sy) {
   g.fillStyle = "#ffe8a0";
   g.fillText(nm, cx, ny);
   hudObs(cx, ny, nw, 14 * s); // (v1.4.78: the floating words keep clear of the caption)
+  STAGE_CAP.box = { x: cx, y: ny, hw: nw / 2, h: 14 * s, t: performance.now() }; // (v1.5.78: for the name tags - kids2.ts)
   // (v1.5.45) WHERE THE ACT'S WORDS GO: just over the stage - but in the tall view (a phone held upright) the stage is
   // small, up under the HUD, and the comedian's joke bubble (and the shouts) landed right on the SHAKE FEVER meters and
   // the line under the sign. There they go just below the "LIVE:" caption instead, clear of the HUD
@@ -78155,7 +78181,7 @@ function levelOfTour(of) {
     inTour = ((lv - 1) % LAST_LEVEL) + 1;
   return (tour > 1 ? "TOUR " + tour + "  ·  " : "") + "LEVEL " + inTour + of + LAST_LEVEL;
 }
-const GAME_VERSION = "v1.5.77",
+const GAME_VERSION = "v1.5.78",
   GAME_DATE = "21.11.2026",
   VERSION_TEXT = GAME_VERSION + "  ·  " + GAME_DATE;
 const FB = '"Chakra Petch", "Segoe UI", sans-serif';
@@ -79193,7 +79219,14 @@ function drawHud(fps) {
         g.fillStyle = P0.c;
         g.fillRect(pad, y + 13 * s, 110 * s * Math.min(1, left / P0.dur), 4 * s);
         g.globalAlpha = 1;
-        hudObs(pad + 58 * s, y + 9 * s, 124 * s, 24 * s); // (v1.5.39: "LONG SLIDE!" landed on the SHIELD timer - the floating words keep clear of it now)
+        // (v1.5.78: as wide as its name really is - with TEXT SIZE HUGE, or a long name in Afrikaans ("DRIEDUBBELE SKOOT"),
+        //  the name reaches past the bar, and a floating word landed on its end)
+        {
+          g.font = fD(10);
+          const nw = Math.max(110 * s, g.measureText(T(P0.name)).width) + 14 * s;
+          hudObs(pad + nw / 2 - 7 * s, y + 9 * s, nw, 24 * s);
+        }
+        // (v1.5.39: "LONG SLIDE!" landed on the SHIELD timer - the floating words keep clear of it now)
         row++;
       }
     }
@@ -85662,6 +85695,14 @@ profWire();
 //  the game, and where the motion capture, the folk songs and the fonts come from. Both from the menu at any time.
 // =====================================================================================
 const NEWS = [
+  {
+    ver: "v1.5.78",
+    title: "HUGE AND CLEAR",
+    items: [
+      "WITH HUGE TEXT, FLOATING WORDS NO LONGER LAND ON THE END OF A LONG POWER-UP NAME LIKE DRIEDUBBELE SKOOT",
+      "ON A PHONE HELD UPRIGHT A CUSTOMER'S NAME TAG NO LONGER COVERS THE STAGE'S LIVE SIGN",
+    ],
+  },
   {
     ver: "v1.5.77",
     title: "LONG WORDS",

@@ -329,6 +329,19 @@ body.retro .table { font-size: 10px; gap: 5px; }
 #touch button.act.on { background: rgba(255, 95, 168, .45); }
 #touch button.holy { width: 112px; height: 46px; border-radius: 14px; font-size: 13px; flex-direction: row; gap: 5px; border-color: rgba(127, 216, 255, .8); background: rgba(20, 60, 110, .55); }
 #touch button.holy small { font-size: 9px; }
+/* (v1.6.8) two players on one touch screen: each gets a little pad - HOLY, up, POUR / left, down, right - in their colour */
+#touch .tp { display: none; }
+body.touch2p #touch .grp:not(.tp) { display: none; }
+body.touch2p #touch .tp { display: grid; grid-template-columns: repeat(3, 60px); grid-template-rows: repeat(2, 60px); gap: 8px; position: relative; }
+body.touch2p #touch .tp button { width: 60px; height: 60px; border-radius: 16px; font-size: 20px; }
+body.touch2p #touch .tp button.pour { font-size: 13px; font-weight: 700; }
+body.touch2p #touch .tp button.holy { width: 60px; height: 60px; font-size: 11px; flex-direction: column; }
+#touch .tp1 button { border-color: rgba(255, 95, 168, .85); }
+#touch .tp2 button { border-color: rgba(95, 176, 255, .85); }
+#touch .tp .who { position: absolute; top: -18px; left: 0; font: 700 12px var(--disp, sans-serif); color: #ff5fa8; }
+#touch .tp2 .who { left: auto; right: 0; color: #5fb0ff; }
+@media (max-width: 480px), (max-height: 480px) { body.touch2p #touch .tp { grid-template-columns: repeat(3, 50px); grid-template-rows: repeat(2, 50px); gap: 5px; }
+  body.touch2p #touch .tp button { width: 50px; height: 50px; font-size: 17px; } body.touch2p #touch .tp button.holy, body.touch2p #touch .tp button.pour { width: 50px; height: 50px; font-size: 10px; } }
 #touch .row2 { display: flex; gap: 6px; } #touch .row2 button.holy { width: 53px; flex-direction: column; gap: 0; font-size: 12px; }
 #touch button.cross { border-color: rgba(255, 210, 77, .85); background: rgba(90, 60, 10, .55); font-size: 18px !important; }
 @media (max-height: 420px) { #touch button { width: 72px; height: 72px; } #touch .col button { width: 64px; height: 52px; } #touch button.act { width: 94px; height: 94px; } #touch button.holy { width: 94px; height: 36px; } #touch .row2 button.holy { width: 44px; } }
@@ -704,6 +717,9 @@ body.retro .table { font-size: 10px; gap: 5px; }
 
 <div id="touch" hidden>
   <div class="grp"><button id="tLeft" aria-label="Left">◀<small id="tLeftL">RUN</small></button><button id="tRight" aria-label="Right">▶<small id="tRightL">RUN</small></button><button id="tFlav" aria-label="Change flavour">🍓<small>FLAVOUR</small></button></div>
+  <!-- (v1.6.8) TWO PLAYERS ON ONE TOUCH SCREEN: a set of controls each - player 1 bottom left, player 2 bottom right -->
+  <div class="grp tp tp1" aria-label="Player 1 controls"><button id="t1Holy" class="holy" aria-label="Holy water">HOLY</button><button id="t1U" class="u" aria-label="Up">▲</button><button id="t1Pour" class="pour" aria-label="Pour">POUR</button><button id="t1L" class="l" aria-label="Left">◀</button><button id="t1D" class="d" aria-label="Down">▼</button><button id="t1R" class="r" aria-label="Right">▶</button><b class="who">P1</b></div>
+  <div class="grp tp tp2" aria-label="Player 2 controls"><button id="t2Holy" class="holy" aria-label="Holy water">HOLY</button><button id="t2U" class="u" aria-label="Up">▲</button><button id="t2Pour" class="pour" aria-label="Pour">POUR</button><button id="t2L" class="l" aria-label="Left">◀</button><button id="t2D" class="d" aria-label="Down">▼</button><button id="t2R" class="r" aria-label="Right">▶</button><b class="who">P2</b></div>
   <div class="grp"><div class="col"><button id="tUp" aria-label="Up">▲<small id="tUpL"></small></button><button id="tDown" aria-label="Down">▼<small id="tDownL"></small></button></div><div class="col"><div class="row2"><button id="tCross" class="holy cross" aria-label="Show the cross">✝<small>CROSS</small></button><button id="tHoly" class="holy" aria-label="Holy water">HOLY<small>WATER</small></button></div><button id="tPour" class="act" aria-label="Pour">POUR<small>SLIDE</small></button></div></div>
 </div>
 
@@ -7752,6 +7768,17 @@ const DICT_ROWS                             = [
     "EN AS DIE FOOIEPOT-DIEF WEGKOM, WORD DIE VERLIES OOK GEDEEL - DIT HET ALLES VAN SPELER 1 AFGEGAAN",
     "A GDY ZŁODZIEJ SŁOIKA NA NAPIWKI UCIEKNIE, STRATA TEŻ JEST DZIELONA - CAŁA SZŁA Z KONTA GRACZA 1",
   ],
+  ["TWO ON A TABLET", "TWEE OP 'N TABLET", "DWOJE NA TABLECIE"],
+  [
+    "TWO PLAYERS CAN NOW SHARE ONE TOUCH SCREEN: EACH GETS A LITTLE PAD - PLAYER 1 BOTTOM LEFT, PLAYER 2 BOTTOM RIGHT",
+    "TWEE SPELERS KAN NOU EEN RAAKSKERM DEEL: ELKEEN KRY 'N KLEIN BEHEERBORD - SPELER 1 ONDER LINKS, SPELER 2 ONDER REGS",
+    "DWOJE GRACZY MOŻE TERAZ GRAĆ NA JEDNYM EKRANIE DOTYKOWYM: KAŻDY MA MAŁY PANEL - GRACZ 1 NA DOLE PO LEWEJ, GRACZ 2 NA DOLE PO PRAWEJ",
+  ],
+  [
+    "ARROWS TO MOVE, POUR AND HOLY WATER, IN YOUR OWN COLOUR. FLAVOURS ARE PICKED FOR YOU",
+    "PYLTJIES OM TE BEWEEG, SKINK EN WYWATER, IN JOU EIE KLEUR. GEURE WORD VIR JOU GEKIES",
+    "STRZAŁKI DO RUCHU, NALEWANIE I WODA ŚWIĘCONA, W TWOIM KOLORZE. SMAKI SĄ WYBIERANE ZA CIEBIE",
+  ],
   ["TAKING THE LEAD", "DIE VOORTOU NEEM", "OBEJMOWANIE PROWADZENIA"],
   [
     "IN VERSUS THE PLAYER AHEAD WEARS A GOLD CROWN OVER THEIR MARKER",
@@ -13156,7 +13183,9 @@ function fromText() {
 // =====================================================================================
 //  INPUT
 // =====================================================================================
+// (v1.6.8: touchHeld2 - player 2's buttons on a shared touch screen, below)
 const keys = new Set(),
+  touchHeld2        = {},
   touchHeld = {
     left: false,
     right: false,
@@ -13635,7 +13664,7 @@ function playerInput(id) {
   const two = twoP(),
     e = id ? pressedEdge2 : pressedEdge,
     pd = id ? pad2 : pad,
-    th        = id ? {} : touchHeld;
+    th        = id ? touchHeld2 : touchHeld; // (v1.6.8: player 2 has touch buttons of their own now)
   const K = two
     ? id
       ? {
@@ -13793,6 +13822,45 @@ for (const [id, k] of [
   $(id).addEventListener("pointerdown", () => {
     pressedEdge[k] = true;
   });
+// (v1.6.8) TWO PLAYERS ON ONE TOUCH SCREEN: each little pad holds its own player's directions and pour (held, as the
+// keys are), presses the edges for a move, and sends holy water - player 1's into touchHeld / pressedEdge, player 2's
+// into touchHeld2 / pressedEdge2
+for (const n of [1, 2]) {
+  const held = n === 1 ? touchHeld : touchHeld2,
+    edge = () => (n === 1 ? pressedEdge : pressedEdge2);
+  for (const [b, k] of [
+    ["U", "up"],
+    ["D", "down"],
+    ["L", "left"],
+    ["R", "right"],
+    ["Pour", "pour"],
+  ]) {
+    const el = $("t" + n + b),
+      on = (e) => {
+        e.preventDefault();
+        audio();
+        setDev("touch");
+        held[k] = true;
+        if (k !== "pour") edge()[k] = true;
+        el.classList.add("on");
+      },
+      off = (e) => {
+        e.preventDefault();
+        held[k] = false;
+        el.classList.remove("on");
+      };
+    el.addEventListener("pointerdown", on);
+    el.addEventListener("pointerup", off);
+    el.addEventListener("pointercancel", off);
+    el.addEventListener("pointerleave", off);
+  }
+  $("t" + n + "Holy").addEventListener("pointerdown", (e) => {
+    e.preventDefault();
+    audio();
+    setDev("touch");
+    edge().holy = true;
+  });
+}
 // On the game picture: tap (or click) a bar to jump to it; press and hold on your own bar to pour;
 // swipe up / down to change bar; drag left / right to run. In the bonus round, tap a dome to pick it.
 const GEST = new Map();
@@ -63737,8 +63805,10 @@ function funSpawn(c, demo) {
   if (!c || c.type.evil || c.type.glutton) return;
   if (COMFORT.flav && Math.random() < (demo ? 0.3 : 0.38)) c.want = Math.floor(Math.random() * 3); // (unless flavour orders are off)
 }
+// (v1.6.8: autoFlav - two players on one touch screen have no flavour buttons, so theirs is picked for them too)
+const autoFlav = () => oneBtn() || DF().kid || (twoP() && lastDev === "touch");
 function funPourFlavor(P0, demo) {
-  if (demo || oneBtn() || DF().kid) {
+  if (demo || autoFlav()) {
     const f = customers
       .filter((c) => c.lane === P0.lane && c.state === "walk" && c.want !== undefined)
       .sort((a, b) => b.x - a.x)[0];
@@ -66154,7 +66224,7 @@ function funHud(g, s, t, fD, sx, sy) {
       const ft =
         (twoP() ? "P1 FLAVOUR: " : "FLAVOUR: ") + // (v1.6.3: whose, with two players)
         FLAV_NAMES[f] +
-        (oneBtn() || DF().kid
+        (autoFlav()
           ? "  (AUTO)"
           : lastDev === "touch" || coarse
             ? ""
@@ -66175,7 +66245,7 @@ function funHud(g, s, t, fD, sx, sy) {
           ft2 =
             "P2 FLAVOUR: " +
             FLAV_NAMES[f2] +
-            (oneBtn() || DF().kid ? "  (AUTO)" : lastDev === "pad" ? "  (SELECT)" : "  (R)"),
+            (autoFlav() ? "  (AUTO)" : lastDev === "pad" ? "  (SELECT)" : "  (R)"),
           fy2 = fy0 - 16 * s;
         g.strokeText(ft2, 16 * s, fy2);
         g.fillStyle = FLAV_TXT[f2];
@@ -79794,7 +79864,7 @@ function levelOfTour(of) {
     inTour = ((lv - 1) % LAST_LEVEL) + 1;
   return (tour > 1 ? "TOUR " + tour + "  ·  " : "") + "LEVEL " + inTour + of + LAST_LEVEL;
 }
-const GAME_VERSION = "v1.6.7",
+const GAME_VERSION = "v1.6.8",
   GAME_DATE = "21.11.2026",
   VERSION_TEXT = GAME_VERSION + "  ·  " + GAME_DATE;
 const FB = '"Chakra Petch", "Segoe UI", sans-serif';
@@ -86197,6 +86267,11 @@ function toggleSound() {
 // =====================================================================================
 //  MENUS AND BUTTONS
 // =====================================================================================
+// the touch buttons: in play on a touch screen - (v1.6.8) and with two players sharing one, in the mini-games too (the
+// duels and races need player 2's buttons; player 1 can steer with a finger, but player 2 couldn't play at all)
+const touchWanted = () =>
+  (lastDev === "touch" || (coarse && lastDev !== "pad")) &&
+  (G.state === "play" || (twoP() && !G.demo && G.state === "mini"));
 function showPanels() {
   $("menu").hidden = G.state !== "menu" || ATTRACT.on || JB.open || CS.open || SB.open || WD.open || fpAny();
   $("shop").hidden = !FP.shop;
@@ -86222,7 +86297,8 @@ function showPanels() {
   $("pause").hidden = G.state !== "paused" || BRK.open;
   $("pJoin").hidden = !(G.state === "paused" && G.prev === "play" && canJoin()); // (v1.6.0)
   $("over").hidden = G.state !== "over";
-  $("touch").hidden = !((lastDev === "touch" || (coarse && lastDev !== "pad")) && G.state === "play");
+  $("touch").hidden = !touchWanted(); // (v1.6.8: see touchWanted)
+  document.body.classList.toggle("touch2p", twoP() && !G.demo); // (v1.6.8: a pad for each player - head.html)
   $("tHoly").hidden = G.level < 2;
   $("tFlav").hidden = !COMFORT.flav;
   $("tCross").hidden = G.level < 2;
@@ -87393,6 +87469,14 @@ profWire();
 //  the game, and where the motion capture, the folk songs and the fonts come from. Both from the menu at any time.
 // =====================================================================================
 const NEWS = [
+  {
+    ver: "v1.6.8",
+    title: "TWO ON A TABLET",
+    items: [
+      "TWO PLAYERS CAN NOW SHARE ONE TOUCH SCREEN: EACH GETS A LITTLE PAD - PLAYER 1 BOTTOM LEFT, PLAYER 2 BOTTOM RIGHT",
+      "ARROWS TO MOVE, POUR AND HOLY WATER, IN YOUR OWN COLOUR. FLAVOURS ARE PICKED FOR YOU",
+    ],
+  },
   {
     ver: "v1.6.7",
     title: "TAKING THE LEAD",
@@ -89958,6 +90042,12 @@ function frame(ts) {
   }
 }
 function frameWork(ts) {
+  // (v1.6.8) the touch buttons follow the game into and out of the mini-games (nothing else redraws the panels there)
+  {
+    const tw = touchWanted(),
+      te = $("touch");
+    if (te && te.hidden === tw) te.hidden = !tw;
+  }
   const real = Math.max(0, (ts - last) / 1000);
   last = ts;
   let dt = Math.min(real, 1 / 30);

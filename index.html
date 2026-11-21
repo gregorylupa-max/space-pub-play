@@ -4772,6 +4772,24 @@ const DICT_ROWS                             = [
   ],
   ["WISH YOU WERE HERE", "WENS JY WAS HIER", "SZKODA, ŻE CIĘ TU NIE MA"],
   ["TEAM SPIRIT", "SPANGEES", "DUCH DRUŻYNY"], // (v1.5.84: the reason for the coins)
+  ["PLAYER 2: PICK ANOTHER CUP", "SPELER 2: KIES 'N ANDER KOPPIE", "GRACZ 2: WYBIERZ INNY KUBEK"],
+  // (v1.5.89) the team tips on the first co-op stops
+  [
+    "TEAM TIP: SPLIT THE BARS BETWEEN YOU - TWO EACH",
+    "SPANWENK: VERDEEL DIE TOONBANKE TUSSEN JULLE - TWEE ELK",
+    "PORADA DLA DRUŻYNY: PODZIELCIE SIĘ LADAMI - PO DWIE",
+  ],
+  [
+    "TEAM TIP: SERVE AT THE SAME TIME FOR HIGH FIVES - RUN TO A PARTNER WHO SLIPS",
+    "SPANWENK: BEDIEN GELYKTYDIG VIR HOË VYWE - HARDLOOP NA 'N MAAT WAT GLY",
+    "PORADA DLA DRUŻYNY: OBSŁUGUJCIE RÓWNOCZEŚNIE, BY ZBIJAĆ PIĄTKI - PODBIEGNIJ DO PARTNERA, KTÓRY SIĘ POŚLIZGNIE",
+  ],
+  ["TWINS", "TWEELING", "BLIŹNIAKI"], // (v1.5.85: the label over each twin, and the reason for the coins)
+  // (v1.5.86) the co-op trophies
+  ["DREAM TEAM", "DROOMSPAN", "DRUŻYNA MARZEŃ"],
+  ["50 high fives in co-op", "50 hoë vywe in saamspeel", "50 piątek we współpracy"],
+  ["DOUBLE TROUBLE", "DUBBEL MOEILIKHEID", "PODWÓJNE KŁOPOTY"],
+  ["serve 10 pairs of twins together", "bedien 10 pare tweelinge saam", "obsłużcie razem 10 par bliźniaków"],
   // (v1.5.73) ...and the whole line Koos reads out on Castaway Island (only the bottle's words had a row)
   [
     'A MESSAGE IN A BOTTLE! IT SAYS: "WISH YOU WERE HERE"',
@@ -7666,6 +7684,69 @@ const DICT_ROWS                             = [
   ["where's my milkshake?", "WAAR'S MY MILKSHAKE?", "gdzie mój koktajl?"],
   ["we're still waiting!", "ONS WAG NOG!", "wciąż czekamy!"],
   ["oh my goodness!", "HAAI, JIRRE!", "o rany!"],
+  ["TEAM TIPS", "SPANWENKE", "PORADY DLA DRUŻYNY"],
+  [
+    "A NEW CO-OP TEAM GETS TWO TIPS ON ITS FIRST THREE STOPS: SPLIT THE BARS, SERVE TOGETHER, AND HELP A PARTNER WHO SLIPS",
+    "'N NUWE SAAMSPEEL-SPAN KRY TWEE WENKE OP SY EERSTE DRIE STOPS: VERDEEL DIE TOONBANKE, BEDIEN SAAM EN HELP 'N MAAT WAT GLY",
+    "NOWA DRUŻYNA DOSTAJE DWIE PORADY NA PIERWSZYCH TRZECH PRZYSTANKACH: PODZIELCIE LADY, OBSŁUGUJCIE RAZEM I POMÓŻCIE PARTNEROWI, KTÓRY SIĘ POŚLIZGNIE",
+  ],
+  [
+    "THE TIPS WAIT THEIR TURN, AFTER THE PLACE AND THE FUN FACT",
+    "DIE WENKE WAG HUL BEURT AF, NA DIE PLEK EN DIE PRET-FEIT",
+    "PORADY CZEKAJĄ NA SWOJĄ KOLEJ, PO MIEJSCU I CIEKAWOSTCE",
+  ],
+  ["TWO GUESSES", "TWEE RAAISELS", "DWA STRZAŁY"],
+  [
+    "IN CO-OP'S BONUS ROUND EACH PLAYER PICKS A CUP - PLAYER 1 FIRST, THEN PLAYER 2 PICKS ANOTHER",
+    "IN SAAMSPEEL SE BONUSRONDTE KIES ELKE SPELER 'N KOPPIE - SPELER 1 EERSTE, DAN KIES SPELER 2 'N ANDER",
+    "W RUNDZIE BONUSOWEJ WE WSPÓŁPRACY KAŻDY GRACZ WYBIERA KUBEK - NAJPIERW GRACZ 1, POTEM GRACZ 2 WYBIERA INNY",
+  ],
+  [
+    "WHOEVER FINDS THE ALIEN GETS THE POINTS, AND THE PARTNER GETS HALF - BEFORE, THEY ALWAYS WENT TO PLAYER 1",
+    "WIE OOK AL DIE RUIMTEWESE VIND, KRY DIE PUNTE EN DIE MAAT DIE HELFTE - VROEËR HET HULLE ALTYD NA SPELER 1 GEGAAN",
+    "KTO ZNAJDZIE KOSMITĘ, DOSTAJE PUNKTY, A PARTNER POŁOWĘ - WCZEŚNIEJ ZAWSZE DOSTAWAŁ JE GRACZ 1",
+  ],
+  ["HELPING HAND", "HELPENDE HAND", "POMOCNA DŁOŃ"],
+  [
+    "IN CO-OP, IF YOUR PARTNER SLIPS ON A BANANA OR GETS KNOCKED DIZZY, RUN OVER ON THE SAME BAR AND PULL THEM STRAIGHT BACK UP",
+    "IN SAAMSPEEL, AS JOU MAAT OP 'N PIESANG GLY OF DUISELIG GESLAAN WORD, HARDLOOP OP DIESELFDE TOONBANK NAAS HOM EN TREK HOM DADELIK OP",
+    "W TRYBIE WSPÓŁPRACY, GDY PARTNER POŚLIŹNIE SIĘ NA BANANIE ALBO DOSTANIE ZAWROTÓW GŁOWY, PODBIEGNIJ DO NIEGO NA TEJ SAMEJ LADZIE I OD RAZU GO PODNIEŚ",
+  ],
+  [
+    "A HELPING HAND IS WORTH POINTS FOR THE ONE WHO HELPS",
+    "'N HELPENDE HAND IS PUNTE WERD VIR DIE EEN WAT HELP",
+    "POMOCNA DŁOŃ DAJE PUNKTY TEMU, KTO POMAGA",
+  ],
+  [
+    "THE HIGH FIVE NOW SHOWS THE POINTS YOU REALLY GET",
+    "DIE HOË VYF WYS NOU DIE PUNTE WAT JY REGTIG KRY",
+    "PIĄTKA POKAZUJE TERAZ PUNKTY, KTÓRE NAPRAWDĘ DOSTAJESZ",
+  ],
+  [
+    "TWO NEW TROPHIES FOR THE CO-OP TEAM: DREAM TEAM FOR 50 HIGH FIVES, AND DOUBLE TROUBLE FOR 10 PAIRS OF TWINS",
+    "TWEE NUWE TROFEE VIR DIE SAAMSPEEL-SPAN: DROOMSPAN VIR 50 HOË VYWE EN DUBBEL MOEILIKHEID VIR 10 PARE TWEELINGE",
+    "DWA NOWE TROFEA DLA DRUŻYNY: DRUŻYNA MARZEŃ ZA 50 PIĄTEK I PODWÓJNE KŁOPOTY ZA 10 PAR BLIŹNIAKÓW",
+  ],
+  [
+    "THE GAME-OVER CARD SHOWS THE TEAM'S HIGH FIVES AND TWINS FOR THE WHOLE GAME",
+    "DIE SPEL-VERBY-KAART WYS DIE SPAN SE HOË VYWE EN TWEELINGE VIR DIE HELE SPEL",
+    "KARTA KOŃCA GRY POKAZUJE PIĄTKI I BLIŹNIAKI DRUŻYNY Z CAŁEJ GRY",
+  ],
+  [
+    "IN CO-OP, NOW AND THEN TWINS WALK IN ON TWO BARS AT ONCE - SERVE BOTH WITHIN FOUR SECONDS FOR +500 EACH",
+    "IN SAAMSPEEL STAP DAAR SO NOU EN DAN 'N TWEELING BY TWEE TOONBANKE GELYK IN - BEDIEN ALBEI BINNE VIER SEKONDES VIR +500 ELK",
+    "W TRYBIE WSPÓŁPRACY OD CZASU DO CZASU BLIŹNIAKI WCHODZĄ NARAZ PRZY DWÓCH LADACH - OBSŁUŻCIE OBA W CIĄGU CZTERECH SEKUND, A DOSTANIECIE PO +500",
+  ],
+  [
+    "A GOLD TWINS LABEL SHOWS WHO THEY ARE - IT FLASHES WHEN ONE HAS BEEN SERVED AND THE CLOCK IS RUNNING",
+    "'N GOUE TWEELING-ETIKET WYS WIE HULLE IS - DIT FLIKKER WANNEER EEN BEDIEN IS EN DIE HORLOSIE LOOP",
+    "ZŁOTY NAPIS BLIŹNIAKI POKAZUJE, KIM SĄ - MIGA, GDY JEDNO JUŻ OBSŁUŻONO I CZAS UCIEKA",
+  ],
+  [
+    "A MOMENT MADE FOR TWO BARTENDERS - ONE ON EACH BAR",
+    "'N OOMBLIK GEMAAK VIR TWEE KROEGMANNE - EEN BY ELKE TOONBANK",
+    "CHWILA STWORZONA DLA DWÓCH BARMANÓW - PO JEDNYM PRZY KAŻDEJ LADZIE",
+  ],
   ["HIGH FIVE", "HOË VYF", "PIĄTKA"],
   [
     "IN CO-OP, WHEN BOTH OF YOU SERVE A CUSTOMER AT ALMOST THE SAME MOMENT IT'S A HIGH FIVE - POINTS FOR BOTH AND A LITTLE SHAKE FEVER",
@@ -9635,6 +9716,30 @@ const DICT_PAT                             = [
   [/^LEVEL (\d+) \/ (\d+)$/, "VLAK $1 / $2", "POZIOM $1 / $2"],
   [/^SERVED (\d+) \/ (\d+)$/, "BEDIEN $1 / $2", "OBSŁUŻONO $1 / $2"],
   [/^SERVED (\d+)$/, "BEDIEN $1", "OBSŁUŻONO $1"],
+  // (v1.5.88) the bonus round's two picks in co-op
+  [/^PLAYER (\d+) FOUND IT!  \+(\d+)$/, "SPELER $1 HET DIT GEKRY!  +$2", "GRACZ $1 GO ZNALAZŁ!  +$2"],
+  // (v1.5.87) a helping hand in co-op
+  [/^HELPING HAND!  \+(\d+)$/, "HELPENDE HAND!  +$1", "POMOCNA DŁOŃ!  +$1"],
+  // (v1.5.86) the co-op team's line on the game-over card
+  [
+    /^TEAM: (\d+) HIGH FIVES  ·  (\d+) TWINS$/,
+    "SPAN: $1 HOË VYWE  ·  $2 TWEELINGE",
+    "DRUŻYNA: $1 PIĄTEK  ·  $2 BLIŹNIAKÓW",
+  ],
+  // (...and its two halves - the card's line is joined with " · " and translated piece by piece)
+  [/^TEAM: (\d+) HIGH FIVES$/, "SPAN: $1 HOË VYWE", "DRUŻYNA: $1 PIĄTEK"],
+  [/^(\d+) TWINS$/, "$1 TWEELINGE", "$1 BLIŹNIAKÓW"],
+  // (v1.5.85) the twins in co-op
+  [
+    /^TWINS ON BARS (\d+) AND (\d+)!  SERVE THEM TOGETHER$/,
+    "TWEELINGE BY TOONBANKE $1 EN $2!  BEDIEN HULLE SAAM",
+    "BLIŹNIAKI PRZY LADACH $1 I $2!  OBSŁUŻCIE ICH RAZEM",
+  ],
+  [
+    /^TWINS SERVED TOGETHER!  \+(\d+) EACH$/,
+    "TWEELINGE SAAM BEDIEN!  +$1 ELK",
+    "BLIŹNIAKI OBSŁUŻONE RAZEM!  +$1 KAŻDY",
+  ],
   // (v1.5.84) co-op teamwork: the high five, team spirit, and the team report at the end of a stop
   [/^HIGH FIVE!  \+(\d+)$/, "HOË VYF!  +$1", "PIĄTKA!  +$1"],
   [/^TEAM SPIRIT!  (\d+) HIGH FIVES$/, "SPANGEES!  $1 HOË VYWE", "DUCH DRUŻYNY!  $1 PIĄTEK"],
@@ -16281,6 +16386,7 @@ function update(dt) {
       // (v1.5.84) HIGH FIVES in co-op (twists.ts) - last, after the serve's own points, so its words are among the newest
       // on the screen (only the three newest floating words show)
       coopServe(catcher, s, demo);
+      coopTwinServed(catcher, s, demo); // (v1.5.85: twins served together)
     } else if (
       s.x < X0 - 8 &&
       (s.park || 0) < 4 &&
@@ -17071,6 +17177,24 @@ function updateTwist(dt, demo) {
   G.twS = G.twC = G.twE = 1;
   G.twFreeze = false;
   loadShedding(dt, demo); // (Spacekom doesn't care which planet you're on)
+  coopTwins(dt, demo); // (v1.5.85: twins in co-op)
+  coopHelp(demo); // (v1.5.87: a helping hand in co-op)
+  if (G.tipAt > 0 && G.state === "play" && !demo) {
+    G.tipAt -= dt;
+    if (G.tipAt <= 0 && G.callouts.filter((c) => c.sub && c.life > 0).length <= 1) {
+      store.set("coopTips", (store.get("coopTips", 0) | 0) + 1);
+      G.callouts.push(
+        { text: "TEAM TIP: SPLIT THE BARS BETWEEN YOU - TWO EACH", c: "#9fe8ff", life: 4, max: 4, sub: true },
+        {
+          text: "TEAM TIP: SERVE AT THE SAME TIME FOR HIGH FIVES - RUN TO A PARTNER WHO SLIPS",
+          c: "#9fe8ff",
+          life: 4.5,
+          max: 4.5,
+          sub: true,
+        }
+      );
+    } else if (G.tipAt <= 0) G.tipAt = 1; // (the line is busy: a second later)
+  }
   if (!W) return;
   const kind = W.kind === "core" ? W.ev || "" : W.kind,
     say = (W.def && W.def.say) || "";
@@ -17684,6 +17808,13 @@ function coopLevelStart() {
     p.lastServeT = -9;
   }
   G.hiFives = 0;
+  G.twin = null; // (v1.5.85)
+  G.twinT = rnd(15, 25);
+  // (v1.5.89) TEAM TIPS: the coach stays quiet with two players, so a new team got no hint how to play together. On the
+  // first three co-op stops ever played, two short tips go under the sign about nine seconds into the stop - once the
+  // place, the fun fact and the twist have had their turn (only four lines may wait at once, so at the start they'd
+  // have pushed those out, and been pushed out themselves)
+  G.tipAt = coopOn() && (store.get("coopTips", 0) | 0) < 3 ? 9 : -1;
 }
 function coopServe(c, s, demo) {
   if (demo || !coopOn()) return;
@@ -17697,15 +17828,18 @@ function coopServe(c, s, demo) {
     me.lastServeT = now;
     me.hiUsed = true;
     G.hiFives = (G.hiFives || 0) + 1;
+    G.hiFivesAll = (G.hiFivesAll || 0) + 1; // (v1.5.86: for the whole game, and the DREAM TEAM trophy)
+    fStat("hiFives");
+    let got = HIFIVE_PTS;
     for (const p of [me, mate]) {
       SCORER = p;
-      addScore(HIFIVE_PTS);
+      got = addScore(HIFIVE_PTS) || HIFIVE_PTS; // (v1.5.87: the points really given, for the words below)
       SCORER = null;
     }
     feverAdd(0.5, demo);
     sfx("clink", c.x);
     const [px, py] = [(me.x + mate.x) / 2, Math.min(me.lane, mate.lane)];
-    worldText("HIGH FIVE!  +" + HIFIVE_PTS, { lane: py, x: px }, "#ffd24d");
+    worldText("HIGH FIVE!  +" + got, { lane: py, x: px }, "#ffd24d");
     if (!COMFORT.calm) sparkle(px, LY(py, px) - 60, [1, 0.85, 0.3, 1], 10, py);
     if (G.hiFives % 5 === 0) {
       callout("TEAM SPIRIT!  " + G.hiFives + " HIGH FIVES", "#ffd24d", 2);
@@ -17740,6 +17874,98 @@ function coopLevelClear(demo) {
       max: 3,
       sub: true,
     });
+}
+// (v1.5.85) TWINS IN CO-OP: now and then two customers walk in on two different bars at the same moment, both with a gold
+// "TWINS" label. Serve the two within four seconds of each other for TWINS SERVED TOGETHER (+500 each and coins) - with
+// two bartenders, one on each bar, that's the moment teamwork is for; one player alone can rarely manage it
+const TWIN_WIN = 4;
+function coopTwins(dt, demo) {
+  if (demo || !coopOn() || G.state !== "play") return;
+  G.twinT = (G.twinT ?? rnd(15, 25)) - dt;
+  // a pair whose time ran out: the label goes
+  if (G.twin && G.twin.served1 !== undefined && G.time - G.twin.served1 > TWIN_WIN) {
+    for (const c of G.twin.cs) c.twin = false;
+    G.twin = null;
+  }
+  if (G.twin && G.twin.cs.some((c) => c.state === "out" && !c.twinServed)) {
+    // one left without being served (kicked out, a boss's fire...): no pair any more
+    for (const c of G.twin.cs) c.twin = false;
+    G.twin = null;
+  }
+  if (G.twin || G.twinT > 0) return;
+  // two plain customers just through the door, on different bars
+  const fresh = customers.filter(
+    (c) =>
+      c.state === "walk" &&
+      c.x >= X0 - 40 &&
+      c.x < X0 + 60 &&
+      !c.type.evil &&
+      !c.type.boss &&
+      !c.type.glutton &&
+      !c.protest &&
+      !c.extra &&
+      !c.twin
+  );
+  for (let i = 0; i < fresh.length; i++)
+    for (let j = i + 1; j < fresh.length; j++)
+      if (fresh[i].lane !== fresh[j].lane) {
+        const cs = [fresh[i], fresh[j]];
+        for (const c of cs) c.twin = true;
+        G.twin = { cs };
+        G.twinT = rnd(30, 45);
+        callout(
+          "TWINS ON BARS " +
+            (Math.min(cs[0].lane, cs[1].lane) + 1) +
+            " AND " +
+            (Math.max(cs[0].lane, cs[1].lane) + 1) +
+            "!  SERVE THEM TOGETHER",
+          "#ffd24d",
+          2.4
+        );
+        return;
+      }
+  G.twinT = 2; // (nobody suitable yet: look again in a moment)
+}
+function coopTwinServed(c, s, demo) {
+  if (demo || !c.twin || !G.twin) return;
+  c.twinServed = true;
+  if (G.twin.served1 === undefined) {
+    G.twin.served1 = G.time;
+    return;
+  }
+  // the second twin, in time
+  for (const p of PL) {
+    SCORER = p;
+    addScore(500);
+    SCORER = null;
+  }
+  addCoins(5, "TWINS");
+  G.twinsAll = (G.twinsAll || 0) + 1; // (v1.5.86: for the whole game, and the DOUBLE TROUBLE trophy)
+  fStat("twins");
+  callout("TWINS SERVED TOGETHER!  +500 EACH", "#ffd24d", 2.4);
+  sfx("fanfare", c.x);
+  if (!COMFORT.calm) for (let k = 0; k < 18; k++) confetti(rnd(0, PW), -10, 1);
+  for (const t of G.twin.cs) t.twin = false;
+  G.twin = null;
+}
+// (v1.5.87) A HELPING HAND IN CO-OP: slipped on a banana or knocked dizzy, a bartender is stuck for a second or so - and if
+// the partner is right there on the same bar, they pull them straight back up: HELPING HAND (+100 for the helper). Run over
+// to your partner when they go down
+function coopHelp(demo) {
+  if (demo || !coopOn() || G.state !== "play") return;
+  for (const p of PL) {
+    if (!p.alive || !((p.slipT || 0) > 0.2 || (p.stunT || 0) > 0.2)) continue;
+    const mate = PL[p.id ? 0 : 1];
+    if (!mate || !mate.alive || (mate.slipT || 0) > 0 || (mate.stunT || 0) > 0) continue;
+    if (mate.lane !== p.lane || Math.abs(mate.x - p.x) > 56) continue;
+    p.slipT = p.stunT = 0;
+    SCORER = mate;
+    const got = addScore(100) || 100; // (the points really given - the difficulty and SHAKE FEVER change them)
+    SCORER = null;
+    worldText("HELPING HAND!  +" + got, { lane: p.lane, x: (p.x + mate.x) / 2 }, "#7dffc8");
+    sfx("boing", p.x);
+    G.helps = (G.helps || 0) + 1;
+  }
 }
 // DRAGON FIRE: a rainbow of flame rolls down the dragon's bar and blows everybody on it back to the door
 // four kinds: JADE (the mystic one), GOLD (its fire is worth double), SILVER (it blesses you: holy water full, cross ready)
@@ -19240,17 +19466,39 @@ function bonusStep(d) {
   const b = bonus;
   // (v1.4.89: only once the shuffle is over - moving it before then let it follow the alien's cup, see updateBonus)
   if (!b || b.phase !== "pick") return;
-  const p = b.pos[b.sel],
-    np = (p + d + b.n) % b.n,
-    i = b.pos.indexOf(np);
+  let p = b.pos[b.sel],
+    i = -1;
+  // (v1.5.88: in co-op's second pick it steps over player 1's cup)
+  for (let k = 0; k < b.n; k++) {
+    p = (p + d + b.n) % b.n;
+    i = b.pos.indexOf(p);
+    if (i !== b.sel1) break;
+  }
   if (i >= 0) {
     b.sel = i;
     sfx("tick");
   }
 }
+// (v1.5.88) TWO PICKS IN CO-OP: the bonus round had one pick, and its points always went to player 1 - player 2 never got
+// anything from it. With two players, PLAYER 1 picks a cup, then PLAYER 2 picks another; both are lifted. Whoever finds
+// the alien gets the points, and the partner half of them - a guess you make together
 function pickDome(i) {
   const b = bonus;
   if (!b || b.phase !== "pick") return;
+  if (coopOn() && b.n >= 3) {
+    if (b.sel1 === undefined) {
+      b.sel1 = i;
+      sfx("click");
+      callout("PLAYER 2: PICK ANOTHER CUP", "#5fb0ff", 2);
+      b.sel = i;
+      bonusStep(1);
+      return;
+    }
+    if (i === b.sel1) {
+      sfx("bonk");
+      return;
+    } // (not the same cup as player 1)
+  }
   b.sel = i;
   b.phase = "drum";
   b.t = 0.8;
@@ -19262,9 +19510,22 @@ function revealDome() {
     i = b.sel;
   b.phase = "reveal";
   b.t = 2.6;
-  b.result = i === b.alien;
+  b.result = i === b.alien || b.sel1 === b.alien;
   b.revT = 0;
-  if (b.result) {
+  if (b.result && b.sel1 !== undefined) {
+    // (v1.5.88: co-op - the finder gets the points, the partner half)
+    const pts = 3000 + 500 * G.level,
+      finder = b.sel1 === b.alien ? 0 : 1;
+    SCORER = PL[finder];
+    const got = addScore(pts) || pts;
+    SCORER = PL[finder ? 0 : 1];
+    addScore(Math.round(pts / 2));
+    SCORER = null;
+    callout("PLAYER " + (finder + 1) + " FOUND IT!  +" + got, finder ? "#5fb0ff" : "#ff5fa8", 2.2);
+    sfx("tip");
+    for (let k = 0; k < 40; k++) confetti(domeX(b.pos[finder ? i : b.sel1]) + rnd(-60, 60), 200, 1);
+    fireworks(3);
+  } else if (b.result) {
     const pts = 3000 + 500 * G.level;
     addScore(pts);
     callout("FOUND IT!  +" + pts, "#5ff5c8", 2.2);
@@ -45912,7 +46173,7 @@ function drawBonus(t) {
   for (const d of D) {
     const { i, x, y, z, v } = d,
       s = 1 + 0.13 * z,
-      lift = (i === b.alien && (showing || reveal)) || (reveal && i === b.sel) ? b.lift : 0;
+      lift = (i === b.alien && (showing || reveal)) || (reveal && (i === b.sel || i === b.sel1)) ? b.lift : 0; // (v1.5.88: player 1's cup too, in co-op)
     const wig = pick
         ? Math.sin(t * 7 + i * 1.9) * 0.04 * (i === b.sel ? 1.6 : 0.6)
         : drum && i === b.sel
@@ -45939,7 +46200,7 @@ function drawBonus(t) {
     if (i === b.alien && lift > 0.05)
       drawCupAlien(x, 366 + z * 14, s, t, reveal ? (b.result ? "cheer" : "tease") : "wave", lift);
     else if (peek && i === b.alien) drawCupAlien(x, 366 + z * 14, s, t, "wave", 0.35);
-    if (reveal && i === b.sel && !b.result && lift > 0.3) {
+    if (reveal && (i === b.sel || i === b.sel1) && i !== b.alien && lift > 0.3) {
       disc(x - 6, 366, 3, col("#e8c890"), 2);
       disc(x + 8, 367, 2, col("#e8c890"), 1.4);
     } // nothing but crumbs
@@ -45971,6 +46232,27 @@ function drawBonus(t) {
         );
       }
       R.setAdd(false);
+    }
+    // (v1.5.88) player 1's cup in co-op keeps a pink spotlight and marker while player 2 picks
+    if ((pick || drum) && i === b.sel1 && i !== b.sel) {
+      R.setAdd(true);
+      quad4(
+        x - 20,
+        -10,
+        x + 20,
+        -10,
+        x + 80 * s,
+        380,
+        x - 80 * s,
+        380,
+        withA(col("#ffb0d8"), 0.14),
+        withA(col("#ffb0d8"), 0.14),
+        withA(C.white, 0.02),
+        withA(C.white, 0.02)
+      );
+      glow(x, 400, 70, withA(col("#ff5fa8"), 0.4));
+      R.setAdd(false);
+      tri(x - 13, 430, x + 13, 430, x, 412, col("#ff5fa8"));
     }
     if ((pick || drum) && i === b.sel) {
       const x = b.spotX ?? d.x;
@@ -62479,6 +62761,9 @@ const TROPHIES = [
   { id: "t18", name: "BEST FRIENDS", line: "your pet saves you 5 times", k: "petSaves", n: 5 },
   { id: "t19", name: "ORDER EXPERT", line: "serve 20 right flavours", k: "orders", n: 20 },
   { id: "t21", name: "SUPER SLEUTH", line: "close 3 cases at the Sirius Noir Lounge", k: "cases", n: 3 },
+  // (v1.5.86) two for the co-op team (twists.ts counts them)
+  { id: "t22", name: "DREAM TEAM", line: "50 high fives in co-op", k: "hiFives", n: 50 },
+  { id: "t23", name: "DOUBLE TROUBLE", line: "serve 10 pairs of twins together", k: "twins", n: 10 },
   {
     id: "t20",
     name: "GALACTIC CHAMPION",
@@ -62680,6 +62965,7 @@ function funGameStart() {
   G.endlessNext = false;
   G.endLvl = 1;
   G.endServed = 0;
+  G.hiFivesAll = G.twinsAll = 0; // (v1.5.86: co-op's whole-game counts start again)
   G.after = [];
   if (!G.demo) {
     if (invUse("life")) {
@@ -63163,6 +63449,10 @@ function funPerfect() {
 }
 function funGameOver() {
   modesGameOver();
+  // (v1.5.86) the co-op team's whole game, on the game-over card
+  if (twoP() && !G.versus && ((G.hiFivesAll || 0) > 0 || (G.twinsAll || 0) > 0))
+    $k("overInfo").textContent +=
+      "   ·   TEAM: " + (G.hiFivesAll || 0) + " HIGH FIVES  ·  " + (G.twinsAll || 0) + " TWINS";
   if (G.endless) {
     const b = fStats().endlessBest || 0;
     $k("overInfo").textContent += "   ·   ENDLESS: SERVED " + G.endServed + "  (BEST " + b + ")";
@@ -78377,7 +78667,7 @@ function levelOfTour(of) {
     inTour = ((lv - 1) % LAST_LEVEL) + 1;
   return (tour > 1 ? "TOUR " + tour + "  ·  " : "") + "LEVEL " + inTour + of + LAST_LEVEL;
 }
-const GAME_VERSION = "v1.5.84",
+const GAME_VERSION = "v1.5.89",
   GAME_DATE = "21.11.2026",
   VERSION_TEXT = GAME_VERSION + "  ·  " + GAME_DATE;
 const FB = '"Chakra Petch", "Segoe UI", sans-serif';
@@ -79964,6 +80254,18 @@ function drawSigns(g, s, t, sx, sy) {
       g.fillText(lbl, sx(x), sy(y) + 1);
       hudObs(sx(x), sy(y), lw, lh);
     } // how hungry is he still?
+    // (v1.5.85) the twins in co-op: a gold label over each, pulsing while the other has been served and the clock runs
+    if (c.twin && c.state === "walk") {
+      const [x, y] = projL(c.lane, c.x + 12, LY(c.lane, c.x) - 132, VSIDE.c),
+        hurry = G.twin && G.twin.served1 !== undefined;
+      g.font = Math.round(11 * s * TXT()) + "px " + FD;
+      g.fillStyle = hurry && Math.sin(t * 16) > 0 ? "#fff3e2" : "#ffd24d";
+      g.strokeStyle = "rgba(10,6,20,.85)";
+      g.lineWidth = 3 * s;
+      g.strokeText("TWINS", sx(x), sy(y));
+      g.fillText("TWINS", sx(x), sy(y));
+      hudObs(sx(x), sy(y), g.measureText(T("TWINS")).width + 8 * s, 14 * s);
+    }
     if ((c.outlaw && c.hold) || (c.vip > 0 && !c.vipDone)) {
       const [x, y] = projL(c.lane, c.x + 12, LY(c.lane, c.x) - 128, VSIDE.c),
         X = sx(x),
@@ -85926,6 +86228,48 @@ profWire();
 //  the game, and where the motion capture, the folk songs and the fonts come from. Both from the menu at any time.
 // =====================================================================================
 const NEWS = [
+  {
+    ver: "v1.5.89",
+    title: "TEAM TIPS",
+    items: [
+      "A NEW CO-OP TEAM GETS TWO TIPS ON ITS FIRST THREE STOPS: SPLIT THE BARS, SERVE TOGETHER, AND HELP A PARTNER WHO SLIPS",
+      "THE TIPS WAIT THEIR TURN, AFTER THE PLACE AND THE FUN FACT",
+    ],
+  },
+  {
+    ver: "v1.5.88",
+    title: "TWO GUESSES",
+    items: [
+      "IN CO-OP'S BONUS ROUND EACH PLAYER PICKS A CUP - PLAYER 1 FIRST, THEN PLAYER 2 PICKS ANOTHER",
+      "WHOEVER FINDS THE ALIEN GETS THE POINTS, AND THE PARTNER GETS HALF - BEFORE, THEY ALWAYS WENT TO PLAYER 1",
+    ],
+  },
+  {
+    ver: "v1.5.87",
+    title: "HELPING HAND",
+    items: [
+      "IN CO-OP, IF YOUR PARTNER SLIPS ON A BANANA OR GETS KNOCKED DIZZY, RUN OVER ON THE SAME BAR AND PULL THEM STRAIGHT BACK UP",
+      "A HELPING HAND IS WORTH POINTS FOR THE ONE WHO HELPS",
+      "THE HIGH FIVE NOW SHOWS THE POINTS YOU REALLY GET",
+    ],
+  },
+  {
+    ver: "v1.5.86",
+    title: "DREAM TEAM",
+    items: [
+      "TWO NEW TROPHIES FOR THE CO-OP TEAM: DREAM TEAM FOR 50 HIGH FIVES, AND DOUBLE TROUBLE FOR 10 PAIRS OF TWINS",
+      "THE GAME-OVER CARD SHOWS THE TEAM'S HIGH FIVES AND TWINS FOR THE WHOLE GAME",
+    ],
+  },
+  {
+    ver: "v1.5.85",
+    title: "TWINS",
+    items: [
+      "IN CO-OP, NOW AND THEN TWINS WALK IN ON TWO BARS AT ONCE - SERVE BOTH WITHIN FOUR SECONDS FOR +500 EACH",
+      "A GOLD TWINS LABEL SHOWS WHO THEY ARE - IT FLASHES WHEN ONE HAS BEEN SERVED AND THE CLOCK IS RUNNING",
+      "A MOMENT MADE FOR TWO BARTENDERS - ONE ON EACH BAR",
+    ],
+  },
   {
     ver: "v1.5.84",
     title: "HIGH FIVE",

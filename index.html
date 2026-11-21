@@ -7665,6 +7665,22 @@ const DICT_ROWS                             = [
   ["where's my milkshake?", "WAAR'S MY MILKSHAKE?", "gdzie mój koktajl?"],
   ["we're still waiting!", "ONS WAG NOG!", "wciąż czekamy!"],
   ["oh my goodness!", "HAAI, JIRRE!", "o rany!"],
+  ["OWN CONTROLLER", "EIE BEHEERDER", "WŁASNY KONTROLER"],
+  [
+    "WITH TWO CONTROLLERS, EACH PLAYER CHOOSES THEIR BARTENDER ON THEIR OWN CONTROLLER",
+    "MET TWEE BEHEERDERS KIES ELKE SPELER SY KROEGMAN OP SY EIE BEHEERDER",
+    "PRZY DWÓCH KONTROLERACH KAŻDY GRACZ WYBIERA BARMANA NA SWOIM WŁASNYM KONTROLERZE",
+  ],
+  [
+    "ON YOUR TURN ONLY YOUR CONTROLLER MOVES THE CURSOR - THE OTHER PLAYER CAN'T CHANGE YOUR CHOICE",
+    "OP JOU BEURT SKUIF NET JOU BEHEERDER DIE WYSER - DIE ANDER SPELER KAN NIE JOU KEUSE VERANDER NIE",
+    "W TWOJEJ KOLEJCE TYLKO TWÓJ KONTROLER PORUSZA KURSOREM - DRUGI GRACZ NIE ZMIENI TWOJEGO WYBORU",
+  ],
+  [
+    "WITH ONE CONTROLLER IT STILL DOES BOTH TURNS",
+    "MET EEN BEHEERDER DOEN DIT STEEDS BEIDE BEURTE",
+    "Z JEDNYM KONTROLEREM NADAL OBSŁUGUJE OBIE KOLEJKI",
+  ],
   ["TWO ON A BIG SCREEN", "TWEE OP 'N GROOT SKERM", "DWOJE NA DUŻYM EKRANIE"],
   [
     "WITH TWO PLAYERS AND BIG TEXT, THE HOLY WATER WORD NO LONGER RUNS INTO P1",
@@ -12926,7 +12942,19 @@ function readPads() {
   } catch (e) {}
   // with two players, a single controller goes to player 2 (player 1 keeps the keyboard); two controllers = one each
   const two = G.players === 2 && G.state !== "menu";
-  const [pa, pb] = two ? (list.length === 1 ? [null, list[0]] : [list[0], list[1]]) : [list[0], null];
+  // (v1.5.83) EACH PLAYER PICKS A BARTENDER ON THEIR OWN CONTROLLER: in the menus only the first controller was read, so
+  // with two players the second had to borrow the first one's pad to choose. While the two-player bartender choice is
+  // open and two controllers are connected, both are read - and each player's turn answers only to their own pad
+  // (below), so the other can't move their cursor. With one controller it still does both turns, as before
+  const csTwo =
+    G.state === "menu" && typeof CS !== "undefined" && CS.open && CS.start && !!playMode && list.length >= 2;
+  const [pa, pb] = csTwo
+    ? [list[0], list[1]]
+    : two
+      ? list.length === 1
+        ? [null, list[0]]
+        : [list[0], list[1]]
+      : [list[0], null];
   const read = (pd, gp, edge) => {
     pd.upW = pd.up;
     pd.downW = pd.down;
@@ -13008,12 +13036,15 @@ function readPads() {
     return;
   }
   // menus: D-pad moves between buttons, A chooses, B goes back
+  if (csTwo) for (const k in pressedEdge2) pressedEdge2[k] = false; // (player 2's pad only chooses here - no moves left over)
   if (typeof panelNav === "function" && panelNav()) {
-    const e = (k) => (pad[k] && !pad[k + "W"]) || (pad2[k] && !pad2[k + "W"]);
+    const own = csTwo ? (CS.who ? pad2 : pad) : null; // (v1.5.83: whose turn it is - only their pad counts)
+    const e = (k) =>
+      own ? own[k] && !own[k + "W"] : (pad[k] && !pad[k + "W"]) || (pad2[k] && !pad2[k + "W"]);
     // the D-pad / stick moves the way it points - one step per press, a steady repeat when held, and a short pause between steps
     // so a stick resting near the edge doesn't jump about (menus only - play is as quick as ever)
     {
-      const held = (k) => pad[k] || pad2[k],
+      const held = (k) => (own ? own[k] : pad[k] || pad2[k]),
         dir = held("up")
           ? "up"
           : held("down")
@@ -78243,7 +78274,7 @@ function levelOfTour(of) {
     inTour = ((lv - 1) % LAST_LEVEL) + 1;
   return (tour > 1 ? "TOUR " + tour + "  ·  " : "") + "LEVEL " + inTour + of + LAST_LEVEL;
 }
-const GAME_VERSION = "v1.5.82",
+const GAME_VERSION = "v1.5.83",
   GAME_DATE = "21.11.2026",
   VERSION_TEXT = GAME_VERSION + "  ·  " + GAME_DATE;
 const FB = '"Chakra Petch", "Segoe UI", sans-serif';
@@ -85792,6 +85823,15 @@ profWire();
 //  the game, and where the motion capture, the folk songs and the fonts come from. Both from the menu at any time.
 // =====================================================================================
 const NEWS = [
+  {
+    ver: "v1.5.83",
+    title: "OWN CONTROLLER",
+    items: [
+      "WITH TWO CONTROLLERS, EACH PLAYER CHOOSES THEIR BARTENDER ON THEIR OWN CONTROLLER",
+      "ON YOUR TURN ONLY YOUR CONTROLLER MOVES THE CURSOR - THE OTHER PLAYER CAN'T CHANGE YOUR CHOICE",
+      "WITH ONE CONTROLLER IT STILL DOES BOTH TURNS",
+    ],
+  },
   {
     ver: "v1.5.82",
     title: "TWO ON A BIG SCREEN",

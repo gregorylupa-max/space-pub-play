@@ -7665,6 +7665,17 @@ const DICT_ROWS                             = [
   ["where's my milkshake?", "WAAR'S MY MILKSHAKE?", "gdzie mój koktajl?"],
   ["we're still waiting!", "ONS WAG NOG!", "wciąż czekamy!"],
   ["oh my goodness!", "HAAI, JIRRE!", "o rany!"],
+  ["COMBO CORNER", "KOMBO-HOEK", "KĄCIK KOMBINACJI"],
+  [
+    "ON A PHONE HELD UPRIGHT THE COMBO COUNTER NOW WAITS BELOW THE LINES UNDER THE SIGN, AND BELOW THE STAGE'S LIVE SIGN - NOT ON TOP OF THEM",
+    "OP 'N FOON WAT REGOP GEHOU WORD, WAG DIE KOMBINASIE-TELLER NOU ONDER DIE REËLS ONDER DIE BORD EN ONDER DIE VERHOOG SE LIVE-BORD - NIE BO-OP HULLE NIE",
+    "NA TELEFONIE TRZYMANYM PIONOWO LICZNIK KOMBINACJI CZEKA TERAZ POD WIERSZAMI POD SZYLDEM I POD NAPISEM LIVE NAD SCENĄ - NIE NA NICH",
+  ],
+  [
+    "CUSTOMERS' NAME TAGS STEP BELOW THE COMBO COUNTER WHILE IT'S UP",
+    "KLANTE SE NAAMPLAATJIES SKUIF ONDER DIE KOMBINASIE-TELLER IN WANNEER DIT WYS",
+    "PLAKIETKI Z IMIONAMI KLIENTÓW SCHODZĄ POD LICZNIK KOMBINACJI, GDY JEST WIDOCZNY",
+  ],
   ["PAUSE AND BREAK", "POUSE EN BREUK", "PAUZA I PODZIAŁ"],
   [
     "WITH HUGE TEXT ON A PHONE HELD UPRIGHT THE PAUSE SCREEN'S GRAPHICS BUTTON NO LONGER RUNS OVER ITS EDGE",
@@ -52162,6 +52173,17 @@ function nameTagsHud(g, s, sx, sy) {
       )
         y = C.y + C.h / 2 + 11 * s;
     }
+    // (v1.5.80) ...or onto the COMBO counter while it's up ("KOMBO X3" over "ANIOŁ"): just below it
+    {
+      const K = COMBO_BOX.last;
+      if (
+        K &&
+        G.time - G.lastCatch < 1.2 &&
+        Math.abs(K.x - x) < K.hw + w / 2 &&
+        Math.abs(K.y - y) < K.h / 2 + 9 * s
+      )
+        y = K.y + K.h / 2 + 11 * s;
+    }
     if (used.some((r) => Math.abs(r[0] - x) < (r[2] + w) / 2 && Math.abs(r[1] - y) < 20 * s)) continue; // (never one on top of another)
     used.push([x, y, w]);
     const near = busy.some(([bx, by]) => Math.abs(bx - x) < w / 2 + 24 * s && Math.abs(by - y) < 26 * s),
@@ -78194,7 +78216,7 @@ function levelOfTour(of) {
     inTour = ((lv - 1) % LAST_LEVEL) + 1;
   return (tour > 1 ? "TOUR " + tour + "  ·  " : "") + "LEVEL " + inTour + of + LAST_LEVEL;
 }
-const GAME_VERSION = "v1.5.79",
+const GAME_VERSION = "v1.5.80",
   GAME_DATE = "21.11.2026",
   VERSION_TEXT = GAME_VERSION + "  ·  " + GAME_DATE;
 const FB = '"Chakra Petch", "Segoe UI", sans-serif';
@@ -79265,7 +79287,9 @@ function drawHud(fps) {
       // (v1.5.70: and in the wide view it starts after the whole score block - in VERSUS that reaches past the lives
       //  bars, which it used to sit right on top of)
       let cxc = cssW < 700 ? pad : Math.max(pad + 150 * s, pad + (HUDB.scoreW || 0) + 10 * s),
-        cyc = cssW < 700 ? pad + 96 * s : pad + 4 * s + 8 * s,
+        // (v1.5.80: on a phone, never up in the lines under the sign - "KOMBO X3" sat across "NOWA NAKLEJKA: ..." with
+        //  big letters - but just below the meters' plate, where the top of the HUD ends)
+        cyc = cssW < 700 ? Math.max(pad + 96 * s, (HUD_TOP.low || 0) + 6 * s + 8 * s) : pad + 4 * s + 8 * s,
         fit = 1;
       const cw = g.measureText(txt).width,
         ch = parseFloat(g.font) * 1.2;
@@ -79298,7 +79322,21 @@ function drawHud(fps) {
           }
         }
       }
-      COMBO_BOX.last = { x: cxc + (cw * fit) / 2, y: cyc - 8 * s, hw: (cw * fit * 1.2) / 2, h: ch };
+      {
+        // (v1.5.80) AND OFF THE STAGE'S "LIVE:" CAPTION: on a phone held upright, with big letters, the combo's place under
+        // the score is right where the caption sits ("KOMBO X3" over "NA ŻYWO: MISTRZOWIE SHAOLIN") - it steps just below
+        const C = STAGE_CAP.box;
+        if (
+          C &&
+          performance.now() - C.t < 500 &&
+          cxc < C.x + C.hw &&
+          cxc + cw * fit > C.x - C.hw &&
+          Math.abs(C.y - (cyc - 8 * s + ch / 2)) < (C.h + ch) / 2
+        )
+          cyc = C.y + C.h / 2 + 4 * s + 8 * s; // (its top just under the caption)
+      }
+      // (the words hang down from cyc - 8*s - the baseline is "top" here - so the middle of the box is half a line lower)
+      COMBO_BOX.last = { x: cxc + (cw * fit) / 2, y: cyc - 8 * s + ch / 2, hw: (cw * fit * 1.2) / 2, h: ch };
       HUD_OBS.cur.push(COMBO_BOX.last);
       g.translate(cxc, cyc);
       g.scale(fit, fit);
@@ -85708,6 +85746,14 @@ profWire();
 //  the game, and where the motion capture, the folk songs and the fonts come from. Both from the menu at any time.
 // =====================================================================================
 const NEWS = [
+  {
+    ver: "v1.5.80",
+    title: "COMBO CORNER",
+    items: [
+      "ON A PHONE HELD UPRIGHT THE COMBO COUNTER NOW WAITS BELOW THE LINES UNDER THE SIGN, AND BELOW THE STAGE'S LIVE SIGN - NOT ON TOP OF THEM",
+      "CUSTOMERS' NAME TAGS STEP BELOW THE COMBO COUNTER WHILE IT'S UP",
+    ],
+  },
   {
     ver: "v1.5.79",
     title: "PAUSE AND BREAK",

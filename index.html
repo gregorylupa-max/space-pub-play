@@ -7665,6 +7665,17 @@ const DICT_ROWS                             = [
   ["where's my milkshake?", "WAAR'S MY MILKSHAKE?", "gdzie mój koktajl?"],
   ["we're still waiting!", "ONS WAG NOG!", "wciąż czekamy!"],
   ["oh my goodness!", "HAAI, JIRRE!", "o rany!"],
+  ["TWO ON A BIG SCREEN", "TWEE OP 'N GROOT SKERM", "DWOJE NA DUŻYM EKRANIE"],
+  [
+    "WITH TWO PLAYERS AND BIG TEXT, THE HOLY WATER WORD NO LONGER RUNS INTO P1",
+    "MET TWEE SPELERS EN GROOT TEKS LOOP DIE WOORD VIR WYWATER NIE MEER IN P1 VAS NIE",
+    "PRZY DWÓCH GRACZACH I DUŻYM TEKŚCIE SŁOWO WODA NIE NACHODZI JUŻ NA P1",
+  ],
+  [
+    "A LONG ANNOUNCEMENT NEVER RUNS UNDER THE FULL SCREEN BUTTON - IT FITS BETWEEN THE SCORES AND THE LIVES",
+    "'N LANG AANKONDIGING LOOP NOOIT ONDER DIE VOLSKERM-KNOPPIE IN NIE - DIT PAS TUSSEN DIE TELLINGS EN DIE LEWES",
+    "DŁUGIE OGŁOSZENIE NIGDY NIE WCHODZI POD PRZYCISK PEŁNEGO EKRANU - MIEŚCI SIĘ MIĘDZY PUNKTAMI A ŻYCIAMI",
+  ],
   ["BIG SCREEN", "GROOT SKERM", "DUŻY EKRAN"],
   [
     "ON A COMPUTER WITH BIG OR HUGE TEXT THE COMBO COUNTER NO LONGER RUNS INTO YOUR SCORE",
@@ -78232,7 +78243,7 @@ function levelOfTour(of) {
     inTour = ((lv - 1) % LAST_LEVEL) + 1;
   return (tour > 1 ? "TOUR " + tour + "  ·  " : "") + "LEVEL " + inTour + of + LAST_LEVEL;
 }
-const GAME_VERSION = "v1.5.81",
+const GAME_VERSION = "v1.5.82",
   GAME_DATE = "21.11.2026",
   VERSION_TEXT = GAME_VERSION + "  ·  " + GAME_DATE;
 const FB = '"Chakra Petch", "Segoe UI", sans-serif';
@@ -78694,7 +78705,12 @@ function drawHud(fps) {
             (g.measureText(txt).width * 18) / 24 / 2 + 30 * s >
               (HUDB.l || cssW) - 6 * s - Math.max(HUDB.scoreW || 0, 14 * s + coopW() + 8 * s))),
       sgY = signY || (cramp ? HUDB.b + 30 * s : 0);
-    const room = cramp ? cssW - 24 * s : tight,
+    // (v1.5.82) ...and never wider than the real gap between the scores and the LIVES: the room above is centred on the
+    // middle of the screen, but a wide score block (VERSUS with big text) pushes the announcement right of the middle, and
+    // a long one ran in under "Full screen" ("DEMON! POKAŻ KRZYŻ..." with HUGE text on a computer)
+    const gapTop =
+        !sgY && HUDB.lives && HUDB.scoreW ? HUDB.lives - HUDB.scoreW - (plate ? 30 * s : 0) - 12 * s : 1e9,
+      room = cramp ? cssW - 24 * s : Math.max(120 * s, Math.min(tight, gapTop)),
       wd = g.measureText(txt).width;
     // (v1.4.63) a long warning on a narrow phone shrank to tiny letters - now it breaks onto two lines instead
     const ws = txt.split(" ");
@@ -79199,12 +79215,14 @@ function drawHud(fps) {
       g.fillStyle = "#7fd8ff";
       g.fillText("HOLY", x0, y0 + 3 * s);
       const holyX0 = x0;
-      x0 += 34 * s;
+      // (v1.5.82) AFTER THE WORD AS IT REALLY IS: the bottles (and "P1" / "P2") started a fixed 34 units along - room for
+      // "HOLY" at the normal size; "WODA" or "WY" in big letters ran into them ("WODAP1"). Now they start after the word
+      x0 += Math.max(34 * s, g.measureText(T("HOLY")).width + 8 * s);
       for (const p of active()) {
         if (twoP()) {
           g.fillStyle = p.id ? "#5fb0ff" : "#ff5fa8";
           g.fillText("P" + (p.id + 1), x0, y0 + 3 * s);
-          x0 += 18 * s;
+          x0 += Math.max(18 * s, g.measureText("P" + (p.id + 1)).width + 6 * s); // (and after "P1", likewise)
         }
         for (let i = 0; i < Math.min(6, Math.max(DF().holy, p.holy ?? 0)); i++) {
           const on = i < (p.holy ?? 0);
@@ -85774,6 +85792,14 @@ profWire();
 //  the game, and where the motion capture, the folk songs and the fonts come from. Both from the menu at any time.
 // =====================================================================================
 const NEWS = [
+  {
+    ver: "v1.5.82",
+    title: "TWO ON A BIG SCREEN",
+    items: [
+      "WITH TWO PLAYERS AND BIG TEXT, THE HOLY WATER WORD NO LONGER RUNS INTO P1",
+      "A LONG ANNOUNCEMENT NEVER RUNS UNDER THE FULL SCREEN BUTTON - IT FITS BETWEEN THE SCORES AND THE LIVES",
+    ],
+  },
   {
     ver: "v1.5.81",
     title: "BIG SCREEN",

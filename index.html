@@ -7752,6 +7752,17 @@ const DICT_ROWS                             = [
     "EN AS DIE FOOIEPOT-DIEF WEGKOM, WORD DIE VERLIES OOK GEDEEL - DIT HET ALLES VAN SPELER 1 AFGEGAAN",
     "A GDY ZŁODZIEJ SŁOIKA NA NAPIWKI UCIEKNIE, STRATA TEŻ JEST DZIELONA - CAŁA SZŁA Z KONTA GRACZA 1",
   ],
+  ["TAKING THE LEAD", "DIE VOORTOU NEEM", "OBEJMOWANIE PROWADZENIA"],
+  [
+    "IN VERSUS THE PLAYER AHEAD WEARS A GOLD CROWN OVER THEIR MARKER",
+    "IN TEENSPEL DRA DIE SPELER WAT VOOR IS 'N GOUE KROON BO HUL MERKER",
+    "W POJEDYNKU GRACZ, KTÓRY PROWADZI, NOSI NAD ZNACZNIKIEM ZŁOTĄ KORONĘ",
+  ],
+  [
+    "WHEN THE LEAD CHANGES HANDS THE GAME SAYS SO: PLAYER 2 TAKES THE LEAD!",
+    "AS DIE VOORTOU VAN HANDE WISSEL, SÊ DIE SPEL DIT: SPELER 2 NEEM DIE VOORTOU!",
+    "GDY PROWADZENIE PRZECHODZI NA DRUGIEGO, GRA TO OGŁASZA: GRACZ 2 OBEJMUJE PROWADZENIE!",
+  ],
   ["HANDS UP", "HANDE OP", "RĘCE W GÓRĘ"],
   [
     "A HIGH FIVE IN CO-OP NOW PUTS A HAND UP BESIDE EACH OF YOU, SO YOU SEE IT HAPPEN",
@@ -10042,6 +10053,7 @@ const DICT_PAT                             = [
     "WSPÓLNE ZWYCIĘSTWO!  P1 $1  ·  P2 $2 KOKTAJLI",
   ],
   [/^PLAYER (\d+): BAR (\d+)!$/, "SPELER $1: TOONBANK $2!", "GRACZ $1: LADA $2!"], // (v1.5.94)
+  [/^PLAYER (\d+) TAKES THE LEAD!$/, "SPELER $1 NEEM DIE VOORTOU!", "GRACZ $1 OBEJMUJE PROWADZENIE!"], // (v1.6.7)
   [/^PLAYER (\d+) TAKES THE CROWN!$/, "SPELER $1 VAT DIE KROON!", "GRACZ $1 ZDOBYWA KORONĘ!"], // (v1.5.92)
   [/^PLAYER (\d+) DID THEIR SHARE!$/, "SPELER $1 HET HUL DEEL GEDOEN!", "GRACZ $1: SWOJA CZĘŚĆ ZROBIONA!"],
   // (v1.5.88) the bonus round's two picks in co-op
@@ -17520,6 +17532,7 @@ function updateTwist(dt, demo) {
   coopTwins(dt, demo); // (v1.5.85: twins in co-op)
   coopHelp(demo); // (v1.5.87: a helping hand in co-op)
   tgUpdate(dt, demo); // (v1.5.91: the co-op team goal)
+  versusLead(demo); // (v1.6.7: who's ahead in versus)
   if (G.tipAt > 0 && G.state === "play" && !demo) {
     G.tipAt -= dt;
     if (G.tipAt <= 0 && G.callouts.filter((c) => c.sub && c.life > 0).length <= 1) {
@@ -18423,6 +18436,29 @@ function joinP2() {
   sfx("chime", TAPX, 2);
   fStat("dropIns");
   return true;
+}
+// (v1.6.7) WHO'S AHEAD IN VERSUS: the leader wears the co-op crown, and when the lead changes hands the game says so -
+// "PLAYER 2 TAKES THE LEAD!". It has to be a real lead (500 points, more as the scores grow), so it doesn't flicker
+function versusLead(demo) {
+  if (demo || !G.versus || !twoP() || G.state !== "play") return;
+  const a = P1.score,
+    b = P2.score,
+    gap = Math.max(500, Math.max(a, b) * 0.03),
+    lead = a > b + gap ? 0 : b > a + gap ? 1 : G.vsLead;
+  if (lead === undefined) return;
+  G.crown = lead;
+  if (lead !== G.vsLead) {
+    if (G.vsLead !== undefined) {
+      const p = PL[lead];
+      worldText(
+        "PLAYER " + (lead + 1) + " TAKES THE LEAD!",
+        { lane: p.lane, x: p.x },
+        lead ? "#5fb0ff" : "#ff5fa8"
+      );
+      sfx("chime", p.x, 1.5);
+    }
+    G.vsLead = lead;
+  }
 }
 // (v1.5.99) FAIR SHARES: with two players, the bonuses for an event always went to player 1 - the UFO's visitors, the fan
 // party, a protest calmed down, the fastest pour, the VIP - and the tip-jar thief's -300 came off player 1 alone. Now a
@@ -31788,7 +31824,8 @@ function drawPlayer(t) {
     glow(x, hy + 1, 8, withA(c, 0.5));
     R.setAdd(false);
     // (v1.5.92) the leader's crown in co-op, over the marker (see coopServe in twists.ts)
-    if (G.crown === P.id && coopOn() && G.state === "play") {
+    if (G.crown === P.id && (coopOn() || (G.versus && !G.demo)) && G.state === "play") {
+      // (v1.6.7: and versus's leader)
       const gold = col("#ffd24d"),
         cy = hy - 4;
       rect(x - 8, cy - 4, 16, 4, gold);
@@ -63582,6 +63619,7 @@ function funGameStart() {
   G.hiFivesAll = G.twinsAll = 0; // (v1.5.86: co-op's whole-game counts start again)
   G.tgStreak = 0; // (v1.6.2: the team's goal streak)
   G.padP1 = false; // (v1.6.4: a single controller is player 2's again in a new two-player game)
+  G.vsLead = undefined; // (v1.6.7: nobody leads a new versus game yet)
   G.coopG = { served: [0, 0], caught: [0, 0], helps: [0, 0], crowns: [0, 0] }; // (v1.5.93: for the team awards)
   G.after = [];
   if (!G.demo) {
@@ -79756,7 +79794,7 @@ function levelOfTour(of) {
     inTour = ((lv - 1) % LAST_LEVEL) + 1;
   return (tour > 1 ? "TOUR " + tour + "  ·  " : "") + "LEVEL " + inTour + of + LAST_LEVEL;
 }
-const GAME_VERSION = "v1.6.6",
+const GAME_VERSION = "v1.6.7",
   GAME_DATE = "21.11.2026",
   VERSION_TEXT = GAME_VERSION + "  ·  " + GAME_DATE;
 const FB = '"Chakra Petch", "Segoe UI", sans-serif';
@@ -87355,6 +87393,14 @@ profWire();
 //  the game, and where the motion capture, the folk songs and the fonts come from. Both from the menu at any time.
 // =====================================================================================
 const NEWS = [
+  {
+    ver: "v1.6.7",
+    title: "TAKING THE LEAD",
+    items: [
+      "IN VERSUS THE PLAYER AHEAD WEARS A GOLD CROWN OVER THEIR MARKER",
+      "WHEN THE LEAD CHANGES HANDS THE GAME SAYS SO: PLAYER 2 TAKES THE LEAD!",
+    ],
+  },
   {
     ver: "v1.6.6",
     title: "HANDS UP",

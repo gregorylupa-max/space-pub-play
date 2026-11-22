@@ -7785,6 +7785,17 @@ const DICT_ROWS                             = [
     "EN AS DIE FOOIEPOT-DIEF WEGKOM, WORD DIE VERLIES OOK GEDEEL - DIT HET ALLES VAN SPELER 1 AFGEGAAN",
     "A GDY ZŁODZIEJ SŁOIKA NA NAPIWKI UCIEKNIE, STRATA TEŻ JEST DZIELONA - CAŁA SZŁA Z KONTA GRACZA 1",
   ],
+  ["HIGH FIVE CHAIN", "HOË-VYF-KETTING", "ŁAŃCUCH PIĄTEK"],
+  [
+    "IN CO-OP, HIGH FIVES IN QUICK SUCCESSION CHAIN ON: HIGH FIVE x2, x3... UP TO x5, EACH WORTH THAT MANY TIMES THE POINTS",
+    "IN SAAMSPEEL VORM HOË VYWE KORT NA MEKAAR 'N KETTING: HOË VYF x2, x3... TOT x5, ELKEEN SOVEEL KEER DIE PUNTE WERD",
+    "W KOOPERACJI PIĄTKI JEDNA PO DRUGIEJ TWORZĄ ŁAŃCUCH: PIĄTKA x2, x3... AŻ DO x5, KAŻDA WARTA TYLE RAZY WIĘCEJ PUNKTÓW",
+  ],
+  [
+    "KEEP THE RHYTHM - LEAVE MORE THAN EIGHT SECONDS AND THE CHAIN STARTS AGAIN",
+    "HOU DIE RITME - LAAT MEER AS AGT SEKONDES VERBYGAAN EN DIE KETTING BEGIN WEER",
+    "TRZYMAJCIE RYTM - PO WIĘCEJ NIŻ OŚMIU SEKUNDACH PRZERWY ŁAŃCUCH ZACZYNA SIĘ OD NOWA",
+  ],
   ["TIDY PADS", "NETJIESE BEHEERBORDE", "PORZĄDEK NA PANELACH"],
   [
     "TWO ON A TOUCH SCREEN: NO MORE ORDER HINT ASKING FOR A FLAVOUR BUTTON THAT ISN'T THERE (THE FLAVOURS ARE PICKED FOR YOU)",
@@ -10143,6 +10154,13 @@ const DICT_PAT                             = [
   ],
   // (v1.5.84) co-op teamwork: the high five, team spirit, and the team report at the end of a stop
   [/^HIGH FIVE!  \+(\d+)$/, "HOË VYF!  +$1", "PIĄTKA!  +$1"],
+  // (v1.6.11) the high-five chain, with and without the team goal's count
+  [/^HIGH FIVE x(\d)!  \+(\d+)$/, "HOË VYF x$1!  +$2", "PIĄTKA x$1!  +$2"],
+  [
+    /^HIGH FIVE x(\d)!  \+(\d+)  \((\d+)\/(\d+)\)$/,
+    "HOË VYF x$1!  +$2  ($3/$4)",
+    "PIĄTKA x$1!  +$2  ($3/$4)",
+  ],
   [/^TEAM SPIRIT!  (\d+) HIGH FIVES$/, "SPANGEES!  $1 HOË VYWE", "DUCH DRUŻYNY!  $1 PIĄTEK"],
   [
     /^TEAM REPORT:  (.+) (\d+)  ·  (.+) (\d+)  ·  (\d+) HIGH FIVES$/,
@@ -18263,6 +18281,8 @@ function coopLevelStart() {
   }
   G.hiFives = 0;
   G.twin = null; // (v1.5.85)
+  G.h5Chain = 0; // (v1.6.11: a new stop, a new high-five chain)
+  G.h5LastT = -99;
   G.crown = undefined; // (v1.5.92: nobody wears it at the start of a stop)
   G.twinT = rnd(15, 25);
   // (v1.5.89) TEAM TIPS: the coach stays quiet with two players, so a new team got no hint how to play together. On the
@@ -18363,10 +18383,15 @@ function coopServe(c, s, demo) {
     G.hiFives = (G.hiFives || 0) + 1;
     G.hiFivesAll = (G.hiFivesAll || 0) + 1; // (v1.5.86: for the whole game, and the DREAM TEAM trophy)
     fStat("hiFives");
-    let got = HIFIVE_PTS;
+    // (v1.6.11) A HIGH FIVE CHAIN: another high five within 8 seconds of the last one chains on - x2, x3... up to x5 -
+    // and is worth that many times the points, so a team that finds its rhythm is paid for keeping it
+    G.h5Chain = now - (G.h5LastT ?? -99) < 8 ? Math.min(5, (G.h5Chain || 1) + 1) : 1;
+    G.h5LastT = now;
+    const pts = HIFIVE_PTS * G.h5Chain;
+    let got = pts;
     for (const p of [me, mate]) {
       SCORER = p;
-      got = addScore(HIFIVE_PTS) || HIFIVE_PTS; // (v1.5.87: the points really given, for the words below)
+      got = addScore(pts) || pts; // (v1.5.87: the points really given, for the words below)
       SCORER = null;
     }
     feverAdd(0.5, demo);
@@ -18377,7 +18402,12 @@ function coopServe(c, s, demo) {
       G.tg && G.tg.kind === "hifive" && !G.tg.done
         ? "  (" + Math.min(G.hiFives, G.tg.n) + "/" + G.tg.n + ")"
         : "";
-    worldText("HIGH FIVE!  +" + got + tg, { lane: py, x: px }, "#ffd24d");
+    worldText(
+      (G.h5Chain > 1 ? "HIGH FIVE x" + G.h5Chain + "!  +" : "HIGH FIVE!  +") + got + tg,
+      { lane: py, x: px },
+      G.h5Chain > 1 ? "#ffa84d" : "#ffd24d"
+    );
+    if (G.h5Chain > 1) sfx("chime", px, G.h5Chain); // (v1.6.11: a rising note along the chain)
     if (!COMFORT.calm) sparkle(px, LY(py, px) - 60, [1, 0.85, 0.3, 1], 10, py);
     if (G.hiFives % 5 === 0) {
       callout("TEAM SPIRIT!  " + G.hiFives + " HIGH FIVES", "#ffd24d", 2);
@@ -79900,7 +79930,7 @@ function levelOfTour(of) {
     inTour = ((lv - 1) % LAST_LEVEL) + 1;
   return (tour > 1 ? "TOUR " + tour + "  ·  " : "") + "LEVEL " + inTour + of + LAST_LEVEL;
 }
-const GAME_VERSION = "v1.6.10",
+const GAME_VERSION = "v1.6.11",
   GAME_DATE = "22.11.2026",
   VERSION_TEXT = GAME_VERSION + "  ·  " + GAME_DATE;
 const FB = '"Chakra Petch", "Segoe UI", sans-serif';
@@ -87505,6 +87535,14 @@ profWire();
 //  the game, and where the motion capture, the folk songs and the fonts come from. Both from the menu at any time.
 // =====================================================================================
 const NEWS = [
+  {
+    ver: "v1.6.11",
+    title: "HIGH FIVE CHAIN",
+    items: [
+      "IN CO-OP, HIGH FIVES IN QUICK SUCCESSION CHAIN ON: HIGH FIVE x2, x3... UP TO x5, EACH WORTH THAT MANY TIMES THE POINTS",
+      "KEEP THE RHYTHM - LEAVE MORE THAN EIGHT SECONDS AND THE CHAIN STARTS AGAIN",
+    ],
+  },
   {
     ver: "v1.6.10",
     title: "TIDY PADS",

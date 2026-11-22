@@ -4808,6 +4808,7 @@ const DICT_ROWS                             = [
     "CEL DRUŻYNY: OBSŁUŻCIE RAZEM PARĘ BLIŹNIAKÓW",
   ], // (v1.5.91)
   ["TEAM GOAL DONE!", "SPANDOEL BEREIK!", "CEL DRUŻYNY OSIĄGNIĘTY!"], // (v1.5.91)
+  ["DREAM SHIFT", "DROOMSKOF", "WYMARZONA ZMIANA"], // (v1.6.14: the reason for the coins)
   ["✔ TEAM GOAL DONE!", "✔ SPANDOEL BEREIK!", "✔ CEL DRUŻYNY OSIĄGNIĘTY!"], // (v1.6.2)
   ["TEAM SPIRIT", "SPANGEES", "DUCH DRUŻYNY"], // (v1.5.84: the reason for the coins)
   ["PLAYER 2: PICK ANOTHER CUP", "SPELER 2: KIES 'N ANDER KOPPIE", "GRACZ 2: WYBIERZ INNY KUBEK"],
@@ -7785,6 +7786,32 @@ const DICT_ROWS                             = [
     "EN AS DIE FOOIEPOT-DIEF WEGKOM, WORD DIE VERLIES OOK GEDEEL - DIT HET ALLES VAN SPELER 1 AFGEGAAN",
     "A GDY ZŁODZIEJ SŁOIKA NA NAPIWKI UCIEKNIE, STRATA TEŻ JEST DZIELONA - CAŁA SZŁA Z KONTA GRACZA 1",
   ],
+  [
+    "IN CO-OP, CLEAR A STOP WITHOUT LOSING A LIFE AND WITH THE TEAM GOAL MET FOR A DREAM SHIFT",
+    "IN SAAMSPEEL, VOLTOOI 'N STOP SONDER OM 'N LEWE TE VERLOOR EN MET DIE SPANDOEL BEREIK VIR 'N DROOMSKOF",
+    "W KOOPERACJI UKOŃCZ PRZYSTANEK BEZ UTRATY ŻYCIA I Z OSIĄGNIĘTYM CELEM DRUŻYNY, A BĘDZIE WYMARZONA ZMIANA",
+  ],
+  [
+    "A BONUS FOR EACH OF YOU, TEN COINS, A FANFARE AND A SHOWER OF CONFETTI - THE BEST A TEAM CAN DO",
+    "'N BONUS VIR ELKEEN VAN JULLE, TIEN MUNTE, 'N FANFARE EN 'N REËN VAN KONFETTI - DIE BESTE WAT 'N SPAN KAN DOEN",
+    "PREMIA DLA KAŻDEGO Z WAS, DZIESIĘĆ MONET, FANFARA I DESZCZ KONFETTI - NAJLEPSZE, CO MOŻE ZROBIĆ DRUŻYNA",
+  ],
+  ["FULL HOUSE", "VOL HUIS", "PEŁNA SALA"],
+  [
+    "A CO-OP BAR IS BUSIER NOW, SO BOTH OF YOU ARE KEPT ON YOUR TOES - IT WAS NOTICEABLY EASIER THAN PLAYING ALONE",
+    "'N SAAMSPEEL-KROEG IS NOU BESIGER, SODAT JULLE ALBEI WAKKER BLY - DIT WAS MERKBAAR MAKLIKER AS OM ALLEEN TE SPEEL",
+    "BAR W KOOPERACJI MA TERAZ WIĘCEJ GOŚCI, WIĘC OBOJE MACIE CO ROBIĆ - BYŁO WYRAŹNIE ŁATWIEJ NIŻ W POJEDYNKĘ",
+  ],
+  [
+    "THE TEAM'S SCORE IS SHOWN UNDER 1UP AND 2UP - THE SCORE THAT GOES IN THE HIGH SCORES",
+    "DIE SPAN SE TELLING WORD ONDER 1UP EN 2UP GEWYS - DIE TELLING WAT IN DIE HOOGSTE TELLINGS KOM",
+    "WYNIK DRUŻYNY WIDAĆ POD 1UP I 2UP - TO TEN WYNIK TRAFIA DO NAJLEPSZYCH WYNIKÓW",
+  ],
+  [
+    "A HIGH FIVE BURSTS A GOLD RING ROUND EACH OF YOU, BIGGER AS THE CHAIN GROWS",
+    "'N HOË VYF LAAT 'N GOUE RING OM ELKEEN VAN JULLE BARS, GROTER NAMATE DIE KETTING GROEI",
+    "PIĄTKA ROZBŁYSKA ZŁOTYM KRĘGIEM WOKÓŁ KAŻDEGO Z WAS, TYM WIĘKSZYM, IM DŁUŻSZY ŁAŃCUCH",
+  ],
   ["THE DEMO HIGH-FIVES", "DIE DEMO GEE HOË VYWE", "DEMO PRZYBIJA PIĄTKI"],
   [
     "THE MENU'S CO-OP DEMO NOW SHOWS THE TWO BARTENDERS HIGH-FIVING, HANDS UP - SO ANYONE WATCHING SEES WHAT PLAYING TOGETHER IS ABOUT",
@@ -10112,6 +10139,7 @@ const DICT_PAT                             = [
     "SPANDOEL: 'N PAAR TWEELINGE - $1 / $2",
     "CEL DRUŻYNY: PARA BLIŹNIAKÓW - $1 / $2",
   ],
+  [/^DREAM SHIFT!  \+(\d+) EACH$/, "DROOMSKOF!  +$1 ELK", "WYMARZONA ZMIANA!  +$1 KAŻDY"], // (v1.6.14)
   [
     /^GOAL STREAK: (\d+) STOPS IN A ROW$/,
     "DOELREEKS: $1 STOPS AGTER MEKAAR",
@@ -10221,6 +10249,8 @@ const DICT_PAT                             = [
     "BEZBŁĘDNIE!  WYNIK x$1 OD TERAZ",
   ],
   [/^HI (\d+)$/, "BESTE $1", "REKORD $1"],
+  [/^TEAM (\d+)(\s+)HI (\d+)$/, "SPAN $1$2BESTE $3", "DRUŻYNA $1$2REKORD $3"], // (v1.6.13: co-op's team score)
+  [/^VERSUS(\s+)HI (\d+)$/, "TEEN$1BESTE $2", "POJEDYNEK$1REKORD $2"],
   [/^SCORE (\d+)$/, "TELLING $1", "WYNIK $1"],
   [/^STAGE (\d+)$/, "VLAK $1", "ETAP $1"],
   [
@@ -12933,7 +12963,10 @@ const relaxed = (p) =>
     : p;
 const paramsRaw = () => {
   const L0 = G.endless ? Math.min(20, G.endLvl || 1) : G.level,
-    k2 = G.players === 2 ? 1.35 : 1,
+    // (v1.6.13) A PROPERLY BUSY CO-OP BAR: measured with the demo pair, two bartenders at 1.35 had a third less to do
+    // each than one alone on the early stops, and lost a third of the lives on the late ones - with two more lives to
+    // lose. A co-op bar is fuller now (1.6), so both of you are kept busy; VERSUS stays as it was
+    k2 = G.players === 2 ? (G.versus ? 1.35 : 1.6) : 1,
     D = DF(); // two bartenders get a busier bar
   // (v1.5.9) EASY, GENTLER STILL: the stops count for 30% now (was 45%), so Easy climbs more slowly again
   const L = D.kid ? 1 + (L0 - 1) * 0.4 : D.easy ? 1 + (L0 - 1) * 0.3 : L0; // KID MODE: the stages get harder much more slowly (v1.4.42: EASY a good deal more slowly too)
@@ -18416,6 +18449,14 @@ function coopServe(c, s, demo) {
     );
     if (G.h5Chain > 1) sfx("chime", px, G.h5Chain); // (v1.6.11: a rising note along the chain)
     if (!COMFORT.calm) sparkle(px, LY(py, px) - 60, [1, 0.85, 0.3, 1], 10, py);
+    // (v1.6.13) A HIGH FIVE YOU FEEL: a gold ring bursts out round each of you and a warm flash of light - bigger as
+    // the chain grows (calm mode: just the light)
+    for (const p of [me, mate]) {
+      const [rx, ry] = at(p.lane, p.x, LY(p.lane, p.x) - 50);
+      if (!COMFORT.calm)
+        rings.push({ x: rx, y: ry, r: 90 + 25 * G.h5Chain, life: 0.5, max: 0.5, c: [1, 0.85, 0.35, 1] });
+      lightFx(rx, ry, 120, [1, 0.85, 0.4, 1], 0.16); // (soft: their spotlights are on them already)
+    }
     if (G.hiFives % 5 === 0) {
       callout("TEAM SPIRIT!  " + G.hiFives + " HIGH FIVES", "#ffd24d", 2);
       sfx("cheer", c.x);
@@ -18457,6 +18498,24 @@ function coopLevelClear(demo) {
     max: 4,
     sub: true,
   });
+  // (v1.6.14) A DREAM SHIFT: a stop cleared with no life lost AND the team goal met - the best a team can do - gets
+  // its own moment, just after the LEVEL CLEAR sign: a bonus for each of you, coins, a fanfare and a shower of confetti
+  if (G.perfect && G.tg && G.tg.done) {
+    let got = 0;
+    for (const p of PL) {
+      SCORER = p;
+      got = addScore(2000) || 2000;
+      SCORER = null;
+    }
+    addCoins(10, "DREAM SHIFT");
+    fStat("dreamShifts");
+    setTimeout(() => {
+      if (G.state !== "clear") return;
+      callout("DREAM SHIFT!  +" + got + " EACH", "#ffd24d", 2.8);
+      sfx("fanfare", PW / 2);
+      for (let k = 0; k < (COMFORT.calm ? 12 : 40); k++) confetti(rnd(0, PW), -10, 1);
+    }, 1300);
+  }
   // (v1.5.91) a team goal not reached: how close you came
   if (G.tg && !G.tg.done) G.tgStreak = 0; // (v1.6.2: and the goal streak starts again)
   if (G.tg && !G.tg.done)
@@ -79953,7 +80012,7 @@ function levelOfTour(of) {
     inTour = ((lv - 1) % LAST_LEVEL) + 1;
   return (tour > 1 ? "TOUR " + tour + "  ·  " : "") + "LEVEL " + inTour + of + LAST_LEVEL;
 }
-const GAME_VERSION = "v1.6.12",
+const GAME_VERSION = "v1.6.14",
   GAME_DATE = "22.11.2026",
   VERSION_TEXT = GAME_VERSION + "  ·  " + GAME_DATE;
 const FB = '"Chakra Petch", "Segoe UI", sans-serif';
@@ -80165,7 +80224,8 @@ function drawHud(fps) {
   const coopW = () => {
     const f = g.font;
     g.font = fB(13);
-    const w = g.measureText(T(G.versus ? "VERSUS" : "CO-OP") + "   HI 000000").width;
+    // (v1.6.13: co-op's line is the team's score now - "TEAM 012345   HI 045000")
+    const w = g.measureText(T(G.versus ? "VERSUS   HI 000000" : "TEAM 000000   HI 000000")).width;
     g.font = f;
     return w;
   };
@@ -80850,7 +80910,11 @@ function drawHud(fps) {
       g.font = fB(13);
       g.fillStyle = "#b9a8b8";
       g.fillText(
-        (G.versus ? "VERSUS" : "CO-OP") + "   HI " + String(G.hi).padStart(6, "0"),
+        // (v1.6.13) THE TEAM'S SCORE: in co-op the two of you play for one score (it's what goes in the high scores),
+        // but it was never shown - only 1UP and 2UP. Now the line under them says it: "TEAM 012345   HI 045000"
+        (G.versus ? "VERSUS" : "TEAM " + String(G.score).padStart(6, "0")) +
+          "   HI " +
+          String(G.hi).padStart(6, "0"),
         pad,
         pad + 62 * s
       );
@@ -87563,6 +87627,23 @@ profWire();
 //  the game, and where the motion capture, the folk songs and the fonts come from. Both from the menu at any time.
 // =====================================================================================
 const NEWS = [
+  {
+    ver: "v1.6.14",
+    title: "DREAM SHIFT",
+    items: [
+      "IN CO-OP, CLEAR A STOP WITHOUT LOSING A LIFE AND WITH THE TEAM GOAL MET FOR A DREAM SHIFT",
+      "A BONUS FOR EACH OF YOU, TEN COINS, A FANFARE AND A SHOWER OF CONFETTI - THE BEST A TEAM CAN DO",
+    ],
+  },
+  {
+    ver: "v1.6.13",
+    title: "FULL HOUSE",
+    items: [
+      "A CO-OP BAR IS BUSIER NOW, SO BOTH OF YOU ARE KEPT ON YOUR TOES - IT WAS NOTICEABLY EASIER THAN PLAYING ALONE",
+      "THE TEAM'S SCORE IS SHOWN UNDER 1UP AND 2UP - THE SCORE THAT GOES IN THE HIGH SCORES",
+      "A HIGH FIVE BURSTS A GOLD RING ROUND EACH OF YOU, BIGGER AS THE CHAIN GROWS",
+    ],
+  },
   {
     ver: "v1.6.12",
     title: "THE DEMO HIGH-FIVES",

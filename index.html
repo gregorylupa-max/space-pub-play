@@ -7785,6 +7785,12 @@ const DICT_ROWS                             = [
     "EN AS DIE FOOIEPOT-DIEF WEGKOM, WORD DIE VERLIES OOK GEDEEL - DIT HET ALLES VAN SPELER 1 AFGEGAAN",
     "A GDY ZŁODZIEJ SŁOIKA NA NAPIWKI UCIEKNIE, STRATA TEŻ JEST DZIELONA - CAŁA SZŁA Z KONTA GRACZA 1",
   ],
+  ["THE DEMO HIGH-FIVES", "DIE DEMO GEE HOË VYWE", "DEMO PRZYBIJA PIĄTKI"],
+  [
+    "THE MENU'S CO-OP DEMO NOW SHOWS THE TWO BARTENDERS HIGH-FIVING, HANDS UP - SO ANYONE WATCHING SEES WHAT PLAYING TOGETHER IS ABOUT",
+    "DIE KIESLYS SE SAAMSPEEL-DEMO WYS NOU DIE TWEE KROEGMANNE WAT HOË VYWE GEE, HANDE OP - SODAT ENIGIEMAND WAT KYK SIEN WAAROOR SAAMSPEEL GAAN",
+    "DEMO KOOPERACJI W MENU POKAZUJE TERAZ DWÓCH BARMANÓW PRZYBIJAJĄCYCH PIĄTKI, Z RĘKAMI W GÓRZE - ŻEBY KAŻDY WIDZIAŁ, O CO CHODZI WE WSPÓLNEJ GRZE",
+  ],
   ["HIGH FIVE CHAIN", "HOË-VYF-KETTING", "ŁAŃCUCH PIĄTEK"],
   [
     "IN CO-OP, HIGH FIVES IN QUICK SUCCESSION CHAIN ON: HIGH FIVE x2, x3... UP TO x5, EACH WORTH THAT MANY TIMES THE POINTS",
@@ -18353,7 +18359,8 @@ function tgUpdate(dt, demo) {
   }
 }
 function coopServe(c, s, demo) {
-  if (demo || !coopOn()) return;
+  if (demo) return coopDemoFive(s); // (v1.6.12: the menu's co-op demo shows the high fives too)
+  if (!coopOn()) return;
   const me = PL[s.owner || 0],
     mate = PL[s.owner || 0 ? 0 : 1];
   me.lvServed = (me.lvServed || 0) + 1;
@@ -18414,6 +18421,22 @@ function coopServe(c, s, demo) {
       sfx("cheer", c.x);
       addCoins(3, "TEAM SPIRIT");
     }
+    return;
+  }
+  me.lastServeT = now;
+  me.hiUsed = false;
+}
+// (v1.6.12) THE DEMO SHOWS TEAMWORK: the two bartenders in the menu's CO-OP demo high-five as real players do - the
+// words and the hands go up - so anyone watching sees what playing together is about. No points, coins or counts
+function coopDemoFive(s) {
+  if (!twoP() || G.versus) return;
+  const me = PL[s.owner || 0],
+    mate = PL[s.owner || 0 ? 0 : 1],
+    now = G.time;
+  if (mate && now - (mate.lastServeT ?? -9) < HIFIVE_WIN && !mate.hiUsed) {
+    mate.hiUsed = me.hiUsed = true;
+    me.lastServeT = me.h5At = mate.h5At = now;
+    worldText("HIGH FIVE!", { lane: Math.min(me.lane, mate.lane), x: (me.x + mate.x) / 2 }, "#ffd24d");
     return;
   }
   me.lastServeT = now;
@@ -79930,7 +79953,7 @@ function levelOfTour(of) {
     inTour = ((lv - 1) % LAST_LEVEL) + 1;
   return (tour > 1 ? "TOUR " + tour + "  ·  " : "") + "LEVEL " + inTour + of + LAST_LEVEL;
 }
-const GAME_VERSION = "v1.6.11",
+const GAME_VERSION = "v1.6.12",
   GAME_DATE = "22.11.2026",
   VERSION_TEXT = GAME_VERSION + "  ·  " + GAME_DATE;
 const FB = '"Chakra Petch", "Segoe UI", sans-serif';
@@ -81389,8 +81412,26 @@ function helpLines() {
       "  ·  H holy water  ·  Q cross",
   ];
 }
+// (v1.6.12: the high-five hands, moved out of drawHelp - it stops in the demo, and the co-op demo shows them too)
+function drawHands(g, s, sx, sy) {
+  // (v1.6.6) HANDS UP: a high five in co-op - a hand pops up over each bartender for a moment, so you see it happen
+  // between the two of you (in calm mode it just fades, without the pop)
+  if ((coopOn() && G.state === "play") || (G.demo && twoP() && !G.versus))
+    // (v1.6.12: and the co-op demo)
+    for (const p of PL) {
+      const k = (G.time - (p.h5At ?? -9)) / 0.9;
+      if (k < 0 || k >= 1) continue;
+      const [x, y] = projL(p.lane, p.x - 30, LY(p.lane, p.x) - 76 - k * 14, VSIDE.p), // (beside the head - above it the HIGH FIVE words float)
+        pop = COMFORT.calm ? 1 : 0.6 + 0.6 * Math.sin(Math.min(1, k * 4) * Math.PI * 0.75);
+      g.globalAlpha = Math.min(1, (1 - k) * 3);
+      g.font = Math.round(26 * s * pop) + "px sans-serif";
+      g.fillText("\u270B", sx(x), sy(y));
+      g.globalAlpha = 1;
+    }
+}
 function drawHelp(g, s, t, fD, fB, sx, sy) {
   TOUCHB.help = 0;
+  drawHands(g, s, sx, sy);
   if (G.state !== "play" || G.demo) return;
   g.textAlign = "center";
   g.textBaseline = "middle";
@@ -81425,19 +81466,6 @@ function drawHelp(g, s, t, fD, fB, sx, sy) {
     }
     g.globalAlpha = 1;
   }
-  // (v1.6.6) HANDS UP: a high five in co-op - a hand pops up over each bartender for a moment, so you see it happen
-  // between the two of you (in calm mode it just fades, without the pop)
-  if (coopOn())
-    for (const p of PL) {
-      const k = (G.time - (p.h5At ?? -9)) / 0.9;
-      if (k < 0 || k >= 1) continue;
-      const [x, y] = projL(p.lane, p.x - 30, LY(p.lane, p.x) - 76 - k * 14, VSIDE.p), // (beside the head - above it the HIGH FIVE words float)
-        pop = COMFORT.calm ? 1 : 0.6 + 0.6 * Math.sin(Math.min(1, k * 4) * Math.PI * 0.75);
-      g.globalAlpha = Math.min(1, (1 - k) * 3);
-      g.font = Math.round(26 * s * pop) + "px sans-serif";
-      g.fillText("\u270B", sx(x), sy(y));
-      g.globalAlpha = 1;
-    }
   // (the NO SERVICE sign over every devil, demon and vampire is drawn in the room itself now, as a NO ENTRY road sign -
   //  see drawNoServe in kids2.ts, v1.4.38b - so there's just the one sign)
   // pouring a shake for a bar with nobody on it? it will smash at the far end
@@ -87535,6 +87563,13 @@ profWire();
 //  the game, and where the motion capture, the folk songs and the fonts come from. Both from the menu at any time.
 // =====================================================================================
 const NEWS = [
+  {
+    ver: "v1.6.12",
+    title: "THE DEMO HIGH-FIVES",
+    items: [
+      "THE MENU'S CO-OP DEMO NOW SHOWS THE TWO BARTENDERS HIGH-FIVING, HANDS UP - SO ANYONE WATCHING SEES WHAT PLAYING TOGETHER IS ABOUT",
+    ],
+  },
   {
     ver: "v1.6.11",
     title: "HIGH FIVE CHAIN",

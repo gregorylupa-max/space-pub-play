@@ -7786,6 +7786,27 @@ const DICT_ROWS                             = [
     "EN AS DIE FOOIEPOT-DIEF WEGKOM, WORD DIE VERLIES OOK GEDEEL - DIT HET ALLES VAN SPELER 1 AFGEGAAN",
     "A GDY ZŁODZIEJ SŁOIKA NA NAPIWKI UCIEKNIE, STRATA TEŻ JEST DZIELONA - CAŁA SZŁA Z KONTA GRACZA 1",
   ],
+  ["SMOOTH CHANGES", "GLADDE VERANDERINGE", "PŁYNNE PRZEMIANY"],
+  [
+    "SAVING A DEVIL, VAMPIRE, DEMON OR WEREWOLF NO LONGER SLOWS THE WHOLE GAME DOWN - THE SHOW OF LIGHT PLAYS AT FULL SPEED",
+    "OM 'N DUIWEL, VAMPIER, DEMOON OF WEERWOLF TE RED VERTRAAG NIE MEER DIE HELE SPEL NIE - DIE LIGVERTONING SPEEL TEEN VOLLE SPOED",
+    "RATOWANIE DIABŁA, WAMPIRA, DEMONA CZY WILKOŁAKA NIE SPOWALNIA JUŻ CAŁEJ GRY - POKAZ ŚWIATŁA IDZIE NA PEŁNEJ PRĘDKOŚCI",
+  ],
+  [
+    "THE FLASH OF LIGHT AT A CHANGE IS SHORT AGAIN (IT LINGERED), AND HOLY WATER NO LONGER SLOWS THINGS EITHER",
+    "DIE LIGFLITS BY 'N VERANDERING IS WEER KORT (DIT HET BLY HANG), EN WYWATER VERTRAAG OOK NIKS MEER NIE",
+    "BŁYSK ŚWIATŁA PRZY PRZEMIANIE JEST ZNÓW KRÓTKI (CIĄGNĄŁ SIĘ), A WODA ŚWIĘCONA TEŻ JUŻ NICZEGO NIE SPOWALNIA",
+  ],
+  [
+    "THE GAME OPENED FROM A FILE: THE SONGS GO ROUND THEIR LOOP WITHOUT A GAP OR A STUMBLE",
+    "DIE SPEL UIT 'N LÊER OOPGEMAAK: DIE LIEDJIES GAAN OM HUL LUS SONDER 'N GAPING OF 'N STRUIKELING",
+    "GRA OTWARTA Z PLIKU: PIOSENKI ZAPĘTLAJĄ SIĘ BEZ PRZERWY I BEZ POTKNIĘCIA",
+  ],
+  [
+    "CHANGING THE MUSIC WHILE A TUNE IS FADING NO LONGER CAUSES AN ERROR",
+    "OM DIE MUSIEK TE VERANDER TERWYL 'N DEUNTJIE WEGSTERF VEROORSAAK NIE MEER 'N FOUT NIE",
+    "ZMIANA MUZYKI PODCZAS WYCISZANIA UTWORU NIE POWODUJE JUŻ BŁĘDU",
+  ],
   [
     "IN CO-OP, CLEAR A STOP WITHOUT LOSING A LIFE AND WITH THE TEAM GOAL MET FOR A DREAM SHIFT",
     "IN SAAMSPEEL, VOLTOOI 'N STOP SONDER OM 'N LEWE TE VERLOOR EN MET DIE SPANDOEL BEREIK VIR 'N DROOMSKOF",
@@ -14380,6 +14401,8 @@ const FLY_SAY = {
 const EMPTY_WARN = 1.2; // (seconds of warning before an empty falls off - see EMPTY ALARM below)
 function update(dt) {
   // (v1.5.3) HIT-STOP: for a split second after a big hit (a demon banished) everything moves in slow motion
+  // (v1.6.15: the screen flash fades on real time - in the slow motion it lingered four times as long)
+  const realDt = dt;
   if (G.hitStop > 0) {
     G.hitStop -= dt;
     dt *= 0.25;
@@ -14453,7 +14476,7 @@ function update(dt) {
   }
   G.shake = Math.max(0, G.shake - dt * 24);
   G.kick = Math.max(0, (G.kick || 0) - dt * 6);
-  G.flash = Math.max(0, G.flash - dt * 2.5);
+  G.flash = Math.max(0, G.flash - realDt * 2.5);
   {
     // the big announcements take turns (one at a time, the next one waiting its go - hurried along if others are queued);
     // the little ones over people's heads just float up and fade
@@ -19197,7 +19220,9 @@ function redeemStep(c, dt, demo) {
     sfx("bless", c.x);
     banishFx(c, "redeem", demo); // (v1.5.3: a pillar of golden light, the halos and the feathers)
     // (v1.5.18) the moment itself in slow motion, and the darkness that was in them flees - see drawRedeemFx
-    if (!demo) G.hitStop = Math.max(G.hitStop || 0, 0.4);
+    // (v1.6.15) NO SLOW MOTION ANY MORE: the whole game ran at a quarter speed for 0.4 s (and the 0.16 s of the burst on
+    // top) - it didn't read as a dramatic moment but as the game slowing down. The light, rays and feathers stay
+    // if (!demo) G.hitStop = Math.max(G.hitStop || 0, 0.4);
     sfx("howl", c.x); // (its last, far-off wail as it goes)
     for (let i = 0; i < 18; i++) {
       const [ex, ey] = at(c.lane, c.x + 12 + rnd(-20, 20), y - rnd(10, 90));
@@ -20721,7 +20746,9 @@ function banishFx(c, mode, demo) {
   if (!demo) {
     G.flash = Math.max(G.flash || 0, mode === "kick" ? 0.18 : 0.3);
     G.flashC = col0;
-    G.hitStop = Math.max(G.hitStop || 0, 0.16); // (a split second of slow motion, to feel the hit)
+    // (a split second of slow motion, to feel the hit) - (v1.6.15: only for a kick; holy water and a redemption run on
+    // at full speed - the slow motion there felt like the game slowing down)
+    if (mode === "kick") G.hitStop = Math.max(G.hitStop || 0, 0.16);
     G.shake = Math.max(G.shake, 9 * MOTION());
   }
   // the burst: stars and sparks flying out in a ring
@@ -80012,7 +80039,7 @@ function levelOfTour(of) {
     inTour = ((lv - 1) % LAST_LEVEL) + 1;
   return (tour > 1 ? "TOUR " + tour + "  ·  " : "") + "LEVEL " + inTour + of + LAST_LEVEL;
 }
-const GAME_VERSION = "v1.6.14",
+const GAME_VERSION = "v1.6.15",
   GAME_DATE = "22.11.2026",
   VERSION_TEXT = GAME_VERSION + "  ·  " + GAME_DATE;
 const FB = '"Chakra Petch", "Segoe UI", sans-serif';
@@ -86370,7 +86397,17 @@ function setMusicMode(m) {
   MY.mode = m;
   store.set("musicMode", m === "mine" ? "original" : m);
   if (AC) {
-    musicBus.gain.setTargetAtTime(m === "original" ? 0.3 : 0, AC.currentTime, 0.1);
+    // (v1.6.15: changing the music while a tune was fading between two stops threw an error - the fade's curve was
+    // still running - and left the music in a muddle. The fade is cut short first)
+    const gp = musicBus.gain,
+      now = AC.currentTime;
+    try {
+      gp.setTargetAtTime(m === "original" ? 0.3 : 0, now, 0.1);
+    } catch (e) {
+      gp.cancelScheduledValues(now);
+      gp.setValueAtTime(gp.value, now);
+      gp.setTargetAtTime(m === "original" ? 0.3 : 0, now, 0.1);
+    }
   }
   if (m === "mine") playMine();
   else stopMine();
@@ -87627,6 +87664,16 @@ profWire();
 //  the game, and where the motion capture, the folk songs and the fonts come from. Both from the menu at any time.
 // =====================================================================================
 const NEWS = [
+  {
+    ver: "v1.6.15",
+    title: "SMOOTH CHANGES",
+    items: [
+      "SAVING A DEVIL, VAMPIRE, DEMON OR WEREWOLF NO LONGER SLOWS THE WHOLE GAME DOWN - THE SHOW OF LIGHT PLAYS AT FULL SPEED",
+      "THE FLASH OF LIGHT AT A CHANGE IS SHORT AGAIN (IT LINGERED), AND HOLY WATER NO LONGER SLOWS THINGS EITHER",
+      "THE GAME OPENED FROM A FILE: THE SONGS GO ROUND THEIR LOOP WITHOUT A GAP OR A STUMBLE",
+      "CHANGING THE MUSIC WHILE A TUNE IS FADING NO LONGER CAUSES AN ERROR",
+    ],
+  },
   {
     ver: "v1.6.14",
     title: "DREAM SHIFT",
@@ -91853,6 +91900,7 @@ const REC = {
   src: null                                ,
   gain: null                   ,
   el: null                           , // (the plain player, from the disk)
+  el2: null                           , // (v1.6.15: its twin, waiting at the loop's start - see recElTick)
   t0: 0, // (when the record playing now started at its top, on the audio clock)
   elLaps: 0, // (the plain player: how many times it has gone round its loop)
   ctx: null                 , // (v1.5.25: whose record it is - this game's run, or the demo's - see recCtx)
@@ -91947,11 +91995,12 @@ function recStop() {
       } catch (e) {}
     };
   }
-  if (REC.el) {
-    try {
-      REC.el.pause();
-    } catch (e) {}
-  }
+  for (const el of [REC.el, REC.el2])
+    if (el) {
+      try {
+        el.pause();
+      } catch (e) {}
+    }
   REC.src = null;
   REC.gain = null;
   REC.playing = -1;
@@ -92003,33 +92052,80 @@ function recElBegin(i) {
     REC.bad[r.id] = true;
     if (REC.playing === i) REC.playing = -1;
   };
-  el.onended = () => {
+  el.onended = (ev) => {
     // (in case it ran off the end between two checks)
     if (REC.playing !== i) return;
+    const me = (ev && (ev.target                    )) || el; // (v1.6.15: whichever twin it was)
     try {
       REC.elLaps++;
-      el.currentTime = r.loop[0];
-      const p = el.play();
+      me.currentTime = r.loop[0];
+      const p = me.play();
       if (p && p.catch) p.catch(() => {});
     } catch (e) {}
   };
   el.volume = 0;
   REC.elLaps = 0;
   el.src = recUrl(r) + (off > 0 ? "#t=" + off.toFixed(2) : ""); // (a media fragment: start part-way in)
+  recElCue(r);
   try {
     const p = el.play();
     if (p && p.catch) p.catch(() => {});
   } catch (e) {}
   REC.playing = i;
 }
+// (v1.6.15) A SMOOTHER LOOP FROM THE DISK: the plain player went round its loop by jumping its own playhead back while
+// it played - a seek in a playing song, heard as a little gap and a stumble in the beat at every repeat. Now a twin
+// player waits, already at the loop's start; at the loop's end it simply starts and the first one stops - no seek in
+// the song you're hearing. (The game opened from a web address - the site, the Windows app - loops sample-exactly anyway)
+function recElCue(r         ) {
+  if (!REC.el2) {
+    REC.el2 = new Audio();
+    REC.el2.preload = "auto";
+  }
+  const el2 = REC.el2,
+    url = recUrl(r);
+  try {
+    el2.pause();
+    el2.volume = 0;
+    if (!el2.src.endsWith(url)) el2.src = url;
+    const cue = () => {
+      try {
+        el2.currentTime = r.loop[0];
+      } catch (e) {}
+    };
+    if (el2.readyState >= 1) cue();
+    else el2.onloadedmetadata = cue;
+  } catch (e) {}
+}
 function recElTick(i) {
   const el = REC.el,
     r = TRACKS[i].rec;
   if (!el || REC.playing !== i) return;
   // loop: past the loop's end, back to its start (carrying the overshoot, so the beat stays even)
-  if (el.currentTime >= r.loop[1]) {
-    el.currentTime = r.loop[0] + (el.currentTime - r.loop[1]);
+  // (v1.6.15: by handing over to the twin waiting at the start - a frame early, so the beat stays even - or, if it
+  // isn't ready, by the old jump back)
+  const el2 = REC.el2;
+  if (el.currentTime >= r.loop[1] - 0.02) {
+    const over = Math.max(0, el.currentTime - r.loop[1]);
+    if (el2 && el2.readyState >= 2 && Math.abs(el2.currentTime - r.loop[0]) < 0.25) {
+      try {
+        if (over > 0.03) el2.currentTime = r.loop[0] + over;
+        el2.volume = el.volume;
+        const p = el2.play();
+        if (p && p.catch) p.catch(() => {});
+        el.pause();
+      } catch (e) {}
+      el2.onended = el.onended;
+      el2.onerror = el.onerror;
+      el.onended = el.onerror = null;
+      REC.el = el2;
+      REC.el2 = el;
+      try {
+        el.currentTime = r.loop[0]; // (and the old one waits at the start for the next time round)
+      } catch (e) {}
+    } else el.currentTime = r.loop[0] + over;
     REC.elLaps++;
+    return;
   }
   // its volume follows the music channel: the fades, the slider, MUTE
   const lvl = musicBus ? musicBus.gain.value / 0.3 : 1;

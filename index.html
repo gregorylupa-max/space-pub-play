@@ -7958,6 +7958,18 @@ const DICT_ROWS                             = [
     "EN AS DIE FOOIEPOT-DIEF WEGKOM, WORD DIE VERLIES OOK GEDEEL - DIT HET ALLES VAN SPELER 1 AFGEGAAN",
     "A GDY ZŁODZIEJ SŁOIKA NA NAPIWKI UCIEKNIE, STRATA TEŻ JEST DZIELONA - CAŁA SZŁA Z KONTA GRACZA 1",
   ],
+  // (v1.7.11) FESTIVAL LIGHTS
+  ["FESTIVAL LIGHTS", "FEESLIGTE", "ŚWIATŁA FESTIWALU"],
+  [
+    "ARRIVING AT THE GRAND FESTIVAL, THE SKY IS FULL OF FIREWORKS",
+    "AS JY BY DIE GROOT FEES AANKOM, IS DIE LUG VOL VUURWERKE",
+    "GDY PRZYLATUJESZ NA WIELKI FESTIWAL, NIEBO JEST PEŁNE FAJERWERKÓW",
+  ],
+  [
+    "IN CO-OP THE RACE WITH THE BLACK HOLE BISTRO COUNTS THE TEAM'S SERVES",
+    "IN SPANSPEL TEL DIE WEDLOOP MET DIE SWARTGAT-BISTRO DIE SPAN SE BEDIENINGS",
+    "W TRYBIE KOOPERACJI WYŚCIG Z BISTRO CZARNA DZIURA LICZY PODANIA CAŁEJ DRUŻYNY",
+  ],
   // (v1.7.10) REMATCH!
   ["REMATCH!", "HERWEDSTRYD!", "REWANŻ!"],
   [
@@ -10726,6 +10738,11 @@ const DICT_PAT                             = [
     "WEDLOOP  ·  JY $1 / $2  ·  BISTRO $3 / $4",
     "WYŚCIG  ·  TY $1 / $2  ·  BISTRO $3 / $4",
   ],
+  [
+    /^RACE  ·  TEAM (\d+) \/ (\d+)  ·  BISTRO (\d+) \/ (\d+)$/,
+    "WEDLOOP  ·  SPAN $1 / $2  ·  BISTRO $3 / $4",
+    "WYŚCIG  ·  DRUŻYNA $1 / $2  ·  BISTRO $3 / $4",
+  ], // (v1.7.11)
   [
     /^YOU BEAT THE BLACK HOLE BISTRO!  \+(\d+)$/,
     "JY HET DIE SWARTGAT-BISTRO GEKLOP!  +$1",
@@ -66513,7 +66530,15 @@ function rivalHud(g, s, fD, y) {
     txt =
       Rv.won < 0
         ? "✖ THE BISTRO WON THIS ONE"
-        : "RACE  ·  YOU " + you + " / " + tot + "  ·  BISTRO " + them + " / " + tot;
+        : "RACE  ·  " +
+          (coopOn() ? "TEAM " : "YOU ") +
+          you +
+          " / " +
+          tot +
+          "  ·  BISTRO " +
+          them +
+          " / " +
+          tot; // (v1.7.11: TEAM in co-op)
   g.font = fD(11);
   g.textAlign = "left";
   const tbs = touchTops();
@@ -66699,6 +66724,28 @@ function drawGrumbloGlow(c, t) {
   const fy = c.fy !== undefined ? c.fy : LY(c.lane, c.x) + 22;
   R.setAdd(true);
   glow(c.x + 12, fy - 50, 44, withA(col("#c69bff"), 0.16 + 0.05 * Math.sin(t * 2.5)));
+  R.setAdd(false);
+}
+function festivalSky(L, T, w, h, k, t) {
+  const n = COMFORT.calm ? 3 : 7,
+    cols = ["#ffd24d", "#ff5fa8", "#5ff5c8", "#9fe8ff", "#c69bff", "#ff8a3a"];
+  R.setAdd(true);
+  for (let i = 0; i < n; i++) {
+    const per = COMFORT.calm ? 3.2 : 1.9,
+      ph = (t / per + i / n) % 1, // (each burst's life: 0 -> 1)
+      cyc = Math.floor(t / per + i / n),
+      x = L + w * (0.1 + 0.8 * hash(i * 7.1 + cyc * 3.3)),
+      y = T + h * (0.12 + 0.3 * hash(i * 2.9 + cyc * 5.7)),
+      c = col(cols[(i + cyc) % cols.length]),
+      r = (40 + 50 * hash(i + cyc)) * k * (0.25 + ph),
+      a = ph < 0.15 ? ph / 0.15 : 1 - (ph - 0.15) / 0.85;
+    glow(x, y, r * 1.2, withA(c, 0.18 * a));
+    for (let j = 0; j < 14; j++) {
+      const an = (j / 14) * 6.283 + i,
+        dy = ph * ph * 30 * k; // (the sparks droop as they fade)
+      star(x + Math.cos(an) * r, y + Math.sin(an) * r + dy, 2.4 * k + 1, withA(c, 0.9 * a));
+    }
+  }
   R.setAdd(false);
 }
 // (on the way in to a race stop, the Bistro's purple saucer zooms past - a dark disc with a black hole on its roof)
@@ -69332,6 +69379,9 @@ function drawApproach(t) {
       );
     }
   if (front) diner();
+  // (v1.7.11) FESTIVAL LIGHTS: arriving at the Grand Festival (the tour's last stop), the sky over it is full of
+  // fireworks - bursts of coloured sparks blooming and fading, one after another (fewer and slower in calm mode)
+  if (envoyTour() && G.level === LAST_LEVEL && zoom > 0.5) festivalSky(L, T, w, h, k, t);
   // (v1.7.3) a race stop: the Black Hole Bistro's saucer zooms past, out ahead of the diner
   if (rivalStop() && zoom > 0.6)
     drawBistroShip(L + w * (-0.15 + 1.3 * u0), T + h * 0.36 + Math.sin(t * 2) * 6 * k, 0.55 * k, t);
@@ -81562,7 +81612,7 @@ function levelOfTour(of) {
     inTour = ((lv - 1) % LAST_LEVEL) + 1;
   return (tour > 1 ? "TOUR " + tour + "  ·  " : "") + "LEVEL " + inTour + of + LAST_LEVEL;
 }
-const GAME_VERSION = "v1.7.10",
+const GAME_VERSION = "v1.7.11",
   GAME_DATE = "23.11.2026",
   VERSION_TEXT = GAME_VERSION + "  ·  " + GAME_DATE;
 const FB = '"Chakra Petch", "Segoe UI", sans-serif';
@@ -89233,6 +89283,14 @@ profWire();
 //  the game, and where the motion capture, the folk songs and the fonts come from. Both from the menu at any time.
 // =====================================================================================
 const NEWS = [
+  {
+    ver: "v1.7.11",
+    title: "FESTIVAL LIGHTS",
+    items: [
+      "ARRIVING AT THE GRAND FESTIVAL, THE SKY IS FULL OF FIREWORKS",
+      "IN CO-OP THE RACE WITH THE BLACK HOLE BISTRO COUNTS THE TEAM'S SERVES",
+    ],
+  },
   {
     ver: "v1.7.10",
     title: "REMATCH!",

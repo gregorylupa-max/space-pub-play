@@ -459,7 +459,7 @@ body.touch2p #touch .tp button.holy { width: 60px; height: 60px; font-size: 11px
     <button id="bRush">BOSS RUSH <b id="vRush"></b><small class="d">ALL 14 BOSSES, ONE AFTER ANOTHER</small></button>
     <button id="bMap">GALAXY MAP <b id="vMap"></b><small class="d">PICK A BAR TO PLAY</small></button>
     <button id="bCup">CUP TOURNAMENT <b id="vCup"></b><small class="d">A KNOCKOUT CUP FOR 2 TO 8 PLAYERS</small></button>
-    <button id="bStory" class="wide">THE STORY <b>WATCH THE OPENING AGAIN</b></button>
+    <button id="bStory" class="wide">THE STORY <b>THE OPENING, AND THE STORY SO FAR</b></button>
     <button id="bSolar" class="wide">SOLAR SYSTEM TOUR <b>THE SUN TO PLUTO</b></button>
     <button id="bCast" class="wide">CASTAWAY ISLAND <b>KOOS VAN SCHOOR</b></button>
     <h3 class="sec">YOUR COLLECTION</h3>
@@ -4648,6 +4648,11 @@ const DICT_ROWS                             = [
     "WIELKI FESTIWAL - JESTEŚCIE NA MIEJSCU!",
   ],
   ["WATCH THE OPENING AGAIN", "KYK WEER NA DIE BEGIN", "OBEJRZYJ POCZĄTEK JESZCZE RAZ"],
+  [
+    "THE OPENING, AND THE STORY SO FAR",
+    "DIE BEGIN, EN DIE VERHAAL TOT DUSVER",
+    "POCZĄTEK I HISTORIA DO TEJ PORY",
+  ], // (v1.7.8)
   // (v1.7.1) the envoys from Andromeda, and their festival stamps
   ["✉ ENVOY", "✉ GESANT", "✉ POSEŁ"],
   ["POSTMASTER", "POSMEESTER", "POCZMISTRZ"],
@@ -7952,6 +7957,18 @@ const DICT_ROWS                             = [
     "AND WHEN THE TIP-JAR THIEF GETS AWAY, THE LOSS IS SHARED TOO - IT ALL CAME OFF PLAYER 1",
     "EN AS DIE FOOIEPOT-DIEF WEGKOM, WORD DIE VERLIES OOK GEDEEL - DIT HET ALLES VAN SPELER 1 AFGEGAAN",
     "A GDY ZŁODZIEJ SŁOIKA NA NAPIWKI UCIEKNIE, STRATA TEŻ JEST DZIELONA - CAŁA SZŁA Z KONTA GRACZA 1",
+  ],
+  // (v1.7.8) A QUICKER START
+  ["A QUICKER START", "'N VINNIGER BEGIN", "SZYBSZY START"],
+  [
+    "AFTER THE OPENING STORY, BOGDAN JUST SAYS HELLO - THE FIRST CUSTOMERS ARRIVE MUCH SOONER",
+    "NA DIE OPENINGSVERHAAL SÊ BOGDAN NET HALLO - DIE EERSTE KLANTE KOM BAIE GOUER",
+    "PO HISTORII NA POCZĄTEK BOGDAN TYLKO SIĘ WITA - PIERWSI KLIENCI PRZYCHODZĄ DUŻO WCZEŚNIEJ",
+  ],
+  [
+    "PLAY MORE, THE STORY: AFTER THE OPENING, BOGDAN'S POSTCARDS FROM EVERY STOP YOU'VE REACHED",
+    "SPEEL MEER, DIE VERHAAL: NA DIE BEGIN, BOGDAN SE POSKAARTE VAN ELKE STOP WAT JY BEREIK HET",
+    "GRAJ WIĘCEJ, HISTORIA: PO POCZĄTKU POCZTÓWKI BOGDANA Z KAŻDEGO PRZYSTANKU, DO KTÓREGO DOTARŁEŚ",
   ],
   // (v1.7.7) GRUMBLO'S DIRTY TRICK
   ["GRUMBLO'S DIRTY TRICK", "GRUMBLO SE VUIL TRUUK", "BRUDNA SZTUCZKA GRUMBLO"],
@@ -66026,10 +66043,27 @@ function funStoryUpdate(dt) {
       G.state = "approach";
     } else if (th === "menu") {
       toMenu(); // (v1.7.2: watched from PLAY MORE)
+    } else if (th === "journal") {
+      // (v1.7.8) THE STORY SO FAR: after the opening, Bogdan's postcards from every stop you've reached, one after the
+      // other - ESC (or BACK) leaves at any point
+      const nx = S0.skip ? undefined : (G.journal || []).shift();
+      if (nx) {
+        startStory(nx, "journal");
+        if (G.story) G.story.journal = true;
+      } else {
+        G.journal = null;
+        toMenu();
+      }
     } else if (th === "bogdan") {
       // (v1.7.0: after the opening, Bogdan says hello - unless the opening was skipped: then straight to the first stop)
       if (S0.skip) G.state = "approach";
-      else startStory(1, "approach");
+      else {
+        startStory(1, "approach");
+        // (v1.7.8) A QUICKER START: the opening has just told the trip, the invitation and the route - so Bogdan only says
+        // hello and "have fun" here (all five of his lines took another 16 s before the first customer)
+        const S1 = STORY[1];
+        if (G.story && S1 && S1.length > 2) G.story.lines = [S1[0], S1[S1.length - 1]];
+      }
     } else funNext();
   }
 }
@@ -66065,6 +66099,8 @@ function drawStory(t) {
   R.setAdd(false);
   rrect(418, 438, 124, 18, 9, col("#ff5fa8")); // the neon sign
   rrect(422, 441, 116, 3, 1.5, withA(C.white, 0.45));
+  // (v1.7.8) Bogdan's warning about the Black Hole Bistro (stop 4's card): its purple saucer, hovering up on the left
+  if (S0.level === 4) drawBistroShip(lerpA(-80, 230, e), 150 + Math.sin(t * 1.8) * 8, 0.9, t);
   const bx = lerpA(1100, 640, e),
     by = 230 + Math.sin(t * 1.4) * 10;
   drawBocian(bx, by, 2.4, t, (c) => c);
@@ -67498,6 +67534,23 @@ function funHud(g, s, t, fD, sx, sy) {
     g.font = fD(14);
     g.textAlign = "left";
     g.fillText(S0.intro ? "THE ASTRO CAFÉ" : "BOGDAN THE STORK", bx + 18 * s, by + 20 * s); // (v1.7.0: the opening's narrator)
+    // (v1.7.8) the story so far: which stop each of Bogdan's postcards comes from, over the card
+    if (S0.journal && VENUES[S0.level - 1]) {
+      g.globalAlpha = Math.min(1, S0.t / 0.6);
+      g.textAlign = "center";
+      fitText(
+        g,
+        "STOP " + S0.level + ": " + VENUES[S0.level - 1].name,
+        cssW / 2,
+        Math.max(60 * s, cssH * 0.1),
+        cssW - 24,
+        "700 ",
+        18 * s,
+        "#ffd24d"
+      );
+      g.textAlign = "left";
+      g.globalAlpha = Math.min(1, S0.t / 0.8);
+    }
     // (v1.7.0) the opening's titles: the café's name over the first picture, the tour's over the last
     if (S0.intro && (i === 0 || i === INTRO_LINES.length - 1)) {
       const ta = Math.min(1, (S0.t - i * per) / 0.8);
@@ -68076,7 +68129,12 @@ function funPanelsInit() {
     sfx("click");
     closeFP("more");
     stopAttract();
-    startStory("intro", "menu");
+    // (v1.7.8: and then the postcards of every stop reached so far - see "journal" in funStoryUpdate)
+    G.journal = Object.keys(STORY)
+      .map(Number)
+      .filter((l) => l <= unlocked())
+      .sort((a, b) => a - b);
+    startStory("intro", "journal");
     showPanels();
   };
   $k("bCast").onclick = () => {
@@ -81381,7 +81439,7 @@ function levelOfTour(of) {
     inTour = ((lv - 1) % LAST_LEVEL) + 1;
   return (tour > 1 ? "TOUR " + tour + "  ·  " : "") + "LEVEL " + inTour + of + LAST_LEVEL;
 }
-const GAME_VERSION = "v1.7.7",
+const GAME_VERSION = "v1.7.8",
   GAME_DATE = "23.11.2026",
   VERSION_TEXT = GAME_VERSION + "  ·  " + GAME_DATE;
 const FB = '"Chakra Petch", "Segoe UI", sans-serif';
@@ -89052,6 +89110,14 @@ profWire();
 //  the game, and where the motion capture, the folk songs and the fonts come from. Both from the menu at any time.
 // =====================================================================================
 const NEWS = [
+  {
+    ver: "v1.7.8",
+    title: "A QUICKER START",
+    items: [
+      "AFTER THE OPENING STORY, BOGDAN JUST SAYS HELLO - THE FIRST CUSTOMERS ARRIVE MUCH SOONER",
+      "PLAY MORE, THE STORY: AFTER THE OPENING, BOGDAN'S POSTCARDS FROM EVERY STOP YOU'VE REACHED",
+    ],
+  },
   {
     ver: "v1.7.7",
     title: "GRUMBLO'S DIRTY TRICK",

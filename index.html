@@ -459,6 +459,7 @@ body.touch2p #touch .tp button.holy { width: 60px; height: 60px; font-size: 11px
     <button id="bRush">BOSS RUSH <b id="vRush"></b><small class="d">ALL 14 BOSSES, ONE AFTER ANOTHER</small></button>
     <button id="bMap">GALAXY MAP <b id="vMap"></b><small class="d">PICK A BAR TO PLAY</small></button>
     <button id="bCup">CUP TOURNAMENT <b id="vCup"></b><small class="d">A KNOCKOUT CUP FOR 2 TO 8 PLAYERS</small></button>
+    <button id="bStory" class="wide">THE STORY <b>WATCH THE OPENING AGAIN</b></button>
     <button id="bSolar" class="wide">SOLAR SYSTEM TOUR <b>THE SUN TO PLUTO</b></button>
     <button id="bCast" class="wide">CASTAWAY ISLAND <b>KOOS VAN SCHOOR</b></button>
     <h3 class="sec">YOUR COLLECTION</h3>
@@ -4586,12 +4587,125 @@ const DICT_ROWS                             = [
   ["PEACE ON BAR 3!", "VREDE OP TOONBANK 3!", "POKÓJ NA LADZIE 3!"],
   ["THE FINAL BAR!", "DIE LAASTE KROEG!", "OSTATNI BAR!"],
   // (v1.7.0) THE GRAND TOUR: the opening, and the story's thread through the tour
-  ["THE ASTRO CAFÉ", "DIE ASTRO-KAFEE", "ASTRO KAWIARNIA"],
+  ["THE ASTRO CAFÉ", "DIE ASTRO CAFÉ", "ASTRO CAFÉ"],
   ["THE GRAND TOUR BEGINS!", "DIE GROOT TOER BEGIN!", "WIELKA PODRÓŻ SIĘ ZACZYNA!"],
+  // (v1.7.3) Bogdan's new postcards
+  [
+    "NEPTUNE - THE LAST OF THE BIG PLANETS. THE WIND HERE BLOWS FASTER THAN A JET AIRLINER!",
+    "NEPTUNUS - DIE LAASTE VAN DIE GROOT PLANETE. DIE WIND HIER WAAI VINNIGER AS 'N STRALER!",
+    "NEPTUN - OSTATNIA Z WIELKICH PLANET. WIATR WIEJE TU SZYBCIEJ NIŻ LECI ODRZUTOWIEC!",
+  ],
+  [
+    "A NEW MESSAGE FROM ANDROMEDA: THE FESTIVAL TENTS ARE GOING UP. KEEP POURING!",
+    "'N NUWE BOODSKAP VAN ANDROMEDA: DIE FEESTENTE WORD OPGESLAAN. HOU AAN SKINK!",
+    "NOWA WIADOMOŚĆ Z ANDROMEDY: STAWIAJĄ JUŻ NAMIOTY FESTIWALOWE. NALEWAJ DALEJ!",
+  ],
+  [
+    "KEPLER-452B IS A COUSIN OF THE EARTH - BIGGER, OLDER, AND GOING ROUND A SUN LIKE OURS.",
+    "KEPLER-452B IS 'N NEEF VAN DIE AARDE - GROTER, OUER, EN DIT DRAAI OM 'N SON SOOS ONS S'N.",
+    "KEPLER-452B TO KUZYN ZIEMI - WIĘKSZY, STARSZY I KRĄŻY WOKÓŁ SŁOŃCA PODOBNEGO DO NASZEGO.",
+  ],
+  [
+    "THE ENVOYS SAY THE WHOLE FESTIVAL IS PRACTISING ONE NEW WORD: MILKSHAKE!",
+    "DIE GESANTE SÊ DIE HELE FEES OEFEN EEN NUWE WOORD: MELKSKOMMEL!",
+    "POSŁOWIE MÓWIĄ, ŻE CAŁY FESTIWAL ĆWICZY JEDNO NOWE SŁOWO: KOKTAJL MLECZNY!",
+  ],
+  [
+    "WE'RE HALFWAY ROUND THE STAR PA-99-N2 - THE FESTIVAL CAN SEE OUR LIGHTS ALREADY!",
+    "ONS IS HALFPAD OM DIE STER PA-99-N2 - DIE FEES KAN AL ONS LIGTE SIEN!",
+    "JESTEŚMY W POŁOWIE DROGI WOKÓŁ GWIAZDY PA-99-N2 - FESTIWAL WIDZI JUŻ NASZE ŚWIATŁA!",
+  ],
+  [
+    "THE QUEEN OF ANDROMEDA SENT WORD: SHE WANTS TO TRY A MINT SHAKE FIRST.",
+    "DIE KONINGIN VAN ANDROMEDA HET LAAT WEET: SY WIL EERSTE 'N MENTSKOMMEL PROE.",
+    "KRÓLOWA ANDROMEDY PRZESŁAŁA WIADOMOŚĆ: NAJPIERW CHCE SPRÓBOWAĆ MIĘTOWEGO KOKTAJLU.",
+  ],
+  [
+    "A STAR THAT FLARES UP EVERY SINGLE YEAR - THE FESTIVAL USES IT AS A FIREWORK!",
+    "'N STER WAT ELKE JAAR OPVLAM - DIE FEES GEBRUIK DIT AS VUURWERK!",
+    "GWIAZDA, KTÓRA ROZBŁYSKA CO ROKU - FESTIWAL UŻYWA JEJ JAKO FAJERWERKU!",
+  ],
+  [
+    "ONLY A FEW STOPS LEFT. POLISH THE GLASSES - WE'RE NEARLY THERE!",
+    "NET 'N PAAR STOPS OOR. POETS DIE GLASE - ONS IS AMPER DAAR!",
+    "ZOSTAŁO TYLKO KILKA PRZYSTANKÓW. POLERUJCIE SZKLANKI - JUŻ PRAWIE JESTEŚMY!",
+  ],
+  [
+    "THE HEART OF ANDROMEDA - THE GRAND FESTIVAL! LOOK AT ALL THOSE THIRSTY ANDROMEDANS!",
+    "DIE HART VAN ANDROMEDA - DIE GROOT FEES! KYK NET AL DIE DORSTIGE ANDROMEDANE!",
+    "SERCE ANDROMEDY - WIELKI FESTIWAL! SPÓJRZ NA TYCH WSZYSTKICH SPRAGNIONYCH ANDROMEDAN!",
+  ],
+  [
+    "THIS IS IT, BARTENDER: ONE LAST BAR. LET'S GIVE THEM THE SHAKES OF THEIR LIVES!",
+    "DIS DIT, KROEGMAN: NOG EEN LAASTE KROEG. KOM ONS GEE HULLE DIE SKOMMELS VAN HUL LEWE!",
+    "TO JUŻ TO, BARMANIE: OSTATNI BAR. DAJMY IM KOKTAJLE ICH ŻYCIA!",
+  ],
+  ["THE STORY", "DIE STORIE", "HISTORIA"], // (v1.7.2: PLAY MORE)
+  ["1 STOP TO THE GRAND FESTIVAL", "1 STOP TOT BY DIE GROOT FEES", "1 PRZYSTANEK DO WIELKIEGO FESTIWALU"],
+  [
+    "THE GRAND FESTIVAL - YOU'VE ARRIVED!",
+    "DIE GROOT FEES - JULLE IS DAAR!",
+    "WIELKI FESTIWAL - JESTEŚCIE NA MIEJSCU!",
+  ],
+  ["WATCH THE OPENING AGAIN", "KYK WEER NA DIE BEGIN", "OBEJRZYJ POCZĄTEK JESZCZE RAZ"],
+  // (v1.7.1) the envoys from Andromeda, and their festival stamps
+  ["✉ ENVOY", "✉ GESANT", "✉ POSEŁ"],
+  ["POSTMASTER", "POSMEESTER", "POCZMISTRZ"],
+  [
+    "collect 10 festival stamps from Andromeda's envoys",
+    "versamel 10 feesstempels by Andromeda se gesante",
+    "zbierz 10 stempli festiwalowych od posłów z Andromedy",
+  ],
+  ["ENVOY", "GESANT", "POSEŁ"],
+  [
+    "AN ENVOY FROM ANDROMEDA!  SERVE THEM",
+    "'N GESANT VAN ANDROMEDA!  BEDIEN HOM",
+    "POSEŁ Z ANDROMEDY!  OBSŁUŻ GO",
+  ],
+  [
+    "THE ENVOY SAYS: THE FESTIVAL HAS A FOUNTAIN THAT FLOWS WITH CHOCOLATE SHAKE!",
+    "DIE GESANT SÊ: DIE FEES HET 'N FONTEIN WAT MET SJOKOLADESKOMMEL VLOEI!",
+    "POSEŁ MÓWI: NA FESTIWALU JEST FONTANNA, Z KTÓREJ PŁYNIE CZEKOLADOWY KOKTAJL!",
+  ],
+  [
+    "THE ENVOY SAYS: NOBODY IN ANDROMEDA HAS EVER TASTED STRAWBERRY. YOU'LL BE FAMOUS!",
+    "DIE GESANT SÊ: NIEMAND IN ANDROMEDA HET AL OOIT AARBEI GEPROE. JULLE SAL BEROEMD WEES!",
+    "POSEŁ MÓWI: NIKT W ANDROMEDZIE NIE PRÓBOWAŁ JESZCZE TRUSKAWKI. BĘDZIECIE SŁAWNI!",
+  ],
+  [
+    "THE ENVOY SAYS: KEEP GOING - THE WHOLE GALAXY IS TALKING ABOUT YOUR SHAKES!",
+    "DIE GESANT SÊ: HOU AAN - DIE HELE STERRESTELSEL PRAAT OOR JULLE SKOMMELS!",
+    "POSEŁ MÓWI: NIE ZATRZYMUJCIE SIĘ - CAŁA GALAKTYKA MÓWI O WASZYCH KOKTAJLACH!",
+  ],
+  [
+    "THE ENVOY SAYS: AT THE FESTIVAL THE STARS DANCE IN TIME WITH THE MUSIC.",
+    "DIE GESANT SÊ: BY DIE FEES DANS DIE STERRE OP DIE MAAT VAN DIE MUSIEK.",
+    "POSEŁ MÓWI: NA FESTIWALU GWIAZDY TAŃCZĄ W RYTM MUZYKI.",
+  ],
+  [
+    "THE ENVOY SAYS: BRING YOUR BEST MINT - THE QUEEN OF ANDROMEDA LOVES MINT!",
+    "DIE GESANT SÊ: BRING JULLE BESTE MENT - DIE KONINGIN VAN ANDROMEDA IS MAL OOR MENT!",
+    "POSEŁ MÓWI: WEŹCIE NAJLEPSZĄ MIĘTĘ - KRÓLOWA ANDROMEDY UWIELBIA MIĘTĘ!",
+  ],
+  [
+    "THE ENVOY SAYS: WE'VE SAVED YOU THE LONGEST COUNTER IN THE GALAXY.",
+    "DIE GESANT SÊ: ONS HET DIE LANGSTE TOONBANK IN DIE STERRESTELSEL VIR JULLE GEHOU.",
+    "POSEŁ MÓWI: ZAREZERWOWALIŚMY DLA WAS NAJDŁUŻSZĄ LADĘ W GALAKTYCE.",
+  ],
+  [
+    "THE ENVOY SAYS: A SHAKE THIS GOOD IS WORTH 2.5 MILLION LIGHT YEARS!",
+    "DIE GESANT SÊ: 'N SKOMMEL SO GOED IS 2,5 MILJOEN LIGJARE WERD!",
+    "POSEŁ MÓWI: TAK DOBRY KOKTAJL JEST WART 2,5 MILIONA LAT ŚWIETLNYCH!",
+  ],
+  [
+    "THE ENVOY SAYS: YOUR CARD IS STAMPED. SEE YOU AT THE FESTIVAL!",
+    "DIE GESANT SÊ: JULLE KAART IS GESTEMPEL. SIEN JULLE BY DIE FEES!",
+    "POSEŁ MÓWI: WASZA KARTA JEST OSTEMPLOWANA. DO ZOBACZENIA NA FESTIWALU!",
+  ],
   [
     "SOMEWHERE NEAR THE SUN FLOATS THE ASTRO CAFÉ - A LITTLE DINER ON A ROCK, WITH THE BEST MILKSHAKES IN THE SOLAR SYSTEM.",
-    "ÊRENS NABY DIE SON DRYF DIE ASTRO-KAFEE - 'N KLEIN EETPLEKKIE OP 'N ROTS, MET DIE BESTE MELKSKOMMELS IN DIE SONNESTELSEL.",
-    "GDZIEŚ BLISKO SŁOŃCA UNOSI SIĘ ASTRO KAWIARNIA - MAŁY BAR NA SKALE, Z NAJLEPSZYMI KOKTAJLAMI MLECZNYMI W UKŁADZIE SŁONECZNYM.",
+    "ÊRENS NABY DIE SON DRYF DIE ASTRO CAFÉ - 'N KLEIN EETPLEKKIE OP 'N ROTS, MET DIE BESTE MELKSKOMMELS IN DIE SONNESTELSEL.",
+    "GDZIEŚ BLISKO SŁOŃCA UNOSI SIĘ ASTRO CAFÉ - MAŁY BAR NA SKALE, Z NAJLEPSZYMI KOKTAJLAMI MLECZNYMI W UKŁADZIE SŁONECZNYM.",
   ],
   [
     "ONE NIGHT A MESSAGE CRACKLES IN FROM THE ANDROMEDA GALAXY: WE HAVE HEARD OF YOUR SHAKES - COME AND SERVE AT THE GRAND FESTIVAL, AT THE HEART OF ANDROMEDA!",
@@ -4610,8 +4724,8 @@ const DICT_ROWS                             = [
   ],
   [
     "FORTY STOPS, AND THIRSTY CUSTOMERS AT EVERY ONE - SOME OF THEM VERY STRANGE. SERVE THEM ALL, BARTENDER, AND THE ASTRO CAFÉ WILL BE THE TALK OF TWO GALAXIES!",
-    "VEERTIG STOPS, EN DORSTIGE KLANTE BY ELKEEN - SOMMIGE BAIE VREEMD. BEDIEN HULLE ALMAL, KROEGMAN, EN DIE ASTRO-KAFEE SAL DIE GESPREK VAN TWEE STERRESTELSELS WEES!",
-    "CZTERDZIEŚCI PRZYSTANKÓW I SPRAGNIENI KLIENCI NA KAŻDYM - NIEKTÓRZY BARDZO DZIWNI. OBSŁUŻ ICH WSZYSTKICH, BARMANIE, A O ASTRO KAWIARNI BĘDĄ MÓWIĆ W DWÓCH GALAKTYKACH!",
+    "VEERTIG STOPS, EN DORSTIGE KLANTE BY ELKEEN - SOMMIGE BAIE VREEMD. BEDIEN HULLE ALMAL, KROEGMAN, EN DIE ASTRO CAFÉ SAL DIE GESPREK VAN TWEE STERRESTELSELS WEES!",
+    "CZTERDZIEŚCI PRZYSTANKÓW I SPRAGNIENI KLIENCI NA KAŻDYM - NIEKTÓRZY BARDZO DZIWNI. OBSŁUŻ ICH WSZYSTKICH, BARMANIE, A O ASTRO CAFÉ BĘDĄ MÓWIĆ W DWÓCH GALAKTYKACH!",
   ],
   [
     "THE ANDROMEDANS INVITED US TO THEIR GRAND FESTIVAL - SO WE'LL SERVE OUR WAY THERE, STOP BY STOP!",
@@ -7839,11 +7953,43 @@ const DICT_ROWS                             = [
     "EN AS DIE FOOIEPOT-DIEF WEGKOM, WORD DIE VERLIES OOK GEDEEL - DIT HET ALLES VAN SPELER 1 AFGEGAAN",
     "A GDY ZŁODZIEJ SŁOIKA NA NAPIWKI UCIEKNIE, STRATA TEŻ JEST DZIELONA - CAŁA SZŁA Z KONTA GRACZA 1",
   ],
+  ["THE ROAD TO THE FESTIVAL", "DIE PAD NA DIE FEES", "DROGA NA FESTIWAL"],
+  [
+    "EVERY ARRIVAL NOW SAYS HOW MANY STOPS ARE LEFT TO THE GRAND FESTIVAL",
+    "ELKE AANKOMS SÊ NOU HOEVEEL STOPS OOR IS TOT BY DIE GROOT FEES",
+    "KAŻDE PRZYBYCIE MÓWI TERAZ, ILE PRZYSTANKÓW ZOSTAŁO DO WIELKIEGO FESTIWALU",
+  ],
+  [
+    "BOGDAN SENDS FIVE NEW POSTCARDS ON THE WAY - THE FESTIVAL TENTS, THE QUEEN OF ANDROMEDA, AND THE ARRIVAL",
+    "BOGDAN STUUR VYF NUWE POSKAARTE OP PAD - DIE FEESTENTE, DIE KONINGIN VAN ANDROMEDA, EN DIE AANKOMS",
+    "BOGDAN WYSYŁA PO DRODZE PIĘĆ NOWYCH POCZTÓWEK - NAMIOTY FESTIWALOWE, KRÓLOWA ANDROMEDY I PRZYBYCIE",
+  ],
+  [
+    "WATCH THE STORY AGAIN ANY TIME: PLAY MORE, THE STORY",
+    "KYK ENIGE TYD WEER NA DIE STORIE: SPEEL MEER, DIE STORIE",
+    "OBEJRZYJ HISTORIĘ PONOWNIE W KAŻDEJ CHWILI: WIĘCEJ GIER, HISTORIA",
+  ],
+  ["ENVOYS", "GESANTE", "POSŁOWIE"],
+  [
+    "ON MOST STOPS AN ENVOY FROM ANDROMEDA TURNS UP AMONG THE CUSTOMERS - LOOK FOR THE BLUE ENVOY SIGN",
+    "BY DIE MEESTE STOPS DAAG 'N GESANT VAN ANDROMEDA TUSSEN DIE KLANTE OP - SOEK DIE BLOU GESANT-BORD",
+    "NA WIĘKSZOŚCI PRZYSTANKÓW WŚRÓD KLIENTÓW POJAWIA SIĘ POSEŁ Z ANDROMEDY - SZUKAJ NIEBIESKIEGO NAPISU POSEŁ",
+  ],
+  [
+    "SERVE THEM FOR A FESTIVAL STAMP, COINS AND NEWS OF THE FESTIVAL - YOUR STAMPS ARE COUNTED AT THE GRAND FESTIVAL",
+    "BEDIEN HOM VIR 'N FEESSTEMPEL, MUNTE EN NUUS VAN DIE FEES - JULLE STEMPELS WORD BY DIE GROOT FEES GETEL",
+    "OBSŁUŻ GO, A DOSTANIESZ STEMPEL FESTIWALOWY, MONETY I WIEŚCI O FESTIWALU - STEMPLE ZOSTANĄ POLICZONE NA WIELKIM FESTIWALU",
+  ],
+  [
+    "A NEW TROPHY: POSTMASTER, FOR TEN STAMPS",
+    "'N NUWE TROFEE: POSMEESTER, VIR TIEN STEMPELS",
+    "NOWE TROFEUM: POCZMISTRZ, ZA DZIESIĘĆ STEMPLI",
+  ],
   ["THE GRAND TOUR", "DIE GROOT TOER", "WIELKA PODRÓŻ"],
   [
     "A NEW GAME NOW OPENS WITH THE STORY OF THE TRIP: THE ASTRO CAFÉ NEAR THE SUN, AN INVITATION FROM ANDROMEDA, AND THE ROUTE ACROSS TWO GALAXIES",
-    "'N NUWE SPEL BEGIN NOU MET DIE STORIE VAN DIE REIS: DIE ASTRO-KAFEE NABY DIE SON, 'N UITNODIGING VAN ANDROMEDA, EN DIE ROETE OOR TWEE STERRESTELSELS",
-    "NOWA GRA ZACZYNA SIĘ TERAZ OD HISTORII PODRÓŻY: ASTRO KAWIARNIA BLISKO SŁOŃCA, ZAPROSZENIE Z ANDROMEDY I TRASA PRZEZ DWIE GALAKTYKI",
+    "'N NUWE SPEL BEGIN NOU MET DIE STORIE VAN DIE REIS: DIE ASTRO CAFÉ NABY DIE SON, 'N UITNODIGING VAN ANDROMEDA, EN DIE ROETE OOR TWEE STERRESTELSELS",
+    "NOWA GRA ZACZYNA SIĘ TERAZ OD HISTORII PODRÓŻY: ASTRO CAFÉ BLISKO SŁOŃCA, ZAPROSZENIE Z ANDROMEDY I TRASA PRZEZ DWIE GALAKTYKI",
   ],
   [
     "THE ANDROMEDANS HAVE INVITED THE CAFÉ TO SERVE AT THEIR GRAND FESTIVAL - BOGDAN'S POSTCARDS FOLLOW THE STORY ALL THE WAY THERE",
@@ -10230,6 +10376,15 @@ const DICT_PAT                             = [
     "CEL DRUŻYNY: PARA BLIŹNIAKÓW - $1 / $2",
   ],
   [/^DREAM SHIFT!  \+(\d+) EACH$/, "DROOMSKOF!  +$1 ELK", "WYMARZONA ZMIANA!  +$1 KAŻDY"], // (v1.6.14)
+  [
+    /^(\d+) STOPS TO THE GRAND FESTIVAL$/,
+    "$1 STOPS TOT BY DIE GROOT FEES",
+    "PRZYSTANKÓW DO WIELKIEGO FESTIWALU: $1",
+  ], // (v1.7.2)
+  // (v1.7.1) the festival stamps
+  [/^FESTIVAL STAMP!  (\d+) COLLECTED$/, "FEESSTEMPEL!  $1 VERSAMEL", "STEMPEL FESTIWALOWY!  ZEBRANO $1"],
+  [/^FESTIVAL STAMPS: (\d+)  ·  \+(\d+)$/, "FEESSTEMPELS: $1  ·  +$2", "STEMPLE FESTIWALOWE: $1  ·  +$2"],
+  [/^FESTIVAL STAMPS: (\d+)$/, "FEESSTEMPELS: $1", "STEMPLE FESTIWALOWE: $1"],
   [
     /^GOAL STREAK: (\d+) STOPS IN A ROW$/,
     "DOELREEKS: $1 STOPS AGTER MEKAAR",
@@ -15435,6 +15590,7 @@ function update(dt) {
       thanksArrive(customers[customers.length - 1], thank);
     kidSpawn(customers[customers.length - 1], demo);
     funSpawn(customers[customers.length - 1], demo);
+    envoySpawn(customers[customers.length - 1], demo); // (v1.7.1: an envoy from Andromeda - fun.ts)
     // sometimes a whole group walks in at once
     G.spawnT = Math.random() < prm.group ? 0.25 : prm.spawn * rnd(0.7, 1.3);
     sfx("door", X0);
@@ -16955,6 +17111,7 @@ function update(dt) {
       twistServed(catcher, s, demo);
       kidServe(catcher, s, demo);
       funServe(catcher, s, demo);
+      envoyServed(catcher, demo); // (v1.7.1)
       thanksServed(catcher, demo); // (v1.5.4: one you saved, back to thank you)
       SCORER = PL[s.owner || 0];
       addScore(
@@ -19965,6 +20122,7 @@ function newTour() {
   G.won = false;
   G.mwDone = false;
   G.level = 0;
+  G.stamps = 0; // (v1.7.2: a new tour, a new stamp card - the last one was paid out at the festival)
   if (!G.versus) G.lives++;
   else for (const p of PL) p.lives++;
   G.state = "bonus";
@@ -21331,6 +21489,7 @@ function draw() {
         if (c.rage) bossRageFx(c, t); // (v1.5.14: a furious boss glows red and steams - kids.ts)
         if (c.hopWarn !== undefined) bossHopWarn(c, t); // (v1.5.21: about to jump - the warning arrow)
         if (c.gold) kidDrawVip(c, t);
+        if (c.envoy) drawEnvoyGlow(c, t); // (v1.7.1: an envoy from Andromeda - fun.ts)
         if (c.hurry) drawHurry(c, t);
         drawNoServe(c, t); // (v1.4.37: a "don't serve me" sign over the devils, demons and vampires)
         if (c.want !== undefined) funOrderBubble(c, t);
@@ -34014,6 +34173,7 @@ function drawVert(V, t) {
           if (c.rage) bossRageFx(c, t); // (v1.5.14: a furious boss glows red and steams - kids.ts)
           if (c.hopWarn !== undefined) bossHopWarn(c, t); // (v1.5.21: about to jump - the warning arrow)
           if (c.gold) kidDrawVip(c, t);
+          if (c.envoy) drawEnvoyGlow(c, t); // (v1.7.1)
           if (c.hurry) drawHurry(c, t);
           drawNoServe(c, t); // (v1.4.37: a "don't serve me" sign over the devils, demons and vampires)
           if (c.want !== undefined) funOrderBubble(c, t);
@@ -63736,6 +63896,13 @@ const TROPHIES = [
   { id: "t26", name: "DUEL CHAMPION", line: "win 3 mini-game duels or races", k: "duelWins", n: 3 },
   { id: "t27", name: "WELCOME ABOARD", line: "a friend joins your game", k: "dropIns", n: 1 },
   {
+    id: "t28",
+    name: "POSTMASTER",
+    line: "collect 10 festival stamps from Andromeda's envoys",
+    k: "stamps",
+    n: 10,
+  }, // (v1.7.1)
+  {
     id: "t20",
     name: "GALACTIC CHAMPION",
     line: "finish the whole tour, all the way to Andromeda",
@@ -63897,6 +64064,32 @@ const EVENT_NAMES = {
 };
 // ---- STORY with Bocian Bogdan ----
 const STORY = {
+  // (v1.7.3: the story of the trip, kept alive between the old postcards)
+  10: [
+    "NEPTUNE - THE LAST OF THE BIG PLANETS. THE WIND HERE BLOWS FASTER THAN A JET AIRLINER!",
+    "A NEW MESSAGE FROM ANDROMEDA: THE FESTIVAL TENTS ARE GOING UP. KEEP POURING!",
+  ],
+  // (v1.7.3: the story of the trip, kept alive between the old postcards)
+  17: [
+    "KEPLER-452B IS A COUSIN OF THE EARTH - BIGGER, OLDER, AND GOING ROUND A SUN LIKE OURS.",
+    "THE ENVOYS SAY THE WHOLE FESTIVAL IS PRACTISING ONE NEW WORD: MILKSHAKE!",
+  ],
+  // (v1.7.3: the story of the trip, kept alive between the old postcards)
+  27: [
+    "WE'RE HALFWAY ROUND THE STAR PA-99-N2 - THE FESTIVAL CAN SEE OUR LIGHTS ALREADY!",
+    "THE QUEEN OF ANDROMEDA SENT WORD: SHE WANTS TO TRY A MINT SHAKE FIRST.",
+  ],
+  // (v1.7.3: the story of the trip, kept alive between the old postcards)
+  37: [
+    "A STAR THAT FLARES UP EVERY SINGLE YEAR - THE FESTIVAL USES IT AS A FIREWORK!",
+    "ONLY A FEW STOPS LEFT. POLISH THE GLASSES - WE'RE NEARLY THERE!",
+  ],
+  // (v1.7.3: the story of the trip, kept alive between the old postcards)
+  40: [
+    "THE HEART OF ANDROMEDA - THE GRAND FESTIVAL! LOOK AT ALL THOSE THIRSTY ANDROMEDANS!",
+    "THIS IS IT, BARTENDER: ONE LAST BAR. LET'S GIVE THEM THE SHAKES OF THEIR LIVES!",
+  ],
+
   1: [
     "CZESC! HELLO! I'M BOGDAN THE STORK.",
     "OUR HOME IS THE MILKY WAY GALAXY. WE START IN THE SOLAR SYSTEM, RIGHT NEXT TO THE SUN.",
@@ -63941,6 +64134,7 @@ function funGameStart() {
   G.endServed = 0;
   G.hiFivesAll = G.twinsAll = 0; // (v1.5.86: co-op's whole-game counts start again)
   G.tgStreak = 0; // (v1.6.2: the team's goal streak)
+  G.stamps = 0; // (v1.7.1: festival stamps - a new tour, a new card)
   G.padP1 = false; // (v1.6.4: a single controller is player 2's again in a new two-player game)
   G.vsLead = undefined; // (v1.6.7: nobody leads a new versus game yet)
   G.coopG = { served: [0, 0], caught: [0, 0], helps: [0, 0], crowns: [0, 0] }; // (v1.5.93: for the team awards)
@@ -63957,6 +64151,7 @@ function funGameStart() {
 }
 function funLevelStart() {
   G.petUsed = {};
+  envoyLevelStart(); // (v1.7.1: an envoy from Andromeda on this stop?)
   for (const p of PL) p.flav = p.flav ?? Math.floor(Math.random() * 3);
   if (G.endless) {
     G.total = 1e9;
@@ -64205,6 +64400,15 @@ function funUpdate(dt, demo) {
       }
   }
   if (G.event === "newyear" && Math.random() < dt * 0.15) fireworks(1);
+  // (v1.7.2) THE GRAND FESTIVAL IS A PARTY: at the last stop of the tour fireworks go up now and then (not in calm mode)
+  if (
+    envoyTour() &&
+    G.level === LAST_LEVEL &&
+    G.state === "play" &&
+    !COMFORT.calm &&
+    Math.random() < dt * 0.2
+  )
+    fireworks(1);
   if (G.tw && G.tw.kind === "mystery") funMystery(dt);
   // the flavour button on a controller: SELECT / L3 / R3
   // (v1.6.3) WITH TWO PLAYERS, EACH CONTROLLER ITS OWN PLAYER'S FLAVOUR: only the first controller was read, and it always
@@ -64439,6 +64643,8 @@ function funGameOver() {
   if (twoP() && !G.versus && ((G.hiFivesAll || 0) > 0 || (G.twinsAll || 0) > 0))
     $k("overInfo").textContent +=
       "   ·   TEAM: " + (G.hiFivesAll || 0) + " HIGH FIVES  ·  " + (G.twinsAll || 0) + " TWINS";
+  // (v1.7.1) the festival stamps collected on the tour
+  if ((G.stamps || 0) > 0 && !G.endless) $k("overInfo").textContent += "   ·   FESTIVAL STAMPS: " + G.stamps;
   if (G.endless) {
     const b = fStats().endlessBest || 0;
     $k("overInfo").textContent += "   ·   ENDLESS: SERVED " + G.endServed + "  (BEST " + b + ")";
@@ -65523,6 +65729,8 @@ function funStoryUpdate(dt) {
       G.pourLock = [true, true];
     } else if (th === "approach") {
       G.state = "approach";
+    } else if (th === "menu") {
+      toMenu(); // (v1.7.2: watched from PLAY MORE)
     } else if (th === "bogdan") {
       // (v1.7.0: after the opening, Bogdan says hello - unless the opening was skipped: then straight to the first stop)
       if (S0.skip) G.state = "approach";
@@ -65567,6 +65775,86 @@ function drawStory(t) {
   drawBocian(bx, by, 2.4, t, (c) => c);
 }
 
+// (v1.7.1) ENVOYS FROM ANDROMEDA - the story, met along the way: on most stops of the tour the festival's envoy turns up
+// among the customers once, with a light-blue ENVOY sign over their head. Serve them for a FESTIVAL STAMP, a few coins
+// and a word from Andromeda about the festival; at the last stop - the Grand Festival - your stamps are counted and
+// paid for. Not in endless, free play, time attack or the demo (it's the tour's story)
+const ENVOY_LINES = [
+  "THE ENVOY SAYS: THE FESTIVAL HAS A FOUNTAIN THAT FLOWS WITH CHOCOLATE SHAKE!",
+  "THE ENVOY SAYS: NOBODY IN ANDROMEDA HAS EVER TASTED STRAWBERRY. YOU'LL BE FAMOUS!",
+  "THE ENVOY SAYS: KEEP GOING - THE WHOLE GALAXY IS TALKING ABOUT YOUR SHAKES!",
+  "THE ENVOY SAYS: AT THE FESTIVAL THE STARS DANCE IN TIME WITH THE MUSIC.",
+  "THE ENVOY SAYS: BRING YOUR BEST MINT - THE QUEEN OF ANDROMEDA LOVES MINT!",
+  "THE ENVOY SAYS: WE'VE SAVED YOU THE LONGEST COUNTER IN THE GALAXY.",
+  "THE ENVOY SAYS: A SHAKE THIS GOOD IS WORTH 2.5 MILLION LIGHT YEARS!",
+  "THE ENVOY SAYS: YOUR CARD IS STAMPED. SEE YOU AT THE FESTIVAL!",
+];
+const envoyTour = () => !G.demo && !G.endless && !G.free && !G.ta && !G.brush && !G.daily && !CUP.match; // (v1.7.2: not in a cup match either)
+function envoyLevelStart() {
+  // (one envoy on about six stops in ten, a little while into the stop - never on the festival's own stop)
+  G.envoyAt = envoyTour() && G.level < LAST_LEVEL && Math.random() < 0.6 ? G.time + rnd(8, 20) : -1;
+  if (envoyTour() && G.level === LAST_LEVEL && (G.stamps || 0) > 0) {
+    // THE GRAND FESTIVAL: the stamps collected on the way, counted and paid for
+    let got = 0;
+    for (const p of active()) {
+      SCORER = p;
+      got = addScore(Math.round((1000 * G.stamps) / active().length)) || 0;
+      SCORER = null;
+    }
+    G.callouts.push({
+      text: "FESTIVAL STAMPS: " + G.stamps + "  ·  +" + got * active().length,
+      c: "#9fe8ff",
+      life: 3.4,
+      max: 3.4,
+      sub: true,
+    });
+  }
+}
+function envoySpawn(c, demo) {
+  if (demo || !c || !(G.envoyAt > 0) || G.time < G.envoyAt || G.state !== "play") return;
+  if (c.type.evil || c.type.glutton || c.type.boss || c.fan || c.hurry || c.gold || c.twin || c.extra) return;
+  G.envoyAt = -1;
+  c.envoy = true;
+  G.callouts.push({
+    text: "AN ENVOY FROM ANDROMEDA!  SERVE THEM",
+    c: "#9fe8ff",
+    life: 2.4,
+    max: 2.4,
+    sub: true,
+  });
+  sfx("chime", X0, 4);
+}
+// (the envoy's light: a soft light-blue glow round them and two little stars circling - like a VIP's, in Andromeda's blue)
+function drawEnvoyGlow(c, t) {
+  if (c.state === "out" || c.fly || c.alpha < 0.6) return;
+  const fy = c.fy !== undefined ? c.fy : LY(c.lane, c.x) + 22,
+    cx = c.x + 12;
+  R.setAdd(true);
+  glow(cx, fy - 50, 44, withA(col("#9fe8ff"), 0.16 + 0.06 * Math.sin(t * 3)));
+  for (let i = 0; i < 2; i++) {
+    const a = t * 1.8 + i * 3.14;
+    star(cx + Math.cos(a) * 24, fy - 64 + Math.sin(a) * 30, 2.2, withA(col("#e8f8ff"), 0.75));
+  }
+  R.setAdd(false);
+}
+function envoyServed(c, demo) {
+  if (demo || !c.envoy) return;
+  c.envoy = false;
+  G.stamps = (G.stamps || 0) + 1;
+  fStat("stamps");
+  addCoins(5, "ENVOY");
+  sfx("tip", c.x);
+  const [px, py] = projL(c.lane, c.x + 16, LY(c.lane, c.x) - 90);
+  if (!COMFORT.calm) rings.push({ x: px, y: py, r: 120, life: 0.6, max: 0.6, c: [0.6, 0.9, 1, 1] });
+  callout("FESTIVAL STAMP!  " + G.stamps + " COLLECTED", "#9fe8ff", 2.2);
+  G.callouts.push({
+    text: ENVOY_LINES[(G.stamps - 1) % ENVOY_LINES.length],
+    c: "#cfefff",
+    life: 4.2,
+    max: 4.2,
+    sub: true,
+  });
+}
 // (v1.7.0) THE OPENING'S PICTURES, one for each line of INTRO_LINES - drawn from the game's own art: the diner on its rock
 // (drawDinerBody), the Andromeda galaxy (drawAndromeda), the model of the Solar System (drawOrrery). Each picture
 // fades in from the dark; the narrator's card is drawn over them by the HUD
@@ -65631,6 +65919,14 @@ function drawIntro(t) {
   } else if (i === 2) {
     // the route through the Solar System: the model of it, slowly turning
     drawOrrery(L, Rr, T, B, 0.4 + u * 0.2, t);
+    // (v1.7.1) and Bogdan himself, flying over it as he plots the way
+    drawBocian(
+      lerpA(Rr + 60 * k, L + w * 0.25, ease(u)),
+      T + h * (tall ? 0.16 : 0.2) + Math.sin(t * 1.4) * 8 * k,
+      1.5 * k,
+      t,
+      (c) => c
+    );
   } else if (i === 3) {
     // the Milky Way's band of stars across the sky - and Andromeda ahead, growing as the diner flies at it
     R.setAdd(true);
@@ -65659,6 +65955,14 @@ function drawIntro(t) {
     } // (stars streaking past)
     R.setAdd(false);
     diner(cx + 40 * k, cy + Math.sin(t * 1.2) * 4 * k, (tall ? 0.5 : 0.48) * k, th);
+    // (v1.7.1) Bogdan leads the way, out in front
+    drawBocian(
+      cx + (tall ? 120 : 330) * k,
+      cy - (tall ? 120 : 110) * k + Math.sin(t * 1.6) * 8 * k,
+      1.6 * k,
+      t,
+      (c) => c
+    );
   }
   // each picture fades in from the dark
   const fin = clamp((S0.t - i * per) / 0.6, 0, 1);
@@ -66561,6 +66865,31 @@ function funHud(g, s, t, fD, sx, sy) {
     );
     fitText(g, v.region, cssW / 2, ty0 + 62 * s, cssW - 24, "600 ", 13 * s, "#5ff5c8");
     fitText(g, v.sub || "", cssW / 2, ty0 + 82 * s, cssW - 24, "600 ", 13 * s, "#fff3e2");
+    // (v1.7.2) THE STORY'S GOAL, IN SIGHT: how many stops are left to the Grand Festival at the heart of Andromeda (the
+    // tour only - not endless, the daily challenge or the other modes)
+    if (envoyTour() && G.level < LAST_LEVEL) {
+      const left = LAST_LEVEL - G.level;
+      fitText(
+        g,
+        left === 1 ? "1 STOP TO THE GRAND FESTIVAL" : left + " STOPS TO THE GRAND FESTIVAL",
+        cssW / 2,
+        ty0 + 104 * s,
+        cssW - 24,
+        "700 ",
+        12 * s,
+        "#9fe8ff"
+      );
+    } else if (envoyTour() && G.level === LAST_LEVEL)
+      fitText(
+        g,
+        "THE GRAND FESTIVAL - YOU'VE ARRIVED!",
+        cssW / 2,
+        ty0 + 104 * s,
+        cssW - 24,
+        "700 ",
+        12 * s,
+        "#ffd24d"
+      );
     if (v.fact && A0.t > 1.0) {
       const fa = Math.min(1, (A0.t - 1.0) / 0.3);
       g.globalAlpha = Math.max(0, Math.min(a, fa));
@@ -67004,6 +67333,15 @@ function funPanelsInit() {
     startPlanetTour();
   }; // (v1.4.1) the Solar System tour, the Sun to Pluto
   $k("bSolar2").onclick = $k("bSolar").onclick;
+  // (v1.7.2) THE STORY, AGAIN: the opening of the tour (see INTRO_LINES), watched from PLAY MORE - and back to the menu
+  $k("bStory").onclick = () => {
+    if (G.state !== "menu") return;
+    sfx("click");
+    closeFP("more");
+    stopAttract();
+    startStory("intro", "menu");
+    showPanels();
+  };
   $k("bCast").onclick = () => {
     if (G.state !== "menu") return;
     sfx("click");
@@ -80261,7 +80599,7 @@ function levelOfTour(of) {
     inTour = ((lv - 1) % LAST_LEVEL) + 1;
   return (tour > 1 ? "TOUR " + tour + "  ·  " : "") + "LEVEL " + inTour + of + LAST_LEVEL;
 }
-const GAME_VERSION = "v1.7.0",
+const GAME_VERSION = "v1.7.2",
   GAME_DATE = "23.11.2026",
   VERSION_TEXT = GAME_VERSION + "  ·  " + GAME_DATE;
 const FB = '"Chakra Petch", "Segoe UI", sans-serif';
@@ -81878,6 +82216,17 @@ function drawSigns(g, s, t, sx, sy) {
       g.fillText(lbl, sx(x), sy(y) + 1);
       hudObs(sx(x), sy(y), lw, lh);
     } // how hungry is he still?
+    // (v1.7.1) an envoy from Andromeda: a light-blue ENVOY sign over their head (fun.ts envoySpawn)
+    if (c.envoy && c.state === "walk") {
+      const [x, y] = projL(c.lane, c.x + 12, LY(c.lane, c.x) - 132, VSIDE.c);
+      g.font = Math.round(11 * s * TXT()) + "px " + FD;
+      g.fillStyle = Math.sin(t * 5) > -0.6 ? "#9fe8ff" : "#ffffff";
+      g.strokeStyle = "rgba(10,6,20,.85)";
+      g.lineWidth = 3 * s;
+      g.strokeText("✉ ENVOY", sx(x), sy(y));
+      g.fillText("✉ ENVOY", sx(x), sy(y));
+      hudObs(sx(x), sy(y), g.measureText(T("✉ ENVOY")).width + 8 * s, 14 * s);
+    }
     // (v1.5.85) the twins in co-op: a gold label over each, pulsing while the other has been served and the clock runs
     if (c.twin && c.state === "walk") {
       const [x, y] = projL(c.lane, c.x + 12, LY(c.lane, c.x) - 132, VSIDE.c),
@@ -87886,6 +88235,24 @@ profWire();
 //  the game, and where the motion capture, the folk songs and the fonts come from. Both from the menu at any time.
 // =====================================================================================
 const NEWS = [
+  {
+    ver: "v1.7.2",
+    title: "THE ROAD TO THE FESTIVAL",
+    items: [
+      "EVERY ARRIVAL NOW SAYS HOW MANY STOPS ARE LEFT TO THE GRAND FESTIVAL",
+      "WATCH THE STORY AGAIN ANY TIME: PLAY MORE, THE STORY",
+      "BOGDAN SENDS FIVE NEW POSTCARDS ON THE WAY - THE FESTIVAL TENTS, THE QUEEN OF ANDROMEDA, AND THE ARRIVAL",
+    ],
+  },
+  {
+    ver: "v1.7.1",
+    title: "ENVOYS",
+    items: [
+      "ON MOST STOPS AN ENVOY FROM ANDROMEDA TURNS UP AMONG THE CUSTOMERS - LOOK FOR THE BLUE ENVOY SIGN",
+      "SERVE THEM FOR A FESTIVAL STAMP, COINS AND NEWS OF THE FESTIVAL - YOUR STAMPS ARE COUNTED AT THE GRAND FESTIVAL",
+      "A NEW TROPHY: POSTMASTER, FOR TEN STAMPS",
+    ],
+  },
   {
     ver: "v1.7.0",
     title: "THE GRAND TOUR",

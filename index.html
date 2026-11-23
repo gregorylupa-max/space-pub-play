@@ -7958,6 +7958,26 @@ const DICT_ROWS                             = [
     "EN AS DIE FOOIEPOT-DIEF WEGKOM, WORD DIE VERLIES OOK GEDEEL - DIT HET ALLES VAN SPELER 1 AFGEGAAN",
     "A GDY ZŁODZIEJ SŁOIKA NA NAPIWKI UCIEKNIE, STRATA TEŻ JEST DZIELONA - CAŁA SZŁA Z KONTA GRACZA 1",
   ],
+  // (v1.7.9) ORDER STREAKS
+  ["ORDER STREAKS", "BESTELLINGREEKSE", "SERIE ZAMÓWIEŃ"],
+  [
+    "GET THE FLAVOUR RIGHT ORDER AFTER ORDER: 3, 5, 8 AND 12 IN A ROW EARN A GROWING BONUS",
+    "KRY DIE GEUR REG BESTELLING NA BESTELLING: 3, 5, 8 EN 12 AGTER MEKAAR VERDIEN 'N GROEIENDE BONUS",
+    "TRAFIAJ SMAK ZAMÓWIENIE ZA ZAMÓWIENIEM: 3, 5, 8 I 12 Z RZĘDU DAJĄ CORAZ WIĘKSZĄ PREMIĘ",
+  ],
+  [
+    "A WRONG FLAVOUR STARTS THE COUNT AGAIN - THE STREAK CARRIES ON FROM STOP TO STOP",
+    "'N VERKEERDE GEUR BEGIN DIE TELLING WEER - DIE REEKS GAAN VAN STOP TOT STOP AAN",
+    "ZŁY SMAK ZACZYNA LICZENIE OD NOWA - SERIA TRWA Z PRZYSTANKU NA PRZYSTANEK",
+  ],
+  [
+    "A NEW TROPHY: MIND READER, FOR 8 RIGHT ORDERS IN A ROW",
+    "'N NUWE TROFEE: GEDAGTELESER, VIR 8 REG BESTELLINGS AGTER MEKAAR",
+    "NOWE TROFEUM: CZYTAJĄCY W MYŚLACH, ZA 8 TRAFIONYCH ZAMÓWIEŃ Z RZĘDU",
+  ],
+  ["MIND READER", "GEDAGTELESER", "CZYTAJĄCY W MYŚLACH"],
+  ["8 right flavour orders in a row", "8 reg geur-bestellings agter mekaar", "8 trafionych smaków z rzędu"],
+  ["ORDER STREAK BROKEN", "BESTELLINGREEKS GEBREEK", "SERIA ZAMÓWIEŃ PRZERWANA"],
   // (v1.7.8) A QUICKER START
   ["A QUICKER START", "'N VINNIGER BEGIN", "SZYBSZY START"],
   [
@@ -10634,6 +10654,12 @@ const DICT_PAT                             = [
     "PRZYSTANKÓW DO WIELKIEGO FESTIWALU: $1",
   ], // (v1.7.2)
   // (v1.7.1) the festival stamps
+  // (v1.7.9) order streaks
+  [
+    /^(\d+) RIGHT ORDERS IN A ROW!  \+(\d+)$/,
+    "$1 REG BESTELLINGS AGTER MEKAAR!  +$2",
+    "$1 TRAFIONYCH ZAMÓWIEŃ Z RZĘDU!  +$2",
+  ],
   // (v1.7.7) Grumblo's black hole
   [
     /^CHEF GRUMBLO DROPPED A BLACK HOLE ON BAR (\d+)!$/,
@@ -64196,6 +64222,7 @@ const TROPHIES = [
     n: 10,
   }, // (v1.7.1)
   { id: "t29", name: "RACE ACE", line: "beat the Black Hole Bistro 3 times", k: "races", n: 3 }, // (v1.7.3)
+  { id: "t31", name: "MIND READER", line: "8 right flavour orders in a row", k: "ordStreak", n: 8 }, // (v1.7.9)
   { id: "t30", name: "ROYAL SERVICE", line: "serve the Queen of Andromeda her mint shake", k: "queen", n: 1 }, // (v1.7.4)
   {
     id: "t20",
@@ -64430,6 +64457,7 @@ function funGameStart() {
   fpClearAll(); // (no SETTINGS or PLAY MORE screen left open behind the game)
   G.folkUsed = []; // (v1.4.65: a new game - every folk song can be played once again)
   G.rivalWins = 0; // (v1.7.4: a new game - Chef Grumblo's lines start again from the first)
+  G.ordStreak = 0; // (v1.7.9: the order streak starts again)
   G.endless = !!G.endlessNext;
   G.endlessNext = false;
   G.endLvl = 1;
@@ -64533,8 +64561,10 @@ function funServe(c, s, demo) {
         worldText("RIGHT ORDER!  " + FLAV_NAMES[c.want] + "!", c, "#5ff5c8");
         sfx("chime", c.x, 2);
         fStat("orders");
+        orderStreak(true, s);
       }
-    } else if (!demo)
+    } else if (!demo) {
+      orderStreak(false, s);
       worldText(
         ["NOT MY FLAVOUR... BUT OK!", "HMM, I ORDERED " + FLAV_NAMES[c.want] + "!", "OOPS - WRONG FLAVOUR!"][
           Math.floor(Math.random() * 3)
@@ -64542,6 +64572,7 @@ function funServe(c, s, demo) {
         c,
         "#c8b0d0"
       );
+    }
     c.want = undefined;
   }
   if (demo) return;
@@ -64557,6 +64588,28 @@ function funServe(c, s, demo) {
       sfx("turbo");
     }
   }
+}
+// (v1.7.9) ORDER STREAKS: the right flavour for order after order, without a wrong one between - at 3, 5, 8 and 12 in a
+// row a growing bonus (coins from 5), and the MIND READER trophy for 8. A wrong flavour starts the count again; it
+// carries on from stop to stop through the game
+const ORDER_STEPS = [3, 5, 8, 12];
+function orderStreak(right, s) {
+  if (!right) {
+    if ((G.ordStreak || 0) >= 3)
+      G.callouts.push({ text: "ORDER STREAK BROKEN", c: "#c8b0d0", life: 1.6, max: 1.6, sub: true });
+    G.ordStreak = 0;
+    return;
+  }
+  const n = (G.ordStreak = (G.ordStreak || 0) + 1);
+  fStat("ordStreak", n, true);
+  if (!ORDER_STEPS.includes(n) && !(n > 12 && n % 4 === 0)) return;
+  SCORER = PL[s.owner || 0];
+  const got = addScore(100 * n) || 100 * n;
+  SCORER = null;
+  if (n >= 5) addCoinsQuiet(Math.min(10, n - 2));
+  callout(n + " RIGHT ORDERS IN A ROW!  +" + got, n >= 8 ? "#ffd24d" : "#5ff5c8", 2);
+  sfx(n >= 8 ? "fanfare" : "bonus");
+  if (!COMFORT.calm) for (let k = 0; k < Math.min(30, n * 3); k++) confetti(rnd(0, PW), -10, 1);
 }
 function funSpawn(c, demo) {
   if (!c || c.type.evil || c.type.glutton) return;
@@ -81439,7 +81492,7 @@ function levelOfTour(of) {
     inTour = ((lv - 1) % LAST_LEVEL) + 1;
   return (tour > 1 ? "TOUR " + tour + "  ·  " : "") + "LEVEL " + inTour + of + LAST_LEVEL;
 }
-const GAME_VERSION = "v1.7.8",
+const GAME_VERSION = "v1.7.9",
   GAME_DATE = "23.11.2026",
   VERSION_TEXT = GAME_VERSION + "  ·  " + GAME_DATE;
 const FB = '"Chakra Petch", "Segoe UI", sans-serif';
@@ -89110,6 +89163,15 @@ profWire();
 //  the game, and where the motion capture, the folk songs and the fonts come from. Both from the menu at any time.
 // =====================================================================================
 const NEWS = [
+  {
+    ver: "v1.7.9",
+    title: "ORDER STREAKS",
+    items: [
+      "GET THE FLAVOUR RIGHT ORDER AFTER ORDER: 3, 5, 8 AND 12 IN A ROW EARN A GROWING BONUS",
+      "A WRONG FLAVOUR STARTS THE COUNT AGAIN - THE STREAK CARRIES ON FROM STOP TO STOP",
+      "A NEW TROPHY: MIND READER, FOR 8 RIGHT ORDERS IN A ROW",
+    ],
+  },
   {
     ver: "v1.7.8",
     title: "A QUICKER START",

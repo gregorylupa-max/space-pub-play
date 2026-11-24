@@ -7992,6 +7992,18 @@ const DICT_ROWS                             = [
     "DIE WEDLOOP MET DIE SWARTGAT-BISTRO HET NOU 'N KLEIN RENBAAN: JOU KAFEE EN HULLE PIERING, OP PAD NA DIE VLAG",
     "WYŚCIG Z BISTRO CZARNA DZIURA MA TERAZ MAŁY TOR: TWOJA KAWIARNIA I ICH SPODEK PĘDZĄ DO FLAGI",
   ],
+  // (v1.8.19) CARRY ON
+  ["CARRY ON", "GAAN VOORT", "GRAJ DALEJ"],
+  [
+    "A CUP TOURNAMENT MATCH NO LONGER WIPES YOUR TOUR'S CONTINUE",
+    "'N BEKERTOERNOOI-WEDSTRYD VEE NIE MEER JOU TOER SE VOORTGAAN UIT NIE",
+    "MECZ TURNIEJU PUCHAROWEGO NIE KASUJE JUŻ KONTYNUACJI TWOJEJ TRASY",
+  ],
+  [
+    "CONTINUE NOW KEEPS YOUR FESTIVAL STAMPS AND RACES WON, NOT JUST THE SCORE",
+    "VOORTGAAN HOU NOU JOU FEESSTEMPELS EN WEDLOPE GEWEN, NIE NET DIE TELLING NIE",
+    "KONTYNUACJA ZACHOWUJE TERAZ STEMPLE FESTIWALOWE I WYGRANE WYŚCIGI, A NIE TYLKO WYNIK",
+  ],
   // (v1.8.18) FAIR AND SQUARE
   ["FAIR AND SQUARE", "EERLIK EN REG", "UCZCIWIE I SPRAWIEDLIWIE"],
   [
@@ -21291,6 +21303,7 @@ function newTour() {
   G.level = 0;
   G.stamps = 0; // (v1.7.2: a new tour, a new stamp card - the last one was paid out at the festival)
   G.rivalWins = 0; // (v1.7.7: the races won count again from nothing on a new tour)
+  G.stampsPaid = false; // (v1.8.19)
   if (!G.versus) G.lives++;
   else for (const p of PL) p.lives++;
   G.state = "bonus";
@@ -21327,9 +21340,11 @@ const OVER_TIPS = {
 };
 function gameOver() {
   G.state = "over";
+  // (v1.8.19: CONTINUE is remembered before the cup's result clears the match - a cup game used to overwrite the tour's
+  //  continue with its own little stage 1-3, and contRemember now leaves cup matches out)
+  contRemember();
   const cupM = cupResult(); // (a cup match: the result goes into the bracket)
   say("GAME OVER", true);
-  contRemember();
   if (twoP()) G.score = G.versus ? Math.max(P1.score, P2.score) : P1.score + P2.score;
   const best = G.score > G.hi;
   if (best) {
@@ -65470,6 +65485,7 @@ function funGameStart() {
   G.folkUsed = []; // (v1.4.65: a new game - every folk song can be played once again)
   G.rivalWins = 0; // (v1.7.4: a new game - Chef Grumblo's lines start again from the first)
   G.ordStreak = 0; // (v1.7.9: the order streak starts again)
+  G.stampsPaid = false; // (v1.8.19: the festival stamps not paid yet)
   G.endless = !!G.endlessNext;
   G.endlessNext = false;
   G.endLvl = 1;
@@ -67649,7 +67665,9 @@ const envoyTour = () => !G.demo && !G.endless && !G.free && !G.ta && !G.brush &&
 function envoyLevelStart() {
   // (one envoy on about six stops in ten, a little while into the stop - never on the festival's own stop)
   G.envoyAt = envoyTour() && G.level < LAST_LEVEL && Math.random() < 0.6 ? G.time + rnd(8, 20) : -1;
-  if (envoyTour() && G.level === LAST_LEVEL && (G.stamps || 0) > 0) {
+  // (v1.8.19: paid once a game - a crash recovery starting the stop again used to pay them twice)
+  if (envoyTour() && G.level === LAST_LEVEL && (G.stamps || 0) > 0 && !G.stampsPaid) {
+    G.stampsPaid = true;
     // THE GRAND FESTIVAL: the stamps collected on the way, counted and paid for
     let got = 0;
     for (const p of active()) {
@@ -69549,12 +69567,21 @@ const contOn = () => store.get("contOn", true),
     return c && c.level >= 1 && c.level <= VENUES.length ? c : null;
   };
 function contRemember() {
-  if (G.demo || G.daily || G.endless || G.ta || G.brush || G.free) return;
+  if (G.demo || G.daily || G.endless || G.ta || G.brush || G.free || CUP.match) return;
   if (G.won) {
     store.set("cont", null);
     return;
   }
-  store.set("cont", { level: G.level, g: G.score, p1: P1.score || 0, p2: P2.score || 0, n: G.contN || 0 });
+  // (v1.8.19: and the story's tallies - the festival stamps and the races won - so a continue doesn't lose them)
+  store.set("cont", {
+    level: G.level,
+    g: G.score,
+    p1: P1.score || 0,
+    p2: P2.score || 0,
+    n: G.contN || 0,
+    st: G.stamps || 0,
+    rw: G.rivalWins || 0,
+  });
 }
 function continueGame() {
   const c = contSave();
@@ -69569,6 +69596,11 @@ function continueGame() {
   P1.score = c.p1;
   P2.score = c.p2;
   G.contN = (c.n || 0) + 1;
+  // (v1.8.19) the festival stamps and races won come back too - and continuing at the Grand Festival itself, the
+  // stamps are paid out now (the stop began before they were back)
+  G.stamps = c.st || 0;
+  G.rivalWins = c.rw || 0;
+  if (G.level === LAST_LEVEL) envoyLevelStart();
   callout("CONTINUE " + G.contN + "  ·  STAGE " + c.level + "  ·  SCORE " + c.g, "#5ff5c8", 2.6);
 }
 function funMenuText() {
@@ -83229,7 +83261,7 @@ function levelOfTour(of) {
     inTour = ((lv - 1) % LAST_LEVEL) + 1;
   return (tour > 1 ? "TOUR " + tour + "  ·  " : "") + "LEVEL " + inTour + of + LAST_LEVEL;
 }
-const GAME_VERSION = "v1.8.18",
+const GAME_VERSION = "v1.8.19",
   GAME_DATE = "25.11.2026",
   VERSION_TEXT = GAME_VERSION + "  ·  " + GAME_DATE;
 const FB = '"Chakra Petch", "Segoe UI", sans-serif';
@@ -90961,6 +90993,14 @@ profWire();
 //  the game, and where the motion capture, the folk songs and the fonts come from. Both from the menu at any time.
 // =====================================================================================
 const NEWS = [
+  {
+    ver: "v1.8.19",
+    title: "CARRY ON",
+    items: [
+      "A CUP TOURNAMENT MATCH NO LONGER WIPES YOUR TOUR'S CONTINUE",
+      "CONTINUE NOW KEEPS YOUR FESTIVAL STAMPS AND RACES WON, NOT JUST THE SCORE",
+    ],
+  },
   {
     ver: "v1.8.18",
     title: "FAIR AND SQUARE",

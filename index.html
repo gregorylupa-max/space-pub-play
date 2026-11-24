@@ -7982,6 +7982,19 @@ const DICT_ROWS                             = [
     "DIE WEDLOOP MET DIE SWARTGAT-BISTRO HET NOU 'N KLEIN RENBAAN: JOU KAFEE EN HULLE PIERING, OP PAD NA DIE VLAG",
     "WYŚCIG Z BISTRO CZARNA DZIURA MA TERAZ MAŁY TOR: TWOJA KAWIARNIA I ICH SPODEK PĘDZĄ DO FLAGI",
   ],
+  // (v1.8.7) ON THE MENU
+  ["ON THE MENU", "OP DIE MENU", "W KARCIE"],
+  [
+    "EVERY ARRIVAL SCREEN NOW NAMES THE STOP'S HOUSE COCKTAIL, IN ITS OWN COLOUR",
+    "ELKE AANKOMSSKERM NOEM NOU DIE STOP SE HUISKELKIE, IN SY EIE KLEUR",
+    "KAŻDY EKRAN PRZYLOTU PODAJE TERAZ KOKTAJL DOMU PRZYSTANKU, W JEGO WŁASNYM KOLORZE",
+  ],
+  [
+    "AFTER EACH STOP THE ROAD SO FAR COUNTS THE COCKTAILS ON YOUR MENU",
+    "NA ELKE STOP TEL DIE PAD TOT DUSVER DIE KELKIES OP JOU MENU",
+    "PO KAŻDYM PRZYSTANKU DROGA DO TEJ PORY LICZY KOKTAJLE W TWOJEJ KARCIE",
+  ],
+  ["HOUSE COCKTAIL", "HUISKELKIE", "KOKTAJL DOMU"],
   // (v1.8.6) THE CONNOISSEUR
   ["THE CONNOISSEUR", "DIE FYNPROEWER", "ZNAWCA"],
   [
@@ -11121,6 +11134,7 @@ const DICT_PAT                             = [
   ], // (v1.7.2)
   // (v1.7.1) the festival stamps
   // (v1.8.1) the cocktail menu, in the trophy room
+  [/^COCKTAILS: (\d+) \/ (\d+)$/, "KELKIES: $1 / $2", "KOKTAJLE: $1 / $2"], // (v1.8.7: the road so far)
   [
     /^★ HOUSE SPECIAL READY - P(\d), POUR IT!$/,
     "★ HUISSPESIAAL GEREED - P$1, SKINK DIT!",
@@ -68966,6 +68980,21 @@ function funHud(g, s, t, fD, sx, sy) {
         12 * s,
         "#c69bff"
       );
+    // (v1.8.7) ON THE MENU: this stop's house cocktail, in its own colour (put together from its translated pieces)
+    {
+      const ck = HOUSE_CK[tourStop()];
+      if (ck)
+        fitText(
+          g,
+          T("HOUSE COCKTAIL") + ": " + T(ck.n),
+          cssW / 2,
+          ty0 + (rivalStop() ? 158 : 140) * s,
+          cssW - 24,
+          "700 ",
+          12 * s,
+          ck.c[0]
+        );
+    }
     // (v1.8.0) THIS WORLD'S GRAVITY: how strong it is (Earth = 1) and what it's like - under the other lines
     {
       const gv = gravNow(),
@@ -79816,6 +79845,10 @@ function gmRoadLine(g, s, w, h) {
     ];
   if ((G.stamps || 0) > 0) parts.push(["FESTIVAL STAMPS: " + G.stamps, "#cfefff"]);
   if ((G.rivalWins || 0) > 0) parts.push(["RACES WON: " + G.rivalWins, "#c69bff"]);
+  {
+    const nk = Object.keys(store.get("cocktails", {})).length; // (v1.8.7: and the cocktails on your menu)
+    if (nk > 0) parts.push(["COCKTAILS: " + nk + " / " + HOUSE_CK.length, "#ffd24d"]);
+  }
   const wide = cssW > cssH,
     sep = "  ·  ";
   let px = Math.round(Math.max(9, Math.min(13 * s, h * 0.06)));
@@ -82794,7 +82827,7 @@ function levelOfTour(of) {
     inTour = ((lv - 1) % LAST_LEVEL) + 1;
   return (tour > 1 ? "TOUR " + tour + "  ·  " : "") + "LEVEL " + inTour + of + LAST_LEVEL;
 }
-const GAME_VERSION = "v1.8.6",
+const GAME_VERSION = "v1.8.7",
   GAME_DATE = "24.11.2026",
   VERSION_TEXT = GAME_VERSION + "  ·  " + GAME_DATE;
 const FB = '"Chakra Petch", "Segoe UI", sans-serif';
@@ -90476,6 +90509,14 @@ profWire();
 //  the game, and where the motion capture, the folk songs and the fonts come from. Both from the menu at any time.
 // =====================================================================================
 const NEWS = [
+  {
+    ver: "v1.8.7",
+    title: "ON THE MENU",
+    items: [
+      "EVERY ARRIVAL SCREEN NOW NAMES THE STOP'S HOUSE COCKTAIL, IN ITS OWN COLOUR",
+      "AFTER EACH STOP THE ROAD SO FAR COUNTS THE COCKTAILS ON YOUR MENU",
+    ],
+  },
   {
     ver: "v1.8.6",
     title: "THE CONNOISSEUR",

@@ -682,6 +682,8 @@ body.touch2p #touch .tp button.holy { width: 60px; height: 60px; font-size: 11px
 
 <section id="pause" class="panel" hidden aria-label="Paused">
   <h2>PAUSED</h2>
+  <!-- (v1.8.14) where you are: the stop, its gravity and its house cocktail (filled in by setPause, menus.ts) -->
+  <p class="info" id="pWhere" hidden></p>
   <p class="info" id="pAfk" hidden>STILL THERE? The game paused itself so you don't lose a life while you're away. Press FIRE or RESUME to carry on.</p>
   <div class="buttons">
     <button id="pResume" class="primary">RESUME</button>
@@ -7987,6 +7989,32 @@ const DICT_ROWS                             = [
     "DIE WEDLOOP MET DIE SWARTGAT-BISTRO HET NOU 'N KLEIN RENBAAN: JOU KAFEE EN HULLE PIERING, OP PAD NA DIE VLAG",
     "WYŚCIG Z BISTRO CZARNA DZIURA MA TERAZ MAŁY TOR: TWOJA KAWIARNIA I ICH SPODEK PĘDZĄ DO FLAGI",
   ],
+  // (v1.8.14) FINISHING TOUCHES
+  ["FINISHING TOUCHES", "LAASTE AFRONDING", "OSTATNIE SZLIFY"],
+  [
+    "THE PAUSE SCREEN SAYS WHERE YOU ARE: THE STOP, ITS GRAVITY AND ITS HOUSE COCKTAIL",
+    "DIE POUSESKERM SÊ WAAR JY IS: DIE STOP, SY SWAARTEKRAG EN SY HUISKELKIE",
+    "EKRAN PAUZY MÓWI, GDZIE JESTEŚ: PRZYSTANEK, JEGO GRAWITACJA I KOKTAJL DOMU",
+  ],
+  [
+    "CHEF GRUMBLO LAUGHS WHEN HE WINS, GROWLS WHEN HE TAKES THE LEAD - AND HIS BLACK HOLE SLURPS",
+    "SJEF GRUMBLO LAG AS HY WEN, GROM AS HY VOOR GAAN - EN SY SWARTGAT SLURP",
+    "SZEF GRUMBLO ŚMIEJE SIĘ, GDY WYGRYWA, WARCZY, GDY OBEJMUJE PROWADZENIE - A JEGO CZARNA DZIURA SIORBIE",
+  ],
+  [
+    "THE GAME-OVER CARD COUNTS YOUR RACES WON TOO",
+    "DIE SPEL-VERBY-KAART TEL OOK JOU WEDLOPE GEWEN",
+    "KARTA KOŃCA GRY LICZY TEŻ WYGRANE WYŚCIGI",
+  ],
+  [
+    "A FEW MORE WORDS NOW IN AFRIKAANS AND POLISH: THE MIXER'S HINTS, THE MAGNIFYING GLASS, THE GEYSERS",
+    "'N PAAR WOORDE MEER NOU IN AFRIKAANS EN POOLS: DIE MENGER SE WENKE, DIE VERGROOTGLAS, DIE GEISERS",
+    "KILKA KOLEJNYCH SŁÓW TERAZ PO AFRIKAANS I PO POLSKU: PODPOWIEDZI MIKSERA, LUPA, GEJZERY",
+  ],
+  // (v1.8.14) words found still in English by playing in Polish (a scan of every text the game tried to translate)
+  ["RACE WON", "WEDLOOP GEWEN", "WYGRANY WYŚCIG"],
+  ["↑ OR E", "↑ OF E", "↑ LUB E"],
+  ["BANANA", "PIESANG", "BANAN"],
   // (v1.8.13) EASIER ON THE EYES
   ["EASIER ON THE EYES", "MAKLIKER OP DIE OË", "PRZYJEMNIEJ DLA OCZU"],
   [
@@ -11288,6 +11316,23 @@ const DICT_PAT                             = [
     "KRÓLOWA UWIELBIA TWÓJ KOKTAJL!  +$1",
   ],
   [/^THE QUEEN IS PLEASED!  \+(\d+)$/, "DIE KONINGIN IS TEVREDE!  +$1", "KRÓLOWA JEST ZADOWOLONA!  +$1"],
+  // (v1.8.14) found still in English by playing in Polish
+  [
+    /^MAGNIFYING GLASS - PEEK: (.+)  \((\d+) LEFT\)$/,
+    "VERGROOTGLAS - LOER: $1  ($2 OOR)",
+    "LUPA - ZERKNIJ: $1  (ZOSTAŁO: $2)",
+  ],
+  [
+    /^(.+) IS NOT IN THIS RECIPE \(OR YOU HAVE IT ALREADY\)$/,
+    "$1 IS NIE IN HIERDIE RESEP NIE (OF JY HET DIT REEDS)",
+    "$1 - TEGO NIE MA W PRZEPISIE (ALBO JUŻ TO MASZ)",
+  ],
+  [
+    /^RAZEM!  BAR (\d+) MARCHES OUT TOGETHER$/,
+    "RAZEM!  TOONBANK $1 MARSJEER SAAM UIT",
+    "RAZEM!  LADA $1 WYMASZEROWUJE RAZEM",
+  ],
+  [/^(.+!)  BAR (\d+)$/, "$1  TOONBANK $2", "$1  LADA $2"],
   // (v1.8.11) the Queen's own recipe
   [/^THE QUEEN'S OWN RECIPE!  \+(\d+)$/, "DIE KONINGIN SE EIE RESEP!  +$1", "WŁASNY PRZEPIS KRÓLOWEJ!  +$1"],
   // (v1.7.3) the race with the Black Hole Bistro
@@ -66318,15 +66363,18 @@ function funPerfect() {
 }
 function funGameOver() {
   modesGameOver();
+  // (v1.8.14) each part of the line joined with a dot only BETWEEN parts - on its own, FESTIVAL STAMPS began with one
+  const info = $k("overInfo"),
+    add = (t) => (info.textContent = info.textContent ? info.textContent + "   ·   " + t : t);
   // (v1.5.86) the co-op team's whole game, on the game-over card
   if (twoP() && !G.versus && ((G.hiFivesAll || 0) > 0 || (G.twinsAll || 0) > 0))
-    $k("overInfo").textContent +=
-      "   ·   TEAM: " + (G.hiFivesAll || 0) + " HIGH FIVES  ·  " + (G.twinsAll || 0) + " TWINS";
+    add("TEAM: " + (G.hiFivesAll || 0) + " HIGH FIVES  ·  " + (G.twinsAll || 0) + " TWINS");
   // (v1.7.1) the festival stamps collected on the tour
-  if ((G.stamps || 0) > 0 && !G.endless) $k("overInfo").textContent += "   ·   FESTIVAL STAMPS: " + G.stamps;
+  if ((G.stamps || 0) > 0 && !G.endless) add("FESTIVAL STAMPS: " + G.stamps);
+  if ((G.rivalWins || 0) > 0 && !G.endless) add("RACES WON: " + G.rivalWins); // (v1.8.14: and the Bistro races won)
   if (G.endless) {
     const b = fStats().endlessBest || 0;
-    $k("overInfo").textContent += "   ·   ENDLESS: SERVED " + G.endServed + "  (BEST " + b + ")";
+    add("ENDLESS: SERVED " + G.endServed + "  (BEST " + b + ")");
   }
 }
 // the time between worlds: a mini-game every third level, then the trip. (Bogdan's words come AFTER the trip, just before the new place is shown)
@@ -67644,6 +67692,7 @@ function rivalUpdate(dt) {
   if (ahead !== Rv.ahead && Rv.el > 8 && G.time - Rv.leadT > 6 && Rv.n < G.total) {
     Rv.ahead = ahead;
     Rv.leadT = G.time;
+    sfx(ahead ? "grumble" : "chime", X0); // (v1.8.14: heard as well as read)
     G.callouts.push({
       text: ahead ? "THE BISTRO TAKES THE LEAD!" : "YOU'RE AHEAD AGAIN!",
       c: ahead ? "#c69bff" : "#5ff5c8",
@@ -67657,6 +67706,7 @@ function rivalUpdate(dt) {
     Rv.won = -1;
     Rv.at = G.time;
     callout("THE BLACK HOLE BISTRO SERVED THEM FIRST!", "#c69bff", 2.6);
+    sfx("laugh"); // (v1.8.14: Chef Grumblo laughs - it was a plain click)
     G.callouts.push({
       text: RIVAL_LOSE_LINES[Math.floor(Math.random() * RIVAL_LOSE_LINES.length)],
       c: "#e2ccff",
@@ -67664,7 +67714,7 @@ function rivalUpdate(dt) {
       max: 3.6,
       sub: true,
     });
-    sfx("click");
+    // (the old click: the laugh above now)
   }
 }
 // (v1.7.7) GRUMBLO'S DIRTY TRICK: once in each race, a while into the stop, the Bistro's saucer drops a little black hole
@@ -67710,7 +67760,7 @@ function rivalHole(dt) {
   });
   if (shakes.length < before) {
     h.ate += before - shakes.length;
-    sfx("click", h.x);
+    sfx("swish", h.x); // (v1.8.14: sucked in - it was a click)
   }
 }
 // (the hole on the bar: a flat black disc with a glowing orange ring turning round it - it opens and closes)
@@ -83059,7 +83109,7 @@ function levelOfTour(of) {
     inTour = ((lv - 1) % LAST_LEVEL) + 1;
   return (tour > 1 ? "TOUR " + tour + "  ·  " : "") + "LEVEL " + inTour + of + LAST_LEVEL;
 }
-const GAME_VERSION = "v1.8.13",
+const GAME_VERSION = "v1.8.14",
   GAME_DATE = "25.11.2026",
   VERSION_TEXT = GAME_VERSION + "  ·  " + GAME_DATE;
 const FB = '"Chakra Petch", "Segoe UI", sans-serif';
@@ -89593,6 +89643,7 @@ function pause(on) {
   if (on && ["play", "lost", "clear", "bonus", "mini"].includes(G.state)) {
     G.prev = G.state;
     G.state = "paused";
+    pauseWhere();
   } else if (!on && G.state === "paused") {
     G.state = G.prev || "play";
     G.pourLock = [true, true];
@@ -89606,6 +89657,31 @@ function pause(on) {
   }
   if (!on) $("pAfk").hidden = true;
   showPanels();
+}
+// (v1.8.14) WHERE YOU ARE, ON THE PAUSE SCREEN: the stop's name, its gravity and its house cocktail - each line its own
+// text, so the page's translator can find it (the cocktail's name in its own, readable, colour)
+function pauseWhere() {
+  const el = $("pWhere");
+  if (!el) return;
+  const v = VENUES[tourStop()],
+    ck = HOUSE_CK[tourStop()];
+  if (!v || G.demo) {
+    el.hidden = true;
+    return;
+  }
+  const gv = gravNow();
+  el.textContent = "";
+  const line = (txt, c ) => {
+    const d = document.createElement("span");
+    d.style.display = "block";
+    if (c) d.style.color = c;
+    d.textContent = txt;
+    el.appendChild(d);
+  };
+  line(v.name, "#ffd24d");
+  line("GRAVITY " + (gv < 0.1 ? gv.toFixed(2) : gv.toFixed(gv < 1 ? 2 : 1)) + " g  ·  " + gravWord(gv));
+  if (ck) line(T("HOUSE COCKTAIL") + ": " + T(ck.n), ckText(ck));
+  el.hidden = false;
 }
 function toggleFull() {
   const d = document,
@@ -90741,6 +90817,16 @@ profWire();
 //  the game, and where the motion capture, the folk songs and the fonts come from. Both from the menu at any time.
 // =====================================================================================
 const NEWS = [
+  {
+    ver: "v1.8.14",
+    title: "FINISHING TOUCHES",
+    items: [
+      "THE PAUSE SCREEN SAYS WHERE YOU ARE: THE STOP, ITS GRAVITY AND ITS HOUSE COCKTAIL",
+      "CHEF GRUMBLO LAUGHS WHEN HE WINS, GROWLS WHEN HE TAKES THE LEAD - AND HIS BLACK HOLE SLURPS",
+      "THE GAME-OVER CARD COUNTS YOUR RACES WON TOO",
+      "A FEW MORE WORDS NOW IN AFRIKAANS AND POLISH: THE MIXER'S HINTS, THE MAGNIFYING GLASS, THE GEYSERS",
+    ],
+  },
   {
     ver: "v1.8.13",
     title: "EASIER ON THE EYES",

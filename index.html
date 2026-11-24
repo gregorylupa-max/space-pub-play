@@ -7989,6 +7989,18 @@ const DICT_ROWS                             = [
     "DIE WEDLOOP MET DIE SWARTGAT-BISTRO HET NOU 'N KLEIN RENBAAN: JOU KAFEE EN HULLE PIERING, OP PAD NA DIE VLAG",
     "WYŚCIG Z BISTRO CZARNA DZIURA MA TERAZ MAŁY TOR: TWOJA KAWIARNIA I ICH SPODEK PĘDZĄ DO FLAGI",
   ],
+  // (v1.8.15) SMALL SCREENS
+  ["SMALL SCREENS", "KLEIN SKERMS", "MAŁE EKRANY"],
+  [
+    "ON A PHONE HELD UPRIGHT THE ENDING'S LONG LINES NOW WRAP ONTO TWO ROWS INSTEAD OF SHRINKING TO A WHISPER",
+    "OP 'N FOON WAT REGOP GEHOU WORD, LOOP DIE EINDE SE LANG REËLS NOU OOR TWEE RYE IN PLAAS VAN OM TOT 'N FLUISTERING TE KRIMP",
+    "NA TELEFONIE TRZYMANYM PIONOWO DŁUGIE WIERSZE ZAKOŃCZENIA DZIELĄ SIĘ NA DWA, ZAMIAST KURCZYĆ SIĘ DO SZEPTU",
+  ],
+  [
+    "WITH TWO PLAYERS ON A PHONE THE RACE WITH THE BLACK HOLE BISTRO IS READABLE AGAIN",
+    "MET TWEE SPELERS OP 'N FOON IS DIE WEDLOOP MET DIE SWARTGAT-BISTRO WEER LEESBAAR",
+    "PRZY DWÓCH GRACZACH NA TELEFONIE WYŚCIG Z BISTRO CZARNA DZIURA ZNÓW DA SIĘ PRZECZYTAĆ",
+  ],
   // (v1.8.14) FINISHING TOUCHES
   ["FINISHING TOUCHES", "LAASTE AFRONDING", "OSTATNIE SZLIFY"],
   [
@@ -67861,7 +67873,9 @@ function rivalHud(g, s, fD, y) {
   g.textAlign = "left";
   const tbs = touchTops();
   if (tbs) {
-    const room = tbs.rx - 16 * s - 110 * s, // (v1.7.12: room for the race track too)
+    // (v1.8.15: the right-hand pad only limits it when the line is level with it - above the pads, as with two players
+    //  on a phone held upright, the whole width is free; it was squeezed to a few pixels there)
+    const room = (y > tbs.r - 4 * s ? tbs.rx : cssW - 16 * s) - 16 * s - 110 * s, // (v1.7.12: room for the race track too)
       ow = g.measureText(txt).width;
     if (room > 40 && ow > room) g.font = fD(Math.max(7, (11 * room) / ow));
   }
@@ -83109,7 +83123,7 @@ function levelOfTour(of) {
     inTour = ((lv - 1) % LAST_LEVEL) + 1;
   return (tour > 1 ? "TOUR " + tour + "  ·  " : "") + "LEVEL " + inTour + of + LAST_LEVEL;
 }
-const GAME_VERSION = "v1.8.14",
+const GAME_VERSION = "v1.8.15",
   GAME_DATE = "25.11.2026",
   VERSION_TEXT = GAME_VERSION + "  ·  " + GAME_DATE;
 const FB = '"Chakra Petch", "Segoe UI", sans-serif';
@@ -84886,10 +84900,34 @@ function drawEndingHud(g, s, fD, fB) {
     g.globalAlpha = a;
     g.font = fB(px, 700);
     const w = g.measureText(txt).width;
-    if (w > colW) g.font = fB((px * colW) / w, 700);
     g.fillStyle = c;
+    // (v1.8.15) TOO LONG FOR ONE LINE: on a phone held upright a long sentence was squeezed down to about five pixels
+    // to fit - now, when it would shrink to under two-thirds of its size, it's split into two lines instead
+    if (w > colW && colW / w < 0.8) {
+      const words = T(txt).split(" ");
+      let best = 1,
+        bw = Infinity;
+      for (let i = 1; i < words.length; i++) {
+        const m = Math.max(
+          g.measureText(words.slice(0, i).join(" ")).width,
+          g.measureText(words.slice(i).join(" ")).width
+        );
+        if (m < bw) {
+          bw = m;
+          best = i;
+        }
+      }
+      if (bw > colW) g.font = fB((px * colW) / bw, 700);
+      const lh = parseFloat((/([\d.]+)px/.exec(g.font) || [0, px])[1]) * 1.2; // (the size from "bold 11px ...")
+      g.fillText(words.slice(0, best).join(" "), cx, y - lh * 0.3); // (a little lower than centred - clear of the line above)
+      g.fillText(words.slice(best).join(" "), cx, y + lh * 0.7);
+      g.globalAlpha = 1;
+      return lh * 0.7; // (how much lower it reaches - the line after keeps clear)
+    }
+    if (w > colW) g.font = fB((px * colW) / w, 700);
     g.fillText(txt, cx, y);
     g.globalAlpha = 1;
+    return 0;
   };
   const inOut = (a, b) => Math.max(0, Math.min(1, (et - a) * 3, (b - et) * 3));
   g.textAlign = "center";
@@ -84953,7 +84991,7 @@ function drawEndingHud(g, s, fD, fB) {
       Math.min(ta, pt * 2)
     );
     big(title, cssH * (tall ? 0.1 : 0.09) + 44 * s, "#ff5fa8", 26, Math.min(ta, (pt - 0.6) * 2));
-    small(
+    const drop = small(
       fin
         ? "You served every bar in TWO galaxies - and the Grand Festival will never forget your shakes!" // (v1.7.0: the story's end)
         : "You served every bar in our home galaxy. Next stop: ANDROMEDA!",
@@ -84970,7 +85008,7 @@ function drawEndingHud(g, s, fD, fB) {
           : G.queenDone
             ? "The Queen of Andromeda made you her guests of honour!"
             : "Even Chef Grumblo of the Black Hole Bistro asked for your recipe!",
-        cssH * (tall ? 0.1 : 0.09) + 104 * s,
+        cssH * (tall ? 0.1 : 0.09) + 104 * s + drop * 1.2, // (v1.8.15: lower when the line above took two rows)
         "#ffe98a",
         14,
         Math.min(ta, (pt - 1.8) * 2)
@@ -90817,6 +90855,14 @@ profWire();
 //  the game, and where the motion capture, the folk songs and the fonts come from. Both from the menu at any time.
 // =====================================================================================
 const NEWS = [
+  {
+    ver: "v1.8.15",
+    title: "SMALL SCREENS",
+    items: [
+      "ON A PHONE HELD UPRIGHT THE ENDING'S LONG LINES NOW WRAP ONTO TWO ROWS INSTEAD OF SHRINKING TO A WHISPER",
+      "WITH TWO PLAYERS ON A PHONE THE RACE WITH THE BLACK HOLE BISTRO IS READABLE AGAIN",
+    ],
+  },
   {
     ver: "v1.8.14",
     title: "FINISHING TOUCHES",

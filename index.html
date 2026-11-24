@@ -7992,6 +7992,18 @@ const DICT_ROWS                             = [
     "DIE WEDLOOP MET DIE SWARTGAT-BISTRO HET NOU 'N KLEIN RENBAAN: JOU KAFEE EN HULLE PIERING, OP PAD NA DIE VLAG",
     "WYŚCIG Z BISTRO CZARNA DZIURA MA TERAZ MAŁY TOR: TWOJA KAWIARNIA I ICH SPODEK PĘDZĄ DO FLAGI",
   ],
+  // (v1.8.20) HEAD TO HEAD
+  ["HEAD TO HEAD", "KOP AAN KOP", "ŁEB W ŁEB"],
+  [
+    "IN VERSUS EACH PLAYER HAS THEIR OWN ORDER STREAK - NOBODY CAN STEAL THE OTHER'S BONUS OR BREAK THEIR STREAK",
+    "IN 'N TWEEGEVEG HET ELKE SPELER SY EIE BESTELLINGREEKS - NIEMAND KAN DIE ANDER SE BONUS STEEL OF HULLE REEKS BREEK NIE",
+    "W POJEDYNKU KAŻDY GRACZ MA WŁASNĄ SERIĘ ZAMÓWIEŃ - NIKT NIE UKRADNIE DRUGIEMU PREMII ANI NIE PRZERWIE JEGO SERII",
+  ],
+  [
+    "IN VERSUS THE FESTIVAL STAMPS ARE SHARED BY BOTH PLAYERS, EVEN ONE WHO IS OUT FOR A MOMENT",
+    "IN 'N TWEEGEVEG WORD DIE FEESSTEMPELS DEUR BEIDE SPELERS GEDEEL, SELFS EEN WAT VIR 'N OOMBLIK UIT IS",
+    "W POJEDYNKU STEMPLE FESTIWALOWE DZIELĄ OBAJ GRACZE, NAWET TEN, KTÓRY NA CHWILĘ ODPADŁ",
+  ],
   // (v1.8.19) CARRY ON
   ["CARRY ON", "GAAN VOORT", "GRAJ DALEJ"],
   [
@@ -65485,6 +65497,7 @@ function funGameStart() {
   G.folkUsed = []; // (v1.4.65: a new game - every folk song can be played once again)
   G.rivalWins = 0; // (v1.7.4: a new game - Chef Grumblo's lines start again from the first)
   G.ordStreak = 0; // (v1.7.9: the order streak starts again)
+  for (const p of PL) p.ordStreak = 0; // (v1.8.20: and each versus player's own)
   G.stampsPaid = false; // (v1.8.19: the festival stamps not paid yet)
   G.endless = !!G.endlessNext;
   G.endlessNext = false;
@@ -66033,13 +66046,21 @@ function ckFx(c, k) {
 // carries on from stop to stop through the game
 const ORDER_STEPS = [3, 5, 8, 12];
 function orderStreak(right, s) {
+  // (v1.8.20) IN VERSUS, EACH PLAYER'S OWN STREAK: one shared count let a player take the other's bonus - or wipe their
+  // streak with a wrong flavour on purpose. Co-op and one player keep the single (team) count
+  const P0 = PL[s.owner || 0],
+    own = G.versus && P0;
+  const cur = own ? P0.ordStreak || 0 : G.ordStreak || 0;
   if (!right) {
-    if ((G.ordStreak || 0) >= 3)
+    if (cur >= 3)
       G.callouts.push({ text: "ORDER STREAK BROKEN", c: "#c8b0d0", life: 1.6, max: 1.6, sub: true });
-    G.ordStreak = 0;
+    if (own) P0.ordStreak = 0;
+    else G.ordStreak = 0;
     return;
   }
-  const n = (G.ordStreak = (G.ordStreak || 0) + 1);
+  const n = cur + 1;
+  if (own) P0.ordStreak = n;
+  else G.ordStreak = n;
   fStat("ordStreak", n, true);
   if (!ORDER_STEPS.includes(n) && !(n > 12 && n % 4 === 0)) return;
   SCORER = PL[s.owner || 0];
@@ -67669,14 +67690,16 @@ function envoyLevelStart() {
   if (envoyTour() && G.level === LAST_LEVEL && (G.stamps || 0) > 0 && !G.stampsPaid) {
     G.stampsPaid = true;
     // THE GRAND FESTIVAL: the stamps collected on the way, counted and paid for
+    // (v1.8.20: in versus shared between BOTH players - a player still out after a knock-out used to lose their half)
+    const who = G.versus ? PL : active();
     let got = 0;
-    for (const p of active()) {
+    for (const p of who) {
       SCORER = p;
-      got = addScore(Math.round((1000 * G.stamps) / active().length)) || 0;
+      got = addScore(Math.round((1000 * G.stamps) / who.length)) || 0;
       SCORER = null;
     }
     G.callouts.push({
-      text: "FESTIVAL STAMPS: " + G.stamps + "  ·  +" + got * active().length,
+      text: "FESTIVAL STAMPS: " + G.stamps + "  ·  +" + got * who.length,
       c: "#9fe8ff",
       life: 3.4,
       max: 3.4,
@@ -83261,7 +83284,7 @@ function levelOfTour(of) {
     inTour = ((lv - 1) % LAST_LEVEL) + 1;
   return (tour > 1 ? "TOUR " + tour + "  ·  " : "") + "LEVEL " + inTour + of + LAST_LEVEL;
 }
-const GAME_VERSION = "v1.8.19",
+const GAME_VERSION = "v1.8.20",
   GAME_DATE = "25.11.2026",
   VERSION_TEXT = GAME_VERSION + "  ·  " + GAME_DATE;
 const FB = '"Chakra Petch", "Segoe UI", sans-serif';
@@ -90993,6 +91016,14 @@ profWire();
 //  the game, and where the motion capture, the folk songs and the fonts come from. Both from the menu at any time.
 // =====================================================================================
 const NEWS = [
+  {
+    ver: "v1.8.20",
+    title: "HEAD TO HEAD",
+    items: [
+      "IN VERSUS EACH PLAYER HAS THEIR OWN ORDER STREAK - NOBODY CAN STEAL THE OTHER'S BONUS OR BREAK THEIR STREAK",
+      "IN VERSUS THE FESTIVAL STAMPS ARE SHARED BY BOTH PLAYERS, EVEN ONE WHO IS OUT FOR A MOMENT",
+    ],
+  },
   {
     ver: "v1.8.19",
     title: "CARRY ON",

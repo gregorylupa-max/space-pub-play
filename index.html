@@ -7982,6 +7982,13 @@ const DICT_ROWS                             = [
     "DIE WEDLOOP MET DIE SWARTGAT-BISTRO HET NOU 'N KLEIN RENBAAN: JOU KAFEE EN HULLE PIERING, OP PAD NA DIE VLAG",
     "WYŚCIG Z BISTRO CZARNA DZIURA MA TERAZ MAŁY TOR: TWOJA KAWIARNIA I ICH SPODEK PĘDZĄ DO FLAGI",
   ],
+  // (v1.8.9) HEAVY STEPS
+  ["HEAVY STEPS", "SWAAR TREE", "CIĘŻKIE KROKI"],
+  [
+    "ON THE HEAVIEST WORLDS EVERY STEP IS A STOMP: CUSTOMERS AND THE BARTENDER KICK UP LITTLE PUFFS OF DUST",
+    "OP DIE SWAARSTE WÊRELDE IS ELKE TREE 'N GESTAMP: KLANTE EN DIE KROEGMAN SKOP KLEIN STOFWOLKIES OP",
+    "NA NAJCIĘŻSZYCH ŚWIATACH KAŻDY KROK TO TUPNIĘCIE: KLIENCI I BARMAN WZBIJAJĄ MAŁE OBŁOCZKI KURZU",
+  ],
   // (v1.8.8) THE COCKTAIL MIXER
   ["THE COCKTAIL MIXER", "DIE KELKIEMENGER", "MIKSER KOKTAJLI"],
   [
@@ -65612,11 +65619,35 @@ function ckCount(demo, id = 0) {
 }
 // (v1.8.6) THE CONNOISSEUR: as the house special gets ready, one customer on the bar - an ordinary one, still walking in -
 // wants exactly that, and wears a gold sign saying so. Land the cocktail on them for double; anyone else still loves it
+// (v1.8.9) HEAVY STEPS: on the heaviest worlds (1.8 g and more) every footstep is a stomp - walking customers and the
+// running bartender kick up little puffs of dust off the bar now and then (not in calm mode)
+function heavySteps(dt) {
+  const g = gravNow();
+  if (g < 1.8 || COMFORT.calm) return;
+  const rate = (g >= 2.4 ? 1.6 : 1) * dt;
+  let n = 0;
+  for (const c of customers) {
+    if (c.state !== "walk" || c.x < X0 || c.fly || n >= 3) continue;
+    if (Math.random() < rate * 0.9) {
+      dust(c.lane, c.x + 10, 0, 1);
+      n++;
+    }
+  }
+  for (const p of active()) if (p.dir && !p.fired && Math.random() < rate * 3) dust(p.lane, p.x, 0, 1);
+}
 // (each frame while the special waits and nobody's been chosen: the first fitting customer on the bar - a moment after
 // the special gets ready the bar is often empty but for people still at the door, so it keeps looking)
 function ckConnTick() {
-  if (G.ckReady < 0 || G.ckConn || G.demo) return;
-  ckPickConnoisseur();
+  if (G.demo) return;
+  const has = customers.some((o) => o.conn && o.state !== "out");
+  // (v1.8.9 review: the special poured and gone - lost off the bar, or drunk by a devil - takes the sign down with it)
+  if (G.ckReady < 0) {
+    if (has && !shakes.some((sh) => sh.special !== undefined)) for (const o of customers) o.conn = false;
+    return;
+  }
+  // (and a connoisseur who left the bar - a life lost clears it - is replaced by the next one in)
+  if (G.ckConn && !has) G.ckConn = false;
+  if (!G.ckConn) ckPickConnoisseur();
 }
 function ckPickConnoisseur() {
   const ok = customers.filter(
@@ -65856,6 +65887,7 @@ function funUpdate(dt, demo) {
   rivalHole(dt); // (v1.7.7: and Chef Grumblo's black hole)
   queenUpdate(); // (v1.7.4: the Queen of Andromeda, at the Grand Festival)
   ckConnTick(); // (v1.8.6: a connoisseur for the house special?)
+  heavySteps(dt); // (v1.8.9: footsteps on a heavy world)
   grumbloUpdate(); // (v1.7.6: and then Chef Grumblo, in the queue)
   const used = G.petUsed || (G.petUsed = {});
   for (const P0 of active()) {
@@ -82889,7 +82921,7 @@ function levelOfTour(of) {
     inTour = ((lv - 1) % LAST_LEVEL) + 1;
   return (tour > 1 ? "TOUR " + tour + "  ·  " : "") + "LEVEL " + inTour + of + LAST_LEVEL;
 }
-const GAME_VERSION = "v1.8.8",
+const GAME_VERSION = "v1.8.9",
   GAME_DATE = "24.11.2026",
   VERSION_TEXT = GAME_VERSION + "  ·  " + GAME_DATE;
 const FB = '"Chakra Petch", "Segoe UI", sans-serif';
@@ -90571,6 +90603,13 @@ profWire();
 //  the game, and where the motion capture, the folk songs and the fonts come from. Both from the menu at any time.
 // =====================================================================================
 const NEWS = [
+  {
+    ver: "v1.8.9",
+    title: "HEAVY STEPS",
+    items: [
+      "ON THE HEAVIEST WORLDS EVERY STEP IS A STOMP: CUSTOMERS AND THE BARTENDER KICK UP LITTLE PUFFS OF DUST",
+    ],
+  },
   {
     ver: "v1.8.8",
     title: "THE COCKTAIL MIXER",

@@ -7982,6 +7982,37 @@ const DICT_ROWS                             = [
     "DIE WEDLOOP MET DIE SWARTGAT-BISTRO HET NOU 'N KLEIN RENBAAN: JOU KAFEE EN HULLE PIERING, OP PAD NA DIE VLAG",
     "WYŚCIG Z BISTRO CZARNA DZIURA MA TERAZ MAŁY TOR: TWOJA KAWIARNIA I ICH SPODEK PĘDZĄ DO FLAGI",
   ],
+  // (v1.8.5) ONE FOR THE ROAD
+  ["ONE FOR THE ROAD", "EEN VIR DIE PAD", "STRZEMIENNY"],
+  [
+    "A CUSTOMER WHO GETS THE HOUSE COCKTAIL IS SO HAPPY THEY SLIDE ALL THE WAY OUT OF THE DOOR - SERVED FOR GOOD",
+    "'N KLANT WAT DIE HUISKELKIE KRY, IS SO BLY DAT HY HEELPAD BY DIE DEUR UIT GLY - KLAAR BEDIEN",
+    "KLIENT, KTÓRY DOSTANIE KOKTAJL DOMU, JEST TAK SZCZĘŚLIWY, ŻE WYJEŻDŻA AŻ ZA DRZWI - OBSŁUŻONY NA DOBRE",
+  ],
+  // (v1.8.4) COCKTAIL MOMENTS
+  ["COCKTAIL MOMENTS", "KELKIE-OOMBLIKKE", "KOKTAJLOWE CHWILE"],
+  [
+    "EVERY HOUSE COCKTAIL HAS ITS OWN LITTLE SHOW WHEN IT'S CAUGHT - FLAMES, BUBBLES, A STARBURST, HEARTS OR A SHOWER OF COINS",
+    "ELKE HUISKELKIE HET SY EIE KLEIN VERTONING AS DIT GEVANG WORD - VLAMME, BORRELS, 'N STERBARS, HARTJIES OF 'N REËN VAN MUNTE",
+    "KAŻDY KOKTAJL DOMU MA WŁASNY MAŁY POKAZ, GDY ZOSTANIE ZŁAPANY - PŁOMIENIE, BĄBELKI, GWIEZDNY WYBUCH, SERDUSZKA LUB DESZCZ MONET",
+  ],
+  // (v1.8.3) GRAVITY GAMES
+  ["GRAVITY GAMES", "SWAARTEKRAG-SPELETJIES", "GRY Z GRAWITACJĄ"],
+  [
+    "THE MINI-GAMES FEEL THE GRAVITY TOO: THINGS DRIFT DOWN SLOWLY INTO THE GLASS ON A LIGHT WORLD AND DROP FAST ON A HEAVY ONE",
+    "DIE MINI-SPELETJIES VOEL OOK DIE SWAARTEKRAG: DINGE SWEEF STADIG IN DIE GLAS OP 'N LIGTE WÊRELD EN VAL VINNIG OP 'N SWARE",
+    "MINIGRY TEŻ CZUJĄ GRAWITACJĘ: NA LEKKIM ŚWIECIE RZECZY OPADAJĄ DO SZKLANKI POWOLI, A NA CIĘŻKIM SPADAJĄ SZYBKO",
+  ],
+  [
+    "LOW GRAVITY: EVERYTHING FALLS SLOWLY HERE",
+    "LAE SWAARTEKRAG: ALLES VAL HIER STADIG",
+    "NISKA GRAWITACJA: TUTAJ WSZYSTKO SPADA POWOLI",
+  ],
+  [
+    "HEAVY GRAVITY: EVERYTHING FALLS FAST HERE",
+    "SWAAR SWAARTEKRAG: ALLES VAL HIER VINNIG",
+    "SILNA GRAWITACJA: TUTAJ WSZYSTKO SPADA SZYBKO",
+  ],
   // (v1.8.2) SAILING BACK
   ["SAILING BACK", "TERUGSWEEF", "ODLOT DO TYŁU"],
   [
@@ -14110,6 +14141,8 @@ const gravArc = (c) => {
   const u = clamp(1 - c.left / c.leftMax, 0, 1);
   return Math.sin(u * Math.PI) * 26 * lo * (COMFORT.calm ? 0.5 : 1);
 };
+// (v1.8.3) the mini-games: how fast things drop into the glass - 0.7 on the lightest worlds, 1.3 on the heaviest
+const miniGrav = () => clamp(Math.pow(gravNow(), 0.25), 0.7, 1.3);
 // (how hard things fall - splashes, sparks, coins: slow on the Moon, fast at the black hole)
 const gravFall = () =>
   ["play", "ready", "clear", "lost"].includes(G.state === "paused" ? G.prev : G.state)
@@ -65523,6 +65556,9 @@ function ckServed(c, s, demo) {
     ck = HOUSE_CK[k];
   c.ck = k; // (they hold the cocktail glass while they drink)
   c.joy = 2;
+  // (v1.8.5) ONE FOR THE ROAD: a house cocktail makes their day - they slide all the way back out of the door, served for
+  // good (not a boss or the glutton, who have their own count of shakes)
+  if (!c.type.boss && !c.type.glutton && !c.type.dragonB) c.left = 9999; // (nor the dragon - its last shake earns its fire)
   SCORER = PL[s.owner || 0];
   addScore(500, c.x + 20, LY(s.lane, c.x) - 150);
   SCORER = null;
@@ -65540,6 +65576,68 @@ function ckServed(c, s, demo) {
   sfx("tip", c.x);
   const [px, py] = projL(c.lane, c.x + 16, LY(c.lane, c.x) - 90);
   if (!COMFORT.calm) rings.push({ x: px, y: py, r: 110, life: 0.6, max: 0.6, c: [1, 0.85, 0.4, 1] });
+  ckFx(c, k);
+}
+// (v1.8.4) EACH COCKTAIL'S OWN MOMENT: as it's caught, a little show in its own style, from its garnish - flames for the
+// hot ones, bubbles for the fizzy ones, a starburst for the starry and crystal ones, hearts for Pluto's, a puff of
+// cloud... always a sprinkle of sparkles in its colour (only the sparkles in calm mode)
+function ckFx(c, k) {
+  const ck = HOUSE_CK[k];
+  if (!ck) return;
+  const cc = col(ck.c[0]),
+    x = c.x + 12,
+    y = LY(c.lane, c.x) - 70;
+  sparkle(x, y, cc, COMFORT.calm ? 8 : 16, c.lane);
+  if (COMFORT.calm) return;
+  const [px, py] = projL(c.lane, x, y - 16),
+    g = ck.g;
+  if (g === "heart") catchHearts(c.lane, x, y);
+  else if (g === "spark" || g === "star" || g === "snow" || g === "crystal" || g === "suns")
+    burst(px, py, cc);
+  else if (g === "flame")
+    for (let i = 0; i < 14; i++)
+      emit({
+        kind: "flame",
+        x: px + rnd(-10, 10),
+        y: py + rnd(0, 10),
+        vx: rnd(-25, 25),
+        vy: rnd(-160, -90),
+        life: 0.6,
+        max: 0.6,
+        size: rnd(4, 7),
+        grow: -4,
+        turb: 300,
+        c: [1, rnd(0.45, 0.8), 0.2, 1],
+        fc: [1, rnd(0.45, 0.8), 0.2], // (v1.8.5 review: the flame drawing reads its colour from fc)
+      });
+  else if (g === "bubble" || g === "cloud" || g === "swirl")
+    for (let i = 0; i < 16; i++)
+      emit({
+        kind: "bubble",
+        x: px + rnd(-14, 14),
+        y: py + rnd(-4, 8),
+        vx: rnd(-14, 14),
+        vy: rnd(-90, -40),
+        life: 1.1,
+        max: 1.1,
+        size: rnd(2, 5),
+        c: [cc[0], cc[1], cc[2], 0.9],
+        seed: rnd(0, 6),
+        pop: true,
+      });
+  else if (
+    g === "ring" ||
+    g === "moon" ||
+    g === "moons3" ||
+    g === "comet" ||
+    g === "nugget" ||
+    g === "ice" ||
+    g === "leaf" ||
+    g === "umbrella"
+  ) {
+    rings.push({ x: px, y: py, r: 70, life: 0.5, max: 0.5, c: [cc[0], cc[1], cc[2], 1] });
+    coins(c.lane, x, y + 20, 4);
+  }
 }
 // (v1.7.9) ORDER STREAKS: the right flavour for order after order, without a wrong one between - at 3, 5, 8 and 12 in a
 // row a growing bonus (coins from 5), and the MIND READER trophy for 8. A wrong flavour starts the count again; it
@@ -66097,6 +66195,15 @@ function startMiniGame() {
     M.gl = [mk(0, 200, 200), mk(1, 330, 360)];
   }
   G.callouts = [];
+  // (v1.8.3) GRAVITY IN THE MINI-GAMES: what drops into the glass falls slowly on a light world and fast on a heavy one
+  // (miniGrav) - said as the game starts, when it's far from the Earth's
+  if (kind === "cherry" || kind === "mixer") {
+    const g = gravNow();
+    // (v1.8.5 review: shown on the mini-game's own intro card - the callouts aren't drawn during a mini-game)
+    if (g < 0.45 || g >= 1.25)
+      G.mini.grav =
+        g < 0.45 ? "LOW GRAVITY: EVERYTHING FALLS SLOWLY HERE" : "HEAVY GRAVITY: EVERYTHING FALLS FAST HERE";
+  }
   customers = [];
   shakes = [];
   empties = [];
@@ -66292,7 +66399,7 @@ function funMiniUpdate(dt) {
         kind: k,
         x: MINI_TALL() ? rnd(200, 760) : rnd(80, 880),
         y: -20,
-        vy: rnd(150, 230) + M.t * 5,
+        vy: (rnd(150, 230) + M.t * 5) * miniGrav(), // (v1.8.3: slower on a light world, faster on a heavy one)
         rot: rnd(0, 6),
         spin: rnd(-3, 3),
       });
@@ -66506,7 +66613,7 @@ function miniDuelStep(M, dt, inp0) {
       kind: k,
       x: MINI_TALL() ? rnd(200, 760) : rnd(80, 880),
       y: -20,
-      vy: rnd(150, 230) + M.t * 5,
+      vy: (rnd(150, 230) + M.t * 5) * miniGrav(), // (v1.8.3: slower on a light world, faster on a heavy one)
       rot: rnd(0, 6),
       spin: rnd(-3, 3),
     });
@@ -68362,6 +68469,21 @@ function funHud(g, s, t, fD, sx, sy) {
       // (v1.4.95) the countdown, big and bouncing: 3... 2... 1...
       const cd = Math.ceil(3.2 - M.t),
         fr = 1 - (3.2 - M.t - (cd - 1)); // (0 as each number appears, up to 1)
+      // (v1.8.3) this stop's gravity, when things will fall slowly or fast
+      if (M.grav) {
+        g.font = "700 " + Math.round(14 * s) + "px " + FB;
+        const gw = Math.min(cssW - 16, g.measureText(M.grav).width + 28 * s);
+        g.fillStyle = "rgba(8,6,24,.82)"; // (on a dark card, clear of the glass behind it)
+        g.beginPath();
+        g.roundRect
+          ? g.roundRect(cssW / 2 - gw / 2, cssH * 0.74 - 14 * s, gw, 28 * s, 14 * s)
+          : g.rect(cssW / 2 - gw / 2, cssH * 0.74 - 14 * s, gw, 28 * s);
+        g.fill();
+        g.fillStyle = /LOW/.test(M.grav) ? "#9fe8ff" : "#ffb08a";
+        fitText(g, M.grav, cssW / 2, cssH * 0.74, cssW - 40, "700 ", 14 * s, g.fillStyle);
+        g.fillStyle = "#fff3e2";
+        g.font = "600 " + Math.round(15 * s) + "px " + FB;
+      }
       if (cd > 0) {
         g.fillText("GET READY...", cssW / 2, cssH * 0.5);
         g.globalAlpha = Math.min(1, (1 - fr) * 4);
@@ -82577,7 +82699,7 @@ function levelOfTour(of) {
     inTour = ((lv - 1) % LAST_LEVEL) + 1;
   return (tour > 1 ? "TOUR " + tour + "  ·  " : "") + "LEVEL " + inTour + of + LAST_LEVEL;
 }
-const GAME_VERSION = "v1.8.2",
+const GAME_VERSION = "v1.8.5",
   GAME_DATE = "24.11.2026",
   VERSION_TEXT = GAME_VERSION + "  ·  " + GAME_DATE;
 const FB = '"Chakra Petch", "Segoe UI", sans-serif';
@@ -90248,6 +90370,27 @@ profWire();
 //  the game, and where the motion capture, the folk songs and the fonts come from. Both from the menu at any time.
 // =====================================================================================
 const NEWS = [
+  {
+    ver: "v1.8.5",
+    title: "ONE FOR THE ROAD",
+    items: [
+      "A CUSTOMER WHO GETS THE HOUSE COCKTAIL IS SO HAPPY THEY SLIDE ALL THE WAY OUT OF THE DOOR - SERVED FOR GOOD",
+    ],
+  },
+  {
+    ver: "v1.8.4",
+    title: "COCKTAIL MOMENTS",
+    items: [
+      "EVERY HOUSE COCKTAIL HAS ITS OWN LITTLE SHOW WHEN IT'S CAUGHT - FLAMES, BUBBLES, A STARBURST, HEARTS OR A SHOWER OF COINS",
+    ],
+  },
+  {
+    ver: "v1.8.3",
+    title: "GRAVITY GAMES",
+    items: [
+      "THE MINI-GAMES FEEL THE GRAVITY TOO: THINGS DRIFT DOWN SLOWLY INTO THE GLASS ON A LIGHT WORLD AND DROP FAST ON A HEAVY ONE",
+    ],
+  },
   {
     ver: "v1.8.2",
     title: "SAILING BACK",

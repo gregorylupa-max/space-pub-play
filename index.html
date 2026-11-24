@@ -7982,6 +7982,37 @@ const DICT_ROWS                             = [
     "DIE WEDLOOP MET DIE SWARTGAT-BISTRO HET NOU 'N KLEIN RENBAAN: JOU KAFEE EN HULLE PIERING, OP PAD NA DIE VLAG",
     "WYŚCIG Z BISTRO CZARNA DZIURA MA TERAZ MAŁY TOR: TWOJA KAWIARNIA I ICH SPODEK PĘDZĄ DO FLAGI",
   ],
+  // (v1.8.11) THE QUEEN'S RECIPE
+  ["THE QUEEN'S RECIPE", "DIE KONINGIN SE RESEP", "PRZEPIS KRÓLOWEJ"],
+  [
+    "THE GRAND FESTIVAL'S HOUSE COCKTAIL IS THE QUEEN OF ANDROMEDA'S OWN RECIPE - SERVE IT TO HER FOR HER BIGGEST THANKS",
+    "DIE GROOT FEES SE HUISKELKIE IS DIE KONINGIN VAN ANDROMEDA SE EIE RESEP - BEDIEN DIT AAN HAAR VIR HAAR GROOTSTE DANK",
+    "KOKTAJL DOMU WIELKIEGO FESTIWALU TO WŁASNY PRZEPIS KRÓLOWEJ ANDROMEDY - PODAJ JEJ GO, A PODZIĘKUJE NAJGORĘCEJ",
+  ],
+  [
+    "THE QUEEN: MY VERY OWN RECIPE - AND YOU MADE IT PERFECTLY!",
+    "DIE KONINGIN: MY EIE RESEP - EN JY HET DIT PERFEK GEMAAK!",
+    "KRÓLOWA: MÓJ WŁASNY PRZEPIS - I ZROBIŁEŚ GO IDEALNIE!",
+  ],
+  // (v1.8.10) FEATHER AND STONE
+  ["FEATHER AND STONE", "VEER EN KLIP", "PIÓRKO I KAMIEŃ"],
+  [
+    "TWO NEW TROPHIES: FEATHERWEIGHT (CLEAR 5 LOW-GRAVITY STOPS) AND HEAVYWEIGHT (CLEAR 5 HEAVY-GRAVITY STOPS)",
+    "TWEE NUWE TROFEË: VEERGEWIG (VOLTOOI 5 STOPS MET LAE SWAARTEKRAG) EN SWAARGEWIG (VOLTOOI 5 STOPS MET SWAAR SWAARTEKRAG)",
+    "DWA NOWE TROFEA: WAGA PIÓRKOWA (UKOŃCZ 5 PRZYSTANKÓW Z NISKĄ GRAWITACJĄ) I WAGA CIĘŻKA (UKOŃCZ 5 Z SILNĄ GRAWITACJĄ)",
+  ],
+  ["FEATHERWEIGHT", "VEERGEWIG", "WAGA PIÓRKOWA"],
+  ["HEAVYWEIGHT", "SWAARGEWIG", "WAGA CIĘŻKA"],
+  [
+    "clear 5 stops with low gravity",
+    "voltooi 5 stops met lae swaartekrag",
+    "ukończ 5 przystanków z niską grawitacją",
+  ],
+  [
+    "clear 5 stops with heavy gravity",
+    "voltooi 5 stops met swaar swaartekrag",
+    "ukończ 5 przystanków z silną grawitacją",
+  ],
   // (v1.8.9) HEAVY STEPS
   ["HEAVY STEPS", "SWAAR TREE", "CIĘŻKIE KROKI"],
   [
@@ -11212,6 +11243,8 @@ const DICT_PAT                             = [
     "KRÓLOWA UWIELBIA TWÓJ KOKTAJL!  +$1",
   ],
   [/^THE QUEEN IS PLEASED!  \+(\d+)$/, "DIE KONINGIN IS TEVREDE!  +$1", "KRÓLOWA JEST ZADOWOLONA!  +$1"],
+  // (v1.8.11) the Queen's own recipe
+  [/^THE QUEEN'S OWN RECIPE!  \+(\d+)$/, "DIE KONINGIN SE EIE RESEP!  +$1", "WŁASNY PRZEPIS KRÓLOWEJ!  +$1"],
   // (v1.7.3) the race with the Black Hole Bistro
   [
     /^RACE  ·  YOU (\d+) \/ (\d+)  ·  BISTRO (\d+) \/ (\d+)$/,
@@ -65032,6 +65065,8 @@ const TROPHIES = [
     k: "connoisseurs",
     n: 5,
   }, // (v1.8.6)
+  { id: "t35", name: "FEATHERWEIGHT", line: "clear 5 stops with low gravity", k: "lightClears", n: 5 }, // (v1.8.10)
+  { id: "t36", name: "HEAVYWEIGHT", line: "clear 5 stops with heavy gravity", k: "heavyClears", n: 5 }, // (v1.8.10)
   { id: "t31", name: "MIND READER", line: "8 right flavour orders in a row", k: "ordStreak", n: 8 }, // (v1.7.9)
   { id: "t30", name: "ROYAL SERVICE", line: "serve the Queen of Andromeda her mint shake", k: "queen", n: 1 }, // (v1.7.4)
   {
@@ -66009,6 +66044,9 @@ function funOneButton(inp) {
 function funLevelClear() {
   if (G.demo) return;
   fStat("clears");
+  // (v1.8.10) the gravity trophies: stops cleared on light worlds (under 0.45 g) and on heavy ones (1.25 g and more)
+  if (gravNow() < 0.45) fStat("lightClears");
+  else if (gravNow() >= 1.25) fStat("heavyClears");
   addCoins(5 + (G.starsNow >= 3 ? 5 : 0), "LEVEL CLEAR");
   rivalClear(); // (v1.7.3: beaten the Black Hole Bistro here?)
   if (hasPerk("fireworks")) fireworks(4);
@@ -67827,24 +67865,37 @@ function queenServed(c, s, demo) {
   if (demo || !c.queen || G.queenDone) return;
   G.queenDone = true;
   G.queenT = G.time; // (v1.7.6: Chef Grumblo comes in a little after)
-  const mint = !COMFORT.flav || s.flavor === 2;
+  // (v1.8.11) THE QUEEN'S RECIPE: the festival's house cocktail - THE GRAND FESTIVAL - is her own recipe; served to her,
+  // it beats even the mint shake
+  const recipe = s.special !== undefined,
+    mint = recipe || !COMFORT.flav || s.flavor === 2;
   SCORER = PL[s.owner || 0];
-  const got = addScore(mint ? 5000 : 2000, c.x + 20, LY(s.lane, c.x) - 140) || 0;
+  const got = addScore(recipe ? 7500 : mint ? 5000 : 2000, c.x + 20, LY(s.lane, c.x) - 140) || 0;
   SCORER = null;
-  addCoins(mint ? 20 : 10, "THE QUEEN");
+  addCoins(recipe ? 30 : mint ? 20 : 10, "THE QUEEN");
   if (mint) fStat("queen");
-  callout((mint ? "THE QUEEN LOVES YOUR SHAKE!  +" : "THE QUEEN IS PLEASED!  +") + got, "#ffd24d", 3);
+  callout(
+    (recipe
+      ? "THE QUEEN'S OWN RECIPE!  +"
+      : mint
+        ? "THE QUEEN LOVES YOUR SHAKE!  +"
+        : "THE QUEEN IS PLEASED!  +") + got,
+    "#ffd24d",
+    3
+  );
   G.callouts.push({
-    text: mint
-      ? "THE QUEEN: THE BEST SHAKE IN TWO GALAXIES! YOU ARE OUR GUESTS OF HONOUR!"
-      : "THE QUEEN: NOT MINT... BUT DELICIOUS ALL THE SAME!",
+    text: recipe
+      ? "THE QUEEN: MY VERY OWN RECIPE - AND YOU MADE IT PERFECTLY!"
+      : mint
+        ? "THE QUEEN: THE BEST SHAKE IN TWO GALAXIES! YOU ARE OUR GUESTS OF HONOUR!"
+        : "THE QUEEN: NOT MINT... BUT DELICIOUS ALL THE SAME!",
     c: "#fff3c0",
     life: 4.4,
     max: 4.4,
     sub: true,
   });
   sfx("fanfare", c.x);
-  if (!COMFORT.calm) fireworks(mint ? 5 : 2);
+  if (!COMFORT.calm) fireworks(recipe ? 8 : mint ? 5 : 2);
   for (let k = 0; k < (COMFORT.calm ? 10 : 30); k++) confetti(rnd(0, PW), -10, 1);
 }
 // (v1.7.6) CHEF GRUMBLO IN THE QUEUE: Bogdan's last postcard says the Bistro got lost in its own black hole and its chef
@@ -82921,7 +82972,7 @@ function levelOfTour(of) {
     inTour = ((lv - 1) % LAST_LEVEL) + 1;
   return (tour > 1 ? "TOUR " + tour + "  ·  " : "") + "LEVEL " + inTour + of + LAST_LEVEL;
 }
-const GAME_VERSION = "v1.8.9",
+const GAME_VERSION = "v1.8.11",
   GAME_DATE = "24.11.2026",
   VERSION_TEXT = GAME_VERSION + "  ·  " + GAME_DATE;
 const FB = '"Chakra Petch", "Segoe UI", sans-serif';
@@ -90603,6 +90654,20 @@ profWire();
 //  the game, and where the motion capture, the folk songs and the fonts come from. Both from the menu at any time.
 // =====================================================================================
 const NEWS = [
+  {
+    ver: "v1.8.11",
+    title: "THE QUEEN'S RECIPE",
+    items: [
+      "THE GRAND FESTIVAL'S HOUSE COCKTAIL IS THE QUEEN OF ANDROMEDA'S OWN RECIPE - SERVE IT TO HER FOR HER BIGGEST THANKS",
+    ],
+  },
+  {
+    ver: "v1.8.10",
+    title: "FEATHER AND STONE",
+    items: [
+      "TWO NEW TROPHIES: FEATHERWEIGHT (CLEAR 5 LOW-GRAVITY STOPS) AND HEAVYWEIGHT (CLEAR 5 HEAVY-GRAVITY STOPS)",
+    ],
+  },
   {
     ver: "v1.8.9",
     title: "HEAVY STEPS",

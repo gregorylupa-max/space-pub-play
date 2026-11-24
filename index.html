@@ -7982,6 +7982,36 @@ const DICT_ROWS                             = [
     "DIE WEDLOOP MET DIE SWARTGAT-BISTRO HET NOU 'N KLEIN RENBAAN: JOU KAFEE EN HULLE PIERING, OP PAD NA DIE VLAG",
     "WYŚCIG Z BISTRO CZARNA DZIURA MA TERAZ MAŁY TOR: TWOJA KAWIARNIA I ICH SPODEK PĘDZĄ DO FLAGI",
   ],
+  // (v1.8.6) THE CONNOISSEUR
+  ["THE CONNOISSEUR", "DIE FYNPROEWER", "ZNAWCA"],
+  [
+    "AS THE HOUSE SPECIAL GETS READY, ONE CUSTOMER WANTS EXACTLY THAT - LOOK FOR THE GOLD COCKTAIL SIGN",
+    "AS DIE HUISSPESIAAL GEREED RAAK, WIL EEN KLANT PRESIES DIT HÊ - KYK UIT VIR DIE GOUE KELKIE-BORD",
+    "GDY SPECJAŁ DOMU JEST GOTOWY, JEDEN KLIENT CHCE WŁAŚNIE GO - SZUKAJ ZŁOTEGO NAPISU KOKTAJL",
+  ],
+  [
+    "LAND THE COCKTAIL ON THEM FOR A DOUBLE TIP",
+    "LAAT DIE KELKIE BY HULLE UITKOM VIR 'N DUBBELE FOOITJIE",
+    "PODAJ IM KOKTAJL, A DOSTANIESZ PODWÓJNY NAPIWEK",
+  ],
+  ["A NEW TROPHY: CONNOISSEUR'S CHOICE", "'N NUWE TROFEE: FYNPROEWER SE KEUSE", "NOWE TROFEUM: WYBÓR ZNAWCY"],
+  ["CONNOISSEUR'S CHOICE", "FYNPROEWER SE KEUSE", "WYBÓR ZNAWCY"],
+  [
+    "serve 5 connoisseurs their house cocktail",
+    "bedien 5 fynproewers hulle huiskelkie",
+    "podaj 5 znawcom ich koktajl domu",
+  ],
+  ["★ COCKTAIL", "★ KELKIE", "★ KOKTAJL"],
+  [
+    "A CONNOISSEUR WANTS THE HOUSE COCKTAIL!",
+    "'N FYNPROEWER WIL DIE HUISKELKIE HÊ!",
+    "ZNAWCA CHCE KOKTAJL DOMU!",
+  ],
+  [
+    "THE CONNOISSEUR IS DELIGHTED!  DOUBLE TIP",
+    "DIE FYNPROEWER IS IN SY SKIK!  DUBBELE FOOITJIE",
+    "ZNAWCA JEST ZACHWYCONY!  PODWÓJNY NAPIWEK",
+  ],
   // (v1.8.5) ONE FOR THE ROAD
   ["ONE FOR THE ROAD", "EEN VIR DIE PAD", "STRZEMIENNY"],
   [
@@ -64961,6 +64991,13 @@ const TROPHIES = [
     k: "cocktails",
     n: 40,
   }, // (v1.8.1)
+  {
+    id: "t34",
+    name: "CONNOISSEUR'S CHOICE",
+    line: "serve 5 connoisseurs their house cocktail",
+    k: "connoisseurs",
+    n: 5,
+  }, // (v1.8.6)
   { id: "t31", name: "MIND READER", line: "8 right flavour orders in a row", k: "ordStreak", n: 8 }, // (v1.7.9)
   { id: "t30", name: "ROYAL SERVICE", line: "serve the Queen of Andromeda her mint shake", k: "queen", n: 1 }, // (v1.7.4)
   {
@@ -65532,6 +65569,8 @@ function ckCount(demo, id = 0) {
   if (G.ckN[id] < CK_EVERY) return;
   G.ckN = [0, 0];
   G.ckReady = id;
+  G.ckConn = false; // (a connoisseur is looked for while the special waits - ckConnTick)
+  for (const o of customers) o.conn = false;
   const ck = HOUSE_CK[tourStop()];
   calloutNow("HOUSE SPECIAL READY!", "#ffd24d", 2.2); // (straight to the front of the queue - it's about your next pour)
   G.callouts.push({ text: ck.n, c: ck.c[0], life: 2.4, max: 2.4, sub: true });
@@ -65543,6 +65582,44 @@ function ckCount(demo, id = 0) {
     sub: true,
   });
   sfx("chime", X1, 3);
+}
+// (v1.8.6) THE CONNOISSEUR: as the house special gets ready, one customer on the bar - an ordinary one, still walking in -
+// wants exactly that, and wears a gold sign saying so. Land the cocktail on them for double; anyone else still loves it
+// (each frame while the special waits and nobody's been chosen: the first fitting customer on the bar - a moment after
+// the special gets ready the bar is often empty but for people still at the door, so it keeps looking)
+function ckConnTick() {
+  if (G.ckReady < 0 || G.ckConn || G.demo) return;
+  ckPickConnoisseur();
+}
+function ckPickConnoisseur() {
+  const ok = customers.filter(
+    (o) =>
+      o.state === "walk" &&
+      o.x > X0 - 4 &&
+      !o.type.evil &&
+      !o.type.boss &&
+      !o.type.glutton &&
+      !o.type.dragonB &&
+      !o.fan &&
+      !o.extra &&
+      !o.twin &&
+      !o.envoy &&
+      !o.queen &&
+      !o.grumblo &&
+      !o.thief &&
+      !o.gold
+  );
+  if (!ok.length) return;
+  const c = ok[Math.floor(Math.random() * ok.length)];
+  c.conn = true;
+  G.ckConn = true;
+  G.callouts.push({
+    text: "A CONNOISSEUR WANTS THE HOUSE COCKTAIL!",
+    c: "#ffd24d",
+    life: 2.6,
+    max: 2.6,
+    sub: true,
+  });
 }
 // (a shake being poured: the house cocktail, if it's ready - otherwise a milkshake as usual)
 function ckTake(demo, id = 0) {
@@ -65556,6 +65633,23 @@ function ckServed(c, s, demo) {
     ck = HOUSE_CK[k];
   c.ck = k; // (they hold the cocktail glass while they drink)
   c.joy = 2;
+  // (v1.8.6) the connoisseur who wanted exactly this: double
+  const conn = !!c.conn;
+  for (const o of customers) o.conn = false;
+  if (conn) {
+    SCORER = PL[s.owner || 0];
+    addScore(500, c.x + 20, LY(s.lane, c.x) - 170);
+    SCORER = null;
+    addCoinsQuiet(3);
+    fStat("connoisseurs");
+    G.callouts.push({
+      text: "THE CONNOISSEUR IS DELIGHTED!  DOUBLE TIP",
+      c: "#ffd24d",
+      life: 2.6,
+      max: 2.6,
+      sub: true,
+    });
+  }
   // (v1.8.5) ONE FOR THE ROAD: a house cocktail makes their day - they slide all the way back out of the door, served for
   // good (not a boss or the glutton, who have their own count of shakes)
   if (!c.type.boss && !c.type.glutton && !c.type.dragonB) c.left = 9999; // (nor the dragon - its last shake earns its fire)
@@ -65734,6 +65828,7 @@ function funUpdate(dt, demo) {
   rivalUpdate(dt); // (v1.7.3: the Black Hole Bistro's race)
   rivalHole(dt); // (v1.7.7: and Chef Grumblo's black hole)
   queenUpdate(); // (v1.7.4: the Queen of Andromeda, at the Grand Festival)
+  ckConnTick(); // (v1.8.6: a connoisseur for the house special?)
   grumbloUpdate(); // (v1.7.6: and then Chef Grumblo, in the queue)
   const used = G.petUsed || (G.petUsed = {});
   for (const P0 of active()) {
@@ -82699,7 +82794,7 @@ function levelOfTour(of) {
     inTour = ((lv - 1) % LAST_LEVEL) + 1;
   return (tour > 1 ? "TOUR " + tour + "  ·  " : "") + "LEVEL " + inTour + of + LAST_LEVEL;
 }
-const GAME_VERSION = "v1.8.5",
+const GAME_VERSION = "v1.8.6",
   GAME_DATE = "24.11.2026",
   VERSION_TEXT = GAME_VERSION + "  ·  " + GAME_DATE;
 const FB = '"Chakra Petch", "Segoe UI", sans-serif';
@@ -84326,6 +84421,17 @@ function drawSigns(g, s, t, sx, sy) {
       g.strokeText("✉ ENVOY", sx(x), sy(y));
       g.fillText("✉ ENVOY", sx(x), sy(y));
       hudObs(sx(x), sy(y), g.measureText(T("✉ ENVOY")).width + 8 * s, 14 * s);
+    }
+    // (v1.8.6) the connoisseur: a gold sign - they want the house cocktail
+    if (c.conn && c.state === "walk") {
+      const [x, y] = projL(c.lane, c.x + 12, LY(c.lane, c.x) - 132, VSIDE.c);
+      g.font = Math.round(11 * s * TXT()) + "px " + FD;
+      g.fillStyle = Math.sin(t * 5) > -0.5 ? "#ffd24d" : "#fff3c0";
+      g.strokeStyle = "rgba(10,6,20,.85)";
+      g.lineWidth = 3 * s;
+      g.strokeText("★ COCKTAIL", sx(x), sy(y));
+      g.fillText("★ COCKTAIL", sx(x), sy(y));
+      hudObs(sx(x), sy(y), g.measureText("★ COCKTAIL").width + 8 * s, 14 * s);
     }
     // (v1.7.4) the Queen of Andromeda: a gold QUEEN sign over her head, gently pulsing
     if (c.queen && c.state === "walk") {
@@ -90370,6 +90476,15 @@ profWire();
 //  the game, and where the motion capture, the folk songs and the fonts come from. Both from the menu at any time.
 // =====================================================================================
 const NEWS = [
+  {
+    ver: "v1.8.6",
+    title: "THE CONNOISSEUR",
+    items: [
+      "AS THE HOUSE SPECIAL GETS READY, ONE CUSTOMER WANTS EXACTLY THAT - LOOK FOR THE GOLD COCKTAIL SIGN",
+      "LAND THE COCKTAIL ON THEM FOR A DOUBLE TIP",
+      "A NEW TROPHY: CONNOISSEUR'S CHOICE",
+    ],
+  },
   {
     ver: "v1.8.5",
     title: "ONE FOR THE ROAD",

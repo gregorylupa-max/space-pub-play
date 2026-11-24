@@ -7982,6 +7982,13 @@ const DICT_ROWS                             = [
     "DIE WEDLOOP MET DIE SWARTGAT-BISTRO HET NOU 'N KLEIN RENBAAN: JOU KAFEE EN HULLE PIERING, OP PAD NA DIE VLAG",
     "WYŚCIG Z BISTRO CZARNA DZIURA MA TERAZ MAŁY TOR: TWOJA KAWIARNIA I ICH SPODEK PĘDZĄ DO FLAGI",
   ],
+  // (v1.8.2) SAILING BACK
+  ["SAILING BACK", "TERUGSWEEF", "ODLOT DO TYŁU"],
+  [
+    "ON A LIGHT WORLD A CUSTOMER HIT BY A SHAKE SAILS BACK IN AN ARC - HIGHEST ON CERES, PLUTO AND THE COMET",
+    "OP 'N LIGTE WÊRELD SWEEF 'N KLANT WAT DEUR 'N SKUDDING GETREF WORD IN 'N BOOG TERUG - DIE HOOGSTE OP CERES, PLUTO EN DIE KOMEET",
+    "NA LEKKIM ŚWIECIE KLIENT TRAFIONY KOKTAJLEM ODLATUJE ŁUKIEM - NAJWYŻEJ NA CERES, PLUTONIE I KOMECIE",
+  ],
   // (v1.8.1) HOUSE COCKTAILS
   ["HOUSE COCKTAILS", "HUISKELKIES", "KOKTAJLE DOMU"],
   [
@@ -14094,6 +14101,15 @@ const gravFloat = () => {
 };
 // (the visuals read this: the twists' zero-G spells, or this world's own light gravity, whichever floats more)
 const floatK = () => Math.max(G.lowg || 0, gravFloat());
+// (v1.8.2) SAILING BACK: on a light world a customer hit by a shake doesn't just slide back - they sail up in an arc
+// and come down again where the push ends (higher the lighter the world; half as high in calm mode)
+const gravArc = (c) => {
+  if (c.state !== "pushed" || !(c.leftMax > 0) || c.fly) return 0;
+  const lo = clamp((0.6 - gravNow()) / 0.55, 0, 1);
+  if (!lo) return 0;
+  const u = clamp(1 - c.left / c.leftMax, 0, 1);
+  return Math.sin(u * Math.PI) * 26 * lo * (COMFORT.calm ? 0.5 : 1);
+};
 // (how hard things fall - splashes, sparks, coins: slow on the Moon, fast at the black hole)
 const gravFall = () =>
   ["play", "ready", "clear", "lost"].includes(G.state === "paused" ? G.prev : G.state)
@@ -17405,6 +17421,7 @@ function update(dt) {
       catcher.catchT = 0;
       catcher.state = "pushed";
       catcher.left = catcher.type.push * prm.push * (s.perfect ? 1.6 : 1);
+      catcher.leftMax = catcher.left; // (v1.8.2: how far the push goes - for the arc on a light world, gravArc)
       catcher.happy = 1.2;
       catcher.flavor = s.flavor;
       // GOOD SERVICE GETS A TIP: served quickly - while they're still well up the bar - they often leave a coin on the counter
@@ -27974,7 +27991,8 @@ function drawCustomerRaw(c, t) {
   }
   const lift =
     (c.type.kind === "monk" && c.state !== "out" ? 9 + Math.sin(t * 1.6 + c.ph) * 3 : 0) +
-    (floatK() && c.state !== "out" ? floatK() * (12 + Math.sin(t * 2 + c.ph * 3) * 7) : 0); // (low gravity: everyone floats - v1.8.0: on a light world too)
+    (floatK() && c.state !== "out" ? floatK() * (12 + Math.sin(t * 2 + c.ph * 3) * 7) : 0) + // (low gravity: everyone floats - v1.8.0: on a light world too)
+    gravArc(c); // (v1.8.2: and sails back in an arc when a shake hits them)
   const fu = c.fly ? Math.max(0, c.fly.t - (c.fly.kind === "jet" || c.fly.kind === "prop" ? FLY_IGN : 0)) : 0,
     fh = c.fly
       ? flyHeight(c.fly) + // (v1.4.36: each kind of flyer climbs its own way - see update.ts)
@@ -52197,6 +52215,7 @@ function kidDrawVip(c, t) {
   const lift =
       (c.type.kind === "monk" ? 9 + Math.sin(t * 1.6 + c.ph) * 3 : 0) +
       (floatK() ? floatK() * (12 + Math.sin(t * 2 + c.ph * 3) * 7) : 0) + // (v1.8.0: a light world floats too)
+      gravArc(c) + // (v1.8.2: sailing back on a light world)
       (c.joy > 0 ? Math.abs(Math.sin(c.joy * 11)) * 9 * Math.min(1, c.joy * 1.5) : 0),
     fy = (c.fy !== undefined ? c.fy : LY(c.lane, c.x) + 22) - lift,
     cx = c.x + 12,
@@ -82558,7 +82577,7 @@ function levelOfTour(of) {
     inTour = ((lv - 1) % LAST_LEVEL) + 1;
   return (tour > 1 ? "TOUR " + tour + "  ·  " : "") + "LEVEL " + inTour + of + LAST_LEVEL;
 }
-const GAME_VERSION = "v1.8.1",
+const GAME_VERSION = "v1.8.2",
   GAME_DATE = "24.11.2026",
   VERSION_TEXT = GAME_VERSION + "  ·  " + GAME_DATE;
 const FB = '"Chakra Petch", "Segoe UI", sans-serif';
@@ -90229,6 +90248,13 @@ profWire();
 //  the game, and where the motion capture, the folk songs and the fonts come from. Both from the menu at any time.
 // =====================================================================================
 const NEWS = [
+  {
+    ver: "v1.8.2",
+    title: "SAILING BACK",
+    items: [
+      "ON A LIGHT WORLD A CUSTOMER HIT BY A SHAKE SAILS BACK IN AN ARC - HIGHEST ON CERES, PLUTO AND THE COMET",
+    ],
+  },
   {
     ver: "v1.8.1",
     title: "HOUSE COCKTAILS",

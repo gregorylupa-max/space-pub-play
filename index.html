@@ -7987,6 +7987,28 @@ const DICT_ROWS                             = [
     "DIE WEDLOOP MET DIE SWARTGAT-BISTRO HET NOU 'N KLEIN RENBAAN: JOU KAFEE EN HULLE PIERING, OP PAD NA DIE VLAG",
     "WYŚCIG Z BISTRO CZARNA DZIURA MA TERAZ MAŁY TOR: TWOJA KAWIARNIA I ICH SPODEK PĘDZĄ DO FLAGI",
   ],
+  // (v1.8.13) EASIER ON THE EYES
+  ["EASIER ON THE EYES", "MAKLIKER OP DIE OË", "PRZYJEMNIEJ DLA OCZU"],
+  [
+    "THE DARKEST COCKTAILS' NAMES - THE EVENT HORIZON, THE NOIR NIGHTCAP - ARE NOW EASY TO READ",
+    "DIE DONKERSTE KELKIES SE NAME - DIE GEBEURTENISHORISON, DIE NOIR-SLAAPMUTSIE - IS NOU MAKLIK OM TE LEES",
+    "NAZWY NAJCIEMNIEJSZYCH KOKTAJLI - HORYZONT ZDARZEŃ, NOCNY KRYMINAŁ - DAJĄ SIĘ TERAZ ŁATWO PRZECZYTAĆ",
+  ],
+  [
+    "ON A SMALL PHONE HELD UPRIGHT THE ARRIVAL SCREEN'S LINES ARE BIGGER, AND THE LINE UNDER THE MAP SPLITS IN TWO",
+    "OP 'N KLEIN FOON WAT REGOP GEHOU WORD, IS DIE AANKOMSSKERM SE REËLS GROTER, EN DIE REËL ONDER DIE KAART VERDEEL IN TWEE",
+    "NA MAŁYM TELEFONIE TRZYMANYM PIONOWO WIERSZE EKRANU PRZYLOTU SĄ WIĘKSZE, A WIERSZ POD MAPĄ DZIELI SIĘ NA DWA",
+  ],
+  [
+    "THE OPENING'S FIRST PICTURE SHOWS THE WHOLE SUN ON A PHONE HELD UPRIGHT",
+    "DIE BEGIN SE EERSTE PRENT WYS DIE HELE SON OP 'N FOON WAT REGOP GEHOU WORD",
+    "PIERWSZY OBRAZEK POCZĄTKU POKAZUJE CAŁE SŁOŃCE NA TELEFONIE TRZYMANYM PIONOWO",
+  ],
+  [
+    "THE LOW-GRAVITY STOPS DRAW A LITTLE FASTER",
+    "DIE STOPS MET LAE SWAARTEKRAG TEKEN 'N BIETJIE VINNIGER",
+    "PRZYSTANKI Z NISKĄ GRAWITACJĄ RYSUJĄ SIĘ TROCHĘ SZYBCIEJ",
+  ],
   // (v1.8.12) HOW IT WORKS
   ["HOW IT WORKS", "HOE DIT WERK", "JAK TO DZIAŁA"],
   [
@@ -14244,11 +14266,21 @@ const gravity = (p) => {
       };
 };
 // (how much everything floats: nothing at a third of the Earth's gravity or more, a gentle hover on the Moon, more on a comet)
+// (v1.8.13: worked out once per frame - it's asked for by every customer, glass and bartender drawn, and measured with
+//  bench.py the floating stops ran a fifth slower before)
+const GF_C = { t: -1, st: "", lv: -1, v: 0 };
 const gravFloat = () => {
+  if (GF_C.t === G.time && GF_C.st === G.state && GF_C.lv === G.level) return GF_C.v;
+  GF_C.t = G.time;
+  GF_C.st = G.state;
+  GF_C.lv = G.level;
   // (paused: as it was before the pause - the game is still drawn behind the menu)
   const st = G.state === "paused" ? G.prev : G.state;
-  if (!["play", "ready", "clear", "lost"].includes(st)) return 0;
-  return clamp((0.4 - gravNow()) / 0.4, 0, 1) * 0.5;
+  GF_C.v =
+    st === "play" || st === "ready" || st === "clear" || st === "lost"
+      ? clamp((0.4 - gravNow()) / 0.4, 0, 1) * 0.5
+      : 0;
+  return GF_C.v;
 };
 // (the visuals read this: the twists' zero-G spells, or this world's own light gravity, whichever floats more)
 const floatK = () => Math.max(G.lowg || 0, gravFloat());
@@ -65649,6 +65681,23 @@ const HOUSE_CK = [
   },
 ];
 const CK_EVERY = 7;
+// (v1.8.13) A COCKTAIL'S NAME IN ITS OWN COLOUR, BUT READABLE: a few are nearly black (the EVENT HORIZON, the NOIR
+// NIGHTCAP, the BLACK DIAMOND, the LONE WANDERER) and their names vanished on the dark sky - those are lifted towards
+// white until they read, keeping their tint
+function ckText(ck) {
+  const h = ck.c[0],
+    r = parseInt(h.slice(1, 3), 16),
+    gg = parseInt(h.slice(3, 5), 16),
+    b = parseInt(h.slice(5, 7), 16),
+    lum = 0.299 * r + 0.587 * gg + 0.114 * b;
+  if (lum >= 150) return h;
+  const k = (150 - lum) / (255 - lum) + 0.25,
+    m = (v) =>
+      Math.round(v + (255 - v) * Math.min(1, k))
+        .toString(16)
+        .padStart(2, "0");
+  return "#" + m(r) + m(gg) + m(b);
+}
 function ckLevelStart() {
   G.ckN = [0, 0]; // (each player's own count - v1.8.1 review: in versus, one player's serves earned the other the special)
   G.ckReady = -1; // (whose next pour is the special: 0 or 1, or -1)
@@ -65665,7 +65714,7 @@ function ckCount(demo, id = 0) {
   for (const o of customers) o.conn = false;
   const ck = HOUSE_CK[tourStop()];
   calloutNow("HOUSE SPECIAL READY!", "#ffd24d", 2.2); // (straight to the front of the queue - it's about your next pour)
-  G.callouts.push({ text: ck.n, c: ck.c[0], life: 2.4, max: 2.4, sub: true });
+  G.callouts.push({ text: ck.n, c: ckText(ck), life: 2.4, max: 2.4, sub: true });
   G.callouts.push({
     text: "YOUR NEXT POUR IS THE HOUSE COCKTAIL - SLIDE IT TO ANYONE",
     c: "#fff3e2",
@@ -65773,7 +65822,7 @@ function ckServed(c, s, demo) {
   addScore(500, c.x + 20, LY(s.lane, c.x) - 150);
   SCORER = null;
   addCoinsQuiet(3);
-  callout(ck.n, ck.c[0], 2.4); // (its name in the neon sign - the points float up from the customer)
+  callout(ck.n, ckText(ck), 2.4); // (its name in the neon sign - the points float up from the customer)
   G.callouts.push({ text: ck.l, c: "#fff3e2", life: 3.4, max: 3.4, sub: true });
   const M = store.get("cocktails", {});
   if (!M[k]) {
@@ -68068,8 +68117,10 @@ function drawIntro(t) {
   };
   if (i === 0) {
     // the café near the Sun - at sunset, the Sun low and huge on the left, the diner drifting in its warm light
-    const sx = L + w * (tall ? -0.05 : 0.1),
-      sy = cy + 60 * k;
+    // (v1.8.13: on a screen held upright the Sun sat off the left edge - only a sliver showed; it's up and to the left
+    //  of the diner there now, all of it in view)
+    const sx = L + w * (tall ? 0.22 : 0.1),
+      sy = cy + (tall ? -130 : 60) * k;
     R.setAdd(true);
     glow(sx, sy, 520 * k, withA(col("#ff6a3a"), 0.35));
     glow(sx, sy, 300 * k, withA(col("#ffa850"), 0.45));
@@ -68756,7 +68807,7 @@ function funHud(g, s, t, fD, sx, sy) {
           cssW - 24,
           "700 ",
           14 * s,
-          ck.c[0]
+          ckText(ck)
         );
         g.fillStyle = "#fff3e2";
         g.font = "600 " + Math.round(15 * s) + "px " + FB;
@@ -69100,6 +69151,9 @@ function funHud(g, s, t, fD, sx, sy) {
       }
     }
     g.globalAlpha = Math.max(0, Math.min(a, ek));
+    // (v1.8.13) READABLE ON A SMALL PHONE HELD UPRIGHT: the game's scale made the lines under the stop's name about five
+    // pixels high on a 360-wide screen - on a tall screen they're drawn bigger and further apart (there's room below)
+    const kA = cssH > cssW * 1.2 ? Math.max(1, 9.5 / (12 * s)) : 1;
     neon2(g, "LEVEL " + G.level + " OF " + LAST_LEVEL, cssW / 2, ty0, 14 * s, "#9fd0ff");
     neon2(
       g,
@@ -69109,8 +69163,8 @@ function funHud(g, s, t, fD, sx, sy) {
       Math.min(30 * s, ((cssW - 24) / Math.max(10, v.name.length)) * 1.25),
       "#ffc34d"
     );
-    fitText(g, v.region, cssW / 2, ty0 + 62 * s, cssW - 24, "600 ", 13 * s, "#5ff5c8");
-    fitText(g, v.sub || "", cssW / 2, ty0 + 82 * s, cssW - 24, "600 ", 13 * s, "#fff3e2");
+    fitText(g, v.region, cssW / 2, ty0 + 62 * s * kA, cssW - 24, "600 ", 13 * s * kA, "#5ff5c8");
+    fitText(g, v.sub || "", cssW / 2, ty0 + 82 * s * kA, cssW - 24, "600 ", 13 * s * kA, "#fff3e2");
     // (v1.7.2) THE STORY'S GOAL, IN SIGHT: how many stops are left to the Grand Festival at the heart of Andromeda (the
     // tour only - not endless, the daily challenge or the other modes)
     if (envoyTour() && G.level < LAST_LEVEL) {
@@ -69119,10 +69173,10 @@ function funHud(g, s, t, fD, sx, sy) {
         g,
         left === 1 ? "1 STOP TO THE GRAND FESTIVAL" : left + " STOPS TO THE GRAND FESTIVAL",
         cssW / 2,
-        ty0 + 104 * s,
+        ty0 + 104 * s * kA,
         cssW - 24,
         "700 ",
-        12 * s,
+        12 * s * kA,
         "#9fe8ff"
       );
     } else if (envoyTour() && G.level === LAST_LEVEL)
@@ -69130,10 +69184,10 @@ function funHud(g, s, t, fD, sx, sy) {
         g,
         "THE GRAND FESTIVAL - YOU'VE ARRIVED!",
         cssW / 2,
-        ty0 + 104 * s,
+        ty0 + 104 * s * kA,
         cssW - 24,
         "700 ",
-        12 * s,
+        12 * s * kA,
         "#ffd24d"
       );
     // (v1.7.3) and on a race stop, a warning: the Black Hole Bistro has come here too (its saucer zooms past)
@@ -69142,10 +69196,10 @@ function funHud(g, s, t, fD, sx, sy) {
         g,
         "THE BLACK HOLE BISTRO IS HERE TOO - RACE THEM!",
         cssW / 2,
-        ty0 + 122 * s,
+        ty0 + 122 * s * kA,
         cssW - 24,
         "700 ",
-        12 * s,
+        12 * s * kA,
         "#c69bff"
       );
     // (v1.8.7) ON THE MENU: this stop's house cocktail, in its own colour (put together from its translated pieces)
@@ -69156,11 +69210,11 @@ function funHud(g, s, t, fD, sx, sy) {
           g,
           T("HOUSE COCKTAIL") + ": " + T(ck.n),
           cssW / 2,
-          ty0 + (rivalStop() ? 158 : 140) * s,
+          ty0 + (rivalStop() ? 158 : 140) * s * kA,
           cssW - 24,
           "700 ",
-          12 * s,
-          ck.c[0]
+          12 * s * kA,
+          ckText(ck)
         );
     }
     // (v1.8.0) THIS WORLD'S GRAVITY: how strong it is (Earth = 1) and what it's like - under the other lines
@@ -69171,10 +69225,10 @@ function funHud(g, s, t, fD, sx, sy) {
         g,
         "GRAVITY " + (gv < 0.1 ? gv.toFixed(2) : gv.toFixed(gv < 1 ? 2 : 1)) + " g  ·  " + gravWord(gv),
         cssW / 2,
-        ty0 + (rivalStop() ? 140 : 122) * s,
+        ty0 + (rivalStop() ? 140 : 122) * s * kA,
         cssW - 24,
         "700 ",
-        12 * s,
+        12 * s * kA,
         gq < -0.3 ? "#9fe8ff" : gq > 0.3 ? "#ffb08a" : "#d8d0e8"
       );
     }
@@ -80018,33 +80072,43 @@ function gmRoadLine(g, s, w, h) {
     if (nk > 0) parts.push(["COCKTAILS: " + nk + " / " + HOUSE_CK.length, "#ffd24d"]);
   }
   const wide = cssW > cssH,
-    sep = "  ·  ";
-  let px = Math.round(Math.max(9, Math.min(13 * s, h * 0.06)));
-  g.font = "700 " + px + "px " + FB;
-  const width = () =>
-      parts.reduce((a, [t]) => a + g.measureText(t).width, 0) + g.measureText(sep).width * (parts.length - 1),
-    room = wide ? w * 0.6 : w - 16 * s;
-  if (width() > room) {
-    px = Math.max(7, Math.floor((px * room) / width()));
-    g.font = "700 " + px + "px " + FB;
-  }
-  const tw = width(),
-    y = wide ? h - 10 * s - px / 2 : -8 * s - px / 2;
-  let x = wide ? w - 14 * s - tw : (w - tw) / 2;
+    sep = "  ·  ",
+    base = Math.round(Math.max(9, Math.min(13 * s, h * 0.06))),
+    room = wide ? w * 0.6 : w - 16 * s,
+    rowW = (ps) =>
+      ps.reduce((a, [t]) => a + g.measureText(t).width, 0) + g.measureText(sep).width * (ps.length - 1);
+  // (v1.8.13) TWO ROWS ON A NARROW SCREEN: four things in one line shrank to about 6 pixels on a small phone held
+  // upright - when one row would get smaller than 9, the stops-left goes on a row of its own above the rest
+  g.font = "700 " + base + "px " + FB;
+  const rows                       =
+    !wide && parts.length > 1 && (base * room) / rowW(parts) < 9
+      ? [parts.slice(0, 1), parts.slice(1)]
+      : [parts];
   g.textAlign = "left";
   g.textBaseline = "middle";
   g.lineWidth = 3 * s;
   g.strokeStyle = "rgba(6,4,16,.85)";
-  parts.forEach(([t, c], i) => {
-    if (i) {
-      g.fillStyle = "#9fb0d8";
-      g.fillText(sep, x, y);
-      x += g.measureText(sep).width;
+  rows.forEach((ps, r) => {
+    g.font = "700 " + base + "px " + FB;
+    let px = base;
+    if (rowW(ps) > room) {
+      px = Math.max(7, Math.floor((base * room) / rowW(ps)));
+      g.font = "700 " + px + "px " + FB;
     }
-    g.strokeText(t, x, y);
-    g.fillStyle = c;
-    g.fillText(t, x, y);
-    x += g.measureText(t).width;
+    const tw = rowW(ps),
+      y = wide ? h - 10 * s - px / 2 : -8 * s - px / 2 - (rows.length - 1 - r) * (base + 4 * s); // (the last row sits just above the map)
+    let x = wide ? w - 14 * s - tw : (w - tw) / 2;
+    ps.forEach(([t, c], i) => {
+      if (i) {
+        g.fillStyle = "#9fb0d8";
+        g.fillText(sep, x, y);
+        x += g.measureText(sep).width;
+      }
+      g.strokeText(t, x, y);
+      g.fillStyle = c;
+      g.fillText(t, x, y);
+      x += g.measureText(t).width;
+    });
   });
 }
 // =====================================================================================
@@ -82995,8 +83059,8 @@ function levelOfTour(of) {
     inTour = ((lv - 1) % LAST_LEVEL) + 1;
   return (tour > 1 ? "TOUR " + tour + "  ·  " : "") + "LEVEL " + inTour + of + LAST_LEVEL;
 }
-const GAME_VERSION = "v1.8.12",
-  GAME_DATE = "24.11.2026",
+const GAME_VERSION = "v1.8.13",
+  GAME_DATE = "25.11.2026",
   VERSION_TEXT = GAME_VERSION + "  ·  " + GAME_DATE;
 const FB = '"Chakra Petch", "Segoe UI", sans-serif';
 let FD = '"Bungee", "Impact", sans-serif';
@@ -90677,6 +90741,16 @@ profWire();
 //  the game, and where the motion capture, the folk songs and the fonts come from. Both from the menu at any time.
 // =====================================================================================
 const NEWS = [
+  {
+    ver: "v1.8.13",
+    title: "EASIER ON THE EYES",
+    items: [
+      "THE DARKEST COCKTAILS' NAMES - THE EVENT HORIZON, THE NOIR NIGHTCAP - ARE NOW EASY TO READ",
+      "ON A SMALL PHONE HELD UPRIGHT THE ARRIVAL SCREEN'S LINES ARE BIGGER, AND THE LINE UNDER THE MAP SPLITS IN TWO",
+      "THE OPENING'S FIRST PICTURE SHOWS THE WHOLE SUN ON A PHONE HELD UPRIGHT",
+      "THE LOW-GRAVITY STOPS DRAW A LITTLE FASTER",
+    ],
+  },
   {
     ver: "v1.8.12",
     title: "HOW IT WORKS",

@@ -7992,6 +7992,23 @@ const DICT_ROWS                             = [
     "DIE WEDLOOP MET DIE SWARTGAT-BISTRO HET NOU 'N KLEIN RENBAAN: JOU KAFEE EN HULLE PIERING, OP PAD NA DIE VLAG",
     "WYŚCIG Z BISTRO CZARNA DZIURA MA TERAZ MAŁY TOR: TWOJA KAWIARNIA I ICH SPODEK PĘDZĄ DO FLAGI",
   ],
+  // (v1.8.18) FAIR AND SQUARE
+  ["FAIR AND SQUARE", "EERLIK EN REG", "UCZCIWIE I SPRAWIEDLIWIE"],
+  [
+    "A HOUSE COCKTAIL NOW COUNTS AS THE RIGHT ORDER - IT USED TO SAY WRONG FLAVOUR AND BREAK YOUR ORDER STREAK",
+    "'N HUISKELKIE TEL NOU AS DIE REGTE BESTELLING - DIT HET VOORHEEN VERKEERDE GEUR GESÊ EN JOU BESTELLINGREEKS GEBREEK",
+    "KOKTAJL DOMU LICZY SIĘ TERAZ JAKO TRAFIONE ZAMÓWIENIE - WCZEŚNIEJ MÓWIŁ ZŁY SMAK I PRZERYWAŁ SERIĘ ZAMÓWIEŃ",
+  ],
+  [
+    "IN VERSUS, ONE PLAYER'S HOUSE SPECIAL NO LONGER WIPES THE OTHER'S COUNT",
+    "IN 'N TWEEGEVEG VEE EEN SPELER SE HUISSPESIAAL NIE MEER DIE ANDER SE TELLING UIT NIE",
+    "W POJEDYNKU SPECJAŁ DOMU JEDNEGO GRACZA NIE ZERUJE JUŻ LICZNIKA DRUGIEGO",
+  ],
+  [
+    "CATCHING THE SHAKE THIEF NOW SCORES FOR WHOEVER SERVED THEM",
+    "AS JY DIE SKUDDINGDIEF VANG, TEL DIT NOU VIR WIE OOK AL HOM BEDIEN HET",
+    "ZŁAPANIE ZŁODZIEJA KOKTAJLI DAJE TERAZ PUNKTY TEMU, KTO GO OBSŁUŻYŁ",
+  ],
   // (v1.8.17) YOUR OWN MENU
   ["YOUR OWN MENU", "JOU EIE MENU", "TWOJA WŁASNA KARTA"],
   [
@@ -65548,7 +65565,10 @@ function funLevelStart() {
 }
 function funServe(c, s, demo) {
   ckServed(c, s, demo); // (v1.8.1: a house cocktail?)
-  if (c.thief && !demo) funThiefCaught(c);
+  if (c.thief && !demo) funThiefCaught(c, s);
+  // (v1.8.18) a house cocktail beats any order - it was judged by the tap's flavour too, so the connoisseur (or the
+  // Queen, served her own recipe) said "WRONG FLAVOUR" and the order streak broke
+  if (s.special !== undefined) c.want = undefined;
   if (c.want !== undefined) {
     if (s.flavor === c.want) {
       c.joy = 2;
@@ -65785,11 +65805,17 @@ function ckLevelStart() {
 }
 // (counted on each serve: the special gets ready)
 function ckCount(demo, id = 0) {
-  if (demo || G.ckReady >= 0) return;
+  if (demo) return;
   if (!Array.isArray(G.ckN)) G.ckN = [0, 0];
+  // (v1.8.18: while one player's special waits the other keeps counting - up to one short of their own - and only the
+  //  player whose special it is starts again; in versus one player's special used to wipe the other's count)
+  if (G.ckReady >= 0) {
+    if (id !== G.ckReady) G.ckN[id] = Math.min(CK_EVERY - 1, (G.ckN[id] || 0) + 1);
+    return;
+  }
   G.ckN[id] = (G.ckN[id] || 0) + 1;
   if (G.ckN[id] < CK_EVERY) return;
-  G.ckN = [0, 0];
+  G.ckN[id] = 0;
   G.ckReady = id;
   G.ckConn = false; // (a connoisseur is looked for while the special waits - ckConnTick)
   for (const o of customers) o.conn = false;
@@ -65827,6 +65853,8 @@ function heavySteps(dt) {
 // the special gets ready the bar is often empty but for people still at the door, so it keeps looking)
 function ckConnTick() {
   if (G.demo) return;
+  // (v1.8.18: a versus player knocked out can't pour their special - it's let go, so the other can earn one)
+  if (G.ckReady >= 0 && G.versus && PL[G.ckReady] && PL[G.ckReady].alive === false) G.ckReady = -1;
   const has = customers.some((o) => o.conn && o.state !== "out");
   // (v1.8.9 review: the special poured and gone - lost off the bar, or drunk by a devil - takes the sign down with it)
   if (G.ckReady < 0) {
@@ -65898,7 +65926,12 @@ function ckServed(c, s, demo) {
   }
   // (v1.8.5) ONE FOR THE ROAD: a house cocktail makes their day - they slide all the way back out of the door, served for
   // good (not a boss or the glutton, who have their own count of shakes)
-  if (!c.type.boss && !c.type.glutton && !c.type.dragonB) c.left = 9999; // (nor the dragon - its last shake earns its fire)
+  if (!c.type.boss && !c.type.glutton && !c.type.dragonB) {
+    // (v1.8.18: the push is the whole way to the door and a little more - not 9999 - so the light-gravity arc spans the
+    //  slide out; they still go out of the door before it runs out)
+    c.left = Math.max(60, c.x - X0 + 40);
+    c.leftMax = c.left;
+  } // (nor the dragon - its last shake earns its fire)
   SCORER = PL[s.owner || 0];
   addScore(500, c.x + 20, LY(s.lane, c.x) - 150);
   SCORER = null;
@@ -70946,11 +70979,11 @@ function funMystery(dt) {
     callout("THE THIEF SLIPPED AWAY WITH THE TIP JAR...  -300", "#c0a0c0", 2);
   }
 }
-function funThiefCaught(c) {
+function funThiefCaught(c, s ) {
   c.thief = false;
   c.joy = 0;
   if (G.case) G.case.next = rnd(14, 20);
-  SCORER = P1;
+  SCORER = PL[(s && s.owner) || 0]; // (v1.8.18: whoever served the thief - it always went to player 1)
   addScore(2000, c.x + 20, LY(c.lane, c.x) - 120);
   SCORER = null;
   callout("CASE CLOSED!  YOU CAUGHT THE SHAKE THIEF  +2000", "#5ff5c8", 2.6);
@@ -83196,7 +83229,7 @@ function levelOfTour(of) {
     inTour = ((lv - 1) % LAST_LEVEL) + 1;
   return (tour > 1 ? "TOUR " + tour + "  ·  " : "") + "LEVEL " + inTour + of + LAST_LEVEL;
 }
-const GAME_VERSION = "v1.8.17",
+const GAME_VERSION = "v1.8.18",
   GAME_DATE = "25.11.2026",
   VERSION_TEXT = GAME_VERSION + "  ·  " + GAME_DATE;
 const FB = '"Chakra Petch", "Segoe UI", sans-serif';
@@ -90928,6 +90961,15 @@ profWire();
 //  the game, and where the motion capture, the folk songs and the fonts come from. Both from the menu at any time.
 // =====================================================================================
 const NEWS = [
+  {
+    ver: "v1.8.18",
+    title: "FAIR AND SQUARE",
+    items: [
+      "A HOUSE COCKTAIL NOW COUNTS AS THE RIGHT ORDER - IT USED TO SAY WRONG FLAVOUR AND BREAK YOUR ORDER STREAK",
+      "IN VERSUS, ONE PLAYER'S HOUSE SPECIAL NO LONGER WIPES THE OTHER'S COUNT",
+      "CATCHING THE SHAKE THIEF NOW SCORES FOR WHOEVER SERVED THEM",
+    ],
+  },
   {
     ver: "v1.8.17",
     title: "YOUR OWN MENU",

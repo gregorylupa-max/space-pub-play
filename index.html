@@ -627,6 +627,11 @@ body.touch2p #touch .tp button.holy { width: 60px; height: 60px; font-size: 11px
     <h3>TWO PLAYERS</h3>
     <p data-tr>Choose <b>2 · CO-OP</b> (or VERSUS) on the menu. Player 1 plays on W A S D + Space, player 2 on the arrow keys + Enter - or a controller each, or a pad each on a touch screen. A friend can <b>join a game already going</b>: START on a second controller, or + PLAYER 2 JOINS in the pause menu.</p>
     <p data-tr>In co-op you share the lives and play as a team. Serve at the same moment for a <b>HIGH FIVE</b>; serve the <b>TWINS</b> on two bars together; run to a partner who slips for a <b>HELPING HAND</b>. Every stop has a <b>TEAM GOAL</b> (in the corner) - meet them stop after stop for a goal streak. Whoever is three serves ahead wears the <b>CROWN</b>, and the mini-games are played together: a cherry duel, a stork race and a team mixer.</p>
+    <!-- (v1.8.12) GRAVITY and HOUSE COCKTAILS: the two new things of the cocktails/gravity run, explained -->
+    <h3>GRAVITY</h3>
+    <p data-tr>Every stop has its own gravity - the arrival screen shows how strong it is. On a <b>light</b> world everyone floats, and a shake sends customers sailing further back - but they drift back in quicker. On a <b>heavy</b> world they plod in slowly - but a shake barely pushes them. In the mini-games things fall slowly or fast to match.</p>
+    <h3>HOUSE COCKTAILS</h3>
+    <p data-tr>Every stop has its own <b>HOUSE COCKTAIL</b>. Every 7 serves the house special is ready: your next pour comes out as the stop's cocktail. Whoever catches it tips big and leaves happy - land it on the customer with the gold <b>★ COCKTAIL</b> sign for double. Each new one goes into your <b>COCKTAIL MENU</b> in the Trophy Room.</p>
     <h3>POWER-UPS, STARS AND COINS</h3>
     <p data-tr>Grab the <b>power-ups</b> that appear on the bar when it's quiet. Each level gives up to three <b>stars</b>, and you earn <b>coins</b> to spend in the COIN SHOP (PLAY MORE). FREE PLAY mode has no losing and no timer.</p>
   </div>
@@ -7981,6 +7986,24 @@ const DICT_ROWS                             = [
     "THE RACE WITH THE BLACK HOLE BISTRO NOW HAS A LITTLE TRACK: YOUR DINER AND THEIR SAUCER, HEADING FOR THE FLAG",
     "DIE WEDLOOP MET DIE SWARTGAT-BISTRO HET NOU 'N KLEIN RENBAAN: JOU KAFEE EN HULLE PIERING, OP PAD NA DIE VLAG",
     "WYŚCIG Z BISTRO CZARNA DZIURA MA TERAZ MAŁY TOR: TWOJA KAWIARNIA I ICH SPODEK PĘDZĄ DO FLAGI",
+  ],
+  // (v1.8.12) HOW IT WORKS
+  ["HOW IT WORKS", "HOE DIT WERK", "JAK TO DZIAŁA"],
+  [
+    "HOW TO PLAY NOW EXPLAINS GRAVITY AND THE HOUSE COCKTAILS",
+    "HOE OM TE SPEEL VERDUIDELIK NOU SWAARTEKRAG EN DIE HUISKELKIES",
+    "JAK GRAĆ WYJAŚNIA TERAZ GRAWITACJĘ I KOKTAJLE DOMU",
+  ],
+  // (v1.8.12) HOW TO PLAY: gravity and the house cocktails
+  [
+    "Every stop has its own gravity - the arrival screen shows how strong it is. On a <b>light</b> world everyone floats, and a shake sends customers sailing further back - but they drift back in quicker. On a <b>heavy</b> world they plod in slowly - but a shake barely pushes them. In the mini-games things fall slowly or fast to match.",
+    "Elke stop het sy eie swaartekrag - die aankomsskerm wys hoe sterk dit is. Op 'n <b>ligte</b> wêreld sweef almal, en 'n skudding laat klante verder terugsweef - maar hulle dryf vinniger terug. Op 'n <b>swaar</b> wêreld slof hulle stadig nader - maar 'n skudding stoot hulle skaars terug. In die mini-speletjies val dinge ooreenkomstig stadig of vinnig.",
+    "Każdy przystanek ma własną grawitację - ekran przylotu pokazuje, jak jest silna. Na <b>lekkim</b> świecie wszyscy się unoszą, a koktajl odsyła klientów dalej - ale szybciej wracają. Na <b>ciężkim</b> świecie człapią powoli - ale koktajl ledwo ich odpycha. W minigrach rzeczy spadają odpowiednio wolno albo szybko.",
+  ],
+  [
+    "Every stop has its own <b>HOUSE COCKTAIL</b>. Every 7 serves the house special is ready: your next pour comes out as the stop's cocktail. Whoever catches it tips big and leaves happy - land it on the customer with the gold <b>★ COCKTAIL</b> sign for double. Each new one goes into your <b>COCKTAIL MENU</b> in the Trophy Room.",
+    "Elke stop het sy eie <b>HUISKELKIE</b>. Elke 7 bedienings is die huisspesiaal gereed: jou volgende skink is die stop se kelkie. Wie dit ook al vang, gee 'n groot fooitjie en loop gelukkig - laat dit by die klant met die goue <b>★ KELKIE</b>-bord uitkom vir dubbel. Elke nuwe een gaan in jou <b>KELKIEMENU</b> in die Trofeekamer.",
+    "Każdy przystanek ma własny <b>KOKTAJL DOMU</b>. Co 7 podań specjał domu jest gotowy: następne nalanie to koktajl przystanku. Kto go złapie, daje duży napiwek i wychodzi szczęśliwy - podaj go klientowi ze złotym napisem <b>★ KOKTAJL</b>, a dostaniesz podwójnie. Każdy nowy trafia do <b>KARTY KOKTAJLI</b> w Sali Trofeów.",
   ],
   // (v1.8.11) THE QUEEN'S RECIPE
   ["THE QUEEN'S RECIPE", "DIE KONINGIN SE RESEP", "PRZEPIS KRÓLOWEJ"],
@@ -82972,7 +82995,7 @@ function levelOfTour(of) {
     inTour = ((lv - 1) % LAST_LEVEL) + 1;
   return (tour > 1 ? "TOUR " + tour + "  ·  " : "") + "LEVEL " + inTour + of + LAST_LEVEL;
 }
-const GAME_VERSION = "v1.8.11",
+const GAME_VERSION = "v1.8.12",
   GAME_DATE = "24.11.2026",
   VERSION_TEXT = GAME_VERSION + "  ·  " + GAME_DATE;
 const FB = '"Chakra Petch", "Segoe UI", sans-serif';
@@ -90654,6 +90677,11 @@ profWire();
 //  the game, and where the motion capture, the folk songs and the fonts come from. Both from the menu at any time.
 // =====================================================================================
 const NEWS = [
+  {
+    ver: "v1.8.12",
+    title: "HOW IT WORKS",
+    items: ["HOW TO PLAY NOW EXPLAINS GRAVITY AND THE HOUSE COCKTAILS"],
+  },
   {
     ver: "v1.8.11",
     title: "THE QUEEN'S RECIPE",

@@ -631,7 +631,7 @@ body.touch2p #touch .tp button.holy { width: 60px; height: 60px; font-size: 11px
     <h3>GRAVITY</h3>
     <p data-tr>Every stop has its own gravity - the arrival screen shows how strong it is. On a <b>light</b> world everyone floats, and a shake sends customers sailing further back - but they drift back in quicker. On a <b>heavy</b> world they plod in slowly - but a shake barely pushes them. In the mini-games things fall slowly or fast to match.</p>
     <h3>HOUSE COCKTAILS</h3>
-    <p data-tr>Every stop has its own <b>HOUSE COCKTAIL</b>. Every 7 serves the house special is ready: your next pour comes out as the stop's cocktail. Whoever catches it tips big and leaves happy - land it on the customer with the gold <b>★ COCKTAIL</b> sign for double. Each new one goes into your <b>COCKTAIL MENU</b> in the Trophy Room.</p>
+    <p data-tr>Every stop has its own <b>HOUSE COCKTAIL</b>. Every 10 serves the house special is ready: your next pour comes out as the stop's cocktail. Whoever catches it tips big and leaves happy - land it on the customer with the gold <b>★ COCKTAIL</b> sign for double. Each new one goes into your <b>COCKTAIL MENU</b> in the Trophy Room.</p>
     <h3>POWER-UPS, STARS AND COINS</h3>
     <p data-tr>Grab the <b>power-ups</b> that appear on the bar when it's quiet. Each level gives up to three <b>stars</b>, and you earn <b>coins</b> to spend in the COIN SHOP (PLAY MORE). FREE PLAY mode has no losing and no timer.</p>
   </div>
@@ -7992,6 +7992,30 @@ const DICT_ROWS                             = [
     "DIE WEDLOOP MET DIE SWARTGAT-BISTRO HET NOU 'N KLEIN RENBAAN: JOU KAFEE EN HULLE PIERING, OP PAD NA DIE VLAG",
     "WYŚCIG Z BISTRO CZARNA DZIURA MA TERAZ MAŁY TOR: TWOJA KAWIARNIA I ICH SPODEK PĘDZĄ DO FLAGI",
   ],
+  // (v1.8.25) SAVED FOR LATER
+  ["SAVED FOR LATER", "GEBERG VIR LATER", "ZOSTAWIONE NA PÓŹNIEJ"],
+  [
+    "A HOUSE SPECIAL MADE READY BY THE LAST CUSTOMER OF A STOP IS NO LONGER LOST - YOU POUR IT AT THE NEXT STOP",
+    "'N HUISSPESIAAL WAT DEUR DIE LAASTE KLANT VAN 'N HALTE GEREED GEMAAK IS, GAAN NIE MEER VERLORE NIE - JY SKINK DIT BY DIE VOLGENDE HALTE",
+    "SPECJAŁ DOMU GOTOWY PRZY OSTATNIM KLIENCIE PRZYSTANKU NIE PRZEPADA - NALEJESZ GO NA NASTĘPNYM PRZYSTANKU",
+  ],
+  [
+    "THE COUNT TO THE NEXT SPECIAL CARRIES ON FROM STOP TO STOP INSTEAD OF STARTING AGAIN",
+    "DIE TELLING TOT DIE VOLGENDE SPESIAAL GAAN VAN HALTE TOT HALTE AAN IN PLAAS VAN OOR TE BEGIN",
+    "LICZENIE DO NASTĘPNEGO SPECJAŁU TRWA OD PRZYSTANKU DO PRZYSTANKU, ZAMIAST ZACZYNAĆ OD NOWA",
+  ],
+  // (v1.8.24) FAIR BALANCE
+  ["FAIR BALANCE", "REGVERDIGE BALANS", "UCZCIWA RÓWNOWAGA"],
+  [
+    "THE HOUSE SPECIAL NOW COMES EVERY 10 SERVES INSTEAD OF EVERY 7",
+    "DIE HUISSPESIAAL KOM NOU ELKE 10 BEDIENINGS IN PLAAS VAN ELKE 7",
+    "SPECJAŁ DOMU POJAWIA SIĘ TERAZ CO 10 PODAŃ ZAMIAST CO 7",
+  ],
+  [
+    "THE SPECIALS HAD MADE THE TOUR ABOUT A FIFTH EASIER - NOW THEY ARE A TREAT, NOT A CRUTCH",
+    "DIE SPESIALE HET DIE TOER OMTRENT 'N VYFDE MAKLIKER GEMAAK - NOU IS HULLE 'N BEDERFIE, NIE 'N KRUK NIE",
+    "SPECJAŁY UŁATWIAŁY TRASĘ O OKOŁO JEDNĄ PIĄTĄ - TERAZ SĄ GRATKĄ, A NIE PODPORĄ",
+  ],
   // (v1.8.23) COMING UP
   ["COMING UP", "OP PAD", "JUŻ ZA CHWILĘ"],
   [
@@ -8157,9 +8181,9 @@ const DICT_ROWS                             = [
     "Każdy przystanek ma własną grawitację - ekran przylotu pokazuje, jak jest silna. Na <b>lekkim</b> świecie wszyscy się unoszą, a koktajl odsyła klientów dalej - ale szybciej wracają. Na <b>ciężkim</b> świecie człapią powoli - ale koktajl ledwo ich odpycha. W minigrach rzeczy spadają odpowiednio wolno albo szybko.",
   ],
   [
-    "Every stop has its own <b>HOUSE COCKTAIL</b>. Every 7 serves the house special is ready: your next pour comes out as the stop's cocktail. Whoever catches it tips big and leaves happy - land it on the customer with the gold <b>★ COCKTAIL</b> sign for double. Each new one goes into your <b>COCKTAIL MENU</b> in the Trophy Room.",
-    "Elke stop het sy eie <b>HUISKELKIE</b>. Elke 7 bedienings is die huisspesiaal gereed: jou volgende skink is die stop se kelkie. Wie dit ook al vang, gee 'n groot fooitjie en loop gelukkig - laat dit by die klant met die goue <b>★ KELKIE</b>-bord uitkom vir dubbel. Elke nuwe een gaan in jou <b>KELKIEMENU</b> in die Trofeekamer.",
-    "Każdy przystanek ma własny <b>KOKTAJL DOMU</b>. Co 7 podań specjał domu jest gotowy: następne nalanie to koktajl przystanku. Kto go złapie, daje duży napiwek i wychodzi szczęśliwy - podaj go klientowi ze złotym napisem <b>★ KOKTAJL</b>, a dostaniesz podwójnie. Każdy nowy trafia do <b>KARTY KOKTAJLI</b> w Sali Trofeów.",
+    "Every stop has its own <b>HOUSE COCKTAIL</b>. Every 10 serves the house special is ready: your next pour comes out as the stop's cocktail. Whoever catches it tips big and leaves happy - land it on the customer with the gold <b>★ COCKTAIL</b> sign for double. Each new one goes into your <b>COCKTAIL MENU</b> in the Trophy Room.",
+    "Elke stop het sy eie <b>HUISKELKIE</b>. Elke 10 bedienings is die huisspesiaal gereed: jou volgende skink is die stop se kelkie. Wie dit ook al vang, gee 'n groot fooitjie en loop gelukkig - laat dit by die klant met die goue <b>★ KELKIE</b>-bord uitkom vir dubbel. Elke nuwe een gaan in jou <b>KELKIEMENU</b> in die Trofeekamer.",
+    "Każdy przystanek ma własny <b>KOKTAJL DOMU</b>. Co 10 podań specjał domu jest gotowy: następne nalanie to koktajl przystanku. Kto go złapie, daje duży napiwek i wychodzi szczęśliwy - podaj go klientowi ze złotym napisem <b>★ KOKTAJL</b>, a dostaniesz podwójnie. Każdy nowy trafia do <b>KARTY KOKTAJLI</b> w Sali Trofeów.",
   ],
   // (v1.8.11) THE QUEEN'S RECIPE
   ["THE QUEEN'S RECIPE", "DIE KONINGIN SE RESEP", "PRZEPIS KRÓLOWEJ"],
@@ -65533,6 +65557,7 @@ function funGameStart() {
   G.ordStreak = 0; // (v1.7.9: the order streak starts again)
   for (const p of PL) p.ordStreak = 0; // (v1.8.20: and each versus player's own)
   G.stampsPaid = false; // (v1.8.19: the festival stamps not paid yet)
+  ckGameStart(); // (v1.8.25: the house special's count starts again with a new game, not at every stop)
   G.endless = !!G.endlessNext;
   G.endlessNext = false;
   G.endLvl = 1;
@@ -65844,7 +65869,7 @@ const HOUSE_CK = [
     l: "THE QUEEN OF ANDROMEDA'S OWN RECIPE.",
   },
 ];
-const CK_EVERY = 7;
+const CK_EVERY = 10; // (v1.8.24: was 7 - measured with curve.py, the specials made the tour a fifth easier)
 // (v1.8.13) A COCKTAIL'S NAME IN ITS OWN COLOUR, BUT READABLE: a few are nearly black (the EVENT HORIZON, the NOIR
 // NIGHTCAP, the BLACK DIAMOND, the LONE WANDERER) and their names vanished on the dark sky - those are lifted towards
 // white until they read, keeping their tint
@@ -65863,6 +65888,14 @@ function ckText(ck) {
   return "#" + m(r) + m(gg) + m(b);
 }
 function ckLevelStart() {
+  // (v1.8.25) THE SPECIAL CARRIES ON TO THE NEXT STOP: the count and a waiting special used to start again at every
+  //  stop - a special made ready by the last customer of a stop was announced and then thrown away, and the countdown
+  //  promised one that never came. Now both start again only with a new game (ckGameStart); a special that waits is
+  //  poured at the next stop as that stop's own cocktail. Only a special whose player has left the game is let go
+  if (!Array.isArray(G.ckN)) ckGameStart();
+  if (G.ckReady >= 0 && !active().some((p) => p.id === G.ckReady)) G.ckReady = -1;
+}
+function ckGameStart() {
   G.ckN = [0, 0]; // (each player's own count - v1.8.1 review: in versus, one player's serves earned the other the special)
   G.ckReady = -1; // (whose next pour is the special: 0 or 1, or -1)
 }
@@ -83348,7 +83381,7 @@ function levelOfTour(of) {
     inTour = ((lv - 1) % LAST_LEVEL) + 1;
   return (tour > 1 ? "TOUR " + tour + "  ·  " : "") + "LEVEL " + inTour + of + LAST_LEVEL;
 }
-const GAME_VERSION = "v1.8.23",
+const GAME_VERSION = "v1.8.25",
   GAME_DATE = "25.11.2026",
   VERSION_TEXT = GAME_VERSION + "  ·  " + GAME_DATE;
 const FB = '"Chakra Petch", "Segoe UI", sans-serif';
@@ -91085,6 +91118,22 @@ profWire();
 //  the game, and where the motion capture, the folk songs and the fonts come from. Both from the menu at any time.
 // =====================================================================================
 const NEWS = [
+  {
+    ver: "v1.8.25",
+    title: "SAVED FOR LATER",
+    items: [
+      "A HOUSE SPECIAL MADE READY BY THE LAST CUSTOMER OF A STOP IS NO LONGER LOST - YOU POUR IT AT THE NEXT STOP",
+      "THE COUNT TO THE NEXT SPECIAL CARRIES ON FROM STOP TO STOP INSTEAD OF STARTING AGAIN",
+    ],
+  },
+  {
+    ver: "v1.8.24",
+    title: "FAIR BALANCE",
+    items: [
+      "THE HOUSE SPECIAL NOW COMES EVERY 10 SERVES INSTEAD OF EVERY 7",
+      "THE SPECIALS HAD MADE THE TOUR ABOUT A FIFTH EASIER - NOW THEY ARE A TREAT, NOT A CRUTCH",
+    ],
+  },
   {
     ver: "v1.8.23",
     title: "COMING UP",

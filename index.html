@@ -7992,6 +7992,18 @@ const DICT_ROWS                             = [
     "DIE WEDLOOP MET DIE SWARTGAT-BISTRO HET NOU 'N KLEIN RENBAAN: JOU KAFEE EN HULLE PIERING, OP PAD NA DIE VLAG",
     "WYŚCIG Z BISTRO CZARNA DZIURA MA TERAZ MAŁY TOR: TWOJA KAWIARNIA I ICH SPODEK PĘDZĄ DO FLAGI",
   ],
+  // (v1.8.28) NO FALSE ALARMS
+  ["NO FALSE ALARMS", "GEEN VALS ALARMS", "BEZ FAŁSZYWYCH ALARMÓW"],
+  [
+    "TIME ATTACK AND BOSS RUSH NO LONGER WARN OF LOW OR HEAVY GRAVITY - GRAVITY DOESN'T CHANGE THERE",
+    "TYDJAG EN BAAS-STORMLOOP WAARSKU NIE MEER OOR LAE OF SWAAR SWAARTEKRAG NIE - DIE SWAARTEKRAG VERANDER NIE DAAR NIE",
+    "NA CZAS I SZTURM NA BOSSÓW NIE OSTRZEGAJĄ JUŻ O NISKIEJ ANI WYSOKIEJ GRAWITACJI - TAM GRAWITACJA SIĘ NIE ZMIENIA",
+  ],
+  [
+    "THE GRAVITY TROPHIES COUNT ONLY STOPS WHERE THE GRAVITY REALLY CHANGES",
+    "DIE SWAARTEKRAG-TROFEË TEL NET HALTES WAAR DIE SWAARTEKRAG REGTIG VERANDER",
+    "TROFEA GRAWITACJI LICZĄ TYLKO PRZYSTANKI, NA KTÓRYCH GRAWITACJA NAPRAWDĘ SIĘ ZMIENIA",
+  ],
   // (v1.8.27) TIDY ARRIVALS
   ["TIDY ARRIVALS", "NETJIESE AANKOMSTE", "SCHLUDNE PRZYLOTY"],
   [
@@ -14255,7 +14267,9 @@ const params = () => {
     K[4] === (G.loop || 0) &&
     K[5] === k5 &&
     K[6] === k6 &&
-    K[7] === !!G.free
+    K[7] === !!G.free &&
+    K[8] === !!(G.ta || G.brush) &&
+    K[9] === G.level
   )
     return PRM_C.p;
   K[0] = k0;
@@ -14266,6 +14280,11 @@ const params = () => {
   K[5] = k5;
   K[6] = k6;
   K[7] = !!G.free;
+  // (v1.8.28) THE GRAVITY'S OWN KEYS: gravity() reads the stop (G.level - in endless too, where k0 is the speed) and is
+  //  off in time attack and boss rush; the old keys didn't say so, and only the menu demo clearing the cache between
+  //  games kept a stale world's gravity from being reused
+  K[8] = !!(G.ta || G.brush);
+  K[9] = G.level;
   return (PRM_C.p = longer(assisted(calmer(relaxed(evened(gravity(paramsRaw()))))))); // (v1.8.0: and this world's gravity)
 };
 // (v1.5.62) THE SPIKES SMOOTHED OUT: tools/dev/curve.py had the demo bartender play every stop of the tour on NORMAL,
@@ -14521,7 +14540,9 @@ const gravWord = (g) =>
 function gravLevelStart() {
   const g = gravNow(),
     tw = here().tw;
-  if (G.demo || (g >= 0.45 && g < 1.25)) return;
+  // (v1.8.28: not in TIME ATTACK or BOSS RUSH either - gravity is off there since v1.8.21, but every time attack still
+  //  opened on Mercury with "LOW GRAVITY: A SHAKE SENDS CUSTOMERS FLYING", a promise the game didn't keep)
+  if (G.demo || G.ta || G.brush || (g >= 0.45 && g < 1.25)) return;
   if (tw !== undefined && TWISTS[tw] && TWISTS[tw].kind === "lowg") return; // (its own LOW GRAVITY twist says it already)
   G.callouts.push({
     text:
@@ -66362,7 +66383,10 @@ function funLevelClear() {
   if (G.demo) return;
   fStat("clears");
   // (v1.8.10) the gravity trophies: stops cleared on light worlds (under 0.45 g) and on heavy ones (1.25 g and more)
-  if (gravNow() < 0.45) fStat("lightClears");
+  // (v1.8.28: not in time attack or boss rush, where gravity is off)
+  if (G.ta || G.brush) {
+    /* (no gravity trophies there) */
+  } else if (gravNow() < 0.45) fStat("lightClears");
   else if (gravNow() >= 1.25) fStat("heavyClears");
   addCoins(5 + (G.starsNow >= 3 ? 5 : 0), "LEVEL CLEAR");
   rivalClear(); // (v1.7.3: beaten the Black Hole Bistro here?)
@@ -83427,7 +83451,7 @@ function levelOfTour(of) {
     inTour = ((lv - 1) % LAST_LEVEL) + 1;
   return (tour > 1 ? "TOUR " + tour + "  ·  " : "") + "LEVEL " + inTour + of + LAST_LEVEL;
 }
-const GAME_VERSION = "v1.8.27",
+const GAME_VERSION = "v1.8.28",
   GAME_DATE = "25.11.2026",
   VERSION_TEXT = GAME_VERSION + "  ·  " + GAME_DATE;
 const FB = '"Chakra Petch", "Segoe UI", sans-serif';
@@ -91166,6 +91190,14 @@ profWire();
 //  the game, and where the motion capture, the folk songs and the fonts come from. Both from the menu at any time.
 // =====================================================================================
 const NEWS = [
+  {
+    ver: "v1.8.28",
+    title: "NO FALSE ALARMS",
+    items: [
+      "TIME ATTACK AND BOSS RUSH NO LONGER WARN OF LOW OR HEAVY GRAVITY - GRAVITY DOESN'T CHANGE THERE",
+      "THE GRAVITY TROPHIES COUNT ONLY STOPS WHERE THE GRAVITY REALLY CHANGES",
+    ],
+  },
   {
     ver: "v1.8.27",
     title: "TIDY ARRIVALS",

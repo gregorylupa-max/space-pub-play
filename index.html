@@ -7992,6 +7992,33 @@ const DICT_ROWS                             = [
     "DIE WEDLOOP MET DIE SWARTGAT-BISTRO HET NOU 'N KLEIN RENBAAN: JOU KAFEE EN HULLE PIERING, OP PAD NA DIE VLAG",
     "WYŚCIG Z BISTRO CZARNA DZIURA MA TERAZ MAŁY TOR: TWOJA KAWIARNIA I ICH SPODEK PĘDZĄ DO FLAGI",
   ],
+  // (v1.8.30) FAIR PLAY
+  ["FAIR PLAY", "REGVERDIGE SPEL", "UCZCIWA GRA"],
+  [
+    "THE VAMPIRE'S BAT NO LONGER FLIES STRAIGHT INTO YOU - IT LANDS SHORT, AND THE ALARM WARNS YOU IN TIME",
+    "DIE VAMPIER SE VLERMUIS VLIEG NIE MEER REGUIT IN JOU VAS NIE - DIT LAND KORT, EN DIE ALARM WAARSKU JOU BETYDS",
+    "NIETOPERZ WAMPIRA NIE WLATUJE JUŻ PROSTO NA CIEBIE - LĄDUJE WCZEŚNIEJ, A ALARM OSTRZEGA CIĘ NA CZAS",
+  ],
+  [
+    "TIME WARP NOW SPEEDS UP SMOOTHLY INSTEAD OF ALL AT ONCE",
+    "TYDSKEUR VERSNEL NOU GELEIDELIK IN PLAAS VAN ALLES IN EEN SLAG",
+    "ZAKRZYWIENIE CZASU PRZYSPIESZA TERAZ PŁYNNIE, A NIE NAGLE",
+  ],
+  [
+    "TWO EMPTY GLASSES NO LONGER REACH THE TAPS ON TWO BARS AT THE SAME MOMENT",
+    "TWEE LEË GLASE BEREIK NIE MEER DIE TAPPE OP TWEE TOONBANKE OP DIESELFDE OOMBLIK NIE",
+    "DWIE PUSTE SZKLANKI NIE DOCIERAJĄ JUŻ DO NALEWAKÓW NA DWÓCH LADACH W TEJ SAMEJ CHWILI",
+  ],
+  [
+    "A BAR CHANGE PRESSED WHILE YOU'RE KNOCKED DOWN IS NEVER LOST - YOU MOVE THE MOMENT YOU'RE UP",
+    "'N TOONBANKWISSELING WAT JY DRUK TERWYL JY PLAT LÊ, GAAN NOOIT VERLORE NIE - JY BEWEEG SODRA JY OP IS",
+    "ZMIANA LADY WCIŚNIĘTA, GDY LEŻYSZ, NIGDY NIE PRZEPADA - RUSZASZ, GDY TYLKO WSTANIESZ",
+  ],
+  [
+    "THE STOPS THAT WERE FAR HARDER THAN THE ONES AROUND THEM ARE IN LINE AGAIN",
+    "DIE HALTES WAT BAIE MOEILIKER AS DIE OM HULLE WAS, IS WEER IN LYN",
+    "PRZYSTANKI DUŻO TRUDNIEJSZE OD SĄSIEDNICH SĄ ZNÓW NA RÓWNI Z NIMI",
+  ],
   // (v1.8.29) COUNTED RIGHT
   ["COUNTED RIGHT", "REG GETEL", "DOBRZE POLICZONE"],
   [
@@ -14300,15 +14327,26 @@ const params = () => {
 // top of the busiest part of the tour). Those three now walk their customers in a little slower, a little less often
 // and fewer at a time, so they sit in line with their neighbours again (NORMAL and HARD only - EASY and KID MODE had
 // no spikes). The number is how much gentler (0.2 = about a fifth)
-const STOP_EVEN = { JANUS: 0.2, HALO: 0.14, "S ANDROMEDAE": 0.45 };
+const STOP_EVEN = {
+  JANUS: 0.2,
+  HALO: 0.3, // (v1.8.30: was 0.14 - still 7.7 lives against about 5.7 around it)
+  "S ANDROMEDAE": 0.45,
+  // (v1.8.30) MEASURED AGAIN after the gravity and the house cocktails (curve.py, 6 tries a stop): three more stops stood
+  //  a third above the stops around them - Thalassa (heavy 1.3 g: a shake barely pushes anyone back, 6.3 against 4.5),
+  //  the Wanderer (8.2 against 6.2) and the Star River (10.3 against 7.8)
+  THALASSA: 0.25,
+  "THE WANDERER": 0.25,
+  "THE GIANT STREAM": 0.25,
+};
 // (v1.5.63) HARD HAS ITS OWN SPIKES: the same measuring on HARD (customers 22% quicker there) found five stops far above
 // their neighbours - the Comet's tail wind (about 7 lives against 2 either side), Janus and Halo again (still 13 and 16
 // against 8-9, even with the easing above), the Wanderer (17 against 8-13) and the NGC 206 star nursery (21 against
 // 12-15). On HARD these numbers are used instead of the ones above
 const STOP_EVEN_HARD = {
   "THE COMET": 0.3,
-  JANUS: 0.6,
+  JANUS: 0.7, // (v1.8.30: was 0.6 - 7.7 against 5.8)
   HALO: 0.4,
+  THALASSA: 0.55, // (v1.8.30: 12.5 lives against about 5.8 either side - the biggest spike on HARD)
   "THE WANDERER": 0.3,
   "NGC 206": 0.3,
   "S ANDROMEDAE": 0.45,
@@ -16109,7 +16147,10 @@ function update(dt) {
     P = pl;
     const inp        = demo ? demoInput(dt) : playerInput(P.id);
     if (!demo) funOneButton(inp);
-    P.bufT = Math.max(0, (P.bufT || 0) - dt);
+    // (v1.8.30: the remembered bar change waits for the whole stun - it counted down during it, so with a 0.9 s banana
+    //  bonk or a 1.3 s slip it was lost unless pressed in the last third of a second, though the comment below says
+    //  it isn't lost)
+    if (!(P.stunT > 0 || P.slipT > 0)) P.bufT = Math.max(0, (P.bufT || 0) - dt);
     if (P.stunT > 0 || P.slipT > 0) {
       // bonked by a banana or flat on your back: no moving, no pouring
       if (inp.up || inp.down) {
@@ -17327,7 +17368,11 @@ function update(dt) {
         // the vampire turns into a bat and flutters up the bar
         if (c.bat > 0) {
           c.bat -= dt;
-          c.x += 200 * prm.speed * dt;
+          // (v1.8.30) THE BAT STOPS SHORT OF YOU: on the far stops (customers twice as quick) the 0.7 s flutter carried
+          //  him some 300 pixels - past the grab line, so he grabbed you the frame he landed, with no warning at all.
+          //  Now he lands at least 140 pixels short of your end, where the usual alarm still has time to warn you
+          c.x = Math.min(Math.max(c.x, X1 - 140), c.x + 200 * prm.speed * dt);
+          if (c.x >= X1 - 140) c.bat = Math.min(c.bat, 0);
           if (c.bat <= 0) transformPuff(c);
           continue;
         }
@@ -17654,7 +17699,20 @@ function update(dt) {
       }
     } else if (c.state === "drink") {
       c.drinkT -= dt;
+      // (v1.8.30) ONE MORE SIP: two empties reaching the taps on different bars within a third of a second can't both
+      //  be caught (and bars two apart need two presses). When this glass would land that close to another one, the
+      //  customer takes a last little sip first - a tenth of a second at a time, half a second at most
+      if (c.drinkT <= 0 && (c.sipT || 0) < 0.5 && !demo) {
+        const ev = prm.empty * (G.twE || 1) * (hasPw("slow") ? 0.5 : 1),
+          at = (m) => (ev > 0 ? (TAPX + 26 - m) / ev : 9),
+          mine = at(c.x + 26);
+        if (empties.some((m) => m.lane !== c.lane && Math.abs(at(m.x) - mine) < 0.35)) {
+          c.drinkT = 0.1;
+          c.sipT = (c.sipT || 0) + 0.1;
+        }
+      }
       if (c.drinkT <= 0) {
+        c.sipT = 0;
         c.state = "walk";
         c.moving = false;
         c.timer = 0.5;
@@ -19486,7 +19544,10 @@ function updateTwist(dt, demo) {
       w.t += dt;
       if (w.t < 5) {
         G.warp = -Math.min(1, w.t * 2, (5 - w.t) * 2);
-        G.twS = G.twC = G.twE = 0.5;
+        // (v1.8.30) THE SPEED FOLLOWS THE WARP: everything jumped from half speed to 1.35x in one frame at the switch -
+        //  an empty 1.7 s from your end was suddenly 0.6 s away, under the "...AND RACES!" banner. Now the speed eases
+        //  down and back up with the warp's own half-second fade (G.warp)
+        G.twS = G.twC = G.twE = 1 + 0.5 * G.warp;
       } else if (w.t < 9) {
         if (!w.fast) {
           w.fast = true;
@@ -19494,7 +19555,7 @@ function updateTwist(dt, demo) {
           if (!demo) callout("...AND RACES!", "#ff7a5a", 1.2);
         }
         G.warp = Math.min(1, (w.t - 5) * 2, (9 - w.t) * 2);
-        G.twS = G.twC = G.twE = 1.35;
+        G.twS = G.twC = G.twE = 1 + 0.35 * G.warp; // (v1.8.30: was 1.35 at once)
       } else {
         W.w = null;
         G.warp = 0;
@@ -83462,7 +83523,7 @@ function levelOfTour(of) {
     inTour = ((lv - 1) % LAST_LEVEL) + 1;
   return (tour > 1 ? "TOUR " + tour + "  ·  " : "") + "LEVEL " + inTour + of + LAST_LEVEL;
 }
-const GAME_VERSION = "v1.8.29",
+const GAME_VERSION = "v1.8.30",
   GAME_DATE = "25.11.2026",
   VERSION_TEXT = GAME_VERSION + "  ·  " + GAME_DATE;
 const FB = '"Chakra Petch", "Segoe UI", sans-serif';
@@ -84952,7 +85013,10 @@ function drawHelp(g, s, t, fD, fB, sx, sy) {
   // WATCH OUT: a pulsing arrow at the end of a bar nobody is standing at, when an empty or a customer is about to cost a life
   for (let l = 0; l < LANES; l++) {
     if (active().some((p) => p.lane === l)) continue;
-    const em = empties.some((m) => m.lane === l && (TAPX + 26 - m.x) / params().empty < 1.3),
+    // (v1.8.30: with the same speed as the bar's own alarm - the twist (time warp, sand, zero-g) and the SLOW power
+    //  included; it came early or late there)
+    const ev = params().empty * (G.twE || 1) * (hasPw("slow") ? 0.5 : 1),
+      em = empties.some((m) => m.lane === l && ev > 0 && (TAPX + 26 - m.x) / ev < 1.3),
       cu = customers.some((c) => c.lane === l && c.state === "walk" && X1 - c.x < 110);
     if (!em && !cu) continue;
     const [x, y] = projL(l, TAPX + 40, LY(l, TAPX) - 64, VSIDE.p),
@@ -91201,6 +91265,17 @@ profWire();
 //  the game, and where the motion capture, the folk songs and the fonts come from. Both from the menu at any time.
 // =====================================================================================
 const NEWS = [
+  {
+    ver: "v1.8.30",
+    title: "FAIR PLAY",
+    items: [
+      "THE VAMPIRE'S BAT NO LONGER FLIES STRAIGHT INTO YOU - IT LANDS SHORT, AND THE ALARM WARNS YOU IN TIME",
+      "TIME WARP NOW SPEEDS UP SMOOTHLY INSTEAD OF ALL AT ONCE",
+      "TWO EMPTY GLASSES NO LONGER REACH THE TAPS ON TWO BARS AT THE SAME MOMENT",
+      "A BAR CHANGE PRESSED WHILE YOU'RE KNOCKED DOWN IS NEVER LOST - YOU MOVE THE MOMENT YOU'RE UP",
+      "THE STOPS THAT WERE FAR HARDER THAN THE ONES AROUND THEM ARE IN LINE AGAIN",
+    ],
+  },
   {
     ver: "v1.8.29",
     title: "COUNTED RIGHT",

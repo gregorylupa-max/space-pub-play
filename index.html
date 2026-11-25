@@ -7992,6 +7992,18 @@ const DICT_ROWS                             = [
     "DIE WEDLOOP MET DIE SWARTGAT-BISTRO HET NOU 'N KLEIN RENBAAN: JOU KAFEE EN HULLE PIERING, OP PAD NA DIE VLAG",
     "WYŚCIG Z BISTRO CZARNA DZIURA MA TERAZ MAŁY TOR: TWOJA KAWIARNIA I ICH SPODEK PĘDZĄ DO FLAGI",
   ],
+  // (v1.8.27) TIDY ARRIVALS
+  ["TIDY ARRIVALS", "NETJIESE AANKOMSTE", "SCHLUDNE PRZYLOTY"],
+  [
+    "THE LINES UNDER A STOP'S NAME ON ARRIVAL STACK NEATLY - NO EMPTY GAP IN ENDLESS OR THE DAILY CHALLENGE",
+    "DIE REËLS ONDER 'N HALTE SE NAAM BY AANKOMS STAPEL NETJIES - GEEN LEË GAPING IN EINDLOSE SPEL OF DIE DAAGLIKSE UITDAGING NIE",
+    "LINIE POD NAZWĄ PRZYSTANKU PO PRZYLOCIE UKŁADAJĄ SIĘ RÓWNO - BEZ PUSTEJ PRZERWY W TRYBIE BEZ KOŃCA I WYZWANIU DNIA",
+  ],
+  [
+    "ENDLESS MODE'S ARRIVAL SAYS ENDLESS MODE INSTEAD OF LEVEL 1 OF 40",
+    "EINDLOSE SPEL SE AANKOMS SÊ NOU EINDLOSE SPEL IN PLAAS VAN VLAK 1 VAN 40",
+    "PRZYLOT W TRYBIE BEZ KOŃCA MÓWI TERAZ TRYB BEZ KOŃCA ZAMIAST POZIOM 1 Z 40",
+  ],
   // (v1.8.26) NEAT CORNERS
   ["NEAT CORNERS", "NETJIESE HOEKE", "SCHLUDNE ROGI"],
   [
@@ -69408,7 +69420,15 @@ function funHud(g, s, t, fD, sx, sy) {
     // (v1.8.13) READABLE ON A SMALL PHONE HELD UPRIGHT: the game's scale made the lines under the stop's name about five
     // pixels high on a 360-wide screen - on a tall screen they're drawn bigger and further apart (there's room below)
     const kA = cssH > cssW * 1.2 ? Math.max(1, 9.5 / (12 * s)) : 1;
-    neon2(g, "LEVEL " + G.level + " OF " + LAST_LEVEL, cssW / 2, ty0, 14 * s, "#9fd0ff");
+    // (v1.8.27: in ENDLESS the heading said "LEVEL 1 OF 40" - there is no 40th in endless; it names the mode instead)
+    neon2(
+      g,
+      G.endless ? "ENDLESS MODE" : "LEVEL " + G.level + " OF " + LAST_LEVEL,
+      cssW / 2,
+      ty0,
+      14 * s,
+      "#9fd0ff"
+    );
     neon2(
       g,
       v.name,
@@ -69419,6 +69439,15 @@ function funHud(g, s, t, fD, sx, sy) {
     );
     fitText(g, v.region, cssW / 2, ty0 + 62 * s * kA, cssW - 24, "600 ", 13 * s * kA, "#5ff5c8");
     fitText(g, v.sub || "", cssW / 2, ty0 + 82 * s * kA, cssW - 24, "600 ", 13 * s * kA, "#fff3e2");
+    // (v1.8.27) THE LINES UNDER THE NAME STACK UP: each one takes the next row (18 apart, from 104) - outside the tour
+    //  (endless, daily...) there is no "STOPS TO THE GRAND FESTIVAL" line, and the gravity and cocktail lines used to sit
+    //  under an empty gap where it would have been
+    let row = 104;
+    const nextRow = () => {
+      const r = row;
+      row += 18;
+      return ty0 + r * s * kA;
+    };
     // (v1.7.2) THE STORY'S GOAL, IN SIGHT: how many stops are left to the Grand Festival at the heart of Andromeda (the
     // tour only - not endless, the daily challenge or the other modes)
     if (envoyTour() && G.level < LAST_LEVEL) {
@@ -69427,7 +69456,7 @@ function funHud(g, s, t, fD, sx, sy) {
         g,
         left === 1 ? "1 STOP TO THE GRAND FESTIVAL" : left + " STOPS TO THE GRAND FESTIVAL",
         cssW / 2,
-        ty0 + 104 * s * kA,
+        nextRow(), // (v1.8.27: was ty0 + 104 * s * kA)
         cssW - 24,
         "700 ",
         12 * s * kA,
@@ -69438,7 +69467,7 @@ function funHud(g, s, t, fD, sx, sy) {
         g,
         "THE GRAND FESTIVAL - YOU'VE ARRIVED!",
         cssW / 2,
-        ty0 + 104 * s * kA,
+        nextRow(), // (v1.8.27: was ty0 + 104 * s * kA)
         cssW - 24,
         "700 ",
         12 * s * kA,
@@ -69450,27 +69479,12 @@ function funHud(g, s, t, fD, sx, sy) {
         g,
         "THE BLACK HOLE BISTRO IS HERE TOO - RACE THEM!",
         cssW / 2,
-        ty0 + 122 * s * kA,
+        nextRow(), // (v1.8.27: was ty0 + 122 * s * kA)
         cssW - 24,
         "700 ",
         12 * s * kA,
         "#c69bff"
       );
-    // (v1.8.7) ON THE MENU: this stop's house cocktail, in its own colour (put together from its translated pieces)
-    {
-      const ck = HOUSE_CK[tourStop()];
-      if (ck)
-        fitText(
-          g,
-          T("HOUSE COCKTAIL") + ": " + T(ck.n),
-          cssW / 2,
-          ty0 + (rivalStop() ? 158 : 140) * s * kA,
-          cssW - 24,
-          "700 ",
-          12 * s * kA,
-          ckText(ck)
-        );
-    }
     // (v1.8.0) THIS WORLD'S GRAVITY: how strong it is (Earth = 1) and what it's like - under the other lines
     {
       const gv = gravNow(),
@@ -69479,12 +69493,27 @@ function funHud(g, s, t, fD, sx, sy) {
         g,
         "GRAVITY " + (gv < 0.1 ? gv.toFixed(2) : gv.toFixed(gv < 1 ? 2 : 1)) + " g  ·  " + gravWord(gv),
         cssW / 2,
-        ty0 + (rivalStop() ? 140 : 122) * s * kA,
+        nextRow(), // (v1.8.27: was ty0 + (rivalStop() ? 140 : 122) * s * kA)
         cssW - 24,
         "700 ",
         12 * s * kA,
         gq < -0.3 ? "#9fe8ff" : gq > 0.3 ? "#ffb08a" : "#d8d0e8"
       );
+    }
+    // (v1.8.7) ON THE MENU: this stop's house cocktail, in its own colour (put together from its translated pieces)
+    {
+      const ck = HOUSE_CK[tourStop()];
+      if (ck)
+        fitText(
+          g,
+          T("HOUSE COCKTAIL") + ": " + T(ck.n),
+          cssW / 2,
+          nextRow(), // (v1.8.27: was ty0 + (rivalStop() ? 158 : 140) * s * kA)
+          cssW - 24,
+          "700 ",
+          12 * s * kA,
+          ckText(ck)
+        );
     }
     if (v.fact && A0.t > 1.0) {
       const fa = Math.min(1, (A0.t - 1.0) / 0.3);
@@ -83398,7 +83427,7 @@ function levelOfTour(of) {
     inTour = ((lv - 1) % LAST_LEVEL) + 1;
   return (tour > 1 ? "TOUR " + tour + "  ·  " : "") + "LEVEL " + inTour + of + LAST_LEVEL;
 }
-const GAME_VERSION = "v1.8.26",
+const GAME_VERSION = "v1.8.27",
   GAME_DATE = "25.11.2026",
   VERSION_TEXT = GAME_VERSION + "  ·  " + GAME_DATE;
 const FB = '"Chakra Petch", "Segoe UI", sans-serif';
@@ -91137,6 +91166,14 @@ profWire();
 //  the game, and where the motion capture, the folk songs and the fonts come from. Both from the menu at any time.
 // =====================================================================================
 const NEWS = [
+  {
+    ver: "v1.8.27",
+    title: "TIDY ARRIVALS",
+    items: [
+      "THE LINES UNDER A STOP'S NAME ON ARRIVAL STACK NEATLY - NO EMPTY GAP IN ENDLESS OR THE DAILY CHALLENGE",
+      "ENDLESS MODE'S ARRIVAL SAYS ENDLESS MODE INSTEAD OF LEVEL 1 OF 40",
+    ],
+  },
   {
     ver: "v1.8.26",
     title: "NEAT CORNERS",

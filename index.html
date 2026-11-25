@@ -7992,6 +7992,28 @@ const DICT_ROWS                             = [
     "DIE WEDLOOP MET DIE SWARTGAT-BISTRO HET NOU 'N KLEIN RENBAAN: JOU KAFEE EN HULLE PIERING, OP PAD NA DIE VLAG",
     "WYŚCIG Z BISTRO CZARNA DZIURA MA TERAZ MAŁY TOR: TWOJA KAWIARNIA I ICH SPODEK PĘDZĄ DO FLAGI",
   ],
+  // (v1.8.35) LOOSE ENDS
+  ["LOOSE ENDS", "LOS PUNTE", "LUŹNE KOŃCE"],
+  [
+    "VERSUS: SPEED NOW ALSO POURS FASTER AND GLOWS ONLY FOR WHOEVER PICKED IT UP",
+    "TEEN MEKAAR: SPOEDKRAG SKINK OOK NET VINNIGER EN GLOEI NET VIR WIE DIT OPGETEL HET",
+    "POJEDYNEK: MOC PRĘDKOŚCI PRZYSPIESZA NALEWANIE I ŚWIECI TYLKO DLA TEGO, KTO JĄ ZŁAPAŁ",
+  ],
+  [
+    "A BAR CHANGE PRESSED WHILE KNOCKED DOWN NO LONGER CARRIES INTO THE NEXT STOP OR PAST A LOST LIFE",
+    "'N TOONBANKWISSELING WAT JY DRUK TERWYL JY PLAT LÊ, GAAN NIE MEER OOR NA DIE VOLGENDE HALTE OF VERBY 'N VERLORE LEWE NIE",
+    "ZMIANA LADY WCIŚNIĘTA, GDY LEŻYSZ, NIE PRZECHODZI JUŻ NA NASTĘPNY PRZYSTANEK ANI PO STRACONYM ŻYCIU",
+  ],
+  [
+    "A QUICK TAP ON POUR IS KEPT ON THE TWO-PLAYER TOUCH PADS TOO",
+    "'N VINNIGE TIK OP SKINK WORD OOK OP DIE TWEESPELER-RAAKKNOPPIES ONTHOU",
+    "SZYBKIE STUKNIĘCIE W NALEWANIE JEST ZAPAMIĘTYWANE TAKŻE NA PRZYCISKACH DLA DWÓCH GRACZY",
+  ],
+  [
+    "AFTER A SAVE, THE FULL ALARM SOUNDS AGAIN WHEN THAT CUSTOMER COMES BACK",
+    "NA 'N REDDING KLINK DIE VOLLE ALARM WEER WANNEER DAARDIE KLANT TERUGKOM",
+    "PO URATOWANIU PEŁNY ALARM ROZBRZMIEWA ZNOWU, GDY TEN KLIENT WRACA",
+  ],
   // (v1.8.34) SETTLED
   ["SETTLED", "TOT RUS", "USTALONE"],
   [
@@ -14804,6 +14826,7 @@ function startLevel() {
     p.fired = null;
     p.stunT = 0;
     p.slipT = 0;
+    p.bufT = 0; // (v1.8.35: a bar change pressed while knocked down is kept for the whole stun now - not into a new stop)
     p.holy = DF().holy;
     p.crossCD = 0;
     p.crossT = 0;
@@ -15614,6 +15637,7 @@ for (const n of [1, 2]) {
         setDev("touch");
         held[k] = true;
         if (k !== "pour") edge()[k] = true;
+        else held.pourTap = true; // (v1.8.35: a quick tap on a two-player pad's POUR is kept until read, too)
         el.classList.add("on");
       },
       off = (e) => {
@@ -16546,7 +16570,10 @@ function update(dt) {
       P.pour = Math.min(
         POUR_TIME,
         P.pour +
-          dt * (hasPw("speed") ? 3 : 1) * (G.fever > 0 || P.fastPour > 0 ? 4 : 1) * (P.tired > 0 ? 0.6 : 1)
+          dt *
+            (hasPw("speed") && (!G.versus || pwOwner("speed") === P) ? 3 : 1) * // (v1.8.35: in versus only the owner's pour)
+            (G.fever > 0 || P.fastPour > 0 ? 4 : 1) *
+            (P.tired > 0 ? 0.6 : 1)
       );
       const wasFull = (P.fullT || 0) > 0;
       P.fullT = P.pour >= POUR_TIME ? (P.fullT || 0) + dt : 0; // (the "LET GO!" hint)
@@ -16587,8 +16614,10 @@ function update(dt) {
           //  samurai's bow, RAZEM, UBUNTU, dragon fire, a pet's puff...) - it fizzles out instead of costing a life.
           //  Two shakes sent to one customer still costs one, as before
           owed =
-            customers.filter((c) => c.lane === P.lane && c.state === "walk" && !c.type.evil).length >
-            shakes.filter((q) => q.lane === P.lane && !q.extra).length;
+            customers.filter(
+              // (v1.8.35: in reach - not still queued far outside the door - and not a bat in mid-flutter)
+              (c) => c.lane === P.lane && c.state === "walk" && !c.type.evil && c.x > X0 - 200 && !(c.bat > 0)
+            ).length > shakes.filter((q) => q.lane === P.lane && !q.extra && !q.holy).length;
         for (let k = 0; k < (hasPw("triple") ? 3 : 1); k++)
           shakes.push({
             lane: P.lane,
@@ -20423,6 +20452,7 @@ function joinP2() {
   p.fired = null;
   p.stunT = 0;
   p.slipT = 0;
+  p.bufT = 0; // (v1.8.35: and no bar change left over from before)
   p.holy = DF().holy;
   p.crossCD = 0;
   p.crossT = 0;
@@ -21182,6 +21212,7 @@ function lose(why, lane, x) {
         if (c.lane === lane && c.x > X1 - 60) {
           c.state = "pushed";
           c.dry = true; // (v1.8.31: pushed back without a shake - no empty glass comes back from them, see "dry")
+          c.alarmed = c.warned = false; // (v1.8.35: the full alarm again when they walk back up)
           c.left = 220;
           c.happy = 0;
         }
@@ -21290,6 +21321,7 @@ function afterLoss() {
     p.x = TAPX;
     p.throwT = 0;
     p.stunT = p.slipT = 0;
+    p.bufT = 0; // (v1.8.35: a bar change pressed while knocked down doesn't carry over a lost life)
   }
   G.state = "play";
   calloutNow(
@@ -35173,7 +35205,7 @@ function drawLights(V, t) {
       // (v1.5.38) softer power-up lights: on top of her spotlight and the lamp pools, the full-strength SPEED FORCE
       // light turned her into a white-orange haze as she ran - now it's a warm tint round her, wider and fainter
       if (hasPw("shield")) g(x, y, 80, C.mint, 0.17);
-      if (hasPw("speed")) g(x, y, 75, col("#ffd040"), 0.16);
+      if (hasPw("speed") && (!G.versus || pwOwner("speed") === p)) g(x, y, 75, col("#ffd040"), 0.16); // (v1.8.35: the owner's glow)
     }
     // (v1.4.29) A SOFT LIGHT ON EVERY CUSTOMER: so their faces and clothes read clearly, even far from the lamps
     for (const c of customers) {
@@ -66508,6 +66540,7 @@ function funSave(why, lane, x) {
       if (c.lane === lane && c.x > X1 - 60) {
         c.state = "pushed";
         c.dry = true; // (v1.8.31: pushed back without a shake - no empty glass comes back from them, see "dry")
+        c.alarmed = c.warned = false; // (v1.8.35: the full alarm again when they walk back up)
         c.left = 220;
         c.happy = 0;
       }
@@ -66565,6 +66598,7 @@ function funUpdate(dt, demo) {
         c.state = "pushed";
         c.left = 260;
         c.dry = true; // (v1.8.31: no shake, so no empty - see "dry")
+        c.alarmed = c.warned = false; // (v1.8.35: the full alarm again when they walk back up)
         sparkle(c.x + 20, LY(c.lane, c.x) - 40, [1, 0.6, 0.2, 1], 24, c.lane);
         callout("BABY DRAGON PUFF!  BACK YOU GO", "#ffa040", 1.8);
         sfx("snort", c.x);
@@ -80064,6 +80098,7 @@ function freeSave(why, lane, x) {
       if (c.lane === lane && c.x > X1 - 60) {
         c.state = "pushed";
         c.dry = true; // (v1.8.31: pushed back without a shake - no empty glass comes back from them, see "dry")
+        c.alarmed = c.warned = false; // (v1.8.35: the full alarm again when they walk back up)
         c.left = 220;
         c.happy = 0;
       }
@@ -83738,7 +83773,7 @@ function levelOfTour(of) {
     inTour = ((lv - 1) % LAST_LEVEL) + 1;
   return (tour > 1 ? "TOUR " + tour + "  ·  " : "") + "LEVEL " + inTour + of + LAST_LEVEL;
 }
-const GAME_VERSION = "v1.8.34",
+const GAME_VERSION = "v1.8.35",
   GAME_DATE = "25.11.2026",
   VERSION_TEXT = GAME_VERSION + "  ·  " + GAME_DATE;
 const FB = '"Chakra Petch", "Segoe UI", sans-serif';
@@ -91480,6 +91515,16 @@ profWire();
 //  the game, and where the motion capture, the folk songs and the fonts come from. Both from the menu at any time.
 // =====================================================================================
 const NEWS = [
+  {
+    ver: "v1.8.35",
+    title: "LOOSE ENDS",
+    items: [
+      "VERSUS: SPEED NOW ALSO POURS FASTER AND GLOWS ONLY FOR WHOEVER PICKED IT UP",
+      "A BAR CHANGE PRESSED WHILE KNOCKED DOWN NO LONGER CARRIES INTO THE NEXT STOP OR PAST A LOST LIFE",
+      "A QUICK TAP ON POUR IS KEPT ON THE TWO-PLAYER TOUCH PADS TOO",
+      "AFTER A SAVE, THE FULL ALARM SOUNDS AGAIN WHEN THAT CUSTOMER COMES BACK",
+    ],
+  },
   {
     ver: "v1.8.34",
     title: "SETTLED",

@@ -7992,6 +7992,28 @@ const DICT_ROWS                             = [
     "DIE WEDLOOP MET DIE SWARTGAT-BISTRO HET NOU 'N KLEIN RENBAAN: JOU KAFEE EN HULLE PIERING, OP PAD NA DIE VLAG",
     "WYŚCIG Z BISTRO CZARNA DZIURA MA TERAZ MAŁY TOR: TWOJA KAWIARNIA I ICH SPODEK PĘDZĄ DO FLAGI",
   ],
+  // (v1.8.33) FAIR GAMES
+  ["FAIR GAMES", "REGVERDIGE SPELETJIES", "UCZCIWE MINIGRY"],
+  [
+    "TURBO, DECAF AND THE QUICKER RUNNING ON THE FAR STOPS WORK AGAIN - V1.8.32 HAD BROKEN THEM",
+    "TURBO, KAFEÏENVRY EN DIE VINNIGER HARDLOOP OP DIE VER HALTES WERK WEER - V1.8.32 HET HULLE GEBREEK",
+    "TURBO, BEZKOFEINOWY I SZYBSZY BIEG NA DALEKICH PRZYSTANKACH ZNÓW DZIAŁAJĄ - V1.8.32 JE ZEPSUŁA",
+  ],
+  [
+    "ON A TOUCH SCREEN A QUICK TAP ON POUR IS NEVER LOST, AND STEERING WITH A FINGER NO LONGER FIRES TURBO",
+    "OP 'N RAAKSKERM GAAN 'N VINNIGE TIK OP SKINK NOOIT VERLORE NIE, EN STUUR MET 'N VINGER VUUR NIE MEER TURBO AF NIE",
+    "NA EKRANIE DOTYKOWYM SZYBKIE STUKNIĘCIE W NALEWANIE NIGDY NIE PRZEPADA, A STEROWANIE PALCEM NIE WŁĄCZA JUŻ TURBO",
+  ],
+  [
+    "ON A TALL SCREEN THE MINI-GAMES' ARROW KEYS AND CONTROLLER NOW GO THE WAY THEY SHOW",
+    "OP 'N HOË SKERM GAAN DIE MINISPELETJIES SE PYLTJIESLEUTELS EN BEHEERDER NOU SOOS HULLE WYS",
+    "NA WYSOKIM EKRANIE STRZAŁKI I PAD W MINIGRACH DZIAŁAJĄ TERAZ TAK, JAK WSKAZUJĄ",
+  ],
+  [
+    "CHERRY CATCH HAS NO GOLD-STAR TRAP, THE STORKS START SIDE BY SIDE, AND THE CUP SHUFFLE IS GENTLER IN CALM MODE",
+    "KERSIEVANG HET GEEN GOUE-STER-LOKVAL NIE, DIE OOIEVAARS BEGIN LANGS MEKAAR, EN DIE KOPPIES SKUIF SAGTER IN RUSTIGE MODUS",
+    "ŁAPANIE WIŚNI NIE MA PUŁAPKI ZE ZŁOTĄ GWIAZDĄ, BOCIANY STARTUJĄ OBOK SIEBIE, A KUBKI MIESZAJĄ SIĘ ŁAGODNIEJ W TRYBIE SPOKOJNYM",
+  ],
   // (v1.8.32) FAIR SHARES
   ["FAIR SHARES", "REGVERDIGE AANDELE", "UCZCIWY PODZIAŁ"],
   [
@@ -14923,6 +14945,7 @@ const keys = new Set(),
     dragL: false,
     dragR: false,
     barPour: false,
+    pourTap: false, // (v1.8.33: a quick tap on POUR, kept until read)
     runTo: null                 ,
   };
 // which point along bar `lane` is under a spot on the screen (works in the wide and the tall view alike)
@@ -15377,10 +15400,12 @@ function readPads() {
     if (pad.up && !pad.upW) {
       bonusPeek();
     }
-    if (pad.left && !pad.leftW) {
+    // (v1.8.33: player 2's controller moves the spotlight too - in co-op player 2 could only pick wherever player 1
+    //  had left it, even on "PLAYER 2: PICK ANOTHER CUP")
+    if ((pad.left && !pad.leftW) || (pad2.left && !pad2.leftW)) {
       bonusStep(-1);
     }
-    if (pad.right && !pad.rightW) {
+    if ((pad.right && !pad.rightW) || (pad2.right && !pad2.rightW)) {
       bonusStep(1);
     }
     if ((pad.pour || pad2.pour) && !pourW) pickDome(bonus.sel);
@@ -15438,7 +15463,11 @@ function playerInput(id) {
     e.up2 = e.down2 = false;
   } // (the queued second press, for next time)
   e.jump = -1;
-  let pour = anyKey(...K.p) || pd.pour || !!th.pour || !!th.barPour;
+  // (v1.8.33) A QUICK TAP ON POUR COUNTS: the button only said "pour" while the finger was on it, so a tap shorter than
+  //  one frame (a 40-60 ms tap on a phone running at 30-45 frames a second) fell between two frames and nothing was
+  //  poured - in TAP mode, the phones' default, that was a lost pour. The tap is now kept until it's read, once
+  let pour = anyKey(...K.p) || pd.pour || !!th.pour || !!th.barPour || !!th.pourTap;
+  th.pourTap = false;
   // the button that started the game (or skipped the jump, or resumed) must be let go first - so the barman doesn't pour straight away
   {
     const li = id ? 1 : 0;
@@ -15480,6 +15509,7 @@ function playerInput(id) {
       downHeld: hd,
       left: rl || dragL,
       right: rr || dragR,
+      dragOnly: (dragL || dragR) && !rl && !rr, // (v1.8.33: running only because a finger steers - no turbo from that)
       pour,
       holy,
       cross,
@@ -15492,6 +15522,7 @@ function playerInput(id) {
     downHeld: hr,
     left: ru || dragL,
     right: rd || dragR,
+    dragOnly: (dragL || dragR) && !ru && !rd, // (v1.8.33: running only because a finger steers - no turbo from that)
     pour,
     holy,
     cross,
@@ -15504,6 +15535,7 @@ function bindHold(id, key) {
       audio();
       setDev("touch");
       touchHeld[key] = true;
+      if (key === "pour") touchHeld.pourTap = true; // (v1.8.33: kept until the game reads it - see playerInput)
       el.classList.add("on");
     },
     off = (e) => {
@@ -15726,7 +15758,10 @@ function bindPointer(canvas) {
         sfx("turbo", P1.x);
         worldText("TURBO!", { lane: P1.lane, x: P1.x - 20 }, "#ffd040");
       }
-    } else if (mine) touchHeld.barPour = true; // hold on your own bar (at the taps end) = pour
+    } else if (mine) {
+      touchHeld.barPour = true; // hold on your own bar (at the taps end) = pour
+      touchHeld.pourTap = true; // (v1.8.33: and a quick tap there isn't lost)
+    }
     try {
       canvas.setPointerCapture(e.pointerId);
     } catch (err) {}
@@ -16297,7 +16332,9 @@ function update(dt) {
       const was = d < 0 ? P.hL : P.hR;
       // TURBO: a DOUBLE TAP of a direction (within 0.45 s). (v1.4.27: holding a direction no longer turbos - only a
       // double tap does, so you can run steadily without shooting off)
-      if (held && !was && !demo) {
+      // (v1.8.33: not when a finger steers him - "run to the finger" switches running on and off as he arrives, and two
+      //  of those within 0.45 s fired TURBO by accident; on a touch screen a double tap on the bar is the turbo)
+      if (held && !was && !demo && !inp.dragOnly) {
         const last = d < 0 ? P.tL : P.tR;
         if (G.time - (last ?? -9) < 0.45 && P.dashCD <= 0 && !(P.tired > 0)) {
           P.dashT = 0.4;
@@ -16312,7 +16349,15 @@ function update(dt) {
       if (d < 0) P.hL = held;
       else P.hR = held;
     }
-    const spd = hasPw("speed") && (!G.versus || pwOwner("speed") === P) ? 1.9 : 1; // (v1.8.32: in versus, only whoever picked it up) * (P.dashT > 0 ? 2.7 : 1) * (P.tired > 0 ? 0.55 : 1) * params().run;
+    // (v1.8.32: SPEED in versus only for whoever picked it up)
+    // (v1.8.33) BACK UP TO SPEED: v1.8.32's note was put in the middle of this line, and everything after it - TURBO,
+    //  the DECAF slow-down and each stop's own running speed (params().run: up to 1.4x on the far stops, and the
+    //  gravity) - became part of the comment. TURBO still said "TURBO!" but ran at normal speed. Put back
+    const spd =
+      (hasPw("speed") && (!G.versus || pwOwner("speed") === P) ? 1.9 : 1) *
+      (P.dashT > 0 ? 2.7 : 1) *
+      (P.tired > 0 ? 0.55 : 1) *
+      params().run;
     if (G.tw && G.tw.kind === "ice" && !demo) {
       // ICE FLOOR: you build up speed and glide - start early, stop early
       const tv =
@@ -21868,7 +21913,9 @@ function startBonus() {
     count = Math.min(18, 8 + Math.floor(first / 3)), // (v1.5.10: one more swap every third stop - it was every stop)
     // (v1.5.3) 10% FASTER from the very first round - the same gentle climb after it (every swap takes 1/1.1 the time)
     // (v1.5.4) and another 20% faster on top of that: every swap takes 1 / (1.1 x 1.2) of the old time - the same climb
-    dur = Math.max(0.17, 0.24 - first * 0.0018) / 1.32; // (v1.5.10: the swaps quicken less than half as fast as before)
+    dur =
+      (Math.max(0.17, 0.24 - first * 0.0018) / 1.32) * // (v1.5.10: the swaps quicken less than half as fast as before)
+      (COMFORT.calm || kidOn() ? 1.4 : 1); // (v1.8.33: gentler in calm mode and kid mode - up to 18 swaps of 0.13 s)
   for (let i = 0; i < count; i++) {
     const a = Math.floor(Math.random() * n);
     let b = Math.floor(Math.random() * (n - 1));
@@ -66930,7 +66977,7 @@ function startMiniGame() {
     const M = G.mini,
       mk = (id, x, y) =>
         Object.assign(Object.create(M), { id, x, y, vy: 0, crashed: false, spin: 0, hurt: 0, score: 0 });
-    M.gl = [mk(0, 200, 200), mk(1, 330, 360)];
+    M.gl = [mk(0, 230, 200), mk(1, 230, 360)]; // (v1.8.33: side by side - player 2 started 130 px further on, first to every star and later warned of every rock)
   }
   G.callouts = [];
   // (v1.8.3) GRAVITY IN THE MINI-GAMES: what drops into the glass falls slowly on a light world and fast on a heavy one
@@ -67008,17 +67055,34 @@ function miniStars(M) {
   const th = MINI_STARS[M.kind] || [1, 5, 10];
   return M.score >= th[2] ? 3 : M.score >= th[1] ? 2 : M.score >= th[0] ? 1 : 0;
 }
+// (v1.8.33) THE MINI-GAMES' ARROWS ARE THE SCREEN'S ARROWS: on a tall screen the bar's controls are turned a quarter
+// round (left / right change bar, up / down run - playerInput), but a mini-game isn't turned - so in CHERRY CATCH the
+// left and right keys did nothing and up / down slid the glass sideways, and in the stork game LEFT flew up. Turned
+// back here for the mini-games (a mirror bar's swap of the running keys too)
+function miniInp(inp) {
+  if (!VERT) return inp;
+  const flip = mirrorPlay();
+  return {
+    ...inp,
+    left: inp.upHeld,
+    right: inp.downHeld,
+    upHeld: flip ? inp.right : inp.left,
+    downHeld: flip ? inp.left : inp.right,
+    up: false, // (the stork reads up / down while held - upHeld / downHeld above)
+    down: false,
+  };
+}
 function funMiniUpdate(dt) {
   const M = G.mini;
   if (!M) return;
   M.t += dt;
   if (M.pops) M.pops = M.pops.filter((p) => (p.t += dt) < 1);
   M.hurt = Math.max(0, M.hurt - dt);
-  const inp = playerInput(M.who || 0), // (v1.5.90: whoever's turn it is)
+  const inp = miniInp(playerInput(M.who || 0)), // (v1.5.90: whoever's turn it is) (v1.8.33: miniInp)
     go = M.phase === "go",
     // (v1.5.96) in a duel or race either player may start it early or move on from the result (player 2 read only
     // then: reading the controls uses up a key press, and in play each duel step reads its own player)
-    p2 = M.gl && !go ? playerInput(1) : null,
+    p2 = M.gl && !go ? miniInp(playerInput(1)) : null,
     pour = inp.pour || !!(p2 && p2.pour);
   if (M.phase === "intro" && (M.t > 3.2 || (pour && M.t > 0.8))) {
     M.phase = "go";
@@ -67141,7 +67205,9 @@ function funMiniUpdate(dt) {
         k =
           Math.random() < 0.7
             ? "cherry"
-            : ["strawberry", "sock", "banana", "star", "chili"][Math.floor(Math.random() * 5)];
+            : ["strawberry", "sock", "banana", "sock", "chili"][
+                Math.floor(Math.random() * 5)
+              ] /* (v1.8.33: no gold star - it is the prize in the stork game, and here it ended the round) */;
       } else {
         const r = Math.random(),
           need = M.recipe.filter((x) => !M.have.includes(x));
@@ -67275,7 +67341,7 @@ function funMiniUpdate(dt) {
 // stars and asteroids are shared
 function storkDuelStep(M, dt, inp0) {
   for (const b of M.gl) {
-    const inp = b.id ? playerInput(1) : inp0, // (player 1's controls were read already this frame)
+    const inp = b.id ? miniInp(playerInput(1)) : inp0, // (player 1's controls were read already this frame)
       ptr = b.id === 0 && M.ptr,
       up = !b.crashed && (inp.upHeld || inp.up || (ptr && M.py < b.y - 12)),
       dn = !b.crashed && (inp.downHeld || inp.down || (ptr && M.py > b.y + 12));
@@ -67333,7 +67399,7 @@ function miniDuelStep(M, dt, inp0) {
   const lo = MINI_TALL() ? 190 : 70,
     hi = MINI_TALL() ? 770 : 890;
   for (const gl of M.gl) {
-    const inp = gl.id ? playerInput(1) : inp0; // (player 1's controls were read already this frame)
+    const inp = gl.id ? miniInp(playerInput(1)) : inp0; // (player 1's controls were read already this frame)
     if (!gl.wrong) {
       if (gl.id === 0 && M.ptr && !inp.left && !inp.right) gl.x += (M.px - gl.x) * Math.min(1, dt * 12);
       else gl.x += ((inp.right ? 1 : 0) - (inp.left ? 1 : 0)) * 560 * dt;
@@ -67346,7 +67412,7 @@ function miniDuelStep(M, dt, inp0) {
   {
     // (shoulder to shoulder: pushed apart, each by half)
     const [a, b] = M.gl,
-      gap = MINI_HW * 2 + 18;
+      gap = MINI_HW * 2 + 24; // (v1.8.33: was + 18 - the two catch zones overlapped by 4 px and player 1 got those cherries)
     if (Math.abs(a.x - b.x) < gap) {
       const m = (a.x + b.x) / 2,
         sg = a.x <= b.x ? -1 : 1;
@@ -67366,7 +67432,9 @@ function miniDuelStep(M, dt, inp0) {
             ]
         : Math.random() < 0.7
           ? "cherry"
-          : ["strawberry", "sock", "banana", "star", "chili"][Math.floor(Math.random() * 5)];
+          : ["strawberry", "sock", "banana", "sock", "chili"][
+              Math.floor(Math.random() * 5)
+            ]; /* (v1.8.33: no gold star - it is the prize in the stork game, and here it ended the round) */
     M.items.push({
       kind: k,
       x: MINI_TALL() ? rnd(200, 760) : rnd(80, 880),
@@ -83654,7 +83722,7 @@ function levelOfTour(of) {
     inTour = ((lv - 1) % LAST_LEVEL) + 1;
   return (tour > 1 ? "TOUR " + tour + "  ·  " : "") + "LEVEL " + inTour + of + LAST_LEVEL;
 }
-const GAME_VERSION = "v1.8.32",
+const GAME_VERSION = "v1.8.33",
   GAME_DATE = "25.11.2026",
   VERSION_TEXT = GAME_VERSION + "  ·  " + GAME_DATE;
 const FB = '"Chakra Petch", "Segoe UI", sans-serif';
@@ -91396,6 +91464,16 @@ profWire();
 //  the game, and where the motion capture, the folk songs and the fonts come from. Both from the menu at any time.
 // =====================================================================================
 const NEWS = [
+  {
+    ver: "v1.8.33",
+    title: "FAIR GAMES",
+    items: [
+      "TURBO, DECAF AND THE QUICKER RUNNING ON THE FAR STOPS WORK AGAIN - V1.8.32 HAD BROKEN THEM",
+      "ON A TOUCH SCREEN A QUICK TAP ON POUR IS NEVER LOST, AND STEERING WITH A FINGER NO LONGER FIRES TURBO",
+      "ON A TALL SCREEN THE MINI-GAMES' ARROW KEYS AND CONTROLLER NOW GO THE WAY THEY SHOW",
+      "CHERRY CATCH HAS NO GOLD-STAR TRAP, THE STORKS START SIDE BY SIDE, AND THE CUP SHUFFLE IS GENTLER IN CALM MODE",
+    ],
+  },
   {
     ver: "v1.8.32",
     title: "FAIR SHARES",

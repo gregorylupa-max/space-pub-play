@@ -7992,6 +7992,30 @@ const DICT_ROWS                             = [
     "DIE WEDLOOP MET DIE SWARTGAT-BISTRO HET NOU 'N KLEIN RENBAAN: JOU KAFEE EN HULLE PIERING, OP PAD NA DIE VLAG",
     "WYŚCIG Z BISTRO CZARNA DZIURA MA TERAZ MAŁY TOR: TWOJA KAWIARNIA I ICH SPODEK PĘDZĄ DO FLAGI",
   ],
+  // (v1.8.22) PAID ONCE
+  ["PAID ONCE", "EEN KEER BETAAL", "WYPŁACONE RAZ"],
+  [
+    "CONTINUING AT THE GRAND FESTIVAL NO LONGER PAYS THE FESTIVAL STAMPS A SECOND TIME",
+    "AS JY BY DIE GROOT FEES VOORTGAAN, WORD DIE FEESSTEMPELS NIE MEER 'N TWEEDE KEER BETAAL NIE",
+    "KONTYNUACJA NA WIELKIM FESTIWALU NIE WYPŁACA JUŻ STEMPLI FESTIWALOWYCH DRUGI RAZ",
+  ],
+  [
+    "THE PAUSE SCREEN IN TIME ATTACK AND BOSS RUSH NO LONGER SHOWS GRAVITY OR A HOUSE COCKTAIL",
+    "DIE POUSESKERM IN TYDREN EN BAASSTORM WYS NIE MEER SWAARTEKRAG OF 'N HUISKELKIE NIE",
+    "EKRAN PAUZY W ATAKU NA CZAS I MARATONIE BOSSÓW NIE POKAZUJE JUŻ GRAWITACJI ANI KOKTAJLU DOMU",
+  ],
+  // (v1.8.21) FAIR SCORES
+  ["FAIR SCORES", "EERLIKE TELLINGS", "UCZCIWE WYNIKI"],
+  [
+    "ORDER STREAKS COUNT ONLY WHEN YOU PICK THE FLAVOUR YOURSELF, AND EACH BONUS IS AT MOST 1200",
+    "BESTELLINGREEKSE TEL NET AS JY SELF DIE GEUR KIES, EN ELKE BONUS IS HOOGSTENS 1200",
+    "SERIE ZAMÓWIEŃ LICZĄ SIĘ TYLKO, GDY SAM WYBIERASZ SMAK, A KAŻDA PREMIA TO NAJWYŻEJ 1200",
+  ],
+  [
+    "TIME ATTACK AND BOSS RUSH PLAY AS THEY ALWAYS DID - NO GRAVITY CHANGES, NO HOUSE SPECIALS - SO YOUR OLD BEST TIMES STILL COUNT",
+    "TYDREN EN BAASSTORM SPEEL SOOS ALTYD - GEEN SWAARTEKRAGVERANDERINGE, GEEN HUISSPESIALE NIE - SO JOU OU BESTE TYE TEL STEEDS",
+    "ATAK NA CZAS I MARATON BOSSÓW DZIAŁAJĄ JAK ZAWSZE - BEZ ZMIAN GRAWITACJI I SPECJAŁÓW DOMU - WIĘC TWOJE DAWNE NAJLEPSZE CZASY WCIĄŻ SIĘ LICZĄ",
+  ],
   // (v1.8.20) HEAD TO HEAD
   ["HEAD TO HEAD", "KOP AAN KOP", "ŁEB W ŁEB"],
   [
@@ -14377,6 +14401,8 @@ const gravNow = () => GRAV[tourStop()] ?? 1;
 const gravQ = () => clamp(Math.log2(Math.max(0.01, gravNow())) / 2, -1, 1);
 // (the physics: a little longer push and a little quicker walk in light gravity; the other way round in heavy)
 const gravity = (p) => {
+  // (v1.8.21: not in TIME ATTACK or BOSS RUSH - their best times and the ghost were set before gravity came in)
+  if (G.ta || G.brush) return p;
   const q = gravQ();
   return q === 0
     ? p
@@ -65834,7 +65860,7 @@ function ckLevelStart() {
 }
 // (counted on each serve: the special gets ready)
 function ckCount(demo, id = 0) {
-  if (demo) return;
+  if (demo || G.ta || G.brush) return; // (v1.8.21: no house specials in TIME ATTACK or BOSS RUSH - fair to old records)
   if (!Array.isArray(G.ckN)) G.ckN = [0, 0];
   // (v1.8.18: while one player's special waits the other keeps counting - up to one short of their own - and only the
   //  player whose special it is starts again; in versus one player's special used to wipe the other's count)
@@ -66046,6 +66072,9 @@ function ckFx(c, k) {
 // carries on from stop to stop through the game
 const ORDER_STEPS = [3, 5, 8, 12];
 function orderStreak(right, s) {
+  // (v1.8.21: not when the flavour is picked for you - kid mode, relax, one-button, two on one touch screen - where
+  //  nearly every order comes out right by itself and the bonus piled up into millions on the shared score table)
+  if (autoFlav()) return;
   // (v1.8.20) IN VERSUS, EACH PLAYER'S OWN STREAK: one shared count let a player take the other's bonus - or wipe their
   // streak with a wrong flavour on purpose. Co-op and one player keep the single (team) count
   const P0 = PL[s.owner || 0],
@@ -66064,7 +66093,7 @@ function orderStreak(right, s) {
   fStat("ordStreak", n, true);
   if (!ORDER_STEPS.includes(n) && !(n > 12 && n % 4 === 0)) return;
   SCORER = PL[s.owner || 0];
-  const got = addScore(100 * n) || 100 * n;
+  const got = addScore(100 * Math.min(n, 12)) || 100 * Math.min(n, 12); // (v1.8.21: at most 1200 a step)
   SCORER = null;
   if (n >= 5) addCoinsQuiet(Math.min(10, n - 2));
   callout(n + " RIGHT ORDERS IN A ROW!  +" + got, n >= 8 ? "#ffd24d" : "#5ff5c8", 2);
@@ -67557,7 +67586,12 @@ function startStory(level, then) {
   let lines = intro ? INTRO_LINES : STORY[level];
   // (v1.7.10) on the way to a race stop where the Bistro isn't racing (another mode), Bogdan leaves Grumblo out - and if
   // nothing is left to say, straight on to the arrival
-  if (!intro && then === "approach" && RIVAL_STOPS.includes(level) && !rivalStop())
+  // (v1.8.21: and at the Grand Festival in a mode without the story - Grumblo never comes there)
+  if (
+    !intro &&
+    then === "approach" &&
+    ((RIVAL_STOPS.includes(level) && !rivalStop()) || (level === LAST_LEVEL && !envoyTour()))
+  )
     lines = lines.filter((l) => !/GRUMBLO|BISTRO/.test(l));
   if (!lines.length) {
     G.state = "approach";
@@ -69604,6 +69638,7 @@ function contRemember() {
     n: G.contN || 0,
     st: G.stamps || 0,
     rw: G.rivalWins || 0,
+    sp: !!G.stampsPaid, // (v1.8.22: already paid at the festival - the score saved above has them in it)
   });
 }
 function continueGame() {
@@ -69623,6 +69658,7 @@ function continueGame() {
   // stamps are paid out now (the stop began before they were back)
   G.stamps = c.st || 0;
   G.rivalWins = c.rw || 0;
+  G.stampsPaid = !!c.sp; // (v1.8.22: a continue at the festival used to pay them again, every time)
   if (G.level === LAST_LEVEL) envoyLevelStart();
   callout("CONTINUE " + G.contN + "  ·  STAGE " + c.level + "  ·  SCORE " + c.g, "#5ff5c8", 2.6);
 }
@@ -80094,6 +80130,12 @@ function buildMap() {
     " STOPS VISITED  ·  TAP A STOP, THEN PLAY";
   gmPlayText();
 }
+// (v1.8.22) is the map panel's canvas taller than wide? (its own shape - what decides the band or the line over it)
+const gmTall = () => {
+  const c = $k("gmCanvas")                                ,
+    r = c && c.getBoundingClientRect();
+  return r && r.width ? r.height > r.width : cssH > cssW;
+};
 function gmPlayText() {
   const el = $k("gmPlay");
   if (el) el.textContent = "▶ PLAY STOP " + (GMV.sel + 1) + ": " + VENUES[GMV.sel].name;
@@ -80103,7 +80145,7 @@ function gmPlayText() {
     const k = GMV.sel,
       gv = GRAV[k] ?? 1,
       ck = HOUSE_CK[k];
-    inf.hidden = !(cssH > cssW);
+    inf.hidden = !gmTall(); // (v1.8.22: the same test as the band on the map - one or the other, never both)
     inf.textContent =
       "GRAVITY " +
       (gv < 0.1 ? gv.toFixed(2) : gv.toFixed(gv < 1 ? 2 : 1)) +
@@ -80146,7 +80188,12 @@ function gmInfoLine(g, w, h) {
     known = !!store.get("cocktails", {})[k],
     a = T("GRAVITY " + (gv < 0.1 ? gv.toFixed(2) : gv.toFixed(gv < 1 ? 2 : 1)) + " g"),
     b = T("HOUSE COCKTAIL") + ": " + (ck && known ? T(ck.n) : "???"),
-    tall = h > w;
+    tall = gmTall();
+  {
+    // (v1.8.22: turned round while the map is open - the line over the map follows)
+    const inf = $k("gmInfo");
+    if (inf && inf.hidden === tall) inf.hidden = !tall;
+  }
   // (on a screen held upright the band would cover the Andromeda galaxy's name - a line over the map says it there,
   //  set when the stop is chosen: gmPlayText)
   if (tall) return;
@@ -83284,7 +83331,7 @@ function levelOfTour(of) {
     inTour = ((lv - 1) % LAST_LEVEL) + 1;
   return (tour > 1 ? "TOUR " + tour + "  ·  " : "") + "LEVEL " + inTour + of + LAST_LEVEL;
 }
-const GAME_VERSION = "v1.8.20",
+const GAME_VERSION = "v1.8.22",
   GAME_DATE = "25.11.2026",
   VERSION_TEXT = GAME_VERSION + "  ·  " + GAME_DATE;
 const FB = '"Chakra Petch", "Segoe UI", sans-serif';
@@ -89878,6 +89925,11 @@ function pauseWhere() {
     el.appendChild(d);
   };
   line(v.name, "#ffd24d");
+  // (v1.8.22: not in TIME ATTACK or BOSS RUSH - they play without the gravity and the house specials)
+  if (G.ta || G.brush) {
+    el.hidden = false;
+    return;
+  }
   line("GRAVITY " + (gv < 0.1 ? gv.toFixed(2) : gv.toFixed(gv < 1 ? 2 : 1)) + " g  ·  " + gravWord(gv));
   if (ck) line(T("HOUSE COCKTAIL") + ": " + T(ck.n), ckText(ck));
   el.hidden = false;
@@ -91016,6 +91068,22 @@ profWire();
 //  the game, and where the motion capture, the folk songs and the fonts come from. Both from the menu at any time.
 // =====================================================================================
 const NEWS = [
+  {
+    ver: "v1.8.22",
+    title: "PAID ONCE",
+    items: [
+      "CONTINUING AT THE GRAND FESTIVAL NO LONGER PAYS THE FESTIVAL STAMPS A SECOND TIME",
+      "THE PAUSE SCREEN IN TIME ATTACK AND BOSS RUSH NO LONGER SHOWS GRAVITY OR A HOUSE COCKTAIL",
+    ],
+  },
+  {
+    ver: "v1.8.21",
+    title: "FAIR SCORES",
+    items: [
+      "ORDER STREAKS COUNT ONLY WHEN YOU PICK THE FLAVOUR YOURSELF, AND EACH BONUS IS AT MOST 1200",
+      "TIME ATTACK AND BOSS RUSH PLAY AS THEY ALWAYS DID - NO GRAVITY CHANGES, NO HOUSE SPECIALS - SO YOUR OLD BEST TIMES STILL COUNT",
+    ],
+  },
   {
     ver: "v1.8.20",
     title: "HEAD TO HEAD",

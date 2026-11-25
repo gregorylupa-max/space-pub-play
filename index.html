@@ -7994,6 +7994,18 @@ const DICT_ROWS                             = [
     "DIE WEDLOOP MET DIE SWARTGAT-BISTRO HET NOU 'N KLEIN RENBAAN: JOU KAFEE EN HULLE PIERING, OP PAD NA DIE VLAG",
     "WYŚCIG Z BISTRO CZARNA DZIURA MA TERAZ MAŁY TOR: TWOJA KAWIARNIA I ICH SPODEK PĘDZĄ DO FLAGI",
   ],
+  // (v1.8.38) CLEAR SKIES
+  ["CLEAR SKIES", "HELDER LUGTE", "CZYSTE NIEBO"],
+  [
+    "BOGDAN'S SPACE DELIVERY: TWO ROCKS NO LONGER PINCH THE STORK BETWEEN THEM",
+    "BOGDAN SE RUIMTE-AFLEWERING: TWEE ROTSE KNYP NIE MEER DIE OOIEVAAR TUSSEN HULLE VAS NIE",
+    "KOSMICZNA DOSTAWA BOGDANA: DWIE SKAŁY NIE ŚCISKAJĄ JUŻ BOCIANA MIĘDZY SOBĄ",
+  ],
+  [
+    "ON A TALL SCREEN THE ROCKS AND STARS FLY A LITTLE SLOWER - THEY COME INTO VIEW LATER THERE",
+    "OP 'N HOË SKERM VLIEG DIE ROTSE EN STERRE 'N BIETJIE STADIGER - HULLE KOM DAAR LATER IN SIG",
+    "NA WYSOKIM EKRANIE SKAŁY I GWIAZDY LECĄ TROCHĘ WOLNIEJ - POJAWIAJĄ SIĘ TAM PÓŹNIEJ",
+  ],
   // (v1.8.37) THUMB SIZE
   ["THUMB SIZE", "DUIMGROOTTE", "NA KCIUK"],
   [
@@ -67146,6 +67158,23 @@ function miniInp(inp) {
     down: false,
   };
 }
+// (v1.8.38) WHAT FLIES AT THE STORK: a star or a rock coming in from the right. A new rock keeps at least 120 pixels
+// above or below the last one - two rocks (of different speeds) could arrive together a little apart in height and
+// pinch the stork between them with no way through. And on a tall screen, where they come into view later (at about
+// 810 instead of 960), everything flies 15% slower so you get the same warning
+function storkItem(M, star) {
+  const lastRock = [...M.items].reverse().find((q) => q.kind === "rock" && !q.dead);
+  let y = rnd(60, 480);
+  if (!star && lastRock) for (let k = 0; k < 8 && Math.abs(y - lastRock.y) < 120; k++) y = rnd(60, 480);
+  return {
+    kind: star ? "star" : "rock",
+    x: 1000,
+    y,
+    r: star ? 12 : rnd(18, 34),
+    vx: (-rnd(220, 320) - M.t * 6) * (MINI_TALL() ? 0.85 : 1),
+    rot: rnd(0, 6),
+  };
+}
 function funMiniUpdate(dt) {
   const M = G.mini;
   if (!M) return;
@@ -67226,15 +67255,7 @@ function funMiniUpdate(dt) {
     M.spawn -= dt;
     if (M.spawn <= 0 && M.endIn === undefined) {
       M.spawn = rnd(0.45, 0.8);
-      const star = Math.random() < 0.45;
-      M.items.push({
-        kind: star ? "star" : "rock",
-        x: 1000,
-        y: rnd(60, 480),
-        r: star ? 12 : rnd(18, 34),
-        vx: -rnd(220, 320) - M.t * 6,
-        rot: rnd(0, 6),
-      });
+      M.items.push(storkItem(M, Math.random() < 0.45)); // (v1.8.38: storkItem)
     }
     for (const it of M.items) {
       it.x += it.vx * dt;
@@ -67441,15 +67462,7 @@ function storkDuelStep(M, dt, inp0) {
   M.spawn -= dt;
   if (M.spawn <= 0 && M.endIn === undefined) {
     M.spawn = rnd(0.4, 0.7); // (a little busier: there are two of you)
-    const star = Math.random() < 0.5;
-    M.items.push({
-      kind: star ? "star" : "rock",
-      x: 1000,
-      y: rnd(60, 480),
-      r: star ? 12 : rnd(18, 34),
-      vx: -rnd(220, 320) - M.t * 6,
-      rot: rnd(0, 6),
-    });
+    M.items.push(storkItem(M, Math.random() < 0.5)); // (v1.8.38: storkItem)
   }
   for (const it of M.items) {
     it.x += it.vx * dt;
@@ -83807,7 +83820,7 @@ function levelOfTour(of) {
     inTour = ((lv - 1) % LAST_LEVEL) + 1;
   return (tour > 1 ? "TOUR " + tour + "  ·  " : "") + "LEVEL " + inTour + of + LAST_LEVEL;
 }
-const GAME_VERSION = "v1.8.37",
+const GAME_VERSION = "v1.8.38",
   GAME_DATE = "25.11.2026",
   VERSION_TEXT = GAME_VERSION + "  ·  " + GAME_DATE;
 const FB = '"Chakra Petch", "Segoe UI", sans-serif';
@@ -91549,6 +91562,14 @@ profWire();
 //  the game, and where the motion capture, the folk songs and the fonts come from. Both from the menu at any time.
 // =====================================================================================
 const NEWS = [
+  {
+    ver: "v1.8.38",
+    title: "CLEAR SKIES",
+    items: [
+      "BOGDAN'S SPACE DELIVERY: TWO ROCKS NO LONGER PINCH THE STORK BETWEEN THEM",
+      "ON A TALL SCREEN THE ROCKS AND STARS FLY A LITTLE SLOWER - THEY COME INTO VIEW LATER THERE",
+    ],
+  },
   {
     ver: "v1.8.37",
     title: "THUMB SIZE",

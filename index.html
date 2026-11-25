@@ -7992,6 +7992,18 @@ const DICT_ROWS                             = [
     "DIE WEDLOOP MET DIE SWARTGAT-BISTRO HET NOU 'N KLEIN RENBAAN: JOU KAFEE EN HULLE PIERING, OP PAD NA DIE VLAG",
     "WYŚCIG Z BISTRO CZARNA DZIURA MA TERAZ MAŁY TOR: TWOJA KAWIARNIA I ICH SPODEK PĘDZĄ DO FLAGI",
   ],
+  // (v1.8.36) KEEP GOING
+  ["KEEP GOING", "HOU AAN", "NIE PRZESTAWAJ"],
+  [
+    "ENDLESS MODE KEEPS GETTING BUSIER AND QUICKER ALL THE WAY TO SPEED 40 - IT USED TO STOP CLIMBING AT SPEED 20",
+    "EINDLOSE SPEL WORD AL BESIGER EN VINNIGER TOT BY SPOED 40 - DIT HET VROEËR BY SPOED 20 OPGEHOU KLIM",
+    "TRYB BEZ KOŃCA ROBI SIĘ CORAZ TŁOCZNIEJSZY I SZYBSZY AŻ DO TEMPA 40 - WCZEŚNIEJ PRZESTAWAŁ ROSNĄĆ PRZY TEMPIE 20",
+  ],
+  [
+    "KID MODE: IN CHERRY CATCH THE WRONG THING BOUNCES OFF THE GLASS INSTEAD OF ENDING THE ROUND",
+    "KINDERMODUS: IN KERSIEVANG BONS DIE VERKEERDE DING VAN DIE GLAS AF IN PLAAS VAN OM DIE RONDTE TE BEËINDIG",
+    "TRYB DZIECIĘCY: W ŁAPANIU WIŚNI ZŁA RZECZ ODBIJA SIĘ OD SZKLANKI, ZAMIAST KOŃCZYĆ RUNDĘ",
+  ],
   // (v1.8.35) LOOSE ENDS
   ["LOOSE ENDS", "LOS PUNTE", "LUŹNE KOŃCE"],
   [
@@ -14508,7 +14520,10 @@ const relaxed = (p) =>
       }
     : p;
 const paramsRaw = () => {
-  const L0 = G.endless ? Math.min(20, G.endLvl || 1) : G.level,
+  // (v1.8.36) ENDLESS KEEPS CLIMBING: it stopped getting harder at speed 20 (the tour's stop 20) - measured with the demo
+  //  bartender it then ran on for 360 customers and six minutes without losing a life, so a good player never reached
+  //  an end. It now climbs on to the tour's last stop (speed 40), more crowded and quicker with every speed-up
+  const L0 = G.endless ? Math.min(40, G.endLvl || 1) : G.level,
     // (v1.6.13) A PROPERLY BUSY CO-OP BAR: measured with the demo pair, two bartenders at 1.35 had a third less to do
     // each than one alone on the early stops, and lost a third of the lives on the late ones - with two more lives to
     // lose. A co-op bar is fuller now (1.6), so both of you are kept busy; VERSUS stays as it was
@@ -67304,6 +67319,16 @@ function funMiniUpdate(dt) {
       if (py < rim && it.y >= rim && Math.abs(dx) < MINI_HW + 11) {
         // IN!
         if (M.kind === "cherry" && M.wrong) continue; // (the round's over - nothing more goes in)
+        // (v1.8.36) KID MODE: the wrong thing bounces off the glass (as in the cocktail mixer) instead of ending the
+        //  round - one sock or banana was the end of CHERRY CATCH for the youngest players too
+        if (M.kind === "cherry" && it.kind !== "cherry" && kidOn()) {
+          it.vx = (dx >= 0 ? 1 : -1) * rnd(160, 260);
+          it.vy = -rnd(320, 420);
+          it.spin = rnd(-9, 9);
+          M.hurt = 0.5;
+          sfx("boing");
+          continue;
+        }
         if (M.kind === "cherry" && it.kind !== "cherry") {
           // (v1.4.78) THE WRONG THING CAUGHT - and you SEE it: it drops into the glass (it used to bounce straight back
           // off, so it looked like a miss - and then the game said you'd caught it). It sinks in big, ringed in red, the
@@ -83773,7 +83798,7 @@ function levelOfTour(of) {
     inTour = ((lv - 1) % LAST_LEVEL) + 1;
   return (tour > 1 ? "TOUR " + tour + "  ·  " : "") + "LEVEL " + inTour + of + LAST_LEVEL;
 }
-const GAME_VERSION = "v1.8.35",
+const GAME_VERSION = "v1.8.36",
   GAME_DATE = "25.11.2026",
   VERSION_TEXT = GAME_VERSION + "  ·  " + GAME_DATE;
 const FB = '"Chakra Petch", "Segoe UI", sans-serif';
@@ -91515,6 +91540,14 @@ profWire();
 //  the game, and where the motion capture, the folk songs and the fonts come from. Both from the menu at any time.
 // =====================================================================================
 const NEWS = [
+  {
+    ver: "v1.8.36",
+    title: "KEEP GOING",
+    items: [
+      "ENDLESS MODE KEEPS GETTING BUSIER AND QUICKER ALL THE WAY TO SPEED 40 - IT USED TO STOP CLIMBING AT SPEED 20",
+      "KID MODE: IN CHERRY CATCH THE WRONG THING BOUNCES OFF THE GLASS INSTEAD OF ENDING THE ROUND",
+    ],
+  },
   {
     ver: "v1.8.35",
     title: "LOOSE ENDS",

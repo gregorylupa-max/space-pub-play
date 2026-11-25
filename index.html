@@ -7992,6 +7992,28 @@ const DICT_ROWS                             = [
     "DIE WEDLOOP MET DIE SWARTGAT-BISTRO HET NOU 'N KLEIN RENBAAN: JOU KAFEE EN HULLE PIERING, OP PAD NA DIE VLAG",
     "WYŚCIG Z BISTRO CZARNA DZIURA MA TERAZ MAŁY TOR: TWOJA KAWIARNIA I ICH SPODEK PĘDZĄ DO FLAGI",
   ],
+  // (v1.8.32) FAIR SHARES
+  ["FAIR SHARES", "REGVERDIGE AANDELE", "UCZCIWY PODZIAŁ"],
+  [
+    "CO-OP: PULL YOUR PARTNER BACK UP FROM THE BAR NEXT DOOR - HELPING HANDS REALLY HAPPEN NOW",
+    "SAAM: TREK JOU MAAT VAN DIE TOONBANK LANGSAAN WEER OP - HELPENDE HANDE GEBEUR NOU REGTIG",
+    "RAZEM: PODNIEŚ PARTNERA Z SĄSIEDNIEJ LADY - POMOCNE DŁONIE NAPRAWDĘ SIĘ TERAZ ZDARZAJĄ",
+  ],
+  [
+    "VERSUS: A MAGNET, SHIELD OR SPEED IS ONLY FOR WHOEVER PICKED IT UP, AND YOUR PET SAVES ONLY YOU",
+    "TEEN MEKAAR: 'N MAGNEET, SKILD OF SPOED IS NET VIR WIE DIT OPGETEL HET, EN JOU TROETELDIER RED NET JOU",
+    "POJEDYNEK: MAGNES, TARCZA LUB SZYBKOŚĆ SĄ TYLKO DLA TEGO, KTO JE ZŁAPAŁ, A TWÓJ ZWIERZAK RATUJE TYLKO CIEBIE",
+  ],
+  [
+    "VERSUS: A DROPPED GLASS IS BLAMED ON WHOEVER SERVED IT, NOT ALWAYS ON PLAYER 1",
+    "TEEN MEKAAR: 'N GLAS WAT VAL, WORD GEBLAMEER OP WIE DIT BEDIEN HET, NIE ALTYD OP SPELER 1 NIE",
+    "POJEDYNEK: ZA UPUSZCZONĄ SZKLANKĘ ODPOWIADA TEN, KTO JĄ PODAŁ, A NIE ZAWSZE GRACZ 1",
+  ],
+  [
+    "VERSUS: WHILE ONE PLAYER IS KNOCKED OUT, THE OTHER GETS A ONE-PLAYER BAR",
+    "TEEN MEKAAR: TERWYL EEN SPELER UITGESLAAN IS, KRY DIE ANDER 'N EENSPELER-TOONBANK",
+    "POJEDYNEK: GDY JEDEN GRACZ JEST ZNOKAUTOWANY, DRUGI MA BAR JAK DLA JEDNEGO GRACZA",
+  ],
   // (v1.8.31) FAIR PLAY TOO
   ["FAIR PLAY TOO", "NOG REGVERDIGER", "JESZCZE UCZCIWIEJ"],
   [
@@ -14325,7 +14347,8 @@ const params = () => {
     K[6] === k6 &&
     K[7] === !!G.free &&
     K[8] === !!(G.ta || G.brush) &&
-    K[9] === G.level
+    K[9] === G.level &&
+    K[10] === active().length
   )
     return PRM_C.p;
   K[0] = k0;
@@ -14341,7 +14364,8 @@ const params = () => {
   //  games kept a stale world's gravity from being reused
   K[8] = !!(G.ta || G.brush);
   K[9] = G.level;
-  return (PRM_C.p = longer(assisted(calmer(relaxed(evened(gravity(paramsRaw()))))))); // (v1.8.0: and this world's gravity)
+  K[10] = active().length; // (v1.8.32: one versus player knocked out - see alone)
+  return (PRM_C.p = longer(assisted(alone(calmer(relaxed(evened(gravity(paramsRaw())))))))); // (v1.8.0: and this world's gravity)
 };
 // (v1.5.62) THE SPIKES SMOOTHED OUT: tools/dev/curve.py had the demo bartender play every stop of the tour on NORMAL,
 // and three stops cost far more lives than the stops either side of them - Janus (the ice floor: you glide, so you get
@@ -14359,6 +14383,7 @@ const STOP_EVEN = {
   THALASSA: 0.25,
   "THE WANDERER": 0.25,
   "THE GIANT STREAM": 0.25,
+  "NGC 206": 0.5, // (v1.8.32: the star nursery - 9.5 lives against 5.0 and 6.8 either side, 12 tries a stop; 0.3 still left 8)
 };
 // (v1.5.63) HARD HAS ITS OWN SPIKES: the same measuring on HARD (customers 22% quicker there) found five stops far above
 // their neighbours - the Comet's tail wind (about 7 lives against 2 either side), Janus and Halo again (still 13 and 16
@@ -14404,6 +14429,13 @@ const longer = (p) => (G.demo ? p : { ...p, total: Math.round(p.total * STOP_LON
 const calmer = (p) =>
   !G.free && !G.demo
     ? { ...p, speed: p.speed * 0.92, spawn: p.spawn * 1.08, group: p.group * 0.85, pause: p.pause * 1.06 }
+    : p;
+// (v1.8.32) ALONE IN VERSUS: while one player sits out a knock-out, the other used to face the busier two-player bar
+// (a third more customers at once, coming a third more often) on their own - and lose lives for it while the knocked-out
+// player was safe. Until the other one is back, customers come as for one player (the stop's total stays the same)
+const alone = (p) =>
+  G.versus && G.players === 2 && !G.demo && active().length === 1
+    ? { ...p, spawn: p.spawn * 1.35, maxOn: Math.max(2, Math.round(p.maxOn / 1.35)) }
     : p;
 // (v1.4.10) RELAX MODE: no hurry - customers stroll in more slowly and rest longer between steps, fewer at once, and
 // the empty glasses slide back gently
@@ -15881,6 +15913,7 @@ const hasPw = (k) => G.pw && G.pw[k] > 0;
 const hasPwBatch = (s) => !!(G.caught && G.caught.has(s.batch)); // one of its triple-shot siblings was caught
 function resetPowers() {
   G.pw = { speed: 0, freeze: 0, triple: 0, magnet: 0, slow: 0, shield: 0 };
+  G.pwBy = {}; // (v1.8.32: nobody owns a power-up yet - pwOwner)
   G.pwT = rnd(10, 16);
   powerups = [];
 }
@@ -15933,7 +15966,10 @@ function updatePowers(dt, demo) {
         by.tired = 7;
         by.dashT = 0;
         sfx("yawn", u.x);
-      } else G.pw[u.type] = Math.min(P0.dur * 1.8, (G.pw[u.type] || 0) + P0.dur); // (grabbing one you already have adds more time)
+      } else {
+        G.pw[u.type] = Math.min(P0.dur * 1.8, (G.pw[u.type] || 0) + P0.dur); // (grabbing one you already have adds more time)
+        (G.pwBy || (G.pwBy = {}))[u.type] = by.id; // (v1.8.32: whose it is - see pwOwner)
+      }
       // (v1.5.61) the power-up's name is translated before its "!" goes on - "DECAF! SO... TIRED..." has its own
       // "!" and dots inside, so the general "WORD!" pattern never caught it and it stayed in English
       if (!demo) callout(T(P0.name) + "!", P0.c, 1.8);
@@ -15988,6 +16024,14 @@ const EMPTY_WARN = 1.2; // (seconds of warning before an empty falls off - see E
 // slide at 60%. A slip lasted longer than the 1.2 s warning an empty gives, so a glass that started its alarm on
 // another bar while you were on your back was lost before you could stand up. The bar's alarm, the arrow at the end of
 // an empty bar and the "one more sip" spacing all use this, so they agree with what the glasses really do
+// (v1.8.32) WHOSE POWER-UP IS IT? - the player who picked it up (in versus the MAGNET's points, the SHIELD and the SPEED
+// are theirs alone: the magnet scored everything to player 1, and one player's shield saved the other's mistake), or
+// the first player still in the game
+function pwOwner(type) {
+  const id = G.pwBy ? G.pwBy[type] : undefined,
+    p = id !== undefined ? PL[id] : null;
+  return p && p.alive !== false && active().includes(p) ? p : active()[0] || P1;
+}
 function emptyK() {
   const ps = G.state === "menu" ? [] : active(),
     down = ps.length > 0 && ps.every((p) => p.stunT > 0 || p.slipT > 0);
@@ -16268,8 +16312,7 @@ function update(dt) {
       if (d < 0) P.hL = held;
       else P.hR = held;
     }
-    const spd =
-      (hasPw("speed") ? 1.9 : 1) * (P.dashT > 0 ? 2.7 : 1) * (P.tired > 0 ? 0.55 : 1) * params().run;
+    const spd = hasPw("speed") && (!G.versus || pwOwner("speed") === P) ? 1.9 : 1; // (v1.8.32: in versus, only whoever picked it up) * (P.dashT > 0 ? 2.7 : 1) * (P.tired > 0 ? 0.55 : 1) * params().run;
     if (G.tw && G.tw.kind === "ice" && !demo) {
       // ICE FLOOR: you build up speed and glide - start early, stop early
       const tv =
@@ -17772,7 +17815,7 @@ function update(dt) {
         c.moving = false;
         c.timer = 0.5;
         c.slideT = G.time; // (v1.4.44: the hand that slides the empty back - characters.ts)
-        empties.push({ lane: c.lane, x: c.x + 26, spin: 0 });
+        empties.push({ lane: c.lane, x: c.x + 26, spin: 0, by: c.servedBy }); // (v1.8.32: who served it - see the drop)
         sfx("clink");
         if ((c.type.tipper || Math.random() < 0.18) && !tips.some((t) => t.lane === c.lane))
           tips.push({ lane: c.lane, x: c.x + 10, t: 0 }); // (a businessman always tips)
@@ -18632,7 +18675,7 @@ function update(dt) {
     m.x += prm.empty * emptyK() * dt * (hasPw("magnet") ? 2.2 : 1); // (v1.8.31: emptyK - see there)
     m.spin += dt * 6;
     if (hasPw("magnet") && m.x > TAPX - 40) {
-      const by = active()[0] || P1;
+      const by = pwOwner("magnet"); // (v1.8.32: was always the first player)
       m.dead = true;
       by.grabT = 0;
       SCORER = by;
@@ -18695,7 +18738,11 @@ function update(dt) {
       m.dead = true;
       G.catchChain = 0; // (the chain is broken)
       if (demo) continue;
-      LOSER = nearestTo(m.lane);
+      // (v1.8.32) WHO DROPPED IT: whoever stands on that bar; if nobody does, whoever served that customer (in versus
+      //  the player on the nearest bar was blamed for the other player's glass); only then the nearest
+      const on = active().find((p) => p.lane === m.lane),
+        srv = m.by !== undefined ? PL[m.by] : null;
+      LOSER = on || (srv && active().includes(srv) ? srv : nearestTo(m.lane));
       lose("empty", m.lane, TAPX + 26);
       return;
     }
@@ -18707,7 +18754,7 @@ function update(dt) {
     t.x = clamp(t.x, X0 + 52, X1 - 20); // (always where the barman can reach it - he can't walk past X0 + 40)
     const by =
       active().find((p) => p.lane === t.lane && Math.abs(p.x - t.x) < 26) ||
-      (hasPw("magnet") && t.t > 0.6 ? active()[0] : null);
+      (hasPw("magnet") && t.t > 0.6 ? pwOwner("magnet") : null); // (v1.8.32: the magnet's owner, not always player 1)
     if (by) {
       t.dead = true;
       SCORER = by;
@@ -20457,7 +20504,9 @@ function coopHelp(demo) {
     if (!p.alive || !((p.slipT || 0) > 0.2 || (p.stunT || 0) > 0.2)) continue;
     const mate = PL[p.id ? 0 : 1];
     if (!mate || !mate.alive || (mate.slipT || 0) > 0 || (mate.stunT || 0) > 0) continue;
-    if (mate.lane !== p.lane || Math.abs(mate.x - p.x) > 56) continue;
+    // (v1.8.32: from the bar next door - two bartenders can never stand on the same bar (changing bars hops over your
+    //  partner), so the HELPING HAND, its award and the GOOD MATES trophy could never happen at all)
+    if (Math.abs(mate.lane - p.lane) > 1 || Math.abs(mate.x - p.x) > 56) continue;
     p.slipT = p.stunT = 0;
     SCORER = mate;
     const got = addScore(100) || 100; // (the points really given - the difficulty and SHAKE FEVER change them)
@@ -21049,10 +21098,18 @@ function refuse(c, demo, how = "kick") {
   }
 }
 let LOSER = null;
+// (v1.8.32: a tie - one player a bar above, the other a bar below - goes to whoever is nearer the taps, where the
+//  trouble is; it always went to player 1)
 const nearestTo = (lane) =>
-  active().reduce((a, b) => (Math.abs(b.lane - lane) < Math.abs(a.lane - lane) ? b : a), active()[0] || P1);
+  active().reduce((a, b) => {
+    const da = Math.abs(a.lane - lane),
+      db = Math.abs(b.lane - lane);
+    return db < da || (db === da && Math.abs(b.x - TAPX) < Math.abs(a.x - TAPX)) ? b : a;
+  }, active()[0] || P1);
 function lose(why, lane, x) {
-  if (hasPw("shield") && !G.demo) {
+  // (v1.8.32: in versus the shield only saves the player who picked it up - it used to be used up on the other
+  //  player's mistake)
+  if (hasPw("shield") && !G.demo && (!G.versus || !LOSER || LOSER === pwOwner("shield"))) {
     // the shield takes the hit instead of you
     G.pw.shield = 0;
     LOSER = null;
@@ -66355,9 +66412,15 @@ function funCycleFlav(P0, d = 1) {
 // PETS WITH POWERS (and the shop's lucky charm): something going wrong can be saved
 function funSave(why, lane, x) {
   if (G.demo) return false;
-  const P0 = active().find((p) => p.lane === lane) || active()[0],
+  // (v1.8.32: the pet of the player losing the life (LOSER), each player's pet with its own saves - in versus the
+  //  other player's pet made the save, and used it up for both)
+  const P0 =
+      (LOSER && active().includes(LOSER) ? LOSER : null) ||
+      active().find((p) => p.lane === lane) ||
+      active()[0],
     pet = P0 ? kidPetFor(P0) : "",
-    used = G.petUsed || (G.petUsed = {});
+    all = G.petUsed || (G.petUsed = {}),
+    used = P0 ? all["p" + P0.id] || (all["p" + P0.id] = {}) : all;
   let by = null;
   if (why === "empty" && pet === "cat" && !used.k) {
     used.k = 1;
@@ -66399,8 +66462,9 @@ function funUpdate(dt, demo) {
   ckConnTick(); // (v1.8.6: a connoisseur for the house special?)
   heavySteps(dt); // (v1.8.9: footsteps on a heavy world)
   grumbloUpdate(); // (v1.7.6: and then Chef Grumblo, in the queue)
-  const used = G.petUsed || (G.petUsed = {});
+  const all = G.petUsed || (G.petUsed = {});
   for (const P0 of active()) {
+    const used = all["p" + P0.id] || (all["p" + P0.id] = {}); // (v1.8.32: each player's pet its own saves)
     const pet = kidPetFor(P0);
     if (pet === "puppy")
       for (const tp of tips)
@@ -83590,7 +83654,7 @@ function levelOfTour(of) {
     inTour = ((lv - 1) % LAST_LEVEL) + 1;
   return (tour > 1 ? "TOUR " + tour + "  ·  " : "") + "LEVEL " + inTour + of + LAST_LEVEL;
 }
-const GAME_VERSION = "v1.8.31",
+const GAME_VERSION = "v1.8.32",
   GAME_DATE = "25.11.2026",
   VERSION_TEXT = GAME_VERSION + "  ·  " + GAME_DATE;
 const FB = '"Chakra Petch", "Segoe UI", sans-serif';
@@ -91332,6 +91396,16 @@ profWire();
 //  the game, and where the motion capture, the folk songs and the fonts come from. Both from the menu at any time.
 // =====================================================================================
 const NEWS = [
+  {
+    ver: "v1.8.32",
+    title: "FAIR SHARES",
+    items: [
+      "CO-OP: PULL YOUR PARTNER BACK UP FROM THE BAR NEXT DOOR - HELPING HANDS REALLY HAPPEN NOW",
+      "VERSUS: A MAGNET, SHIELD OR SPEED IS ONLY FOR WHOEVER PICKED IT UP, AND YOUR PET SAVES ONLY YOU",
+      "VERSUS: A DROPPED GLASS IS BLAMED ON WHOEVER SERVED IT, NOT ALWAYS ON PLAYER 1",
+      "VERSUS: WHILE ONE PLAYER IS KNOCKED OUT, THE OTHER GETS A ONE-PLAYER BAR",
+    ],
+  },
   {
     ver: "v1.8.31",
     title: "FAIR PLAY TOO",

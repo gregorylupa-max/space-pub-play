@@ -767,6 +767,7 @@ const PROFILE_KEYS = new Set([
   "decor",
   "daily",
   "coach",
+  "introSeen", // (v1.8.46: each player in the family sees the opening once)
   "blvl",
   "name",
   "from",
@@ -7994,6 +7995,125 @@ const DICT_ROWS                             = [
     "DIE WEDLOOP MET DIE SWARTGAT-BISTRO HET NOU 'N KLEIN RENBAAN: JOU KAFEE EN HULLE PIERING, OP PAD NA DIE VLAG",
     "WYŚCIG Z BISTRO CZARNA DZIURA MA TERAZ MAŁY TOR: TWOJA KAWIARNIA I ICH SPODEK PĘDZĄ DO FLAGI",
   ],
+  // (v1.8.47) EVERY MODE ITS OWN
+  ["EVERY MODE ITS OWN", "ELKE MODUS SY EIE", "KAŻDY TRYB PO SWOJEMU"],
+  [
+    "PLAY AGAIN AFTER A TIME ATTACK, BOSS RUSH, ENDLESS, RELAX OR DAILY GAME PLAYS THAT MODE AGAIN",
+    "SPEEL WEER NA 'N TYDJAG, BAAS-STORMLOOP, EINDLOSE, ONTSPAN- OF DAAGLIKSE SPEL SPEEL DAARDIE MODUS WEER",
+    "ZAGRAJ PONOWNIE PO GRZE NA CZAS, SZTURMIE NA BOSSÓW, TRYBIE BEZ KOŃCA, RELAKSIE LUB WYZWANIU DNIA ZACZYNA TEN SAM TRYB",
+  ],
+  [
+    "GAME OVER NO LONGER OFFERS TO CONTINUE AN OLD TOUR AFTER THOSE MODES, AND THE MENU'S DEMO IS BACK TO NORMAL",
+    "SPEL VERBY BIED NIE MEER AAN OM 'N OU TOER VOORT TE SIT NA DAARDIE MODUSSE NIE, EN DIE KIESLYS SE DEMO IS WEER NORMAAL",
+    "KONIEC GRY NIE PROPONUJE JUŻ KONTYNUACJI STAREJ TRASY PO TYCH TRYBACH, A DEMO W MENU WRACA DO NORMY",
+  ],
+  [
+    "TWO-PLAYER AND KID-MODE RUNS NO LONGER SET THE BEST TIMES, AND A DAILY CHALLENGE FINISHED AFTER MIDNIGHT KEEPS YOUR STREAK",
+    "TWEESPELER- EN KINDERMODUS-RONDTES STEL NIE MEER DIE BESTE TYE NIE, EN 'N DAAGLIKSE UITDAGING WAT NA MIDDERNAG KLAARGEMAAK WORD, HOU JOU REEKS",
+    "GRY DLA DWÓCH GRACZY I W TRYBIE DZIECIĘCYM NIE USTALAJĄ JUŻ NAJLEPSZYCH CZASÓW, A WYZWANIE DNIA UKOŃCZONE PO PÓŁNOCY ZACHOWUJE SERIĘ",
+  ],
+  // (v1.8.46) ROUND AGAIN
+  ["ROUND AGAIN", "WEER ROND", "KOLEJNE OKRĄŻENIE"],
+  [
+    "ENDLESS GOES ROUND THE TOUR AGAIN AFTER STOP 40, INSTEAD OF PLAYING THE TOUR'S ENDING",
+    "EINDLOSE SPEL GAAN NA HALTE 40 WEER DIE TOER ROND, IN PLAAS VAN OM DIE TOER SE EINDE TE SPEEL",
+    "TRYB BEZ KOŃCA PO PRZYSTANKU 40 ZACZYNA TRASĘ OD NOWA, ZAMIAST POKAZYWAĆ ZAKOŃCZENIE TRASY",
+  ],
+  [
+    "A KEY YOU SET YOURSELF NO LONGER STAYS HELD AFTER PAUSING",
+    "'N SLEUTEL WAT JY SELF GEKIES HET, BLY NIE MEER INGEDRUK NA 'N POUSE NIE",
+    "KLAWISZ USTAWIONY PRZEZ CIEBIE NIE ZOSTAJE JUŻ WCIŚNIĘTY PO PAUZIE",
+  ],
+  [
+    "EACH PLAYER IN THE FAMILY SEES THE OPENING STORY ONCE, AND YOUR OWN MUSIC PLAYS ON WHEN YOU COME BACK TO THE TAB",
+    "ELKE SPELER IN DIE GESIN SIEN DIE OPENINGSVERHAAL EEN KEER, EN JOU EIE MUSIEK SPEEL VOORT WANNEER JY NA DIE OORTJIE TERUGKOM",
+    "KAŻDY GRACZ W RODZINIE WIDZI HISTORIĘ NA POCZĄTEK RAZ, A TWOJA MUZYKA GRA DALEJ PO POWROCIE DO KARTY",
+  ],
+  // (v1.8.45) FIRST STEPS
+  ["FIRST STEPS", "EERSTE TREE", "PIERWSZE KROKI"],
+  [
+    "THE FIRST TIP NOW SAYS THE SHAKE SLIDES BY ITSELF - IN TAP MODE IT SAID LET GO, WHICH DID NOTHING",
+    "DIE EERSTE WENK SÊ NOU DIE MELKSKOMMEL GLY VANSELF - IN TIKMODUS HET DIT GESÊ LOS, WAT NIKS GEDOEN HET NIE",
+    "PIERWSZA WSKAZÓWKA MÓWI TERAZ, ŻE KOKTAJL SAM SIĘ PRZESUWA - W TRYBIE STUKANIA MÓWIŁA PUŚĆ, CO NIC NIE DAWAŁO",
+  ],
+  [
+    "YOUR FIRST SLIP ON EASY SAYS WHAT WENT WRONG BEFORE THE FREE SAVE",
+    "JOU EERSTE GLIP OP MAKLIK SÊ WAT VERKEERD GELOOP HET VOOR DIE GRATIS REDDING",
+    "TWÓJ PIERWSZY BŁĄD NA ŁATWYM MÓWI, CO POSZŁO NIE TAK, PRZED DARMOWYM RATUNKIEM",
+  ],
+  [
+    "A CALMER FIRST STOP, AND THE OPENING STORY ISN'T REPEATED AFTER EVERY RELOAD",
+    "'N RUSTIGER EERSTE HALTE, EN DIE OPENINGSVERHAAL WORD NIE NA ELKE HERLAAI HERHAAL NIE",
+    "SPOKOJNIEJSZY PIERWSZY PRZYSTANEK, A HISTORIA NA POCZĄTEK NIE POWTARZA SIĘ PO KAŻDYM PRZEŁADOWANIU",
+  ],
+  // (v1.8.44) EASY ON THE EARS
+  ["EASY ON THE EARS", "SAG OP DIE ORE", "MIŁE DLA UCHA"],
+  [
+    "THE SAME SOUND NO LONGER STACKS INTO A LOUD BLAST - A MAGNET'S TIPS, SEVERAL ALARMS AT ONCE",
+    "DIESELFDE KLANK STAPEL NIE MEER OP IN 'N HARDE KNAL NIE - 'N MAGNEET SE FOOITJIES, 'N PAAR ALARMS GELYK",
+    "TEN SAM DŹWIĘK NIE NAKŁADA SIĘ JUŻ W GŁOŚNY HUK - NAPIWKI Z MAGNESU, KILKA ALARMÓW NARAZ",
+  ],
+  [
+    "THE MUSIC STOPS WHEN YOU LEAVE THE TAB OR TURN THE SCREEN OFF, AND AT MUSIC VOLUME 0",
+    "DIE MUSIEK STOP WANNEER JY DIE OORTJIE VERLAAT OF DIE SKERM AFSIT, EN BY MUSIEKVOLUME 0",
+    "MUZYKA CICHNIE, GDY OPUŚCISZ KARTĘ LUB WYŁĄCZYSZ EKRAN, ORAZ PRZY GŁOŚNOŚCI MUZYKI 0",
+  ],
+  [
+    "WITH SOUND OFF, THE PHONE NO LONGER MAKES THE SOUNDS SILENTLY",
+    "MET KLANK AF MAAK DIE FOON NIE MEER DIE KLANKE STILLETJIES NIE",
+    "PRZY WYŁĄCZONYM DŹWIĘKU TELEFON NIE TWORZY JUŻ DŹWIĘKÓW PO CICHU",
+  ],
+  // (v1.8.43) LIGHTER LOAD
+  ["LIGHTER LOAD", "LIGTER VRAG", "MNIEJSZE OBCIĄŻENIE"],
+  [
+    "ON A PHONE THAT STRUGGLES TO KEEP UP, THE SCORE AND SIGNS DROP THEIR GLOW - THE DEAREST THING TO DRAW",
+    "OP 'N FOON WAT SUKKEL OM BY TE HOU, VERLOOR DIE TELLING EN BORDE HUL GLOED - DIE DUURSTE DING OM TE TEKEN",
+    "NA TELEFONIE, KTÓRY NIE NADĄŻA, WYNIK I SZYLDY TRACĄ POŚWIATĘ - NAJDROŻSZĄ RZECZ DO RYSOWANIA",
+  ],
+  [
+    "WHILE PAUSED THE GAME DRAWS FAR LESS, SPARING THE BATTERY",
+    "TERWYL DIT GEPOUSEER IS, TEKEN DIE SPEL BAIE MINDER EN SPAAR DIE BATTERY",
+    "PODCZAS PAUZY GRA RYSUJE DUŻO MNIEJ, OSZCZĘDZAJĄC BATERIĘ",
+  ],
+  [
+    "IN AFRIKAANS AND POLISH THE SCORE AND COUNTERS NO LONGER SLOW THE TRANSLATING DOWN",
+    "IN AFRIKAANS EN POOLS VERTRAAG DIE TELLING EN TELLERS NIE MEER DIE VERTALING NIE",
+    "PO AFRIKAANS I PO POLSKU WYNIK I LICZNIKI NIE SPOWALNIAJĄ JUŻ TŁUMACZENIA",
+  ],
+  // (v1.8.42) FOR EVERYONE
+  ["FOR EVERYONE", "VIR ALMAL", "DLA WSZYSTKICH"],
+  [
+    "A CUSTOMER'S ORDER BUBBLE ALWAYS SHOWS THE FLAVOUR'S SHAPE TOO - A HEART, A SQUARE OR A LEAF - NOT ONLY ITS COLOUR",
+    "'N KLANT SE BESTELBORREL WYS ALTYD OOK DIE GEUR SE VORM - 'N HART, 'N VIERKANT OF 'N BLAAR - NIE NET SY KLEUR NIE",
+    "DYMEK Z ZAMÓWIENIEM ZAWSZE POKAZUJE TEŻ KSZTAŁT SMAKU - SERCE, KWADRAT LUB LIŚĆ - NIE TYLKO JEGO KOLOR",
+  ],
+  [
+    "THE STORY AND THE DID YOU KNOW? BOX FOLLOW THE TEXT SIZE SETTING",
+    "DIE STORIE EN DIE HET JY GEWEET?-BLOKKIE VOLG DIE TEKSGROOTTE-INSTELLING",
+    "OPOWIEŚĆ I RAMKA CZY WIESZ, ŻE...? DOSTOSOWUJĄ SIĘ DO ROZMIARU TEKSTU",
+  ],
+  [
+    "CALM MODE: GENTLER LIGHTNING ON CASTAWAY ISLAND AND ONE FIREWORK AT MOST",
+    "RUSTIGE MODUS: SAGTER WEERLIG OP SKIPBREUKELINGEILAND EN HOOGSTENS EEN VUURWERK",
+    "TRYB SPOKOJNY: ŁAGODNIEJSZE BŁYSKAWICE NA WYSPIE ROZBITKA I NAJWYŻEJ JEDEN FAJERWERK",
+  ],
+  // (v1.8.41) SMOOTH MENUS
+  ["SMOOTH MENUS", "GLADDE KIESLYSTE", "PŁYNNE MENU"],
+  [
+    "THE BREAK REMINDER CAN NO LONGER BE SKIPPED BY A CONTROLLER AND LEFT STUCK OVER THE GAME",
+    "DIE POUSE-HERINNERING KAN NIE MEER MET 'N BEHEERDER OORGESLAAN WORD EN OOR DIE SPEL BLY HANG NIE",
+    "PRZYPOMNIENIA O PRZERWIE NIE DA SIĘ JUŻ POMINĄĆ KONTROLEREM I ZOSTAWIĆ NAD GRĄ",
+  ],
+  [
+    "CHANGING KEYS IN CONTROLS NO LONGER KEEPS WAITING AFTER YOU LEAVE, AND YOUR OWN KEYS NO LONGER UPSET THE MENUS",
+    "AS JY SLEUTELS IN KONTROLES VERANDER, WAG DIT NIE MEER NADAT JY UITGAAN NIE, EN JOU EIE SLEUTELS KRAP NIE MEER DIE KIESLYSTE DEURMEKAAR NIE",
+    "ZMIANA KLAWISZY W STEROWANIU NIE CZEKA JUŻ PO WYJŚCIU, A WŁASNE KLAWISZE NIE PSUJĄ JUŻ MENU",
+  ],
+  [
+    "ESCAPE OR B ON GAME OVER GOES BACK TO THE MENU, AND THE PAUSE BUTTON ONLY SHOWS WHERE IT WORKS",
+    "ESCAPE OF B BY SPEL VERBY GAAN TERUG NA DIE KIESLYS, EN DIE POUSEKNOPPIE WYS NET WAAR DIT WERK",
+    "ESCAPE LUB B NA KOŃCU GRY WRACA DO MENU, A PRZYCISK PAUZY POJAWIA SIĘ TYLKO TAM, GDZIE DZIAŁA",
+  ],
   // (v1.8.40) ON THE ROAD
   ["ON THE ROAD", "OP PAD", "W DRODZE"],
   [
@@ -8016,7 +8136,7 @@ const DICT_ROWS                             = [
   [
     "A TAP ON THE SCORE OR THE SIGN ABOVE THE BARS NO LONGER JUMPS YOU TO THE TOP BAR",
     "'N TIK OP DIE TELLING OF DIE BORD BO DIE TOONBANKE SPRING JOU NIE MEER NA DIE BOONSTE TOONBANK NIE",
-    "STUKNIĘCIE W WYNIK LUB SZYLD NAD LADAMI NIE PRZENOSI JUŻ CIĘ NA GÓRNĄ LADĘ",
+    "STUKNIĘCIE W WYNIK LUB SZYLD NAD LADAMI JUŻ CIĘ NIE PRZENOSI NA GÓRNĄ LADĘ",
   ],
   // (v1.8.38) CLEAR SKIES
   ["CLEAR SKIES", "HELDER LUGTE", "CZYSTE NIEBO"],
@@ -8053,18 +8173,18 @@ const DICT_ROWS                             = [
   ["LOOSE ENDS", "LOS PUNTE", "LUŹNE KOŃCE"],
   [
     "VERSUS: SPEED NOW ALSO POURS FASTER AND GLOWS ONLY FOR WHOEVER PICKED IT UP",
-    "TEEN MEKAAR: SPOEDKRAG SKINK OOK NET VINNIGER EN GLOEI NET VIR WIE DIT OPGETEL HET",
+    "TEEN MEKAAR: SPOEDKRAG SKINK NOU OOK VINNIGER EN GLOEI NET VIR WIE DIT OPGETEL HET",
     "POJEDYNEK: MOC PRĘDKOŚCI PRZYSPIESZA NALEWANIE I ŚWIECI TYLKO DLA TEGO, KTO JĄ ZŁAPAŁ",
   ],
   [
     "A BAR CHANGE PRESSED WHILE KNOCKED DOWN NO LONGER CARRIES INTO THE NEXT STOP OR PAST A LOST LIFE",
     "'N TOONBANKWISSELING WAT JY DRUK TERWYL JY PLAT LÊ, GAAN NIE MEER OOR NA DIE VOLGENDE HALTE OF VERBY 'N VERLORE LEWE NIE",
-    "ZMIANA LADY WCIŚNIĘTA, GDY LEŻYSZ, NIE PRZECHODZI JUŻ NA NASTĘPNY PRZYSTANEK ANI PO STRACONYM ŻYCIU",
+    "ZMIANA LADY WCIŚNIĘTA, GDY LEŻYSZ, NIE PRZECHODZI JUŻ NA NASTĘPNY PRZYSTANEK ANI NIE ZOSTAJE PO UTRACIE ŻYCIA",
   ],
   [
     "A QUICK TAP ON POUR IS KEPT ON THE TWO-PLAYER TOUCH PADS TOO",
-    "'N VINNIGE TIK OP SKINK WORD OOK OP DIE TWEESPELER-RAAKKNOPPIES ONTHOU",
-    "SZYBKIE STUKNIĘCIE W NALEWANIE JEST ZAPAMIĘTYWANE TAKŻE NA PRZYCISKACH DLA DWÓCH GRACZY",
+    "'N VINNIGE TIK OP SKINK WORD OOK OP DIE TWEESPELER-BEHEERBORDE ONTHOU",
+    "SZYBKIE STUKNIĘCIE W NALEWANIE JEST ZAPAMIĘTYWANE TAKŻE NA PANELACH DLA DWÓCH GRACZY",
   ],
   [
     "AFTER A SAVE, THE FULL ALARM SOUNDS AGAIN WHEN THAT CUSTOMER COMES BACK",
@@ -8075,13 +8195,13 @@ const DICT_ROWS                             = [
   ["SETTLED", "TOT RUS", "USTALONE"],
   [
     "TWO PLAYERS ON ONE TOUCH SCREEN: A TOUCH ON THE PICTURE NO LONGER MOVES PLAYER 1 - EACH PLAYER HAS THEIR OWN PAD",
-    "TWEE SPELERS OP EEN RAAKSKERM: 'N AANRAKING OP DIE PRENT SKUIF NIE MEER SPELER 1 NIE - ELKE SPELER HET SY EIE BEHEERPAD",
-    "DWÓCH GRACZY NA JEDNYM EKRANIE DOTYKOWYM: DOTKNIĘCIE OBRAZU NIE PORUSZA JUŻ GRACZA 1 - KAŻDY MA WŁASNE PRZYCISKI",
+    "TWEE SPELERS OP EEN RAAKSKERM: 'N AANRAKING OP DIE PRENT SKUIF NIE MEER SPELER 1 NIE - ELKE SPELER HET SY EIE BEHEERBORD",
+    "DWÓCH GRACZY NA JEDNYM EKRANIE DOTYKOWYM: DOTKNIĘCIE OBRAZU NIE PORUSZA JUŻ GRACZA 1 - KAŻDY MA WŁASNY PANEL",
   ],
   [
     "THE JANUS TWILIGHT CAFE'S ICE IS IN LINE WITH THE STOPS AROUND IT AGAIN, NOW THAT RUNNING IS BACK TO FULL SPEED",
-    "DIE JANUS-SKEMERKAFEE SE YS IS WEER IN LYN MET DIE HALTES RONDOM, NOU DAT HARDLOOP WEER TEEN VOLLE SPOED IS",
-    "LÓD W KAWIARNI ZMIERZCHU NA JANUSIE JEST ZNÓW NA RÓWNI Z SĄSIEDNIMI PRZYSTANKAMI, GDY BIEG WRÓCIŁ DO PEŁNEJ SZYBKOŚCI",
+    "DIE JANUS TWILIGHT CAFE SE YS IS WEER IN LYN MET DIE HALTES RONDOM, NOU DAT HARDLOOP WEER TEEN VOLLE SPOED IS",
+    "LÓD W JANUS TWILIGHT CAFE JEST ZNÓW NA RÓWNI Z SĄSIEDNIMI PRZYSTANKAMI, GDY BIEG WRÓCIŁ DO PEŁNEJ SZYBKOŚCI",
   ],
   // (v1.8.33) FAIR GAMES
   ["FAIR GAMES", "REGVERDIGE SPELETJIES", "UCZCIWE MINIGRY"],
@@ -8098,7 +8218,7 @@ const DICT_ROWS                             = [
   [
     "ON A TALL SCREEN THE MINI-GAMES' ARROW KEYS AND CONTROLLER NOW GO THE WAY THEY SHOW",
     "OP 'N HOË SKERM GAAN DIE MINISPELETJIES SE PYLTJIESLEUTELS EN BEHEERDER NOU SOOS HULLE WYS",
-    "NA WYSOKIM EKRANIE STRZAŁKI I PAD W MINIGRACH DZIAŁAJĄ TERAZ TAK, JAK WSKAZUJĄ",
+    "NA WYSOKIM EKRANIE STRZAŁKI I KONTROLER W MINIGRACH DZIAŁAJĄ TERAZ TAK, JAK WSKAZUJĄ",
   ],
   [
     "CHERRY CATCH HAS NO GOLD-STAR TRAP, THE STORKS START SIDE BY SIDE, AND THE CUP SHUFFLE IS GENTLER IN CALM MODE",
@@ -8106,7 +8226,7 @@ const DICT_ROWS                             = [
     "ŁAPANIE WIŚNI NIE MA PUŁAPKI ZE ZŁOTĄ GWIAZDĄ, BOCIANY STARTUJĄ OBOK SIEBIE, A KUBKI MIESZAJĄ SIĘ ŁAGODNIEJ W TRYBIE SPOKOJNYM",
   ],
   // (v1.8.32) FAIR SHARES
-  ["FAIR SHARES", "REGVERDIGE AANDELE", "UCZCIWY PODZIAŁ"],
+  ["FAIR SHARES", "BILLIKE DELE", "UCZCIWY PODZIAŁ"],
   [
     "CO-OP: PULL YOUR PARTNER BACK UP FROM THE BAR NEXT DOOR - HELPING HANDS REALLY HAPPEN NOW",
     "SAAM: TREK JOU MAAT VAN DIE TOONBANK LANGSAAN WEER OP - HELPENDE HANDE GEBEUR NOU REGTIG",
@@ -8147,7 +8267,7 @@ const DICT_ROWS                             = [
   [
     "SPIES NO LONGER VANISH RIGHT NEXT TO YOU, AND THE TRACKER REALLY SPOTS THEM",
     "SPIOENE VERDWYN NIE MEER REG LANGS JOU NIE, EN DIE SPOORSNYER SIEN HULLE REGTIG RAAK",
-    "SZPIEDZY NIE ZNIKAJĄ JUŻ TUŻ OBOK CIEBIE, A TROPICIEL NAPRAWDĘ ICH WYPATRUJE",
+    "SZPIEDZY NIE ZNIKAJĄ JUŻ TUŻ OBOK CIEBIE, A TROPICIEL NAPRAWDĘ ICH WYKRYWA",
   ],
   // (v1.8.30) FAIR PLAY
   ["FAIR PLAY", "REGVERDIGE SPEL", "UCZCIWA GRA"],
@@ -8188,7 +8308,7 @@ const DICT_ROWS                             = [
   [
     "TIME ATTACK AND BOSS RUSH NO LONGER WARN OF LOW OR HEAVY GRAVITY - GRAVITY DOESN'T CHANGE THERE",
     "TYDJAG EN BAAS-STORMLOOP WAARSKU NIE MEER OOR LAE OF SWAAR SWAARTEKRAG NIE - DIE SWAARTEKRAG VERANDER NIE DAAR NIE",
-    "NA CZAS I SZTURM NA BOSSÓW NIE OSTRZEGAJĄ JUŻ O NISKIEJ ANI WYSOKIEJ GRAWITACJI - TAM GRAWITACJA SIĘ NIE ZMIENIA",
+    "NA CZAS I SZTURM NA BOSSÓW NIE OSTRZEGAJĄ JUŻ O NISKIEJ ANI SILNEJ GRAWITACJI - TAM GRAWITACJA SIĘ NIE ZMIENIA",
   ],
   [
     "THE GRAVITY TROPHIES COUNT ONLY STOPS WHERE THE GRAVITY REALLY CHANGES",
@@ -8196,16 +8316,16 @@ const DICT_ROWS                             = [
     "TROFEA GRAWITACJI LICZĄ TYLKO PRZYSTANKI, NA KTÓRYCH GRAWITACJA NAPRAWDĘ SIĘ ZMIENIA",
   ],
   // (v1.8.27) TIDY ARRIVALS
-  ["TIDY ARRIVALS", "NETJIESE AANKOMSTE", "SCHLUDNE PRZYLOTY"],
+  ["TIDY ARRIVALS", "NETJIESE AANKOMSTE", "SCHLUDNE PRZYBYCIA"],
   [
     "THE LINES UNDER A STOP'S NAME ON ARRIVAL STACK NEATLY - NO EMPTY GAP IN ENDLESS OR THE DAILY CHALLENGE",
     "DIE REËLS ONDER 'N HALTE SE NAAM BY AANKOMS STAPEL NETJIES - GEEN LEË GAPING IN EINDLOSE SPEL OF DIE DAAGLIKSE UITDAGING NIE",
-    "LINIE POD NAZWĄ PRZYSTANKU PO PRZYLOCIE UKŁADAJĄ SIĘ RÓWNO - BEZ PUSTEJ PRZERWY W TRYBIE BEZ KOŃCA I WYZWANIU DNIA",
+    "LINIE POD NAZWĄ PRZYSTANKU PO PRZYBYCIU UKŁADAJĄ SIĘ RÓWNO - BEZ PUSTEJ PRZERWY W TRYBIE BEZ KOŃCA I WYZWANIU DNIA",
   ],
   [
     "ENDLESS MODE'S ARRIVAL SAYS ENDLESS MODE INSTEAD OF LEVEL 1 OF 40",
     "EINDLOSE SPEL SE AANKOMS SÊ NOU EINDLOSE SPEL IN PLAAS VAN VLAK 1 VAN 40",
-    "PRZYLOT W TRYBIE BEZ KOŃCA MÓWI TERAZ TRYB BEZ KOŃCA ZAMIAST POZIOM 1 Z 40",
+    "PRZYBYCIE W TRYBIE BEZ KOŃCA MÓWI TERAZ TRYB BEZ KOŃCA ZAMIAST POZIOM 1 Z 40",
   ],
   // (v1.8.26) NEAT CORNERS
   ["NEAT CORNERS", "NETJIESE HOEKE", "SCHLUDNE ROGI"],
@@ -11847,6 +11967,13 @@ const DICT_PAT                             = [
   ],
   [/^(PRESS|HOLD) (\w+) TO POUR$/, "$1 $2 OM TE SKINK", "$1 $2, BY NALAĆ"],
   [/^(TAP|HOLD) POUR - LET GO TO SLIDE IT$/, "SKINK - LOS OM TE GLY", "NALEJ - PUŚĆ, BY PCHNĄĆ"],
+  // (v1.8.45) the TAP-mode pour hint
+  [
+    /^PRESS (\w+) TO POUR - IT SLIDES BY ITSELF$/,
+    "DRUK $1 OM TE SKINK - DIT GLY VANSELF",
+    "NACIŚNIJ $1, BY NALAĆ - SAM SIĘ PRZESUNIE",
+  ],
+  [/^TAP POUR - IT SLIDES BY ITSELF$/, "TIK SKINK - DIT GLY VANSELF", "STUKNIJ NALEJ - SAM SIĘ PRZESUNIE"],
   [
     /^AN EMPTY GLASS! GO TO THAT BAR \((.+)\)$/,
     "'N LEË GLAS! GAAN NA DAARDIE TOONBANK ($1)",
@@ -12055,6 +12182,10 @@ const TCACHE = new Map                ();
 // translate one text (exact, a pattern, or piece by piece around " · " and "  ·  ")
 function T(s) {
   if (LANG === "en" || typeof s !== "string" || !s) return s;
+  // (v1.8.43) NOTHING TO TRANSLATE WITHOUT LETTERS: the rolling score, the timers and the counters are new strings
+  //  almost every frame - each went through the cache, a trim and up to 250 patterns, and in a long endless game they
+  //  filled the cache until it was emptied, so every fixed word had to be looked up again. (No row is without letters)
+  if (!/[A-Za-z]/.test(s)) return s;
   const hit = TCACHE.get(s);
   if (hit !== undefined) return hit;
   let out = s;
@@ -12251,6 +12382,11 @@ function kmDoor(e) {
   if (!e.isTrusted) return; // (the ones passed on below)
   const tg = e.target               ;
   if (tg && (tg.tagName === "INPUT" || tg.tagName === "TEXTAREA")) return;
+  // (v1.8.41) YOUR KEYS ARE FOR PLAYING: the menus keep the usual keys (arrows, Enter, Escape) - with player 1's UP set
+  //  to the up arrow, the arrow reached the menus as W and no longer moved the menu cursor
+  // (v1.8.46: key-downs only - a key let go after pausing or game over must still be let go as the key it stood for,
+  //  or that key stayed held: on resume the barman kept pouring or running until it was pressed again)
+  if (e.type === "keydown" && (["menu", "paused", "over"].includes(G.state) || panelNav())) return;
   const canon = KM.map[e.code];
   if (!canon) return;
   e.preventDefault();
@@ -14765,6 +14901,9 @@ function gravLevelStart() {
   // (v1.8.28: not in TIME ATTACK or BOSS RUSH either - gravity is off there since v1.8.21, but every time attack still
   //  opened on Mercury with "LOW GRAVITY: A SHAKE SENDS CUSTOMERS FLYING", a promise the game didn't keep)
   if (G.demo || G.ta || G.brush || (g >= 0.45 && g < 1.25)) return;
+  // (v1.8.45: not on a brand-new player's first stop - Mercury opens with its name, the Sun's heat, a fact and the
+  //  coach teaching POUR; the gravity is on the arrival screen, and a push they haven't seen yet can wait)
+  if (G.level === 1 && !coachDone().pour) return;
   if (tw !== undefined && TWISTS[tw] && TWISTS[tw].kind === "lowg") return; // (its own LOW GRAVITY twist says it already)
   G.callouts.push({
     text:
@@ -14780,6 +14919,15 @@ function gravLevelStart() {
 const here = () => VENUES[tourStop()];
 
 function resetGame(demo) {
+  // (v1.8.47) BACK TO THE MENU, BACK TO NORMAL: a finished TIME ATTACK, BOSS RUSH, ENDLESS, RELAX or DAILY game stayed
+  //  switched on for the menu's demo - its stops never cleared (a billion customers), it played with no gravity, or
+  //  stuck at the last endless speed. (A new game sets its own mode as it starts.) And the last game's loser is
+  //  forgotten - a tied cup match was decided by it
+  if (demo) {
+    G.ta = G.brush = G.daily = null;
+    G.endless = G.free = false;
+  }
+  G.loser = null;
   G.streak = 0;
   G.chain = 0; // (v1.4.76: shakes served in a row without a slip - twists.ts)
   G.fever = 0;
@@ -16726,7 +16874,7 @@ function update(dt) {
         P.arm = 1;
         coachSlid(P, demo);
       } else {
-        sfx("spill");
+        sfx("spill", TAPX); // (v1.8.44: from the taps, not the middle)
       }
       P.pouring = false;
       P.pour = 0;
@@ -17980,7 +18128,7 @@ function update(dt) {
         c.timer = 0.5;
         c.slideT = G.time; // (v1.4.44: the hand that slides the empty back - characters.ts)
         empties.push({ lane: c.lane, x: c.x + 26, spin: 0, by: c.servedBy }); // (v1.8.32: who served it - see the drop)
-        sfx("clink");
+        sfx("clink", c.x); // (v1.8.44: where the glass is)
         if ((c.type.tipper || Math.random() < 0.18) && !tips.some((t) => t.lane === c.lane))
           tips.push({ lane: c.lane, x: c.x + 10, t: 0 }); // (a businessman always tips)
       }
@@ -18924,7 +19072,7 @@ function update(dt) {
       SCORER = by;
       addScore(t.v || 1500, t.x, LY(t.lane, t.x) - 50);
       SCORER = null;
-      sfx("tip");
+      sfx("tip", t.x); // (v1.8.44: where the tip was)
       tipFx(t.lane, t.x); // (v1.5.7: a ring of gold - juice.ts)
       kidTip(demo);
       coachTip(demo);
@@ -18995,8 +19143,15 @@ function update(dt) {
         3
       );
       // (v1.8.40: an endless stop doesn't unlock the tour's stops or give the tour's milestone life)
-      if (!G.endless && G.level + 1 > unlocked()) store.set("unlock", Math.min(LAST_LEVEL, G.level + 1));
-      if (!G.endless && G.level % (difficulty === "easy" ? 20 : 5) === 0 && G.level < LAST_LEVEL) {
+      if (!G.endless && !G.brush && G.level + 1 > unlocked())
+        store.set("unlock", Math.min(LAST_LEVEL, G.level + 1));
+      // (v1.8.47: and not in BOSS RUSH - its bosses gave the tour's milestone lives, more on NORMAL than on EASY)
+      if (
+        !G.endless &&
+        !G.brush &&
+        G.level % (difficulty === "easy" ? 20 : 5) === 0 &&
+        G.level < LAST_LEVEL
+      ) {
         // (v1.4.63: on EASY the milestone life only every 20 stops - half as many)
         if (G.versus) for (const p of PL) p.lives++;
         else G.lives++;
@@ -21916,7 +22071,9 @@ function gameOver() {
   // fanfare instead; the sad one is only for a game that really ended
   sfx(G.won ? "fanfare" : "over");
   {
-    const sv = contOn() && !G.won && contSave();
+    // (v1.8.47: only after a tour game - after a time attack, boss rush, endless, relax or daily game it offered an old
+    //  tour's CONTINUE (with the focus on it), as if this game could be continued)
+    const sv = contOn() && !G.won && !(G.ta || G.brush || G.endless || G.daily || G.free) && contSave();
     $("oCont").hidden = !sv;
     if (sv) $("vOCont").textContent = "STAGE " + sv.level;
     if (G.contN)
@@ -22105,7 +22262,9 @@ function updateBonus(dt) {
     b.revT += dt;
     b.lift = Math.min(1, b.lift + dt * 2.4);
     if (b.t <= 0) {
-      if (G.level >= LAST_LEVEL) {
+      if (G.level >= LAST_LEVEL && !G.endless) {
+        // (v1.8.46: not in endless - since v1.8.40 it travels, and at stop 40 it played the tour's ending, its prize
+        //  and a harder second tour; endless goes round to the first stop again instead - see startJump)
         startEnding("final");
         return;
       }
@@ -22122,6 +22281,7 @@ function updateBonus(dt) {
 const JUMP_LEN = 10;
 function startJump() {
   G.level++;
+  if (G.endless && G.level > LAST_LEVEL) G.level = 1; // (v1.8.46: endless goes round the tour again, no ending)
   G.state = "jump";
   // (the window cleaner's words: the next set each trip, starting somewhere different each game)
   JUMP_SAY_N = JUMP_SAY_N < 0 ? Math.floor(Math.random() * JUMP_SAYS.length) : JUMP_SAY_N + 1;
@@ -22406,7 +22566,9 @@ function updateParts(dt) {
       }
     }
   }
-  if (parts.length > 1400) parts.splice(0, parts.length - 1400);
+  // (v1.8.43: fewer at once when the game has lowered its drawing quality to keep up - 1400 / 900 / 500)
+  const cap = QUAL >= 2 ? 1400 : QUAL >= 1 ? 900 : 500;
+  if (parts.length > cap) parts.splice(0, parts.length - cap);
   for (let i = rings.length - 1; i >= 0; i--) {
     rings[i].life -= dt;
     if (rings[i].life <= 0) rings.splice(i, 1);
@@ -22551,6 +22713,7 @@ function coins(lane, x, y, n) {
 }
 function fireworks(n) {
   // rockets go up and burst - after a level and a bonus win
+  if (COMFORT.calm) n = Math.min(n, 1); // (v1.8.42: CALM MODE - one rocket at most, wherever it's called from)
   const cs = [
     [1, 0.37, 0.66, 1],
     [0.37, 0.96, 0.78, 1],
@@ -52316,8 +52479,18 @@ function dailyAdd(id, v, set ) {
   D.prog = set ? Math.max(D.prog, v) : D.prog + v;
   if (D.prog >= D.goal.n) {
     D.done = true;
-    const I = dailyInfo(),
-      streak = I.done ? I.streak : I.streak + 1;
+    // (v1.8.47) THE STREAK COUNTS THE CHALLENGE'S OWN DAY: one started at 23:58 and finished after midnight was
+    //  checked against the new day, and a five-day streak went back to 1
+    const S = store.get("daily", { last: "", streak: 0 }),
+      prev = new Date(D.date + "T12:00:00");
+    prev.setDate(prev.getDate() - 1);
+    const ps =
+        prev.getFullYear() +
+        "-" +
+        String(prev.getMonth() + 1).padStart(2, "0") +
+        "-" +
+        String(prev.getDate()).padStart(2, "0"),
+      streak = S.last === D.date ? S.streak : S.last === ps ? (S.streak | 0) + 1 : 1;
     store.set("daily", { last: D.date, streak });
     store.set("dailyStars", (store.get("dailyStars", 0) | 0) + 2);
     funDaily();
@@ -62365,7 +62538,7 @@ function cwDrawWeather(t, b, dark, layer) {
         pts.push(x, T + (hz - T) * (i / 9));
       }
       R.setAdd(true);
-      rect(L, T, w, h, withA(C.white, (ph < 0.08 ? 0.45 : 0.15) * ramp));
+      rect(L, T, w, h, withA(C.white, (ph < 0.08 ? 0.45 : 0.15) * ramp * FLASH())); // (v1.8.42: gentler in calm mode, like every other lightning)
       polyline(pts, 2.4 * ks, withA(col("#e8f0ff"), 0.95));
       polyline(pts, 6 * ks, withA(col("#9ab8ff"), 0.35));
       R.setAdd(false);
@@ -66099,7 +66272,7 @@ function funServe(c, s, demo) {
   if (c.type.bot || ["robot", "bots", "robogob"].includes(c.type.kind)) fStat("robots");
   if (G.endless) {
     G.endServed++;
-    fStat("endlessBest", G.endServed, true);
+    if (!DF().kid) fStat("endlessBest", G.endServed, true); // (v1.8.47: KID MODE never loses a life - no endless record there)
     if (G.endServed % 12 === 0) {
       G.endLvl++;
       callout("FASTER!  SPEED " + G.endLvl, "#ff5fa8", 1.8);
@@ -66108,7 +66281,7 @@ function funServe(c, s, demo) {
       //  its music and its twist (the speed keeps climbing). Last orders: whoever is on the bar now is served, nobody
       //  new comes in, and the stop clears as usual (a bonus round, the warp) - endless used to be the one bar forever
       if ((G.endLvl - 1) % 3 === 0) {
-        G.total = G.served + customers.filter((q) => q.state !== "out").length;
+        G.total = G.served + customers.filter((q) => q.state !== "out" && !q.extra).length; // (v1.8.46: extras never count as served)
         callout("LAST ORDERS!  THEN THE CAFE MOVES ON", "#ffd24d", 2.4);
       }
     }
@@ -67023,6 +67196,7 @@ function breakRefresh() {
   } else {
     b.disabled = false;
     b.textContent = "I'M BACK!";
+    b.focus(); // (v1.8.41: so a controller's A presses it)
   }
 }
 
@@ -67143,7 +67317,7 @@ function skipMini() {
 // ONE GAME BETWEEN LEVELS (v1.3.3): on a mini-game level the cups round is left out - straight on to the mini-game
 function afterLevelNoCups() {
   G.callouts = [];
-  if (G.level >= LAST_LEVEL) return startEnding("final");
+  if (G.level >= LAST_LEVEL && !G.endless) return startEnding("final"); // (v1.8.46: endless goes round again - see startJump)
   if (G.level === MW_LAST && !G.endless) return startEnding("mw");
   funAfterBonus();
 }
@@ -67152,7 +67326,7 @@ function skipBonus() {
   if (G.state !== "bonus" || !bonus) return;
   sfx("click");
   G.callouts = [];
-  if (G.level >= LAST_LEVEL) return startEnding("final");
+  if (G.level >= LAST_LEVEL && !G.endless) return startEnding("final"); // (v1.8.46: endless goes round again - see startJump)
   if (G.level === MW_LAST && !G.endless) return startEnding("mw");
   funAfterBonus();
 }
@@ -68945,6 +69119,10 @@ function funOrderBubble(c, t) {
   translate(x, y + 13);
   scaleBy(0.8 * pu);
   drawGlass(0, 0, c.want, 1, 0);
+  // (v1.8.42) THE ORDER NOT BY COLOUR ALONE: the bubble always carries the flavour's shape (a heart, a square or a leaf)
+  //  - strawberry pink and mint green are a pair many colour-blind players can't tell apart, and FLAVOUR SHAPES is off
+  //  by default (with it on, drawGlass has drawn the shape already)
+  if (!COMFORT.shapes) flavorMark(0, -15, c.want, 1.35);
   pop();
 }
 // ORDERS: the flavour the front customer on a bar wants (the one your next shake will reach first)
@@ -68995,6 +69173,7 @@ function funTapLight(lane, t) {
       R.setAdd(true);
       glow(x, y, 16, withA(col(FLAV_HEX[f]), 0.4 + 0.15 * Math.sin(t * 5)));
       R.setAdd(false);
+      if (COMFORT.shapes) flavorMark(x, y, f, 0.6); // (v1.8.42: FLAVOUR SHAPES on the tap's light too)
     }
 }
 function funLaneDraw(lane, t) {
@@ -69385,6 +69564,8 @@ const miniSkipText = () =>
       ? "DON'T FANCY IT?  TAP  SKIP ▶▶  TO SKIP THIS MINI-GAME"
       : "DON'T FANCY IT?  PRESS ESC (OR K) TO SKIP THIS MINI-GAME";
 // ---- HUD bits ----
+// (v1.8.42) THE STORY'S WORDS FOLLOW THE TEXT SIZE setting (BIG, HUGE) - the postcard box wraps and grows to fit
+const storySz = (s) => Math.max(12, Math.min(19 * s, cssW / 34)) * TXT();
 function funHud(g, s, t, fD, sx, sy) {
   g.textAlign = "center";
   g.textBaseline = "middle";
@@ -69753,9 +69934,9 @@ function funHud(g, s, t, fD, sx, sy) {
       k = Math.min(1, (S0.t - i * per) / 0.4),
       bx = cssW * 0.06,
       bw = cssW * 0.88;
-    g.font = Math.round(Math.max(12, Math.min(19 * s, cssW / 34))) + "px " + FD;
+    g.font = Math.round(storySz(s)) + "px " + FD;
     const ls = wrapText(g, S0.lines[i], bw - 36 * s),
-      lh = Math.max(12, Math.min(19 * s, cssW / 34)) * 1.35,
+      lh = storySz(s) * 1.35,
       bh = 64 * s + ls.length * lh,
       by = Math.min(cssH * 0.62, cssH - bh - 12 * s);
     g.globalAlpha = Math.min(1, S0.t / 0.8);
@@ -69801,7 +69982,7 @@ function funHud(g, s, t, fD, sx, sy) {
       g.globalAlpha = Math.min(1, S0.t / 0.8);
     }
     g.fillStyle = "#2a1a3a";
-    g.font = Math.round(Math.max(12, Math.min(19 * s, cssW / 34))) + "px " + FD;
+    g.font = Math.round(storySz(s)) + "px " + FD;
     let left = Math.floor(S0.lines[i].length * k);
     ls.forEach((ln, j) => {
       const part = ln.slice(0, Math.max(0, left));
@@ -69960,7 +70141,7 @@ function funHud(g, s, t, fD, sx, sy) {
       g.globalAlpha = Math.max(0, Math.min(a, fa));
       const bw = Math.min(cssW - 24, 820 * s),
         bx = (cssW - bw) / 2,
-        fs = Math.max(11, Math.min(15 * s, 15));
+        fs = Math.max(11, Math.min(15 * s, 15)) * TXT(); // (v1.8.42: and the TEXT SIZE setting - the box grows to fit)
       g.font = "600 " + Math.round(fs) + "px " + FB;
       const ls = wrapText(g, v.fact, bw - 28),
         lh = fs * 1.35,
@@ -70313,6 +70494,9 @@ function openFP(id) {
 }
 function closeFP(id) {
   FP[id] = false;
+  // (v1.8.41: leaving CONTROLS while it waits for a key (a controller's B) left it waiting - the next key pressed
+  //  anywhere quietly became that binding)
+  if (id === "keys" && KM.wait) KM.wait = null;
   if (FP_PARENT && id !== FP_PARENT && G.state === "menu") {
     FP[FP_PARENT] = true; // (back to SETTINGS or PLAY MORE, where it was opened from)
     FP_PARENT = null;
@@ -70661,8 +70845,11 @@ function funPointer(type, x, y) {
 }
 function funAfterStart() {
   startApproach();
-  if (G.level === 1 && !G.endless && !G.daily && !G.introShown) {
+  // (v1.8.45: the opening is remembered once seen - it played again, 32 seconds of it, after every reload of the page;
+  //  THE STORY in the menu still plays it whenever you like)
+  if (G.level === 1 && !G.endless && !G.daily && !G.introShown && !store.get("introSeen", false)) {
     G.introShown = true;
+    store.set("introSeen", true);
     startStory("intro", "bogdan"); // (v1.7.0: the opening first - then Bogdan's hello)
   }
 }
@@ -80135,7 +80322,14 @@ function coachHud(g, s, t, fD, sx, sy) {
     const tp = tips[0];
     tip = { lane: tp.lane, x: tp.x, y: LY(tp.lane, tp.x) - 40, text: "A TIP! RUN " + K.run + " TO GRAB IT" };
   } else if (!d.pour && waiting.some((c) => c.lane === P0.lane) && !P0.pouring)
-    tip = { lane: P0.lane, x: TAPX - 10, y: LY(P0.lane, TAPX) - 60, text: K.pour + " - LET GO TO SLIDE IT" };
+    tip = {
+      lane: P0.lane,
+      x: TAPX - 10,
+      y: LY(P0.lane, TAPX) - 60,
+      // (v1.8.45: in TAP mode - the phones' default - one press fills the shake and slides it by itself; "LET GO TO SLIDE
+      //  IT" was the very first thing a new player was told, and it was wrong there)
+      text: K.pour + (pourMode === "tap" || oneBtn() ? " - IT SLIDES BY ITSELF" : " - LET GO TO SLIDE IT"),
+    };
   else if (d.pour && !d.lane && waiting.length && !waiting.some((c) => c.lane === P0.lane)) {
     const c = waiting[0];
     tip = {
@@ -80187,6 +80381,18 @@ const flawMul = () => 1 + Math.min(10, G.flawless || 0) * 0.1;
 function freeSave(why, lane, x) {
   if (G.demo || G.versus || G.freeSaved || !(difficulty === "easy" || difficulty === "kid")) return false;
   G.freeSaved = true;
+  // (v1.8.45) WHAT WENT WRONG, FIRST: on EASY a new player's very first mistake is the free save - and it only said
+  //  "PHEW!", so the first slip was never explained (the reason showed only from the second one on)
+  if (!DF().kid)
+    calloutNow(
+      why === "shake"
+        ? "NOBODY CAUGHT IT!"
+        : why === "grab"
+          ? "A CUSTOMER GOT TO YOU!"
+          : "YOU MISSED THE EMPTY!",
+      "#ff5fa8",
+      2
+    );
   callout("PHEW! A FREE SAVE  (ONE EACH LEVEL)", "#9fe8c8", 2.2);
   sfx("shieldpop", x);
   if (why === "grab")
@@ -81299,8 +81505,10 @@ function modesServed() {
   if (!G.ta || G.ta.endT) return;
   G.ta.served++;
   if (G.ta.served >= TA_GOAL) {
+    // (v1.8.47: two players or KID MODE don't set the best time - a two-player best stopped every solo run counting
+    //  as a new best, and the ghost then never changed)
     const best = store.get("taBest", 0),
-      nb = !best || G.ta.t < best;
+      nb = (!best || G.ta.t < best) && !twoP() && !DF().kid;
     if (nb) {
       store.set("taBest", +G.ta.t.toFixed(1));
       ghostSave(); // (this run becomes the ghost to beat)
@@ -81336,7 +81544,7 @@ function rushNext() {
   R0.i++;
   if (R0.i >= RUSH_LEVELS.length) {
     const best = store.get("rushBest14", 0),
-      nb = !best || R0.t < best;
+      nb = (!best || R0.t < best) && !twoP() && !DF().kid; // (v1.8.47: as the time attack's)
     if (nb) store.set("rushBest14", +R0.t.toFixed(1));
     R0.done = true;
     callout(
@@ -83869,7 +84077,7 @@ function levelOfTour(of) {
     inTour = ((lv - 1) % LAST_LEVEL) + 1;
   return (tour > 1 ? "TOUR " + tour + "  ·  " : "") + "LEVEL " + inTour + of + LAST_LEVEL;
 }
-const GAME_VERSION = "v1.8.40",
+const GAME_VERSION = "v1.8.47",
   GAME_DATE = "25.11.2026",
   VERSION_TEXT = GAME_VERSION + "  ·  " + GAME_DATE;
 const FB = '"Chakra Petch", "Segoe UI", sans-serif';
@@ -83910,6 +84118,10 @@ function hudObs(x, y, w, h) {
 // (lx: where the left-hand group ends, rx: where the right-hand one starts - for words across the middle)
 // (help: the top of the how-to-play box this frame, if it's up - the tune's name and GL go above it, not across it)
 const TOUCHB = { at: -1e9, w: 0, h: 0, l: 0, r: 0, lx: 0, rx: 0, help: 0 };
+// (v1.8.43) GLOWS ONLY WHEN THERE'S TIME FOR THEM: a canvas shadow blur is the dearest thing a phone can draw, and the HUD
+// used it every frame (the score, LIVES, the cross, the sign - and SHAKE FEVER's frame round the whole screen). Once the
+// game has had to lower its drawing quality (QUAL, automatic) to keep up, the HUD's glows are left off
+const GLOW = () => (QUAL >= 2 ? 1 : 0);
 function touchTops() {
   const el = $("touch");
   if (!el || el.hidden) return null;
@@ -84362,7 +84574,7 @@ function drawHud(fps) {
     if (wMax > room) g.font = fD((px * room) / wMax);
     g.fillStyle = colr;
     g.shadowColor = colr;
-    g.shadowBlur = 16 * s;
+    g.shadowBlur = 16 * s * GLOW();
     g.globalAlpha = a;
     const lh = parseFloat(g.font) * 1.05,
       // (v1.5.12: a plate is kept wholly on the screen - a two-line announcement at the very top had its glass cut off)
@@ -84419,7 +84631,7 @@ function drawHud(fps) {
       g.strokeStyle = colr;
       g.lineWidth = 1.6 * s;
       g.shadowColor = colr;
-      g.shadowBlur = 12 * s;
+      g.shadowBlur = 12 * s * GLOW();
       g.stroke();
       // (a glint of light along the top edge of the glass)
       g.shadowBlur = 0;
@@ -84433,7 +84645,7 @@ function drawHud(fps) {
       g.restore();
       g.fillStyle = colr;
       g.shadowColor = colr;
-      g.shadowBlur = 16 * s;
+      g.shadowBlur = 16 * s * GLOW();
       g.globalAlpha = a;
     }
     // (v1.4.99) A DARK EDGE round the announcement's letters, so it reads over the bright stage show behind it
@@ -84499,7 +84711,7 @@ function drawHud(fps) {
   } else {
     g.fillStyle = neon;
     g.shadowColor = neon;
-    g.shadowBlur = 18 * s;
+    g.shadowBlur = 18 * s * GLOW();
     g.globalAlpha = flick;
     if ((!ATTRACT.on || ATTRACT.phase === "demo") && !ending) {
       const nm = G.state === "bonus" ? "BONUS · FIND THE ALIEN" : here().name;
@@ -84710,7 +84922,7 @@ function drawHud(fps) {
     g.strokeStyle = "hsl(" + ((t * 300) % 360) + " 95% 62%)";
     g.globalAlpha = 0.45 + 0.25 * Math.sin(t * 10);
     g.shadowColor = g.strokeStyle;
-    g.shadowBlur = 20 * s;
+    g.shadowBlur = 20 * s * GLOW();
     g.strokeRect(3, 3, cssW - 6, cssH - 6);
     g.restore();
   }
@@ -84739,7 +84951,7 @@ function drawHud(fps) {
     g.font = fD(22);
     g.fillStyle = "#ff5fa8";
     g.shadowColor = "rgba(255,95,168,.6)";
-    g.shadowBlur = 10 * s;
+    g.shadowBlur = 10 * s * GLOW();
     if (twoP()) {
       // 1UP / 2UP, each in their own colour; dead players greyed out
       for (const p of PL) {
@@ -84808,14 +85020,14 @@ function drawHud(fps) {
       g.strokeText(txt, rightL - 10 * s, ly + 13 * s);
       g.fillStyle = nL <= 1 && !unl ? "#ff5a6a" : "#ff8fbf"; // (red on your last life)
       g.shadowColor = "rgba(255,95,168,.5)";
-      g.shadowBlur = 8 * s;
+      g.shadowBlur = 8 * s * GLOW();
       // (v1.5.38) A HEARTBEAT ON THE LAST LIFE: the red number glows in a slow double beat (lub-dub) - a quiet warning,
       // not a flashing alarm (and not in calm mode)
       if (nL <= 1 && !unl && !COMFORT.calm) {
         const ph = (performance.now() / 1000) % 1.1,
           hb = Math.max(Math.exp(-((ph - 0.1) ** 2) / 0.003), 0.6 * Math.exp(-((ph - 0.32) ** 2) / 0.003));
         g.shadowColor = "rgba(255,40,70," + (0.5 + 0.4 * hb).toFixed(2) + ")";
-        g.shadowBlur = (8 + 14 * hb) * s;
+        g.shadowBlur = (8 + 14 * hb) * s * GLOW();
       }
       // (v1.5.29) a life won or lost: the number swells and flashes (white for a new one, red for one lost)
       if (HUDJ.lives >= 0 && nL !== HUDJ.lives && !unl) {
@@ -84828,7 +85040,7 @@ function drawHud(fps) {
         const f = HUDJ.lifeT;
         g.fillStyle = HUDJ.lifeUp ? (f > 0.55 ? "#ffffff" : g.fillStyle) : f > 0.55 ? "#ff3048" : g.fillStyle;
         g.shadowColor = HUDJ.lifeUp ? "rgba(255,255,255,.8)" : "rgba(255,40,60,.8)";
-        g.shadowBlur = (8 + 10 * f) * s;
+        g.shadowBlur = (8 + 10 * f) * s * GLOW();
       }
       g.textAlign = "right";
       hudBounce(g, rightL - 10 * s, ly + 13 * s, HUDJ.lifeT * 1.6, (x2, y2) => g.fillText(txt, x2, y2));
@@ -84884,7 +85096,7 @@ function drawHud(fps) {
         g.fillStyle = "#ffd24d";
         if (ready) {
           g.shadowColor = "#ffd24d";
-          g.shadowBlur = (8 + 4 * Math.sin(t * 5)) * s;
+          g.shadowBlur = (8 + 4 * Math.sin(t * 5)) * s * GLOW();
         }
         g.fillRect(cx0 + 3 * s, cy0, 3 * s, 15 * s);
         g.fillRect(cx0, cy0 + 3.5 * s, 9 * s, 3 * s);
@@ -85024,7 +85236,7 @@ function drawHud(fps) {
       g.fillStyle = cc;
       if (n >= 4) {
         g.shadowColor = cc;
-        g.shadowBlur = 14 * s;
+        g.shadowBlur = 14 * s * GLOW();
       }
       g.fillText(txt, 0, -8 * s);
       g.restore();
@@ -85128,7 +85340,7 @@ function drawHud(fps) {
       g.scale(pop, pop);
       g.fillStyle = c.c;
       g.shadowColor = c.c;
-      g.shadowBlur = 16 * s;
+      g.shadowBlur = 16 * s * GLOW();
       g.fillText(c.text, 0, 0);
       g.shadowBlur = 0;
       const sw = (age - 0.3) / 0.55;
@@ -85170,7 +85382,7 @@ function drawHud(fps) {
       g.strokeText("SPACEKOM LOAD SHEDDING", cssW / 2, cssH * 0.3);
       g.fillStyle = "#ffb030";
       g.shadowColor = "#ff7a20";
-      g.shadowBlur = 26 * s;
+      g.shadowBlur = 26 * s * GLOW();
       g.fillText("SPACEKOM LOAD SHEDDING", cssW / 2, cssH * 0.3);
       g.shadowBlur = 0;
       g.font = fD(Math.min(34, cssW / 20 / s));
@@ -85191,7 +85403,7 @@ function drawHud(fps) {
     g.font = fD((go ? 46 : 34) * (go ? 1 + (1 - k) * 0.4 : 1));
     g.fillStyle = go ? "#5ff5c8" : "#ffc34d";
     g.shadowColor = g.fillStyle;
-    g.shadowBlur = 20 * s;
+    g.shadowBlur = 20 * s * GLOW();
     g.fillText(go ? "GO!" : "READY?", cssW / 2, cssH * 0.56);
     g.shadowBlur = 0;
     g.globalAlpha = 1;
@@ -85640,7 +85852,7 @@ function drawEndingHud(g, s, fD, fB) {
     fit(txt, px, colW);
     g.fillStyle = c;
     g.shadowColor = c;
-    g.shadowBlur = 18 * s;
+    g.shadowBlur = 18 * s * GLOW();
     g.fillText(txt, cx, y);
     g.shadowBlur = 0;
     g.globalAlpha = 1;
@@ -85842,7 +86054,7 @@ function drawEndingHud(g, s, fD, fB) {
       g.strokeStyle = col1;
       g.lineWidth = 2.5 * s;
       g.shadowColor = col1;
-      g.shadowBlur = 14 * s * pulse;
+      g.shadowBlur = 14 * s * pulse * GLOW();
       g.stroke();
       g.shadowBlur = 0;
       g.globalAlpha = 1;
@@ -85942,7 +86154,7 @@ function drawFiredHud(g, s, t, fD, fB, sx, sy) {
       g.font = fD(Math.min(42, cssW / 16 / s));
       g.fillStyle = "#ff5fa8";
       g.shadowColor = "#ff5fa8";
-      g.shadowBlur = 20 * s;
+      g.shadowBlur = 20 * s * GLOW();
       g.fillText("GAME OVER", cssW / 2, cssH * 0.14 + 30 * s);
       g.shadowBlur = 0;
       g.globalAlpha = 1;
@@ -86159,6 +86371,20 @@ for (const ev of ["pointerdown", "pointerup", "touchstart", "touchend", "mousedo
   window.addEventListener(ev, unlockAudio, { capture: true, passive: true });
 document.addEventListener("visibilitychange", () => {
   if (!document.hidden && AC && AC.state !== "running") AC.resume().catch(() => {});
+  // (v1.8.46: a record from your own music, paused when the tab was hidden (below), plays on when you're back)
+  try {
+    if (!document.hidden && typeof REC !== "undefined" && REC.playing >= 0 && REC.el && REC.el.paused)
+      REC.el.play().catch(() => {});
+  } catch (e) {}
+  // (v1.8.44) A HIDDEN TAB IS QUIET: the game pauses itself only mid-stop, so on the menu, paused, or with a phone's
+  //  screen off the music played on. Hidden, all sound waits (it comes back with the tab); a record from your own
+  //  music is paused too (it doesn't follow the sound's pause - its own tick starts it again)
+  if (document.hidden && AC && AC.state === "running") {
+    AC.suspend().catch(() => {});
+    try {
+      if (typeof REC !== "undefined" && REC.el && !REC.el.paused) REC.el.pause();
+    } catch (e) {}
+  }
 });
 // VOLUME: music and sound effects, each 0 to 1 (in steps of a quarter), remembered
 // (and a third, BACKGROUND SOUNDS: the world around the pub - the stage show's laughs, the taxi's hoot, passing
@@ -86394,6 +86620,7 @@ function fxOut(x) {
   const out = AC.createStereoPanner ? AC.createStereoPanner() : AC.createGain();
   if (out.pan) out.pan.value = x === undefined ? 0 : clamp(((x - PW / 2) / (PW / 2)) * 0.75, -0.8, 0.8);
   const bg = SFX_BG && bgBus;
+  let echoG = null;
   out.connect(bg ? bgBus : fxBus);
   if (revSend) {
     if (bg) {
@@ -86401,11 +86628,13 @@ function fxOut(x) {
       g.gain.value = VOL.bg;
       out.connect(g);
       g.connect(revSend);
+      echoG = g;
     } else out.connect(revSend);
   }
   setTimeout(() => {
     try {
       out.disconnect();
+      if (echoG) echoG.disconnect(); // (v1.8.44: the background echo's own gain too - one was left connected each time)
     } catch (e) {}
   }, 7000); // (long enough that no sound's tail is ever cut off mid-note)
   return out;
@@ -86443,7 +86672,18 @@ function glass(out, when, vol = 0.06, base = 2600) {
 // the power-ups, the glasses and the till of the demo bartender, the space show's little noises - are gone. While the
 // demo runs (and on Castaway Island, the screensaver) only the music plays; a click on a button still sounds.
 const demoHush = () => (typeof ATTRACT !== "undefined" && ATTRACT.on) || !!G.demo || G.state === "castaway";
+// (v1.8.44) ONE AT A TIME: the same sound started again within 40 ms is left out - a magnet collecting three tips at once
+// played three bursts of pings on top of each other, and several customers crossing the line in one frame stacked
+// their klaxons into a harsh blast (a catch and a voice are left alone: two players' catches should both sound)
+const SFX_LAST                         = {},
+  SFX_ONCE = new Set(["tip", "danger", "dangertick", "clink", "grab", "boing", "tick", "spill"]);
 function sfx(name, x , kind ) {
+  // (v1.8.44: with SOUND off or the effects volume at 0, nothing is built at all - it was all made and then silenced)
+  if (muted || (SFX_BG ? VOL.bg * VOL.fx : VOL.fx) === 0) return;
+  if (SFX_ONCE.has(name) && AC) {
+    if (AC.currentTime - (SFX_LAST[name] ?? -9) < 0.04) return;
+    SFX_LAST[name] = AC.currentTime;
+  }
   if (
     !AC ||
     AC.state !== "running" ||
@@ -90109,7 +90349,10 @@ function schedule() {
   if (!AC) return;
   const now = AC.currentTime,
     on =
-      (MY.mode === "original" || JB.open || (JB.radio && G.state === "menu")) && !muted && JB.playing !== -2;
+      (MY.mode === "original" || JB.open || (JB.radio && G.state === "menu")) &&
+      !muted &&
+      JB.playing !== -2 &&
+      VOL.music > 0; // (v1.8.44: at MUSIC VOLUME 0 the band stops playing - it played on, silently, using the phone)
   const want = on ? musicWanted() : -1;
   if (want !== curTrack && curTrack >= 0 && want !== MFADE.to) {
     // start fading the old tune out - it carries on playing meanwhile
@@ -90420,15 +90663,20 @@ function showPanels() {
   // (v1.4.98) ↻ START OVER IS ALWAYS THERE: the corner buttons stay up everywhere now - on the menu, in the demo, on
   // Castaway Island, behind every panel - not just during a game; PAUSE only shows while there's a game to pause
   $("topbtns").hidden = false;
-  $("tPause").hidden = !["play", "lost", "clear", "bonus", "mini", "story", "approach", "jump"].includes(
-    G.state
-  );
+  // (v1.8.41: not during the story or the warp - pausing does nothing there; the arrival screen can be paused now)
+  $("tPause").hidden = !["play", "lost", "clear", "bonus", "mini"].includes(G.state); // (v1.8.46: not on the arrival screen)
   fillTable($("hiTable"), store.get("scores", []), -1);
   $("turnHint").hidden = !(coarse && window.innerHeight > window.innerWidth);
   fromText();
   $("bFrom").hidden = false;
 }
 function pause(on) {
+  // (v1.8.41: the break reminder can only be left with its own I'M BACK button - a controller's A, B or START resumed
+  //  the game under it, and its panel stayed over the bar, swallowing every key)
+  if (!on && BRK.open) return;
+  // (v1.8.41: and the arrival screen can be paused too - the PAUSE button showed there but did nothing)
+  // (v1.8.46: taken back out - paused there, the picture behind the pause screen showed the empty bar, and resuming
+  //  with a key skipped the arrival; the PAUSE button is hidden on the arrival screen instead)
   if (on && ["play", "lost", "clear", "bonus", "mini"].includes(G.state)) {
     G.prev = G.state;
     G.state = "paused";
@@ -90680,7 +90928,30 @@ $("pJoin").onclick = () => {
   }
 };
 pressTwice("pQuit", "PRESS AGAIN TO QUIT TO THE MENU", toMenu);
-$("oAgain").onclick = startGame;
+// (v1.8.47) PLAY AGAIN PLAYS THE SAME AGAIN: after a time attack, boss rush, endless, relax or daily game it started an
+// ordinary tour - now it starts the same mode once more, the way its own button does
+$("oAgain").onclick = () => {
+  keepScore(); // (v1.8.47 review: first - a new high score not yet SAVEd is kept, as on every way out of GAME OVER)
+  const was = CUP.match
+    ? ""
+    : G.ta
+      ? "bTa"
+      : G.brush
+        ? "bRush"
+        : G.endless
+          ? "bEndless"
+          : G.free
+            ? "free"
+            : G.daily
+              ? "daily"
+              : "";
+  if (!was) return startGame();
+  G.state = "menu"; // (the mode buttons start a game from the menu)
+  if (was === "free") freeStart();
+  else if (was === "daily") startDaily();
+  else ($k(was)               ).click();
+  if (G.state === "menu") startGame(); // (in case that mode couldn't start - an ordinary game, as before)
+};
 $("oMenu").onclick = toMenu;
 $("oShare").onclick = () => shareNow(G.versus && CUP.s && CUP.s.champ && !cupNext() ? "cup" : "game");
 // EXIT GAME: press it twice (so a stray press never quits). In the Windows app it closes the window; in a browser a page
@@ -91003,6 +91274,11 @@ function refreshChars() {
 // (v1.4.81) ...but only the FIRST time. Once you've picked, the menu shows your bartender (BARTENDER: ANNEKE - tap it to
 // change) and START goes straight into the game, instead of asking again before every single game
 function beginGame() {
+  // (v1.8.47: on GAME OVER, Enter / a controller's A or START do what PLAY AGAIN does - the same mode again)
+  if (G.state === "over" && !$("oAgain").hidden) {
+    $("oAgain").click();
+    return;
+  }
   if (G.state !== "menu") {
     startGame();
     return;
@@ -91262,6 +91538,7 @@ function navPress() {
   return false;
 }
 function navBack() {
+  if (BRK.open) return; // (v1.8.41: see pause - the break reminder waits for I'M BACK)
   if (!$("bye").hidden) {
     $("byeBack").click(); // (v1.4.43: B on the goodbye screen - back to the game)
     return;
@@ -91272,6 +91549,7 @@ function navBack() {
   else if (WD.open) closeWard();
   else if (fpAny()) closeFP(fpWhich());
   else if (G.state === "paused") pause(false);
+  else if (G.state === "over" && $("nameForm").hidden) toMenu(); // (v1.8.41: B / Escape on GAME OVER - back to the menu, as on every other screen)
 }
 const panelNav = () =>
   !$("bye").hidden || // (v1.4.43: the goodbye screen and the "stuck" box always take the controller and the keys)
@@ -91381,6 +91659,13 @@ window.addEventListener(
       e.preventDefault();
       e.stopImmediatePropagation();
       SB.open ? closeStickers() : WD.open ? closeWard() : closeFP(fpWhich());
+      return;
+    }
+    // (v1.8.41) ESCAPE ON GAME OVER goes back to the menu, as on every other screen (with the name box hidden)
+    if (G.state === "over" && $("nameForm").hidden && !fpAny() && k === "Escape") {
+      e.preventDefault();
+      e.stopImmediatePropagation();
+      toMenu();
       return;
     }
     if (SB.open || WD.open || fpAny() || BRK.open) {
@@ -91611,6 +91896,69 @@ profWire();
 //  the game, and where the motion capture, the folk songs and the fonts come from. Both from the menu at any time.
 // =====================================================================================
 const NEWS = [
+  {
+    ver: "v1.8.47",
+    title: "EVERY MODE ITS OWN",
+    items: [
+      "PLAY AGAIN AFTER A TIME ATTACK, BOSS RUSH, ENDLESS, RELAX OR DAILY GAME PLAYS THAT MODE AGAIN",
+      "GAME OVER NO LONGER OFFERS TO CONTINUE AN OLD TOUR AFTER THOSE MODES, AND THE MENU'S DEMO IS BACK TO NORMAL",
+      "TWO-PLAYER AND KID-MODE RUNS NO LONGER SET THE BEST TIMES, AND A DAILY CHALLENGE FINISHED AFTER MIDNIGHT KEEPS YOUR STREAK",
+    ],
+  },
+  {
+    ver: "v1.8.46",
+    title: "ROUND AGAIN",
+    items: [
+      "ENDLESS GOES ROUND THE TOUR AGAIN AFTER STOP 40, INSTEAD OF PLAYING THE TOUR'S ENDING",
+      "A KEY YOU SET YOURSELF NO LONGER STAYS HELD AFTER PAUSING",
+      "EACH PLAYER IN THE FAMILY SEES THE OPENING STORY ONCE, AND YOUR OWN MUSIC PLAYS ON WHEN YOU COME BACK TO THE TAB",
+    ],
+  },
+  {
+    ver: "v1.8.45",
+    title: "FIRST STEPS",
+    items: [
+      "THE FIRST TIP NOW SAYS THE SHAKE SLIDES BY ITSELF - IN TAP MODE IT SAID LET GO, WHICH DID NOTHING",
+      "YOUR FIRST SLIP ON EASY SAYS WHAT WENT WRONG BEFORE THE FREE SAVE",
+      "A CALMER FIRST STOP, AND THE OPENING STORY ISN'T REPEATED AFTER EVERY RELOAD",
+    ],
+  },
+  {
+    ver: "v1.8.44",
+    title: "EASY ON THE EARS",
+    items: [
+      "THE SAME SOUND NO LONGER STACKS INTO A LOUD BLAST - A MAGNET'S TIPS, SEVERAL ALARMS AT ONCE",
+      "THE MUSIC STOPS WHEN YOU LEAVE THE TAB OR TURN THE SCREEN OFF, AND AT MUSIC VOLUME 0",
+      "WITH SOUND OFF, THE PHONE NO LONGER MAKES THE SOUNDS SILENTLY",
+    ],
+  },
+  {
+    ver: "v1.8.43",
+    title: "LIGHTER LOAD",
+    items: [
+      "ON A PHONE THAT STRUGGLES TO KEEP UP, THE SCORE AND SIGNS DROP THEIR GLOW - THE DEAREST THING TO DRAW",
+      "WHILE PAUSED THE GAME DRAWS FAR LESS, SPARING THE BATTERY",
+      "IN AFRIKAANS AND POLISH THE SCORE AND COUNTERS NO LONGER SLOW THE TRANSLATING DOWN",
+    ],
+  },
+  {
+    ver: "v1.8.42",
+    title: "FOR EVERYONE",
+    items: [
+      "A CUSTOMER'S ORDER BUBBLE ALWAYS SHOWS THE FLAVOUR'S SHAPE TOO - A HEART, A SQUARE OR A LEAF - NOT ONLY ITS COLOUR",
+      "THE STORY AND THE DID YOU KNOW? BOX FOLLOW THE TEXT SIZE SETTING",
+      "CALM MODE: GENTLER LIGHTNING ON CASTAWAY ISLAND AND ONE FIREWORK AT MOST",
+    ],
+  },
+  {
+    ver: "v1.8.41",
+    title: "SMOOTH MENUS",
+    items: [
+      "THE BREAK REMINDER CAN NO LONGER BE SKIPPED BY A CONTROLLER AND LEFT STUCK OVER THE GAME",
+      "CHANGING KEYS IN CONTROLS NO LONGER KEEPS WAITING AFTER YOU LEAVE, AND YOUR OWN KEYS NO LONGER UPSET THE MENUS",
+      "ESCAPE OR B ON GAME OVER GOES BACK TO THE MENU, AND THE PAUSE BUTTON ONLY SHOWS WHERE IT WORKS",
+    ],
+  },
   {
     ver: "v1.8.40",
     title: "ON THE ROAD",
@@ -94477,6 +94825,7 @@ let slowN = 0,
   qualCool = 0,
   qualUpWait = 30,
   qualUpAt = -1e9;
+const PAUSE_DRAW = { n: 0 }; // (v1.8.43: see frameWork)
 function autoQuality(f) {
   if (document.hidden) return;
   if (qualCool > 0) {
@@ -94720,6 +95069,9 @@ function frameWork(ts) {
   attractTick(dt);
   ambience(); // (the random background space noises are switched off too - only music and sound effects)
   update(dt);
+  // (v1.8.43) PAUSED, THE PICTURE STANDS STILL: it was drawn in full sixty times a second under the pause screen - now
+  //  every third frame (the screen keeps showing the last one), which spares a phone's battery while you're away
+  if (G.state === "paused" && PAUSE_DRAW.n++ % 3) return;
   draw();
   drawHud(fps);
   drawJukebox();

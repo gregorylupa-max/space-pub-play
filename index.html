@@ -355,10 +355,12 @@ body.touch2p #touch .tp button.holy { width: 60px; height: 60px; font-size: 11px
   #touch { --c: min(80px, calc((100vw - 64px) / 5.1)); padding-left: calc(10px + env(safe-area-inset-left, 0px)); padding-right: calc(10px + env(safe-area-inset-right, 0px)); }
   #touch .grp, #touch .col { gap: 8px; }
   #touch button { width: var(--c); height: var(--c); font-size: calc(var(--c) * .3); }
-  #touch .col button { width: calc(var(--c) * .82); height: calc(var(--c) * .72); border-radius: 14px; font-size: calc(var(--c) * .26); }
+  /* (v1.8.37) BIG ENOUGH FOR A THUMB: on a 360-wide phone the arrows (the RUN buttons, held upright) came out 42 pixels
+     high and the holy water and cross 30 - under the 44 a thumb needs. There's no width to spare, but there is height */
+  #touch .col button { width: calc(var(--c) * .82); height: max(44px, calc(var(--c) * .72)); border-radius: 14px; font-size: calc(var(--c) * .26); }
   #touch button.act { width: calc(var(--c) * 1.27); height: calc(var(--c) * 1.27); font-size: calc(var(--c) * .22); }
   #touch .row2 { gap: 4px; }
-  #touch .row2 button.holy { width: calc(var(--c) * .615); height: calc(var(--c) * .52); font-size: calc(var(--c) * .15); }
+  #touch .row2 button.holy { width: calc(var(--c) * .615); height: max(40px, calc(var(--c) * .52)); font-size: calc(var(--c) * .15); }
   #touch button small { font-size: 9px; letter-spacing: .04em; }
 }
 #crash { position: fixed; inset: 0; z-index: 50; display: flex; align-items: center; justify-content: center; background: rgba(4, 2, 12, .82); }
@@ -7991,6 +7993,13 @@ const DICT_ROWS                             = [
     "THE RACE WITH THE BLACK HOLE BISTRO NOW HAS A LITTLE TRACK: YOUR DINER AND THEIR SAUCER, HEADING FOR THE FLAG",
     "DIE WEDLOOP MET DIE SWARTGAT-BISTRO HET NOU 'N KLEIN RENBAAN: JOU KAFEE EN HULLE PIERING, OP PAD NA DIE VLAG",
     "WYŚCIG Z BISTRO CZARNA DZIURA MA TERAZ MAŁY TOR: TWOJA KAWIARNIA I ICH SPODEK PĘDZĄ DO FLAGI",
+  ],
+  // (v1.8.37) THUMB SIZE
+  ["THUMB SIZE", "DUIMGROOTTE", "NA KCIUK"],
+  [
+    "ON A SMALL PHONE HELD UPRIGHT THE RUN ARROWS, HOLY WATER AND CROSS BUTTONS ARE TALLER - EASIER TO HIT WITH A THUMB",
+    "OP 'N KLEIN FOON WAT REGOP GEHOU WORD, IS DIE HARDLOOP-PYLE, WYWATER- EN KRUISKNOPPIES HOËR - MAKLIKER OM MET 'N DUIM TE TREF",
+    "NA MAŁYM TELEFONIE TRZYMANYM PIONOWO STRZAŁKI BIEGU, WODA ŚWIĘCONA I KRZYŻ SĄ WYŻSZE - ŁATWIEJ TRAFIĆ KCIUKIEM",
   ],
   // (v1.8.36) KEEP GOING
   ["KEEP GOING", "HOU AAN", "NIE PRZESTAWAJ"],
@@ -83798,7 +83807,7 @@ function levelOfTour(of) {
     inTour = ((lv - 1) % LAST_LEVEL) + 1;
   return (tour > 1 ? "TOUR " + tour + "  ·  " : "") + "LEVEL " + inTour + of + LAST_LEVEL;
 }
-const GAME_VERSION = "v1.8.36",
+const GAME_VERSION = "v1.8.37",
   GAME_DATE = "25.11.2026",
   VERSION_TEXT = GAME_VERSION + "  ·  " + GAME_DATE;
 const FB = '"Chakra Petch", "Segoe UI", sans-serif';
@@ -91540,6 +91549,13 @@ profWire();
 //  the game, and where the motion capture, the folk songs and the fonts come from. Both from the menu at any time.
 // =====================================================================================
 const NEWS = [
+  {
+    ver: "v1.8.37",
+    title: "THUMB SIZE",
+    items: [
+      "ON A SMALL PHONE HELD UPRIGHT THE RUN ARROWS, HOLY WATER AND CROSS BUTTONS ARE TALLER - EASIER TO HIT WITH A THUMB",
+    ],
+  },
   {
     ver: "v1.8.36",
     title: "KEEP GOING",

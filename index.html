@@ -7992,6 +7992,18 @@ const DICT_ROWS                             = [
     "DIE WEDLOOP MET DIE SWARTGAT-BISTRO HET NOU 'N KLEIN RENBAAN: JOU KAFEE EN HULLE PIERING, OP PAD NA DIE VLAG",
     "WYŚCIG Z BISTRO CZARNA DZIURA MA TERAZ MAŁY TOR: TWOJA KAWIARNIA I ICH SPODEK PĘDZĄ DO FLAGI",
   ],
+  // (v1.8.34) SETTLED
+  ["SETTLED", "TOT RUS", "USTALONE"],
+  [
+    "TWO PLAYERS ON ONE TOUCH SCREEN: A TOUCH ON THE PICTURE NO LONGER MOVES PLAYER 1 - EACH PLAYER HAS THEIR OWN PAD",
+    "TWEE SPELERS OP EEN RAAKSKERM: 'N AANRAKING OP DIE PRENT SKUIF NIE MEER SPELER 1 NIE - ELKE SPELER HET SY EIE BEHEERPAD",
+    "DWÓCH GRACZY NA JEDNYM EKRANIE DOTYKOWYM: DOTKNIĘCIE OBRAZU NIE PORUSZA JUŻ GRACZA 1 - KAŻDY MA WŁASNE PRZYCISKI",
+  ],
+  [
+    "THE JANUS TWILIGHT CAFE'S ICE IS IN LINE WITH THE STOPS AROUND IT AGAIN, NOW THAT RUNNING IS BACK TO FULL SPEED",
+    "DIE JANUS-SKEMERKAFEE SE YS IS WEER IN LYN MET DIE HALTES RONDOM, NOU DAT HARDLOOP WEER TEEN VOLLE SPOED IS",
+    "LÓD W KAWIARNI ZMIERZCHU NA JANUSIE JEST ZNÓW NA RÓWNI Z SĄSIEDNIMI PRZYSTANKAMI, GDY BIEG WRÓCIŁ DO PEŁNEJ SZYBKOŚCI",
+  ],
   // (v1.8.33) FAIR GAMES
   ["FAIR GAMES", "REGVERDIGE SPELETJIES", "UCZCIWE MINIGRY"],
   [
@@ -14396,7 +14408,7 @@ const params = () => {
 // and fewer at a time, so they sit in line with their neighbours again (NORMAL and HARD only - EASY and KID MODE had
 // no spikes). The number is how much gentler (0.2 = about a fifth)
 const STOP_EVEN = {
-  JANUS: 0.2,
+  JANUS: 0.4, // (v1.8.34: was 0.2 - with the running speed back (v1.8.33) the bartender glides further on its ice: 5.6 lives against 3.8 either side)
   HALO: 0.3, // (v1.8.30: was 0.14 - still 7.7 lives against about 5.7 around it)
   "S ANDROMEDAE": 0.45,
   // (v1.8.30) MEASURED AGAIN after the gravity and the house cocktails (curve.py, 6 tries a stop): three more stops stood
@@ -15726,6 +15738,10 @@ function bindPointer(canvas) {
       return;
     }
     if (G.state !== "play") return;
+    // (v1.8.34) TWO PLAYERS ON ONE TOUCH SCREEN: each has a pad of their own, but a touch on the picture itself always
+    //  moved PLAYER 1 - player 2 tapping a bar, or a thumb resting on the picture, made player 1 jump, run or pour. With
+    //  the two pads showing, the picture's bar gestures are left to the pads (a mouse still works as before)
+    if (e.pointerType === "touch" && document.body.classList.contains("touch2p")) return;
     const lane = laneAt(wx, wy),
       mine = lane === P1.lane;
     GEST.set(e.pointerId, {
@@ -83722,7 +83738,7 @@ function levelOfTour(of) {
     inTour = ((lv - 1) % LAST_LEVEL) + 1;
   return (tour > 1 ? "TOUR " + tour + "  ·  " : "") + "LEVEL " + inTour + of + LAST_LEVEL;
 }
-const GAME_VERSION = "v1.8.33",
+const GAME_VERSION = "v1.8.34",
   GAME_DATE = "25.11.2026",
   VERSION_TEXT = GAME_VERSION + "  ·  " + GAME_DATE;
 const FB = '"Chakra Petch", "Segoe UI", sans-serif';
@@ -91464,6 +91480,14 @@ profWire();
 //  the game, and where the motion capture, the folk songs and the fonts come from. Both from the menu at any time.
 // =====================================================================================
 const NEWS = [
+  {
+    ver: "v1.8.34",
+    title: "SETTLED",
+    items: [
+      "TWO PLAYERS ON ONE TOUCH SCREEN: A TOUCH ON THE PICTURE NO LONGER MOVES PLAYER 1 - EACH PLAYER HAS THEIR OWN PAD",
+      "THE JANUS TWILIGHT CAFE'S ICE IS IN LINE WITH THE STOPS AROUND IT AGAIN, NOW THAT RUNNING IS BACK TO FULL SPEED",
+    ],
+  },
   {
     ver: "v1.8.33",
     title: "FAIR GAMES",

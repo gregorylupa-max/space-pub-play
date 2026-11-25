@@ -7992,6 +7992,18 @@ const DICT_ROWS                             = [
     "DIE WEDLOOP MET DIE SWARTGAT-BISTRO HET NOU 'N KLEIN RENBAAN: JOU KAFEE EN HULLE PIERING, OP PAD NA DIE VLAG",
     "WYŚCIG Z BISTRO CZARNA DZIURA MA TERAZ MAŁY TOR: TWOJA KAWIARNIA I ICH SPODEK PĘDZĄ DO FLAGI",
   ],
+  // (v1.8.26) NEAT CORNERS
+  ["NEAT CORNERS", "NETJIESE HOEKE", "SCHLUDNE ROGI"],
+  [
+    "THE RACE LINE WITH THE BLACK HOLE BISTRO NOW FITS A NARROW WINDOW ON A COMPUTER TOO",
+    "DIE WEDLOOP-REËL MET DIE SWARTGAT-BISTRO PAS NOU OOK IN 'N SMAL VENSTER OP 'N REKENAAR",
+    "LINIA WYŚCIGU Z BISTRO CZARNA DZIURA MIEŚCI SIĘ TERAZ TAKŻE W WĄSKIM OKNIE NA KOMPUTERZE",
+  ],
+  [
+    "ONCE THE RACE LINE HAS GONE, THE HOUSE SPECIAL COUNTDOWN MOVES DOWN INTO ITS PLACE",
+    "SODRA DIE WEDLOOP-REËL WEG IS, SAK DIE AFTELLING NA DIE HUISSPESIAAL IN SY PLEK AF",
+    "GDY LINIA WYŚCIGU ZNIKNIE, ODLICZANIE DO SPECJAŁU DOMU ZJEŻDŻA NA JEJ MIEJSCE",
+  ],
   // (v1.8.25) SAVED FOR LATER
   ["SAVED FOR LATER", "GEBERG VIR LATER", "ZOSTAWIONE NA PÓŹNIEJ"],
   [
@@ -68024,9 +68036,12 @@ function rivalClear() {
 }
 // (the race in the corner, above the FLAVOUR line: both counts, and two little bars side by side - yours pink, the
 // Bistro's purple)
+// (v1.8.26) is the race line in the corner? - four seconds after the race is decided it goes (the countdown to the house
+// special asks too: it used to keep the race line's gap open after the line had gone)
+const rivalShown = () => !!G.rival && !(G.rival.won && G.time - G.rival.at > 4);
 function rivalHud(g, s, fD, y) {
   const Rv = G.rival;
-  if (!Rv || (Rv.won && G.time - Rv.at > 4)) return 0;
+  if (!rivalShown()) return 0;
   const tot = G.total,
     you = Math.min(G.served, tot),
     them = Math.min(Math.floor(Rv.n), tot),
@@ -68045,12 +68060,14 @@ function rivalHud(g, s, fD, y) {
   g.font = fD(11);
   g.textAlign = "left";
   const tbs = touchTops();
-  if (tbs) {
+  {
     // (v1.8.15: the right-hand pad only limits it when the line is level with it - above the pads, as with two players
     //  on a phone held upright, the whole width is free; it was squeezed to a few pixels there)
-    const room = (y > tbs.r - 4 * s ? tbs.rx : cssW - 16 * s) - 16 * s - 110 * s, // (v1.7.12: room for the race track too)
+    // (v1.8.26) AND WITHOUT TOUCH PADS TOO: in a narrow window on a PC (no pads) the line never shrank, and in Polish
+    //  with HUGE text the race track could run off the right edge - now it fits the screen's width there as well
+    const room = (tbs ? (y > tbs.r - 4 * s ? tbs.rx : cssW - 16 * s) : cssW - 16 * s) - 16 * s - 110 * s, // (v1.7.12: room for the race track too)
       ow = g.measureText(txt).width;
-    if (room > 40 && ow > room) g.font = fD(Math.max(7, (11 * room) / ow));
+    if (ow > room) g.font = fD(Math.max(7, (11 * Math.max(room, 1)) / ow));
   }
   g.lineWidth = 3 * s;
   g.strokeStyle = "rgba(8,4,16,.8)";
@@ -69638,7 +69655,7 @@ function funHud(g, s, t, fD, sx, sy) {
       const tbs = touchTops(),
         fy = tbs ? Math.min(cssH - 40 * s, tbs.l - 12 * s) : cssH - 40 * s,
         tgOn = G.tg && coopOn() && (!G.tg.done || G.time - (G.tg.doneT ?? G.time) < 4),
-        cy = fy - ((COMFORT.flav ? (twoP() ? 50 : 34) : 0) + (tgOn ? 16 : 0) + (G.rival ? 18 : 0)) * s,
+        cy = fy - ((COMFORT.flav ? (twoP() ? 50 : 34) : 0) + (tgOn ? 16 : 0) + (rivalShown() ? 18 : 0)) * s, // (v1.8.26: rivalShown)
         txt = soon
           ? "HOUSE SPECIAL IN " + soon
           : twoP()
@@ -83381,7 +83398,7 @@ function levelOfTour(of) {
     inTour = ((lv - 1) % LAST_LEVEL) + 1;
   return (tour > 1 ? "TOUR " + tour + "  ·  " : "") + "LEVEL " + inTour + of + LAST_LEVEL;
 }
-const GAME_VERSION = "v1.8.25",
+const GAME_VERSION = "v1.8.26",
   GAME_DATE = "25.11.2026",
   VERSION_TEXT = GAME_VERSION + "  ·  " + GAME_DATE;
 const FB = '"Chakra Petch", "Segoe UI", sans-serif';
@@ -85161,7 +85178,9 @@ function drawEndingHud(g, s, fD, fB) {
     g.fillStyle = c;
     // (v1.8.15) TOO LONG FOR ONE LINE: on a phone held upright a long sentence was squeezed down to about five pixels
     // to fit - now, when it would shrink to under two-thirds of its size, it's split into two lines instead
-    if (w > colW && colW / w < 0.8) {
+    // (v1.8.26: only when there are two words or more - a single word used to come out 0 pixels high; one word is
+    //  shrunk to fit as before)
+    if (w > colW && colW / w < 0.8 && T(txt).trim().includes(" ")) {
       const words = T(txt).split(" ");
       let best = 1,
         bw = Infinity;
@@ -91118,6 +91137,14 @@ profWire();
 //  the game, and where the motion capture, the folk songs and the fonts come from. Both from the menu at any time.
 // =====================================================================================
 const NEWS = [
+  {
+    ver: "v1.8.26",
+    title: "NEAT CORNERS",
+    items: [
+      "THE RACE LINE WITH THE BLACK HOLE BISTRO NOW FITS A NARROW WINDOW ON A COMPUTER TOO",
+      "ONCE THE RACE LINE HAS GONE, THE HOUSE SPECIAL COUNTDOWN MOVES DOWN INTO ITS PLACE",
+    ],
+  },
   {
     ver: "v1.8.25",
     title: "SAVED FOR LATER",

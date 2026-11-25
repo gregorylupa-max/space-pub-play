@@ -2553,8 +2553,10 @@ const RM_Q = (() => {
       return null;
     }
   })(),
-  MOTION = () => (COMFORT.calm ? 0.15 : RM_Q && RM_Q.matches ? 0.35 : 1),
-  FLASH = () => (COMFORT.calm ? 0.25 : 1); // CALM MODE (in the settings): flashes a quarter as bright, almost no shaking
+  // (v1.8.48: and KID MODE gentler too - shakes and flashes at 40% at most; seventeen places shake the screen)
+  KIDK = () => (typeof kidOn === "function" && kidOn() ? 0.4 : 1),
+  MOTION = () => Math.min(COMFORT.calm ? 0.15 : RM_Q && RM_Q.matches ? 0.35 : 1, KIDK()),
+  FLASH = () => Math.min(COMFORT.calm ? 0.25 : 1, KIDK()); // CALM MODE (in the settings): flashes a quarter as bright, almost no shaking
 // can this device buzz or rumble? (a phone or tablet, or a controller)
 const canBuzz = () => {
   try {
@@ -3749,6 +3751,13 @@ const DICT_ROWS                             = [
     "LOSE NO LIVES FOR MORE STARS",
     "VERLOOR GEEN LEWENS VIR MEER STERRE",
     "NIE TRAĆ ŻYĆ, A DOSTANIESZ WIĘCEJ GWIAZDEK",
+  ],
+  // (v1.8.48) the same in KID MODE, where no life is ever lost - an "oops" costs the star
+  ["NO OOPSES FOR MORE STARS", "GEEN OEPSE VIR MEER STERRE", "BEZ UPSÓW, A DOSTANIESZ WIĘCEJ GWIAZDEK"],
+  [
+    "NO OOPSES!  4 PERFECT POURS FOR THE 3RD STAR",
+    "GEEN OEPSE!  4 PERFEKTE SKINKE VIR DIE 3DE STER",
+    "BEZ UPSÓW!  4 IDEALNE NALANIA = 3. GWIAZDKA",
   ],
   ["PRESS ANY KEY", "DRUK ENIGE SLEUTEL", "NACIŚNIJ DOWOLNY KLAWISZ"],
   ["PRESS ANY BUTTON", "DRUK ENIGE KNOPPIE", "NACIŚNIJ DOWOLNY PRZYCISK"],
@@ -5022,12 +5031,16 @@ const DICT_ROWS                             = [
     "osiągnijcie 10 celów drużyny we współpracy",
   ],
   ["GOOD MATES", "GOEIE MAATS", "DOBRZY KUMPLE"],
-  ["lend 20 helping hands", "gee 20 keer 'n helpende hand", "podaj 20 razy pomocną dłoń"],
+  [
+    "lend 20 helping hands in co-op",
+    "gee 20 keer 'n helpende hand in saamspeel",
+    "podaj 20 razy pomocną dłoń w kooperacji",
+  ],
   ["DUEL CHAMPION", "TWEEGEVEG-KAMPIOEN", "MISTRZ POJEDYNKÓW"],
   [
-    "win 3 mini-game duels or races",
-    "wen 3 mini-speletjie-tweegevegte of -wedrenne",
-    "wygraj 3 pojedynki lub wyścigi w minigrach",
+    "win 3 two-player mini-games",
+    "wen 3 mini-speletjies vir twee spelers",
+    "wygraj 3 minigry dla dwóch graczy",
   ],
   ["WELCOME ABOARD", "WELKOM AAN BOORD", "WITAJ NA POKŁADZIE"],
   ["a friend joins your game", "'n vriend sluit by jou spel aan", "przyjaciel dołącza do twojej gry"],
@@ -7995,6 +8008,28 @@ const DICT_ROWS                             = [
     "DIE WEDLOOP MET DIE SWARTGAT-BISTRO HET NOU 'N KLEIN RENBAAN: JOU KAFEE EN HULLE PIERING, OP PAD NA DIE VLAG",
     "WYŚCIG Z BISTRO CZARNA DZIURA MA TERAZ MAŁY TOR: TWOJA KAWIARNIA I ICH SPODEK PĘDZĄ DO FLAGI",
   ],
+  // (v1.8.48) LITTLE ONES
+  ["LITTLE ONES", "KLEINTJIES", "MALUCHY"],
+  [
+    "KID MODE IS GENTLER: A SLIP IS A SOFT BOING, NO CRASH OR RED WARNING, SMALLER SHAKES, AND NO KLAXON OR SPOOKY HOWL",
+    "KINDERMODUS IS SAGTER: 'N GLIP IS 'N SAGTE BOING, GEEN BREEKGERAAS OF ROOI WAARSKUWING NIE, KLEINER SKUDDINGS, EN GEEN TOETER OF SPOOKAGTIGE GEHUIL NIE",
+    "TRYB DZIECIĘCY JEST ŁAGODNIEJSZY: POŚLIZG TO CICHE BOING, BEZ TRZASKU I CZERWONEGO OSTRZEŻENIA, MNIEJSZE WSTRZĄSY I BEZ SYRENY CZY STRASZNEGO WYCIA",
+  ],
+  [
+    "KID MODE: NO MR HYDE, AND CUSTOMERS SLOW DOWN NEAR YOUR END OF THE BAR AS ON EASY",
+    "KINDERMODUS: GEEN MNR HYDE NIE, EN KLANTE STAP STADIGER NABY JOU KANT VAN DIE TOONBANK, SOOS OP MAKLIK",
+    "TRYB DZIECIĘCY: BEZ PANA HYDE'A, A KLIENCI ZWALNIAJĄ PRZY TWOIM KOŃCU LADY, JAK NA ŁATWYM",
+  ],
+  [
+    "SHOP ITEMS AREN'T USED UP WHERE THEY CAN'T HELP, AND RELAX MODE PAYS HALF COINS",
+    "WINKELITEMS WORD NIE OPGEBRUIK WAAR HULLE NIE KAN HELP NIE, EN ONTSPANMODUS BETAAL HALF SOVEEL MUNTE",
+    "PRZEDMIOTY ZE SKLEPU NIE ZUŻYWAJĄ SIĘ TAM, GDZIE NIE MOGĄ POMÓC, A TRYB RELAKSU DAJE POŁOWĘ MONET",
+  ],
+  [
+    "SOME TROPHY DESCRIPTIONS ARE CLEARER, AND RELAX MODE NO LONGER WINS GALACTIC CHAMPION",
+    "SOMMIGE TROFEE-BESKRYWINGS IS DUIDELIKER, EN ONTSPANMODUS WEN NIE MEER GALAKTIESE KAMPIOEN NIE",
+    "NIEKTÓRE OPISY TROFEÓW SĄ JAŚNIEJSZE, A TRYB RELAKSU NIE ZDOBYWA JUŻ GALAKTYCZNEGO MISTRZA",
+  ],
   // (v1.8.47) EVERY MODE ITS OWN
   ["EVERY MODE ITS OWN", "ELKE MODUS SY EIE", "KAŻDY TRYB PO SWOJEMU"],
   [
@@ -8700,15 +8735,15 @@ const DICT_ROWS                             = [
   ["NEW FOR YOUR COCKTAIL MENU!", "NUUT VIR JOU MENU!", "NOWOŚĆ W TWOJEJ KARCIE KOKTAJLI!"],
   ["MIXOLOGIST", "MENGMEESTER", "MIKSOLOG"],
   [
-    "serve 10 different house cocktails",
-    "bedien 10 verskillende huiskelkies",
-    "podaj 10 różnych koktajli domu",
+    "collect 10 house cocktails on your menu",
+    "versamel 10 huiskelkies op jou kelkiemenu",
+    "zbierz 10 koktajli domu w swojej karcie",
   ],
   ["COCKTAIL KING", "KELKIEKONING", "KRÓL KOKTAJLI"],
   [
-    "serve the house cocktail of all 40 stops",
-    "bedien die huiskelkie van al 40 stops",
-    "podaj koktajl domu ze wszystkich 40 przystanków",
+    "collect the house cocktail of all 40 stops",
+    "versamel die huiskelkie van al 40 haltes",
+    "zbierz koktajl domu ze wszystkich 40 przystanków",
   ],
   ["NEW COCKTAIL", "NUWE KELKIE", "NOWY KOKTAJL"],
   ["SUNSIDE SIZZLER", "SONKANT-SISSER", "SKWARKA OD SŁOŃCA"],
@@ -14875,7 +14910,7 @@ const gravArc = (c) => {
   return Math.sin(u * Math.PI) * 26 * lo * (COMFORT.calm ? 0.5 : 1);
 };
 // (v1.8.3) the mini-games: how fast things drop into the glass - 0.7 on the lightest worlds, 1.3 on the heaviest
-const miniGrav = () => clamp(Math.pow(gravNow(), 0.25), 0.7, 1.3);
+const miniGrav = () => clamp(Math.pow(gravNow(), 0.25), 0.7, DF().kid ? 1 : 1.3); // (v1.8.48: never faster than Earth in KID MODE)
 // (how hard things fall - splashes, sparks, coins: slow on the Moon, fast at the black hole)
 const gravFall = () =>
   ["play", "ready", "clear", "lost"].includes(G.state === "paused" ? G.prev : G.state)
@@ -17329,8 +17364,9 @@ function update(dt) {
     if (G.moonT <= 0 && !G.moon) {
       G.moon = 15;
       G.moonT = rnd(65, 90);
-      sfx("howl", X0);
-      if (!demo) callout("FULL MOON!  WEREWOLVES!  DON'T SERVE THEM", "#c8d8ff", 2.6);
+      // (v1.8.48: not in KID MODE - no werewolf ever comes there, so the howl and the warning only frightened)
+      if (!DF().kid) sfx("howl", X0);
+      if (!demo && !DF().kid) callout("FULL MOON!  WEREWOLVES!  DON'T SERVE THEM", "#c8d8ff", 2.6);
       const free = G.total - G.served - customers.filter((c) => c.state !== "out").length;
       if (free >= 1 && !DF().kid && !customers.some((c) => c.type.wolf && c.state !== "out")) {
         const counts = [0, 0, 0, 0];
@@ -17804,7 +17840,7 @@ function update(dt) {
           (c.wolf ? 1.6 : 1) *
           (c.hyde ? 1.6 : 1) *
           (G.twC || 1) *
-          (DF().easy && c.x > X1 - 170 && !c.type.boss ? 0.6 : 1); // (v1.4.42: on EASY, near your end they slow right down - time to serve them) (v1.4.71: but not a boss - he keeps coming)
+          ((DF().easy || DF().kid) && c.x > X1 - 170 && !c.type.boss ? 0.6 : 1); // (v1.8.48: KID MODE too) // (v1.4.42: on EASY, near your end they slow right down - time to serve them) (v1.4.71: but not a boss - he keeps coming)
         c.x += v;
         c.vps = v / dt / c.spd; // (v1.8.31: how fast a full step goes, in pixels a second - for the alarm below)
         // (v1.4.65) nobody walks INTO a boss: a customer coming up behind one on the same bar waits a step behind it,
@@ -17829,7 +17865,8 @@ function update(dt) {
           sfx("stomp", c.x);
         }
       }
-      if (c.type.kind === "jekyll" && !c.hyde && !c.cured) {
+      if (c.type.kind === "jekyll" && !c.hyde && !c.cured && !DF().kid) {
+        // (v1.8.48: in KID MODE Dr Jekyll stays Dr Jekyll - no groaning Mr Hyde rushing up the bar)
         c.hydeT = (c.hydeT ?? rnd(1.5, 4.5)) - dt;
         if (c.hydeT <= 0) {
           c.hyde = true;
@@ -17857,7 +17894,7 @@ function update(dt) {
         const [lx, ly] = at(c.lane, X1, LY(c.lane, X1) - 40);
         if (!c.alarmed) {
           c.alarmed = true;
-          sfx("danger", c.x);
+          sfx(DF().kid ? "dangertick" : "danger", c.x); // (v1.8.48: KID MODE - a soft tick, not the klaxon)
           coopCall(c.lane, c.x, demo); // (v1.5.94: in co-op, who should go)
           lightFx(lx, ly, 170, [1, 0.15, 0.2, 1], 0.6);
           G.dangerTickT = G.time;
@@ -21484,7 +21521,9 @@ function lose(why, lane, x) {
   G.fever = 0;
   G.chain = 0; // (v1.4.76: the "in a row" count starts again)
   lifeLostMech();
-  G.shake = 10;
+  // (v1.8.48) KID MODE: A SLIP IS A SLIP, NOT A CRASH - a small shake, a soft boing instead of breaking glass, and no red
+  //  "A CUSTOMER GOT TO YOU!" next to the kind "OOPS! NO PROBLEM - KEEP GOING!"
+  G.shake = DF().kid ? 3 : 10;
   G.flash = 0.35;
   G.flashC = [1, 0.4, 0.5, 1];
   if (!G.demo) G.hitStop = Math.max(G.hitStop || 0, 0.22); // (v1.5.5: a moment of slow motion, to feel it)
@@ -21497,7 +21536,7 @@ function lose(why, lane, x) {
   const y = LY(lane, x);
   if (why === "shake" || why === "empty") {
     smash(x, y - 14, lane);
-    sfx("smash", x);
+    sfx(DF().kid ? "boing" : "smash", x); // (v1.8.48: see above)
     // (v1.5.39: the reason goes straight to the front of the sign - see calloutNow in endgame.ts)
     if (!DF().kid) calloutNow(why === "shake" ? "NOBODY CAUGHT IT!" : "YOU MISSED THE EMPTY!", "#ff5fa8", 2);
   } else {
@@ -21509,11 +21548,12 @@ function lose(why, lane, x) {
       if (o.lane === lane) o.lane = (lane + 1) % LANES;
     }
     const gc = customers.find((c) => c.lane === lane && c.x > X1 - 40);
-    calloutNow(
-      gc && gc.type.evil ? "A " + gc.type.kind.toUpperCase() + " GOT TO YOU!" : "A CUSTOMER GOT TO YOU!",
-      "#ff5fa8",
-      2
-    );
+    if (!DF().kid)
+      calloutNow(
+        gc && gc.type.evil ? "A " + gc.type.kind.toUpperCase() + " GOT TO YOU!" : "A CUSTOMER GOT TO YOU!",
+        "#ff5fa8",
+        2
+      ); // (v1.8.48: not in kid mode - see above)
     for (const c of customers) if (c.lane === lane && c.x > X1 - 40) c.angry = true;
   }
 }
@@ -21744,7 +21784,7 @@ function startEnding(kind = "final") {
     return;
   }
   if (kind === "final") {
-    funWon();
+    if (!G.free) funWon(); // (v1.8.48: not in RELAX mode, where you can't lose - GALACTIC CHAMPION is for the real tour)
     G.won = true;
   }
   G.fadeT = 0.6;
@@ -53320,8 +53360,12 @@ function kidHud(g, s, t, fD, sx, sy) {
         G.starsNow >= 3
           ? "PERFECT LEVEL!"
           : G.starsNow === 2
-            ? "NO LIVES LOST!  4 PERFECT POURS FOR THE 3RD STAR"
-            : "LOSE NO LIVES FOR MORE STARS"
+            ? DF().kid
+              ? "NO OOPSES!  4 PERFECT POURS FOR THE 3RD STAR"
+              : "NO LIVES LOST!  4 PERFECT POURS FOR THE 3RD STAR"
+            : DF().kid
+              ? "NO OOPSES FOR MORE STARS" // (v1.8.48: KID MODE never loses a life - but a slip still costs a star)
+              : "LOSE NO LIVES FOR MORE STARS"
       ),
       mpx = Math.max(12 * s * TXT(), 11);
     g.font = fD(mpx / s / TXT());
@@ -65816,6 +65860,8 @@ const oneBtn = () => !!store.get("onebtn", false) && !twoP();
 const fCoins = () => store.get("coins", 0) | 0;
 function addCoins(n, why ) {
   if (G.demo || n <= 0) return;
+  // (v1.8.48: RELAX mode, where nothing can go wrong, pays half - it paid full coins for ever, risk-free)
+  if (G.free) n = Math.ceil(n / 2);
   store.set("coins", fCoins() + n);
   fStat("coinsEarned", n);
   if (why)
@@ -65857,8 +65903,8 @@ const TROPHIES = [
   { id: "t23", name: "DOUBLE TROUBLE", line: "serve 10 pairs of twins together", k: "twins", n: 10 },
   // (v1.6.5) four more for two players: team goals, helping hands, a duel or race won, and a friend dropping in
   { id: "t24", name: "GOAL GETTERS", line: "reach 10 team goals in co-op", k: "teamGoals", n: 10 },
-  { id: "t25", name: "GOOD MATES", line: "lend 20 helping hands", k: "helps", n: 20 },
-  { id: "t26", name: "DUEL CHAMPION", line: "win 3 mini-game duels or races", k: "duelWins", n: 3 },
+  { id: "t25", name: "GOOD MATES", line: "lend 20 helping hands in co-op", k: "helps", n: 20 },
+  { id: "t26", name: "DUEL CHAMPION", line: "win 3 two-player mini-games", k: "duelWins", n: 3 },
   { id: "t27", name: "WELCOME ABOARD", line: "a friend joins your game", k: "dropIns", n: 1 },
   {
     id: "t28",
@@ -65868,11 +65914,11 @@ const TROPHIES = [
     n: 10,
   }, // (v1.7.1)
   { id: "t29", name: "RACE ACE", line: "beat the Black Hole Bistro 3 times", k: "races", n: 3 }, // (v1.7.3)
-  { id: "t32", name: "MIXOLOGIST", line: "serve 10 different house cocktails", k: "cocktails", n: 10 }, // (v1.8.1)
+  { id: "t32", name: "MIXOLOGIST", line: "collect 10 house cocktails on your menu", k: "cocktails", n: 10 }, // (v1.8.1)
   {
     id: "t33",
     name: "COCKTAIL KING",
-    line: "serve the house cocktail of all 40 stops",
+    line: "collect the house cocktail of all 40 stops",
     k: "cocktails",
     n: 40,
   }, // (v1.8.1)
@@ -65936,6 +65982,7 @@ function fCheck() {
   }
 }
 function addCoinsQuiet(n) {
+  if (G.demo || n <= 0) return; // (v1.8.48: the same safety net as addCoins)
   store.set("coins", fCoins() + n);
   const s = fStats();
   s.coinsEarned = (s.coinsEarned || 0) + n;
@@ -66154,12 +66201,15 @@ function funGameStart() {
   G.coopG = { served: [0, 0], caught: [0, 0], helps: [0, 0], crowns: [0, 0] }; // (v1.5.93: for the team awards)
   G.after = [];
   if (!G.demo) {
-    if (invUse("life")) {
+    // (v1.8.48) A SHOP ITEM ONLY WHERE IT CAN HELP: in RELAX and KID MODE no life is ever lost, and in VERSUS each player
+    //  counts their own lives - the EXTRA LIFE (and in relax and kid mode the LUCKY CHARM) was used up for nothing there
+    const canLose = !G.free && !DF().kid;
+    if (canLose && !G.versus && invUse("life")) {
       G.lives++;
       G.startMsg = "EXTRA LIFE FROM THE SHOP!";
     }
     G.shoes = invUse("shoes");
-    G.charm = invUse("save");
+    G.charm = canLose && invUse("save");
   }
   modesGameStart(); // (TIME ATTACK, BOSS RUSH)
 }
@@ -66250,7 +66300,7 @@ function funServe(c, s, demo) {
         SCORER = null;
         worldText("RIGHT ORDER!  " + FLAV_NAMES[c.want] + "!", c, "#5ff5c8");
         sfx("chime", c.x, 2);
-        fStat("orders");
+        if (!autoFlav()) fStat("orders"); // (v1.8.48: ORDER EXPERT only when you picked the flavour yourself)
         orderStreak(true, s);
       }
     } else if (!demo) {
@@ -80393,7 +80443,7 @@ function freeSave(why, lane, x) {
       "#ff5fa8",
       2
     );
-  callout("PHEW! A FREE SAVE  (ONE EACH LEVEL)", "#9fe8c8", 2.2);
+  if (!DF().kid) callout("PHEW! A FREE SAVE  (ONE EACH LEVEL)", "#9fe8c8", 2.2); // (v1.8.48: means nothing where no life is lost)
   sfx("shieldpop", x);
   if (why === "grab")
     for (const c of customers)
@@ -84077,7 +84127,7 @@ function levelOfTour(of) {
     inTour = ((lv - 1) % LAST_LEVEL) + 1;
   return (tour > 1 ? "TOUR " + tour + "  ·  " : "") + "LEVEL " + inTour + of + LAST_LEVEL;
 }
-const GAME_VERSION = "v1.8.47",
+const GAME_VERSION = "v1.8.48",
   GAME_DATE = "25.11.2026",
   VERSION_TEXT = GAME_VERSION + "  ·  " + GAME_DATE;
 const FB = '"Chakra Petch", "Segoe UI", sans-serif';
@@ -89777,7 +89827,8 @@ const DNG = { v: 0 };
 function dangerUpdate(dt) {
   let want = 0;
   // (v1.4.10: never in RELAX MODE or with CALM switched on - the band stays easy-going)
-  if (G.state === "play" && !G.demo && !(G.readyT > 0) && !G.free && !COMFORT.calm)
+  if (G.state === "play" && !G.demo && !(G.readyT > 0) && !G.free && !COMFORT.calm && !DF().kid)
+    // (v1.8.48: nor in KID MODE)
     for (const c of customers)
       if (c.state === "walk" && !c.type.evil) want = Math.max(want, clamp((c.x - (X1 - 190)) / 170, 0, 1));
   DNG.v += (want - DNG.v) * Math.min(1, dt * (want > DNG.v ? 3 : 1.2)); // (in quickly, out gently)
@@ -91896,6 +91947,16 @@ profWire();
 //  the game, and where the motion capture, the folk songs and the fonts come from. Both from the menu at any time.
 // =====================================================================================
 const NEWS = [
+  {
+    ver: "v1.8.48",
+    title: "LITTLE ONES",
+    items: [
+      "KID MODE IS GENTLER: A SLIP IS A SOFT BOING, NO CRASH OR RED WARNING, SMALLER SHAKES, AND NO KLAXON OR SPOOKY HOWL",
+      "KID MODE: NO MR HYDE, AND CUSTOMERS SLOW DOWN NEAR YOUR END OF THE BAR AS ON EASY",
+      "SHOP ITEMS AREN'T USED UP WHERE THEY CAN'T HELP, AND RELAX MODE PAYS HALF COINS",
+      "SOME TROPHY DESCRIPTIONS ARE CLEARER, AND RELAX MODE NO LONGER WINS GALACTIC CHAMPION",
+    ],
+  },
   {
     ver: "v1.8.47",
     title: "EVERY MODE ITS OWN",

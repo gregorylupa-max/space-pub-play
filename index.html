@@ -8089,6 +8089,36 @@ const DICT_ROWS                             = [
     "DIE WEDLOOP MET DIE SWARTGAT-BISTRO HET NOU 'N KLEIN RENBAAN: JOU KAFEE EN HULLE PIERING, OP PAD NA DIE VLAG",
     "WYŚCIG Z BISTRO CZARNA DZIURA MA TERAZ MAŁY TOR: TWOJA KAWIARNIA I ICH SPODEK PĘDZĄ DO FLAGI",
   ],
+  // (v1.8.93) TEXTS BUILT IN PLAY that had no row (the rest are patterns, in DICT_PAT): who got to you, the exorcisms,
+  // the daily challenge done
+  ["A DEVIL GOT TO YOU!", "'N DUIWEL HET BY JOU UITGEKOM!", "DIABEŁ DOTARŁ DO CIEBIE!"],
+  ["A DEMON GOT TO YOU!", "'N DEMOON HET BY JOU UITGEKOM!", "DEMON DOTARŁ DO CIEBIE!"],
+  ["A VAMPIRE GOT TO YOU!", "'N VAMPIER HET BY JOU UITGEKOM!", "WAMPIR DOTARŁ DO CIEBIE!"],
+  ["A WEREWOLF GOT TO YOU!", "'N WEERWOLF HET BY JOU UITGEKOM!", "WILKOŁAK DOTARŁ DO CIEBIE!"],
+  ["DOUBLE EXORCISM!", "DUBBELE UITDRYWING!", "PODWÓJNY EGZORCYZM!"],
+  ["TRIPLE EXORCISM!", "DRIEDUBBELE UITDRYWING!", "POTRÓJNY EGZORCYZM!"],
+  [
+    "DAILY CHALLENGE DONE!  +2 STARS",
+    "DAAGLIKSE UITDAGING KLAAR!  +2 STERRE",
+    "WYZWANIE DNIA UKOŃCZONE!  +2 GWIAZDKI",
+  ],
+  // (v1.8.93) EVERY WORD IN YOUR LANGUAGE
+  ["EVERY WORD IN YOUR LANGUAGE", "ELKE WOORD IN JOU TAAL", "KAŻDE SŁOWO W TWOIM JĘZYKU"],
+  [
+    "SIXTEEN MORE MESSAGES TRANSLATED INTO AFRIKAANS AND POLISH",
+    "SESTIEN MEER BOODSKAPPE IN AFRIKAANS EN POOLS VERTAAL",
+    "SZESNAŚCIE KOLEJNYCH KOMUNIKATÓW PRZETŁUMACZONYCH NA AFRIKAANS I POLSKI",
+  ],
+  [
+    "THE CUP'S PLAY BUTTON, THE MILESTONES, THE STREAKS, THE EXORCISMS AND MORE",
+    "DIE BEKER SE SPEEL-KNOPPIE, DIE MYLPALE, DIE REEKSE, DIE UITDRYWINGS EN MEER",
+    "PRZYCISK GRY W PUCHARZE, KAMIENIE MILOWE, SERIE, EGZORCYZMY I WIĘCEJ",
+  ],
+  [
+    "THE LOAD SHEDDING BANNER FADES AWAY SOONER, SO YOU CAN SEE THE BARS",
+    "DIE BEURTKRAG-BANIER VERVAAG GOUER, SODAT JY DIE TOONBANKE KAN SIEN",
+    "BANER WYŁĄCZEŃ PRĄDU ZNIKA SZYBCIEJ, WIĘC WIDZISZ LADY",
+  ],
   // (v1.8.92) OAK BARRELS AND EGGS
   ["OAK BARRELS AND EGGS", "EIKEHOUTVATE EN EIERS", "DĘBOWE BECZKI I JAJKA"],
   [
@@ -12505,6 +12535,7 @@ const DICT_PAT                             = [
   [/^LONG SLIDE! \+(\d+)$/, "LANG GLY! +$1", "DŁUGI ŚLIZG! +$1"],
   [/^QUICK HANDS! \+(\d+)$/, "VINNIGE HANDE! +$1", "SZYBKIE RĘCE! +$1"],
   [/^PHEW!  \+(\d+)$/, "SJOE!  +$1", "UFF!  +$1"],
+  [/^1 trick$/, "1 truuk", "1 sztuczka"], // (v1.8.93: one is singular - Afrikaans said "1 truuks")
   [/^(\d+) tricks?$/, "$1 truuks", "sztuczki: $1"],
   [
     /^YOU FOUND THE SPACE MOUSE!  \((\d+) TIMES\)$/,
@@ -13020,6 +13051,34 @@ const DICT_PAT                             = [
   [/^SAVING UP FOR: (.+)$/, "SPAAR VIR: $1", "ODKŁADASZ NA: $1"],
   [/^(\d+) COINS TO GO$/, "NOG $1 MUNTE", "BRAKUJE $1 MONET"],
   [/^1 COIN TO GO$/, "NOG 1 MUNT", "BRAKUJE 1 MONETY"], // (v1.5.36)
+  // (v1.8.93) TEXTS BUILT IN PLAY: each of these came out in English (found by a sweep of every text joined from parts).
+  // Above the catch-all "WORD!" pattern just below, which took the ones ending in "!" and gave them back unchanged
+  [/^CONTINUES USED: (\d+)$/, "VOORTGAAN GEBRUIK: $1", "UŻYTE KONTYNUACJE: $1"],
+  [/^CONTINUE (\d+)$/, "VOORTGAAN $1", "KONTYNUACJA $1"],
+  [/^▶ PLAY: (.+) vs (.+)$/, "▶ SPEEL: $1 teen $2", "▶ GRAJ: $1 kontra $2"],
+  [/^OOPS - (.+)!$/, "OEPS - $1!", "UPS - $1!"],
+  [/^(.+) WINS THE UNIVERSE!$/, "$1 WEN DIE HEELAL!", "$1 ZDOBYWA WSZECHŚWIAT!"],
+  [/^(.+) WINS THE MILKY WAY!$/, "$1 WEN DIE MELKWEG!", "$1 ZDOBYWA DROGĘ MLECZNĄ!"],
+  [/^(\d+)x EXORCISM!$/, "$1x UITDRYWING!", "$1x EGZORCYZM!"],
+  [
+    /^KIAI!  THE SAMURAI CLEARS BAR (\d+)$/,
+    "KIAI!  DIE SAMOERAI MAAK TOONBANK $1 SKOON",
+    "KIAI!  SAMURAJ CZYŚCI LADĘ $1",
+  ],
+  [/^CROSS READY IN (\d+)$/, "KRUIS GEREED OOR $1", "KRZYŻ GOTOWY ZA $1"],
+  [/^MILESTONE: (\d+) STOPS DONE$/, "MYLPAAL: $1 STOPS KLAAR", "KAMIEŃ MILOWY: $1 PRZYSTANKÓW ZA TOBĄ"],
+  [/^P([12]) LIVES (\d+)$/, "P$1 LEWENS $2", "P$1 ŻYCIA $2"],
+  [/^STREAK: 1 DAY$/, "REEKS: 1 DAG", "SERIA: 1 DZIEŃ"],
+  [/^STREAK: (\d+) DAYS$/, "REEKS: $1 DAE", "SERIA: $1 DNI"],
+  [
+    /^UNLOCKED: (.+)!  \(HATS & PETS\)$/,
+    "OOPGESLUIT: $1!  (HOEDE & TROETELDIERE)",
+    "ODBLOKOWANO: $1!  (CZAPKI I ZWIERZAKI)",
+  ],
+  [/^STOP (\d+)$/, "HALTE $1", "PRZYSTANEK $1"],
+  [/^REACHED LEVEL (\d+)$/, "VLAK $1 BEREIK", "OSIĄGNIĘTY POZIOM $1"],
+  [/^POUR: (TAP|HOLD)  \(T to change\)$/, "SKINK: $1  (T om te verander)", "NALEWANIE: $1  (T, aby zmienić)"],
+  [/^POUR: (TAP|HOLD)$/, "SKINK: $1", "NALEWANIE: $1"],
   // (v1.4.79) v1.5.2
   [/^([A-Z][A-Z\- ]{2,})!$/, "$1!", "$1!"],
   // (v1.4.79) v1.5.4 redemption
@@ -53819,7 +53878,8 @@ function kidLevelClear() {
     un = [...HATS, ...PETS].filter((x) => x.need > before && x.need <= after);
   if (un.length)
     setTimeout(
-      () => callout("UNLOCKED: " + un.map((u) => u.name).join(" & ") + "!  (HATS & PETS)", "#ffd24d", 3),
+      // (v1.8.93: each name translated before they're joined - the joined names matched no row)
+      () => callout("UNLOCKED: " + un.map((u) => T(u.name)).join(" & ") + "!  (HATS & PETS)", "#ffd24d", 3),
       1200
     );
 }
@@ -85737,7 +85797,7 @@ function levelOfTour(of) {
     inTour = ((lv - 1) % LAST_LEVEL) + 1;
   return (tour > 1 ? "TOUR " + tour + "  ·  " : "") + "LEVEL " + inTour + of + LAST_LEVEL;
 }
-const GAME_VERSION = "v1.8.92",
+const GAME_VERSION = "v1.8.93",
   GAME_DATE = "26.11.2026",
   VERSION_TEXT = GAME_VERSION + "  ·  " + GAME_DATE;
 const FB = '"Chakra Petch", "Segoe UI", sans-serif';
@@ -87068,7 +87128,9 @@ function drawHud(fps) {
     else {
       // (v1.8.92: in calm mode the banner fades in and out without the dying-tube buzz)
       const on = COMFORT.calm || B.t > 0.5 || Math.sin(B.t * 47) > 0,
-        k = Math.min(1, B.t * 4, (2.6 - B.t) * 2.5) * (B.t > 1 ? 0.55 : 1),
+        // (v1.8.93: after its first moment it fades to a faint 30% - at 55% the big letters still hid the customers on
+        //  the middle bars for over a second; and it eases down instead of dropping at once)
+        k = Math.min(1, B.t * 4, (2.6 - B.t) * 2.5) * (B.t < 0.8 ? 1 : Math.max(0.3, 1 - (B.t - 0.8) * 2.5)),
         fl = !COMFORT.calm && B.t > 0.5 && Math.sin(B.t * 31) > 0.93 ? 0.35 : 1;
       g.save();
       g.textAlign = "center";
@@ -93694,6 +93756,15 @@ profWire();
 //  the game, and where the motion capture, the folk songs and the fonts come from. Both from the menu at any time.
 // =====================================================================================
 const NEWS = [
+  {
+    ver: "v1.8.93",
+    title: "EVERY WORD IN YOUR LANGUAGE",
+    items: [
+      "SIXTEEN MORE MESSAGES TRANSLATED INTO AFRIKAANS AND POLISH",
+      "THE CUP'S PLAY BUTTON, THE MILESTONES, THE STREAKS, THE EXORCISMS AND MORE",
+      "THE LOAD SHEDDING BANNER FADES AWAY SOONER, SO YOU CAN SEE THE BARS",
+    ],
+  },
   {
     ver: "v1.8.92",
     title: "OAK BARRELS AND EGGS",

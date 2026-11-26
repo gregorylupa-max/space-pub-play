@@ -692,7 +692,7 @@ body.touch2p #touch .tp button.holy { width: 60px; height: 60px; font-size: 11px
   <h2>PAUSED</h2>
   <!-- (v1.8.14) where you are: the stop, its gravity and its house cocktail (filled in by setPause, menus.ts) -->
   <p class="info" id="pWhere" hidden></p>
-  <p class="info" id="pAfk" hidden>STILL THERE? The game paused itself so you don't lose a life while you're away. Press FIRE or RESUME to carry on.</p>
+  <p class="info" id="pAfk" hidden>STILL THERE? The game paused itself so you don't lose a life while you're away. Press POUR, an arrow or RESUME to carry on.</p>
   <div class="buttons">
     <button id="pResume" class="primary">RESUME</button>
     <button id="pJoin" hidden>+ PLAYER 2 JOINS</button>
@@ -3704,9 +3704,9 @@ const DICT_ROWS                             = [
   ["STOP", "STOP", "STOP"],
   ["PAUSED", "POUSE", "PAUZA"],
   [
-    "STILL THERE? The game paused itself so you don't lose a life while you're away. Press FIRE or RESUME to carry on.",
-    "NOG DAAR? Die spel het self gepouseer sodat jy nie 'n lewe verloor terwyl jy weg is nie. Druk VUUR of GAAN VOORT.",
-    "JESTEŚ TAM? Gra sama się zatrzymała, żebyś nie stracił życia. Naciśnij OGIEŃ lub WZNÓW, by grać dalej.",
+    "STILL THERE? The game paused itself so you don't lose a life while you're away. Press POUR, an arrow or RESUME to carry on.",
+    "NOG DAAR? Die spel het self gepouseer sodat jy nie 'n lewe verloor terwyl jy weg is nie. Druk SKINK, 'n pyltjie of GAAN VOORT.",
+    "JESTEŚ TAM? Gra sama się zatrzymała, żebyś nie stracił życia. Naciśnij NALEJ, strzałkę lub WZNÓW, by grać dalej.",
   ],
   ["RESUME", "GAAN VOORT", "WZNÓW"],
   ["QUIT TO MENU", "TERUG NA KIESLYS", "WYJDŹ DO MENU"],
@@ -3803,6 +3803,12 @@ const DICT_ROWS                             = [
   ["TAP TO SKIP", "TIK OM OOR TE SLAAN", "STUKNIJ, BY POMINĄĆ"],
   ["PRESS ANY KEY TO SKIP", "DRUK ENIGE SLEUTEL OM OOR TE SLAAN", "NACIŚNIJ KLAWISZ, BY POMINĄĆ"],
   ["PRESS POUR TO START", "DRUK SKINK OM TE BEGIN", "NACIŚNIJ NALEJ, BY ZACZĄĆ"],
+  ["PRESS SPACE TO START", "DRUK SPASIE OM TE BEGIN", "NACIŚNIJ SPACJĘ, BY ZACZĄĆ"], // (v1.8.77)
+  [
+    "PRESS SPACE TO GO ON  ·  ESC TO SKIP",
+    "DRUK SPASIE OM AAN TE GAAN  ·  ESC OM OOR TE SLAAN",
+    "NACIŚNIJ SPACJĘ, BY IŚĆ DALEJ  ·  ESC, BY POMINĄĆ",
+  ], // (v1.8.77)
   ["PRESS POUR TO GO ON", "DRUK SKINK OM VOORT TE GAAN", "NACIŚNIJ NALEJ, BY GRAĆ DALEJ"],
   [
     "\u{1F50A}  TAP OR PRESS A KEY FOR SOUND",
@@ -6311,6 +6317,28 @@ const DICT_ROWS                             = [
   ["TAP POUR", "TIK SKINK", "STUKNIJ NALEJ"],
   ["HOLD POUR", "HOU SKINK", "PRZYTRZYMAJ NALEJ"],
   ["SWIPE ← →", "VEE ← →", "PRZESUŃ ← →"],
+  ["PRESS AGAIN: PLAYER 2 JOINS", "DRUK WEER: SPELER 2 SLUIT AAN", "NACIŚNIJ JESZCZE RAZ: GRACZ 2 DOŁĄCZA"], // (v1.8.77)
+  // (v1.8.77) the cups round: what to do once the cups stop
+  [
+    "WHERE'S THE ALIEN?  POUR WHEN IT'S LIT",
+    "WAAR IS DIE RUIMTEWESE?  SKINK AS DIT BELIG IS",
+    "GDZIE JEST KOSMITA?  NALEJ, GDY ŚWIECI",
+  ],
+  [
+    "WHERE'S THE ALIEN?  D-PAD, THEN A",
+    "WAAR IS DIE RUIMTEWESE?  RIGTINGSKNOPPIE, DAN A",
+    "GDZIE JEST KOSMITA?  KRZYŻAK, POTEM A",
+  ],
+  [
+    "WHERE'S THE ALIEN?  TAP A CUP",
+    "WAAR IS DIE RUIMTEWESE?  TIK 'N KOPPIE",
+    "GDZIE JEST KOSMITA?  STUKNIJ KUBEK",
+  ],
+  [
+    "WHERE'S THE ALIEN?  ← →, THEN SPACE",
+    "WAAR IS DIE RUIMTEWESE?  ← →, DAN SPASIE",
+    "GDZIE JEST KOSMITA?  ← →, POTEM SPACJA",
+  ],
   ["SWIPE ↑ ↓", "VEE ↑ ↓", "PRZESUŃ ↑ ↓"],
   ["DRAG UP", "SLEEP OP", "PRZECIĄGNIJ W GÓRĘ"],
   ["DRAG ◀", "SLEEP ◀", "PRZECIĄGNIJ ◀"],
@@ -8058,6 +8086,111 @@ const DICT_ROWS                             = [
     "THE RACE WITH THE BLACK HOLE BISTRO NOW HAS A LITTLE TRACK: YOUR DINER AND THEIR SAUCER, HEADING FOR THE FLAG",
     "DIE WEDLOOP MET DIE SWARTGAT-BISTRO HET NOU 'N KLEIN RENBAAN: JOU KAFEE EN HULLE PIERING, OP PAD NA DIE VLAG",
     "WYŚCIG Z BISTRO CZARNA DZIURA MA TERAZ MAŁY TOR: TWOJA KAWIARNIA I ICH SPODEK PĘDZĄ DO FLAGI",
+  ],
+  // (v1.8.81) POWER TO THE RIGHT PLAYER
+  ["POWER TO THE RIGHT PLAYER", "KRAG VIR DIE REGTE SPELER", "MOC DLA WŁAŚCIWEGO GRACZA"],
+  [
+    "A SECOND FREEZE RAY NO LONGER TURNS THE ICE INTO TALL BLUE COLUMNS",
+    "'N TWEEDE VRIESSTRAAL VERANDER NIE MEER DIE YS IN HOË BLOU KOLOMME NIE",
+    "DRUGI PROMIEŃ ZAMRAŻAJĄCY NIE ZAMIENIA JUŻ LODU W WYSOKIE NIEBIESKIE KOLUMNY",
+  ],
+  [
+    "VERSUS: PICKING UP THE SAME POWER-UP NO LONGER STEALS YOUR OPPONENT'S - AND ITS GLOW SHOWS ONLY ON ITS OWNER",
+    "TEEN MEKAAR: DIESELFDE KRAG OPTEL STEEL NIE MEER JOU TEENSTANDER S'N NIE - EN SY GLOED WYS NET OP SY EIENAAR",
+    "POJEDYNEK: PODNIESIENIE TEGO SAMEGO BONUSU NIE KRADNIE JUŻ BONUSU PRZECIWNIKA - A JEGO BLASK WIDAĆ TYLKO U WŁAŚCICIELA",
+  ],
+  [
+    "THE PUPPY FETCHES A TIP FOR WHAT IT'S WORTH, AND THE BIG ONE STARTS THE HOLO-SHOW",
+    "DIE HONDJIE HAAL 'N FOOI VIR WAT DIT WERD IS, EN DIE GROOT EEN BEGIN DIE HOLO-VERTONING",
+    "SZCZENIAK PRZYNOSI NAPIWEK WART TYLE, ILE JEST WART, A DUŻY URUCHAMIA HOLO-POKAZ",
+  ],
+  [
+    "RELAX: A CUSTOMER SENT BACK UNSERVED NO LONGER SLIDES YOU AN EMPTY",
+    "ONTSPAN: 'N KLANT WAT ONBEDIEN TERUGGESTUUR WORD, GLY NIE MEER 'N LEË GLAS NA JOU NIE",
+    "TRYB RELAKSU: KLIENT ODESŁANY BEZ OBSŁUGI NIE ODSYŁA JUŻ PUSTEJ SZKLANKI",
+  ],
+  // (v1.8.80) SAVED MEANS SAVED
+  ["SAVED MEANS SAVED", "GERED IS GERED", "URATOWANY ZNACZY URATOWANY"],
+  [
+    "A SHIELD, A FREE SAVE, A PET OR THE CHARM THAT SAVES A DROPPED SHAKE REALLY SAVES YOU - THE NEXT MOMENT TOOK THE LIFE ANYWAY",
+    "'N SKILD, 'N GRATIS REDDING, 'N TROETELDIER OF DIE GELUKSBRINGER WAT 'N GEVALLE SKOMMEL RED, RED JOU REGTIG - DIE VOLGENDE OOMBLIK HET DIE LEWE TOG GEVAT",
+    "TARCZA, DARMOWY RATUNEK, ZWIERZAK LUB TALIZMAN, KTÓRY RATUJE UPUSZCZONY KOKTAJL, NAPRAWDĘ CIĘ RATUJE - CHWILĘ PÓŹNIEJ ŻYCIE I TAK PRZEPADAŁO",
+  ],
+  [
+    "RELAX MODE NO LONGER FREEZES WHEN A SHAKE OR A GLASS FALLS",
+    "ONTSPAN VRIES NIE MEER AS 'N SKOMMEL OF 'N GLAS VAL NIE",
+    "TRYB RELAKSU NIE ZAMARZA JUŻ, GDY SPADNIE KOKTAJL LUB SZKLANKA",
+  ],
+  [
+    "A QUICK CUSTOMER CAN'T STEP STRAIGHT THROUGH A SHAKE ANY MORE",
+    "'N VINNIGE KLANT KAN NIE MEER REG DEUR 'N SKOMMEL STAP NIE",
+    "SZYBKI KLIENT NIE MOŻE JUŻ PRZEJŚĆ PROSTO PRZEZ KOKTAJL",
+  ],
+  [
+    "AN EMPTY GLASS NEVER STARTS TOO CLOSE TO THE TAPS TO CATCH",
+    "'N LEË GLAS BEGIN NOOIT TE NA AAN DIE KRANE OM TE VANG NIE",
+    "PUSTA SZKLANKA NIGDY NIE RUSZA ZBYT BLISKO KRANÓW, BY JĄ ZŁAPAĆ",
+  ],
+  // (v1.8.79) CLEAN SLATE
+  ["CLEAN SLATE", "SKOON BEGIN", "CZYSTA KARTA"],
+  [
+    "THE SHAKE THIEF'S FOOTPRINTS NO LONGER FOLLOW YOU TO EVERY LATER STOP",
+    "DIE SKOMMELDIEF SE VOETSPORE VOLG JOU NIE MEER NA ELKE LATER STOP NIE",
+    "ŚLADY ZŁODZIEJA KOKTAJLI NIE IDĄ JUŻ ZA TOBĄ NA KAŻDY KOLEJNY PRZYSTANEK",
+  ],
+  [
+    "ON THE ICE STOPS YOU NO LONGER SLIDE AWAY FROM THE TAPS AFTER A SLIP",
+    "OP DIE YSSTOPS GLY JY NIE MEER NA 'N GLIPSIE WEG VAN DIE KRANE NIE",
+    "NA LODOWYCH PRZYSTANKACH NIE ODJEŻDŻASZ JUŻ OD KRANÓW PO POTKNIĘCIU",
+  ],
+  [
+    "AFTER A SLIP THE VIP, THE OUTLAW AND THE UFO MOVE ON TOO",
+    "NA 'N GLIPSIE GAAN DIE VIP, DIE BANDIET EN DIE UFO OOK AAN",
+    "PO POTKNIĘCIU VIP, BANITA I UFO TEŻ RUSZAJĄ DALEJ",
+  ],
+  [
+    "A BUMP OR A GUST NO LONGER PULLS THE QUEUE OUTSIDE THE DOOR INSIDE",
+    "'N STAMP OF 'N WINDVLAAG TREK NIE MEER DIE TOU BUITE DIE DEUR NAAR BINNE NIE",
+    "WSTRZĄS LUB PODMUCH NIE WCIĄGA JUŻ DO ŚRODKA KOLEJKI SPRZED DRZWI",
+  ],
+  // (v1.8.78) EVERY POINT COUNTED
+  ["EVERY POINT COUNTED", "ELKE PUNT GETEL", "KAŻDY PUNKT POLICZONY"],
+  [
+    "BONUS MESSAGES SHOW THE POINTS YOU REALLY GET - ON HARD OR IN A FEVER THEY SAID LESS",
+    "BONUSBOODSKAPPE WYS DIE PUNTE WAT JY REGTIG KRY - OP MOEILIK OF IN 'N KOORS HET HULLE MINDER GESÊ",
+    "KOMUNIKATY O BONUSACH POKAZUJĄ PUNKTY, KTÓRE NAPRAWDĘ DOSTAJESZ - NA TRUDNYM LUB W GORĄCZCE PODAWAŁY MNIEJ",
+  ],
+  [
+    "A BIG PRIZE THAT PASSES TWO EXTRA-LIFE MARKS GIVES TWO LIVES",
+    "'N GROOT PRYS WAT TWEE EKSTRA-LEWE-MERKE VERBYGAAN, GEE TWEE LEWENS",
+    "DUŻA NAGRODA, KTÓRA MIJA DWA PROGI DODATKOWEGO ŻYCIA, DAJE DWA ŻYCIA",
+  ],
+  [
+    'NO "EXTRA LIFE!" WHERE LIVES ARE ENDLESS, AND CO-OP\'S STOP BONUS IS NO LONGER PAID TWICE',
+    'GEEN "EKSTRA LEWE!" WAAR LEWENS EINDELOOS IS NIE, EN SAAMSPEEL SE STOPBONUS WORD NIE MEER TWEE KEER BETAAL NIE',
+    'BEZ "DODATKOWE ŻYCIE!" TAM, GDZIE ŻYCIA SĄ NIESKOŃCZONE, A PREMIA ZA PRZYSTANEK W KOOPERACJI NIE JEST JUŻ PŁACONA PODWÓJNIE',
+  ],
+  // (v1.8.77) FIRST TIME AROUND
+  ["FIRST TIME AROUND", "DIE EERSTE KEER", "ZA PIERWSZYM RAZEM"],
+  [
+    "THE TOUCH THAT OPENS THE MENU NO LONGER PRESSES A BUTTON TOO - IT MOVED THE START TO STOP 2",
+    "DIE AANRAKING WAT DIE KIESLYS OOPMAAK, DRUK NIE MEER OOK 'N KNOPPIE NIE - DIT HET DIE BEGIN NA STOP 2 GESKUIF",
+    "DOTKNIĘCIE OTWIERAJĄCE MENU NIE NACISKA JUŻ PRZYCISKU - PRZESUWAŁO START NA PRZYSTANEK 2",
+  ],
+  [
+    "THE CUPS ROUND SAYS WHAT TO DO: TAP A CUP",
+    "DIE KOPPIERONDTE SÊ WAT OM TE DOEN: TIK 'N KOPPIE",
+    "RUNDA Z KUBKAMI MÓWI, CO ROBIĆ: STUKNIJ KUBEK",
+  ],
+  [
+    "THE PAUSE SCREEN KEEPS ITS BUTTONS IN PLACE - NO MORE PLAYER 2 JOINING BY MISTAKE",
+    "DIE POUSESKERM HOU SY KNOPPIES OP HUL PLEK - SPELER 2 SLUIT NIE MEER PER ONGELUK AAN NIE",
+    "EKRAN PAUZY TRZYMA PRZYCISKI W MIEJSCU - GRACZ 2 NIE DOŁĄCZA JUŻ PRZEZ POMYŁKĘ",
+  ],
+  [
+    "THE TIPS NAME THE TOUCH BUTTONS AS THEY'RE DRAWN",
+    "DIE WENKE NOEM DIE RAAKKNOPPIES SOOS HULLE GETEKEN IS",
+    "WSKAZÓWKI NAZYWAJĄ PRZYCISKI DOTYKOWE TAK, JAK SĄ NARYSOWANE",
   ],
   // (v1.8.76) EASY TO READ
   ["EASY TO READ", "MAKLIK OM TE LEES", "ŁATWE DO CZYTANIA"],
@@ -12271,7 +12404,8 @@ const DICT_PAT                             = [
     "POZIOM $1 / $2$3·$4OBSŁUŻONO $5",
   ], // (v1.4.76: Time Attack)
   [/^LEVEL (\d+) OF (\d+)$/, "VLAK $1 VAN $2", "POZIOM $1 Z $2"],
-  [/^LEVEL (\d+) (EASY|HARD|KID MODE)$/, "VLAK $1 $2", "POZIOM $1 $2"], // (v1.6.6: a high score's line, played on another difficulty)
+  [/^LEVEL (\d+) (EASY|HARD|KID MODE)$/, "VLAK $1 $2", "POZIOM $1 $2"],
+  [/^LEVEL (\d+)(.*)  ·  QUIT$/, "VLAK $1$2  ·  OPGEHOU", "POZIOM $1$2  ·  PRZERWANA"], // (v1.8.77: a game left half-way) // (v1.6.6: a high score's line, played on another difficulty)
   // (v1.4.77) the second tour and after: "TOUR 2  ·  LEVEL 7 / 40  ·  SERVED 3 / 38", translated piece by piece
   [/^TOUR (\d+)$/, "TOER $1", "TRASA $1"],
   [/^LEVEL (\d+) \/ (\d+)$/, "VLAK $1 / $2", "POZIOM $1 / $2"],
@@ -12603,6 +12737,20 @@ const DICT_PAT                             = [
     "TRASA $1!  TERAZ WSZYSTKO JEST SZYBSZE",
   ],
   [/^FOUND IT!  \+(\d+)$/, "GEVIND!  +$1", "ZNALEZIONE!  +$1"],
+  // (v1.8.78) bonuses that now show the points really added (they were fixed numbers)
+  [/^CRYSTAL HARMONY!  \+(\d+)$/, "KRISTALHARMONIE!  +$1", "KRYSZTAŁOWA HARMONIA!  +$1"],
+  [/^HANDSHAKE IN SPACE!  \+(\d+)$/, "HANDDRUK IN DIE RUIMTE!  +$1", "UŚCISK DŁONI W KOSMOSIE!  +$1"],
+  [
+    /^INTERNATIONAL SPACE STATION!  ALL THREE CREWS  \+(\d+)$/,
+    "INTERNASIONALE RUIMTESTASIE!  AL DRIE SPANNE  +$1",
+    "MIĘDZYNARODOWA STACJA KOSMICZNA!  WSZYSTKIE TRZY ZAŁOGI  +$1",
+  ],
+  [
+    /^CASE CLOSED!  YOU CAUGHT THE SHAKE THIEF  \+(\d+)$/,
+    "SAAK AFGESLUIT!  JY HET DIE SKOMMELDIEF GEVANG  +$1",
+    "SPRAWA ZAMKNIĘTA!  ZŁAPAŁEŚ ZŁODZIEJA KOKTAJLI  +$1",
+  ],
+  [/^EXTRA LIFE x(\d+)!$/, "EKSTRA LEWE x$1!", "DODATKOWE ŻYCIE x$1!"],
   // (v1.4.79) BATCH 3: history, the trip between the galaxies, the controls on the screen, the bosses, the places, the philosophers and emperors
   [/^EMPEROR (.+) OF ROME IS HERE!$/, "KEISER $1 VAN ROME IS HIER!", "CESARZ $1 Z RZYMU JEST TUTAJ!"],
   // (v1.4.79) BATCH 4: the stage acts and the comedian's jokes, power cuts, VIPs and outlaws, the special guests and what they say, and the scenes outside the window
@@ -15617,6 +15765,7 @@ function startLevel() {
   for (const p of PL) {
     p.lane = twoP() ? (p.id ? 2 : 1) : 1;
     p.x = TAPX;
+    p.vx = 0; // (v1.8.79: no glide carried onto an ice stop)
     p.pour = 0;
     p.pouring = false;
     p.throwT = 0;
@@ -15731,8 +15880,39 @@ function keepScore() {
     $("nameForm").requestSubmit ? $("nameForm").requestSubmit() : $("nameSave").click();
   } catch (e) {}
 }
-function toMenu() {
+// (v1.8.77) QUIT TO MENU KEEPS THE SCORE: a game left from the pause menu dropped its score - 30,000 points gone, and the
+// next GAME OVER called a tiny score the HIGH SCORE. It goes in the table under your initials as they stand (as leaving
+// the GAME OVER screen does since v1.5.41), marked QUIT; not a cup match, the demo or a game with no points
+function quitScore() {
+  const live = ["play", "paused", "lost", "clear", "bonus", "mini", "approach", "story", "jump"].includes(
+    G.state
+  );
+  if (!live || G.demo || CUP.match || !(G.score > 0)) return;
+  const table = hiScores();
+  // (and the HI score with it - the next GAME OVER called a smaller score a NEW HIGH SCORE)
+  if (G.score > (G.hi || 0)) {
+    G.hi = G.score;
+    store.set("hi", G.hi);
+  }
+  if (table.length >= 20 && G.score <= table[table.length - 1].s) return;
+  table.push({
+    n: String(store.get("name", "GL")).slice(0, 3) || "GL",
+    s: G.score,
+    sec:
+      "LEVEL " +
+      G.level +
+      (difficulty !== "normal" ? " " + DIFFS[difficulty].name : "") +
+      (twoP() ? (G.versus ? "  ·  VERSUS" : "  ·  CO-OP") : "") +
+      "  ·  QUIT",
+  });
+  table.sort((a, b) => b.s - a.s);
+  table.length = Math.min(20, table.length);
+  store.set("scores", table);
+}
+function toMenu(quit ) {
   keepScore();
+  // (v1.8.77: a game left half-way keeps its score too - see quitScore; only from QUIT TO MENU, not a crash recovery)
+  if (quit === true) quitScore();
   G.mini = null; // (v1.8.62: quit from a paused mini-game, it stayed set - and kept the cosmic weather away next game)
   if (CUP.match) {
     CUP.match = null;
@@ -16932,7 +17112,10 @@ function updatePowers(dt, demo) {
         by.dashT = 0;
         sfx("yawn", u.x);
       } else {
-        G.pw[u.type] = Math.min(P0.dur * 1.8, (G.pw[u.type] || 0) + P0.dur); // (grabbing one you already have adds more time)
+        // (v1.8.81: in VERSUS the other player's time isn't handed over - one shield, two seconds after the opponent's, took
+        //  their whole 45 seconds of it and left them unshielded under their own bubble; the new owner gets just their own)
+        const taken = G.versus && G.pwBy && G.pwBy[u.type] !== undefined && G.pwBy[u.type] !== by.id;
+        G.pw[u.type] = taken ? P0.dur : Math.min(P0.dur * 1.8, (G.pw[u.type] || 0) + P0.dur); // (grabbing one you already have adds more time)
         (G.pwBy || (G.pwBy = {}))[u.type] = by.id; // (v1.8.32: whose it is - see pwOwner)
       }
       // (v1.5.61) the power-up's name is translated before its "!" goes on - "DECAF! SO... TIRED..." has its own
@@ -17517,7 +17700,11 @@ function update(dt) {
               // (v1.8.35: in reach - not still queued far outside the door - and not a bat in mid-flutter)
               (c) => c.lane === P.lane && c.state === "walk" && !c.type.evil && c.x > X0 - 200 && !(c.bat > 0)
             ).length > shakes.filter((q) => q.lane === P.lane && !q.extra && !q.holy).length;
-        for (let k = 0; k < (hasPw("triple") ? 3 : 1); k++)
+        for (
+          let k = 0;
+          k < (hasPw("triple") && (!G.versus || pwOwner("triple") === P) ? 3 : 1);
+          k++ // (v1.8.81: the owner's, in versus)
+        )
           shakes.push({
             lane: P.lane,
             x: TAPX - 34 - k * 46,
@@ -18398,6 +18585,7 @@ function update(dt) {
       c: [0.55, 0.5, 0.6, 0.35],
     }); // smoke drifting up from the braai
   for (const c of customers) {
+    c.px = c.x; // (v1.8.80: where they stood as the frame began - see "reach" in the shakes' catch)
     c.happy = Math.max(0, c.happy - dt);
     c.age = (c.age || 0) + dt;
     if (c.fire > 0) c.fire = Math.max(0, c.fire - dt);
@@ -18878,7 +19066,9 @@ function update(dt) {
         (c.state === "walk" || bigEater(c)) &&
         (!s.holy || c.type.evil) &&
         !(c.bat > 0 && !s.holy) &&
-        reach(c) + 20 <= before + 2 &&
+        // (v1.8.80: from where they started this frame - a quick customer could step clean through a shake between two
+        //  frames, past it without ever touching it, on a slow phone most of all)
+        Math.min(reach(c), c.px ?? c.x) + 20 <= before + 2 &&
         reach(c) + 20 >= s.x - 2 &&
         (!catcher || c.x > catcher.x)
       )
@@ -18988,6 +19178,11 @@ function update(dt) {
       catcher.dry = false; // (v1.8.31: a real shake - an empty comes back)
       catcher.alarmed = catcher.warned = false; // (v1.8.31: the full alarm again if they come back up the bar - see the alarm)
       catcher.left = catcher.type.push * prm.push * (s.perfect ? 1.6 : 1);
+      // (v1.8.80) ROOM TO CATCH THE EMPTY: a heavy customer caught right at your end, on a heavy stop, slid back only a
+      // little and sent the empty from so close to the taps that it arrived in a third of a second - too quick for the
+      // warning. Pushed back far enough that it starts about a second out
+      if (!catcher.type.glutton)
+        catcher.left = Math.max(catcher.left, catcher.x - (TAPX - 0.9 * prm.empty * emptyK()));
       catcher.leftMax = catcher.left; // (v1.8.2: how far the push goes - for the arc on a light world, gravArc)
       catcher.happy = 1.2;
       catcher.flavor = s.flavor;
@@ -19334,14 +19529,14 @@ function update(dt) {
         SCORER = PL[s.owner || 0];
         if (live.length === 3) {
           G.crew = {};
-          addScore(1500);
-          callout("INTERNATIONAL SPACE STATION!  ALL THREE CREWS  +1500", "#7ab0ff", 2.4);
+          const got = addScore(1500) || 1500; // (v1.8.78: what was really added)
+          callout("INTERNATIONAL SPACE STATION!  ALL THREE CREWS  +" + got, "#7ab0ff", 2.4);
           sfx("harmony");
           for (let i = 0; i < 24; i++) confetti(rnd(100, PW - 100), -10, 1);
         } else if (live.length === 2 && !(G.time - (G.shakeHandsT || -99) < 15)) {
           G.shakeHandsT = G.time;
-          addScore(500);
-          callout("HANDSHAKE IN SPACE!  +500", "#ff6a5a", 2);
+          const got = addScore(500) || 500; // (v1.8.78: what was really added)
+          callout("HANDSHAKE IN SPACE!  +" + got, "#ff6a5a", 2);
           sfx("fanfare");
         }
         SCORER = null;
@@ -19652,6 +19847,10 @@ function update(dt) {
       } // Triple Shot's spare shakes vanish harmlessly
       LOSER = PL[s.owner || 0];
       lose("shake", s.lane, X0 - 8);
+      // (v1.8.80) A SAVED DROP IS GONE: when a shield, a free save, a pet or the charm saved you, this shake was still in the
+      // list - the next frame dropped it again and took the life after all (and in RELAX, where every drop is "saved",
+      // the stop froze with a new puddle every frame). Taken out before we leave
+      shakes = shakes.filter((s2) => !s2.dead);
       return;
     }
   }
@@ -19736,6 +19935,7 @@ function update(dt) {
         srv = m.by !== undefined ? PL[m.by] : null;
       LOSER = on || (srv && active().includes(srv) ? srv : nearestTo(m.lane));
       lose("empty", m.lane, TAPX + 26);
+      empties = empties.filter((m2) => !m2.dead); // (v1.8.80: the same for an empty glass - see the shakes above)
       return;
     }
   }
@@ -19809,10 +20009,14 @@ function update(dt) {
       G.clearT = G.versus ? 4.2 : 4.8; // (time to see the stars - and the galaxy map, as the ship hops on)
       const bonusPts = 1000 * G.level + (G.perfect ? 2000 : 0);
       // (v1.5.40: the sign shows the bonus you really got - with FLAWLESS x1.1 it said "+6000" and gave 6600)
+      // (v1.8.78: in CO-OP the team shares one bonus - each player got all of it, and the team score, the two added up,
+      //  rose by twice what the sign said; versus keeps a whole one each, as before)
       let gotPts = 0;
+      const coopN = !G.versus && active().length > 1 ? active().length : 1;
       for (const p of active()) {
         SCORER = p;
-        gotPts = Math.max(gotPts, addScore(bonusPts));
+        const g1 = addScore(Math.round(bonusPts / coopN)) || 0;
+        gotPts = coopN > 1 ? gotPts + g1 : Math.max(gotPts, g1);
       }
       SCORER = null;
       sfx("clear");
@@ -20122,6 +20326,7 @@ const onBeat = () => {
   return f < 0.16 || f > 0.86;
 };
 function startTwist() {
+  G.case = null; // (v1.8.79: the mystery stop's thief and footprints - they stayed frozen on the floor at every later stop)
   G.twS = G.twC = G.twE = 1;
   G.twFreeze = false;
   G.flare = G.dark = G.sand = G.warp = 0;
@@ -20497,7 +20702,7 @@ function updateTwist(dt, demo) {
         sfx("bump");
         for (const c of customers)
           if (c.state === "walk") {
-            c.x = Math.max(X0 - 20, c.x - 50);
+            c.x = Math.min(c.x, Math.max(X0 - 20, c.x - 50)); // (v1.8.79: back, never forward - a queue outside the door was pulled in)
             c.catchT = 0.2;
           }
         for (const m of empties) m.x = Math.min(TAPX + 10, m.x + 26);
@@ -20785,7 +20990,8 @@ function updateTwist(dt, demo) {
       G.twS = m(g.dir > 0 ? 1 + 0.45 * k : 1 - 0.3 * k);
       if (g.dir > 0)
         for (const c of customers)
-          if (c.state === "walk" && !c.type.boss) c.x = Math.max(X0 - 20, c.x - 22 * k * K * dt);
+          if (c.state === "walk" && !c.type.boss)
+            c.x = Math.min(c.x, Math.max(X0 - 20, c.x - 22 * k * K * dt)); // (v1.8.79: never forward)
       if (g.t > 4.5) {
         W.g = null;
         G.wind = 0;
@@ -20813,7 +21019,7 @@ function updateTwist(dt, demo) {
         G.shake = 8;
         for (const c of customers)
           if (c.state === "walk") {
-            c.x = Math.max(X0 - 20, c.x - 40 * K);
+            c.x = Math.min(c.x, Math.max(X0 - 20, c.x - 40 * K)); // (v1.8.79: never forward)
             c.catchT = 0.2;
           }
       }
@@ -20971,9 +21177,9 @@ function twistServed(c, s, demo) {
     if (up || down) {
       W.seq = [];
       SCORER = PL[s.owner || 0];
-      addScore(1500);
+      const got = addScore(1500) || 1500; // (v1.8.78: what was really added)
       SCORER = null;
-      callout("CRYSTAL HARMONY!  +1500", "#9ff0ff", 2);
+      callout("CRYSTAL HARMONY!  +" + got, "#9ff0ff", 2);
       sfx("harmony");
       for (let i = 0; i < 20; i++) confetti(rnd(100, PW - 100), -10, 1);
     }
@@ -21750,9 +21956,9 @@ function showCross(p, demo) {
   if (!demo) {
     if (gone >= 2) {
       SCORER = p;
-      addScore(300 * gone);
+      const got = addScore(300 * gone) || 300 * gone; // (v1.8.78: what was really added)
       SCORER = null;
-      callout("BEGONE, ALL OF YOU!  +" + 300 * gone, "#ffe070", 1.8);
+      callout("BEGONE, ALL OF YOU!  +" + got, "#ffe070", 1.8);
     } else if (!gone && back) callout("THEY'RE BACKING OFF!", "#ffe070", 1.2);
     buzz("power");
   }
@@ -22251,8 +22457,27 @@ function afterLoss() {
   G.bananas = [];
   G.peels = [];
   G.spawnT = 1.3;
+  // (v1.8.79) THE STOP'S SET-PIECES GO WITH THE CUSTOMERS: the VIP, the outlaw and the UFO's visitors were cleared away
+  // above, but the stop still waited for them - "THE VIP LEFT IN A HUFF" for one already gone, no new VIP or outlaw for
+  // a while, and the saucer hovering over an empty bar
+  if (G.tw) {
+    if (G.tw.v) {
+      G.tw.v = null;
+      G.tw.next = rnd(18, 28);
+    }
+    if (G.tw.o) {
+      G.tw.o = null;
+      G.tw.next = rnd(24, 34);
+    }
+  }
+  // (a saucer still landing its visitors just goes - half-way it kept beaming them down onto the cleared bar)
+  if (G.ufo && !G.ufo.go) {
+    if (G.ufo.vis.length < UFO_DROP.length) G.ufo = null;
+    else G.ufo.go = G.ufo.t || 0.01;
+  }
   for (const p of PL) {
     p.x = TAPX;
+    p.vx = 0; // (v1.8.79: no glide left over - on the ice stops he slid away from the taps by himself)
     p.throwT = 0;
     p.stunT = p.slipT = 0;
     p.bufT = 0; // (v1.8.35: a bar change pressed while knocked down doesn't carry over a lost life)
@@ -22827,13 +23052,27 @@ function addScore(n, x , y ) {
   if (G.demo || G.state === "menu") return 0;
   if (n > 0) n = Math.round((n * DF().score * (G.fever > 0 ? 2 : 1) * flawMul()) / 10) * 10; // (easy scores a bit less, hard a lot more; FLAWLESS levels in a row multiply it)
   const who = SCORER || P1;
+  // (v1.8.78: what was really taken - with 100 points, a -300 showed "-300" but took 100)
+  const before = who.score;
   who.score = Math.max(0, who.score + n);
+  if (n < 0) n = who.score - before;
   G.score = twoP() ? (G.versus ? Math.max(P1.score, P2.score) : P1.score + P2.score) : P1.score;
-  if (who.score >= who.nextLife) {
+  // (v1.8.78) EVERY MILESTONE PASSED COUNTS: a big prize jumping over two or three of them gave one life (the rest only
+  // came with later serves, or never after the last prize). And none where lives are endless (RELAX, kid mode: ∞) -
+  // "EXTRA LIFE!" showed there; the milestones still move on
+  let ups = 0;
+  while (who.score >= who.nextLife) {
     who.nextLife += difficulty === "easy" ? 160000 : 40000; // (v1.4.57: on EASY an extra life for every 80,000 points - half as many) (v1.4.63: halved again - every 160,000)
-    if (G.versus) who.lives++;
-    else G.lives++;
-    callout(twoP() ? "EXTRA LIFE · P" + (who.id + 1) : "EXTRA LIFE!", "#5ff5c8", 2);
+    ups++;
+  }
+  if (ups && !(!G.versus && (G.free || DF().kid))) {
+    if (G.versus) who.lives += ups;
+    else G.lives += ups;
+    callout(
+      twoP() ? "EXTRA LIFE · P" + (who.id + 1) : ups > 1 ? "EXTRA LIFE x" + ups + "!" : "EXTRA LIFE!",
+      "#5ff5c8",
+      2
+    );
     sfx("tip");
   }
   if (n === 0) return 0; // (nothing to show for a refused customer leaving)
@@ -23166,8 +23405,8 @@ function revealDome() {
     const pts = 3000 + 500 * G.level;
     // (v1.8.70: in VERSUS shared between both - both players move the one spotlight, and it all went to player 1, which
     //  could decide the match)
-    const got = G.versus ? fairBonus(pts) : addScore(pts);
-    callout("FOUND IT!  +" + (G.versus ? got : pts), "#5ff5c8", 2.2);
+    const got = (G.versus ? fairBonus(pts) : addScore(pts)) || pts;
+    callout("FOUND IT!  +" + got, "#5ff5c8", 2.2); // (v1.8.78: what was really added - on HARD it said +3500 and gave 5250)
     sfx("tip");
     for (let k = 0; k < 40; k++) confetti(domeX(b.pos[i]) + rnd(-60, 60), 200, 1);
     fireworks(3);
@@ -27143,7 +27382,8 @@ function drawIce(c, t) {
     [x, y] = projL(c.lane, c.x, LY(c.lane, c.x) + 22, VSIDE.c);
   const h = 92 * s,
     w = 34 * s,
-    k = Math.min(1, (POWERS.freeze.dur - G.pw.freeze) / 0.3),
+    kg = (POWERS.freeze.dur - G.pw.freeze) / 0.3,
+    k = kg < 0 ? 1 : Math.min(1, kg), // (v1.8.81: a second FREEZE adds time past one length - k went far below 0 and the ice became a tall column)
     melt = G.pw.freeze < 1 ? G.pw.freeze : 1;
   quad4(
     x - w / 2,
@@ -27178,7 +27418,9 @@ function drawPowerFx(t) {
   for (const p of active()) {
     const [x, y] = projL(p.lane, p.x + 8, LY(p.lane, p.x) + 30, VSIDE.p),
       s = pS(p.lane, p.x, VSIDE.p);
-    if (hasPw("shield")) {
+    // (v1.8.81: in VERSUS only round the player it belongs to - the opponent looked shielded, magnetic and fast too)
+    const mine = (k) => hasPw(k) && (!G.versus || pwOwner(k) === p);
+    if (mine("shield")) {
       // (v1.4.63) softer, so the barman inside stays clear - and running out it pulses gently instead of
       // strobing on and off 8 times a second
       const a = G.pw.shield < 3 ? 0.2 + 0.3 * (0.5 + 0.5 * Math.sin(t * 7)) : 0.45;
@@ -27188,7 +27430,7 @@ function drawPowerFx(t) {
       arc(x - 10 * s, y - 50 * s, 18 * s, Math.PI * 1.1, Math.PI * 1.45, 2, withA(C.white, 0.3), 5);
       R.setAdd(false);
     }
-    if (hasPw("magnet")) {
+    if (mine("magnet")) {
       R.setAdd(true);
       for (let i = 0; i < 4; i++) {
         const f = (t * 1.4 + i / 4) % 1;
@@ -27197,7 +27439,7 @@ function drawPowerFx(t) {
       }
       R.setAdd(false);
     }
-    if (hasPw("speed")) {
+    if (mine("speed")) {
       R.setAdd(true);
       // (v1.4.63) the little sparks of speed: they used to jump to a new random place every single frame (a
       // flicker) - now each spark holds for a moment (10 a second), off to the side of the barman, and fades
@@ -27220,7 +27462,7 @@ function drawPowerFx(t) {
     }
   }
   if (hasPw("slow")) {
-    const a = Math.min(1, G.pw.slow, (POWERS.slow.dur - G.pw.slow) * 3);
+    const a = Math.min(1, G.pw.slow, G.pw.slow > POWERS.slow.dur ? 1 : (POWERS.slow.dur - G.pw.slow) * 3); // (v1.8.81: the same for a second SLOW-MO)
     rect(-ox - 20, -oy - 20, PW + ox * 2 + 40, PH + oy * 2 + 40, withA(col("#6a3aa0"), 0.12 * a));
   }
 }
@@ -36167,7 +36409,7 @@ function drawLights(V, t) {
       const [x, y] = projL(p.lane, p.x + 8, LY(p.lane, p.x) - 4, VSIDE.p);
       // (v1.5.38) softer power-up lights: on top of her spotlight and the lamp pools, the full-strength SPEED FORCE
       // light turned her into a white-orange haze as she ran - now it's a warm tint round her, wider and fainter
-      if (hasPw("shield")) g(x, y, 80, C.mint, 0.17);
+      if (hasPw("shield") && (!G.versus || pwOwner("shield") === p)) g(x, y, 80, C.mint, 0.17); // (v1.8.81: the owner's)
       if (hasPw("speed") && (!G.versus || pwOwner("speed") === p)) g(x, y, 75, col("#ffd040"), 0.16); // (v1.8.35: the owner's glow)
     }
     // (v1.4.29) A SOFT LIGHT ON EVERY CUSTOMER: so their faces and clothes read clearly, even far from the lamps
@@ -54179,6 +54421,22 @@ function kidHud(g, s, t, fD, sx, sy) {
     g.strokeText(pt, px, py);
     g.fillText(pt, px, py);
     HUDHIT.peek = [px - pw / 2 - 10 * s, py - 16 * s, pw + 20 * s, 32 * s];
+    // (v1.8.77) WHAT TO DO NOW: once the cups stop, nothing said to pick one - a new player waited for something to
+    // happen. A line under the stage, the way your hands work
+    if (!G.demo) {
+      const how = oneBtn()
+        ? "WHERE'S THE ALIEN?  POUR WHEN IT'S LIT" // (v1.8.77: ONE-BUTTON - the spotlight walks by itself)
+        : lastDev === "pad"
+          ? "WHERE'S THE ALIEN?  D-PAD, THEN A"
+          : lastDev === "touch" || coarse
+            ? "WHERE'S THE ALIEN?  TAP A CUP"
+            : "WHERE'S THE ALIEN?  ← →, THEN SPACE";
+      g.font = fD(15);
+      g.fillStyle = "#5ff5c8";
+      const hy = py - 24 * s; // (just above the magnifying glass's line - below it, on a computer, was the skip line)
+      g.strokeText(how, cssW / 2, hy);
+      g.fillText(how, cssW / 2, hy);
+    }
   } else HUDHIT.peek = null;
   // the sticker book: the name of the chosen sticker
   if (SB.open) {
@@ -56228,6 +56486,8 @@ function freeLose(why, lane, x) {
         c.state = "pushed";
         c.left = 220;
         c.happy = 0;
+        c.dry = true; // (v1.8.81: pushed back unserved - no empty comes back from them, as with the shield's push)
+        c.alarmed = c.warned = false;
       }
     sfx("boing", x);
     G.callouts.push({ text: "OOPS!  BACK YOU GO", c: "#9fe8c8", life: 1.4, max: 1.4, sub: true });
@@ -56530,10 +56790,10 @@ function hurryServed(c, s, demo) {
   const left = Math.max(0, H.t) / H.max,
     pts = 300 + Math.round(left * 10) * 70; // (300 at the last moment, up to 1000 the moment they walk in)
   SCORER = PL[s.owner || 0] || P1;
-  addScore(pts, c.x + 20, LY(c.lane, c.x) - 110);
+  const got = addScore(pts, c.x + 20, LY(c.lane, c.x) - 110) || pts; // (v1.8.78: the words say what was really added)
   SCORER = null;
   addCoins(left > 0.5 ? 6 : 3, "IN A HURRY");
-  worldText(left > 0.5 ? "JUST IN TIME!  +" + pts : "PHEW!  +" + pts, c, "#7dff9a");
+  worldText(left > 0.5 ? "JUST IN TIME!  +" + got : "PHEW!  +" + got, c, "#7dff9a");
   sfx("chime", c.x, 1);
 }
 // the stopwatch over a hurrying customer's head: a ring running down, green to amber to red, ticking faster at the end
@@ -67615,8 +67875,15 @@ function funUpdate(dt, demo) {
           tp.t = 99;
           tp.dead = true;
           SCORER = P0;
-          addScore(1500, tp.x, LY(tp.lane, tp.x) - 50);
+          // (v1.8.81: the tip's own worth - a 250 good-service tip paid 1500 when the puppy fetched it - and the big tip's
+          //  HOLO-SHOW, which a puppy owner never got)
+          addScore(tp.v || 1500, tp.x, LY(tp.lane, tp.x) - 50);
           SCORER = null;
+          tipFx(tp.lane, tp.x);
+          if (!tp.v) {
+            G.showT = 3.6;
+            callout("TIP!  HOLO-SHOW TIME", "#ffc34d", 2.2);
+          }
           sfx("tip");
           kidTip(false);
           fStat("tips");
@@ -70897,7 +71164,7 @@ function funHud(g, s, t, fD, sx, sy) {
         ? "TAP TO GO ON"
         : lastDev === "pad"
           ? "PRESS A TO GO ON"
-          : "PRESS POUR TO GO ON  ·  ESC TO SKIP",
+          : "PRESS SPACE TO GO ON  ·  ESC TO SKIP", // (v1.8.77: the key itself - "POUR" told a new keyboard player nothing)
       bx + bw - 16 * s,
       by + bh - 12 * s
     );
@@ -71065,7 +71332,7 @@ function funHud(g, s, t, fD, sx, sy) {
         ? "TAP TO START"
         : lastDev === "pad"
           ? "PRESS A TO START"
-          : "PRESS POUR TO START";
+          : "PRESS SPACE TO START"; // (v1.8.77: the key itself)
     g.globalAlpha = Math.max(0, a) * (0.8 + 0.2 * Math.sin(performance.now() / 260));
     g.font = "700 " + Math.round(13 * s) + "px " + FB;
     g.lineJoin = "round";
@@ -72735,9 +73002,9 @@ function funThiefCaught(c, s ) {
   c.joy = 0;
   if (G.case) G.case.next = rnd(14, 20);
   SCORER = PL[(s && s.owner) || 0]; // (v1.8.18: whoever served the thief - it always went to player 1)
-  addScore(2000, c.x + 20, LY(c.lane, c.x) - 120);
+  const got = addScore(2000, c.x + 20, LY(c.lane, c.x) - 120) || 2000; // (v1.8.78: what was really added)
   SCORER = null;
-  callout("CASE CLOSED!  YOU CAUGHT THE SHAKE THIEF  +2000", "#5ff5c8", 2.6);
+  callout("CASE CLOSED!  YOU CAUGHT THE SHAKE THIEF  +" + got, "#5ff5c8", 2.6);
   worldText(
     ["CURSES! FOILED AGAIN!", "HOW DID YOU KNOW?!", "IT WAS ME ALL ALONG!"][Math.floor(Math.random() * 3)],
     c,
@@ -81176,8 +81443,10 @@ function coachKeys() {
   if (lastDev === "touch")
     return {
       pour: tap ? "TAP POUR" : "HOLD POUR",
-      bars: VERT ? "SWIPE ← →" : "SWIPE ↑ ↓",
-      run: VERT ? "DRAG UP" : "DRAG ◀",
+      // (v1.8.77: the buttons as they're drawn - "A TIP! RUN DRAG UP TO GRAB IT" read oddly, and SWIPE wasn't what the
+      //  screen showed: ◀ ▶ say BAR on a phone held upright, ▲ ▼ sideways)
+      bars: VERT ? "◀ ▶" : "▲ ▼",
+      run: VERT ? "▲" : "◀",
     };
   return {
     pour: tap ? "PRESS SPACE TO POUR" : "HOLD SPACE TO POUR",
@@ -83756,8 +84025,25 @@ function noteInput() {
     return;
   }
   if (ATTRACT.on && now - (ATTRACT.wakeT || 0) < 350) return; // (the same touch doesn't also open the menu)
-  if (ATTRACT.on) stopAttract();
+  if (ATTRACT.on) {
+    stopAttract();
+    ATTRACT.menuAt = now; // (v1.8.77: and the touch that brings the menu doesn't also press the button under it)
+  }
 }
+// (v1.8.77) THE TOUCH THAT OPENS THE MENU STAYS THERE: its click landed on whatever button had just appeared under the
+// finger - START AT LEVEL moved to stop 2, and a new player started at Venus without knowing
+window.addEventListener(
+  "click",
+  (e) => {
+    // (a pointer's click only - a key or a controller's A presses the button with a click of its own, and the second
+    //  press of a quick Enter-Enter to start was swallowed: detail is 0 for those)
+    if (e.detail > 0 && performance.now() - (ATTRACT.menuAt || 0) < 450) {
+      e.preventDefault();
+      e.stopImmediatePropagation();
+    }
+  },
+  true
+);
 // the quiet demo's volume: music and effects fade out while it's quiet, and back in when someone's there
 const QWANT = { music: -1, fx: -1 };
 function attractQuietTick() {
@@ -85077,7 +85363,7 @@ function levelOfTour(of) {
     inTour = ((lv - 1) % LAST_LEVEL) + 1;
   return (tour > 1 ? "TOUR " + tour + "  ·  " : "") + "LEVEL " + inTour + of + LAST_LEVEL;
 }
-const GAME_VERSION = "v1.8.76",
+const GAME_VERSION = "v1.8.81",
   GAME_DATE = "26.11.2026",
   VERSION_TEXT = GAME_VERSION + "  ·  " + GAME_DATE;
 const FB = '"Chakra Petch", "Segoe UI", sans-serif';
@@ -91710,6 +91996,9 @@ function pause(on) {
   // (v1.8.41: and the arrival screen can be paused too - the PAUSE button showed there but did nothing)
   // (v1.8.46: taken back out - paused there, the picture behind the pause screen showed the empty bar, and resuming
   //  with a key skipped the arrival; the PAUSE button is hidden on the arrival screen instead)
+  // (v1.8.77: a pause starts without "STILL THERE?" - left up from an earlier auto-pause it moved the buttons, and a tap
+  //  meant for RESUME joined a second player; the idle check shows it again after this)
+  if (on) $("pAfk").hidden = true;
   if (on && ["play", "lost", "clear", "bonus", "mini"].includes(G.state)) {
     voiceHush(); // (v1.8.50: the reading stops while paused)
     G.prev = G.state;
@@ -91954,7 +92243,9 @@ function pressTwice(id, sureText, action) {
 }
 $("pResume").onclick = () => pause(false);
 // (v1.6.0) DROP-IN CO-OP from the pause menu: player 2 joins, and the game carries on (twists.ts)
-$("pJoin").onclick = () => {
+// (v1.8.77: pressed twice, as QUIT TO MENU - one stray ↓ then Space from a player who thought they were still playing
+//  turned the game into co-op for good: the arrows moved player 2, and the menu stayed on 2 players)
+pressTwice("pJoin", "PRESS AGAIN: PLAYER 2 JOINS", () => {
   // (v1.6.4) if you were playing on the only controller, it stays yours - your friend takes the arrow keys and Enter
   const one =
     lastDev === "pad" &&
@@ -91964,8 +92255,8 @@ $("pJoin").onclick = () => {
     G.padP1 = one;
     pause(false);
   }
-};
-pressTwice("pQuit", "PRESS AGAIN TO QUIT TO THE MENU", toMenu);
+});
+pressTwice("pQuit", "PRESS AGAIN TO QUIT TO THE MENU", () => toMenu(true)); // (v1.8.77: true - a player's quit, see quitScore)
 // (v1.8.47) PLAY AGAIN PLAYS THE SAME AGAIN: after a time attack, boss rush, endless, relax or daily game it started an
 // ordinary tour - now it starts the same mode once more, the way its own button does
 $("oAgain").onclick = () => {
@@ -92520,7 +92811,14 @@ function navDir(dx, dy) {
     // (v1.4.51) UP AND DOWN GO ROW BY ROW: always to the very next row (it used to skip a row of two buttons when
     // coming from a wide one), landing on the LEFT button of it - or the RIGHT one if that's the side you last moved
     // to. A wider grid keeps to the remembered column. At the end, round to the far row.
-    const ahead = bs.filter((b) => b !== a && (ctr(b)[1] - cy) * dy > 4),
+    // (v1.8.77) THE PINNED DONE BUTTON COMES LAST: it floats at the bottom of the visible panel, so it was always the
+    //  "nearest row below" - in SETTINGS ↓ jumped to it and then wrapped round, and the whole PLAYING section (POUR,
+    //  ONE-BUTTON, LEFT-HANDED, CONTROLS, CALM MODE...) could only be reached with Tab. The rows below it go first
+    const pinned = (b) =>
+        getComputedStyle(b).position === "sticky" ||
+        (b.parentElement && getComputedStyle(b.parentElement).position === "sticky"), // (or the row holding it)
+      ahead0 = bs.filter((b) => b !== a && (ctr(b)[1] - cy) * dy > 4),
+      ahead = ahead0.some((b) => !pinned(b)) ? ahead0.filter((b) => !pinned(b)) : ahead0,
       behind = bs.filter((b) => b !== a && (ctr(b)[1] - cy) * dy < -4),
       pool = ahead.length ? ahead : behind;
     // (v1.8.67: no button that way - a long page with one button (HOW TO PLAY, WHAT'S NEW) scrolls instead; arrows and
@@ -92636,6 +92934,20 @@ window.addEventListener(
     // profile's name) every key went to the box - Esc didn't close the panel and the arrows couldn't get out of it. Now
     // Esc closes the panel and up / down leave the box for the buttons; left / right and the letters still type
     // (v1.8.67: a TEXTAREA - the progress code - too: its arrows moved the cursor out of the box)
+    // (v1.8.77) PAUSED BY ITSELF ("STILL THERE?"): a player who comes back and presses a game key - an arrow, Space -
+    // carries on playing, as the note says, rather than moving about the pause menu (and pressing what's there)
+    if (
+      G.state === "paused" &&
+      !$("pAfk").hidden &&
+      ["Space", "ArrowUp", "ArrowDown", "ArrowLeft", "ArrowRight", "KeyW", "KeyS", "KeyA", "KeyD"].includes(
+        e.code
+      )
+    ) {
+      e.preventDefault();
+      e.stopImmediatePropagation();
+      pause(false);
+      return;
+    }
     if (panelNav() && e.target && ["INPUT", "TEXTAREA"].includes((e.target          ).tagName)) {
       const t = e.target                    ;
       if (e.code === "Escape" || e.code === "ArrowUp" || e.code === "ArrowDown") {
@@ -92982,6 +93294,55 @@ profWire();
 //  the game, and where the motion capture, the folk songs and the fonts come from. Both from the menu at any time.
 // =====================================================================================
 const NEWS = [
+  {
+    ver: "v1.8.81",
+    title: "POWER TO THE RIGHT PLAYER",
+    items: [
+      "A SECOND FREEZE RAY NO LONGER TURNS THE ICE INTO TALL BLUE COLUMNS",
+      "VERSUS: PICKING UP THE SAME POWER-UP NO LONGER STEALS YOUR OPPONENT'S - AND ITS GLOW SHOWS ONLY ON ITS OWNER",
+      "THE PUPPY FETCHES A TIP FOR WHAT IT'S WORTH, AND THE BIG ONE STARTS THE HOLO-SHOW",
+      "RELAX: A CUSTOMER SENT BACK UNSERVED NO LONGER SLIDES YOU AN EMPTY",
+    ],
+  },
+  {
+    ver: "v1.8.80",
+    title: "SAVED MEANS SAVED",
+    items: [
+      "A SHIELD, A FREE SAVE, A PET OR THE CHARM THAT SAVES A DROPPED SHAKE REALLY SAVES YOU - THE NEXT MOMENT TOOK THE LIFE ANYWAY",
+      "RELAX MODE NO LONGER FREEZES WHEN A SHAKE OR A GLASS FALLS",
+      "A QUICK CUSTOMER CAN'T STEP STRAIGHT THROUGH A SHAKE ANY MORE",
+      "AN EMPTY GLASS NEVER STARTS TOO CLOSE TO THE TAPS TO CATCH",
+    ],
+  },
+  {
+    ver: "v1.8.79",
+    title: "CLEAN SLATE",
+    items: [
+      "THE SHAKE THIEF'S FOOTPRINTS NO LONGER FOLLOW YOU TO EVERY LATER STOP",
+      "ON THE ICE STOPS YOU NO LONGER SLIDE AWAY FROM THE TAPS AFTER A SLIP",
+      "AFTER A SLIP THE VIP, THE OUTLAW AND THE UFO MOVE ON TOO",
+      "A BUMP OR A GUST NO LONGER PULLS THE QUEUE OUTSIDE THE DOOR INSIDE",
+    ],
+  },
+  {
+    ver: "v1.8.78",
+    title: "EVERY POINT COUNTED",
+    items: [
+      "BONUS MESSAGES SHOW THE POINTS YOU REALLY GET - ON HARD OR IN A FEVER THEY SAID LESS",
+      "A BIG PRIZE THAT PASSES TWO EXTRA-LIFE MARKS GIVES TWO LIVES",
+      'NO "EXTRA LIFE!" WHERE LIVES ARE ENDLESS, AND CO-OP\'S STOP BONUS IS NO LONGER PAID TWICE',
+    ],
+  },
+  {
+    ver: "v1.8.77",
+    title: "FIRST TIME AROUND",
+    items: [
+      "THE TOUCH THAT OPENS THE MENU NO LONGER PRESSES A BUTTON TOO - IT MOVED THE START TO STOP 2",
+      "THE CUPS ROUND SAYS WHAT TO DO: TAP A CUP",
+      "THE PAUSE SCREEN KEEPS ITS BUTTONS IN PLACE - NO MORE PLAYER 2 JOINING BY MISTAKE",
+      "THE TIPS NAME THE TOUCH BUTTONS AS THEY'RE DRAWN",
+    ],
+  },
   {
     ver: "v1.8.76",
     title: "EASY TO READ",

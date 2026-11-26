@@ -766,6 +766,7 @@ const PROFILE_KEYS = new Set([
   // (v1.8.60: the bartender is saved as char1 / char2 - "char" alone was never used, so every profile shared one)
   "char1",
   "cardsSeen", // (v1.8.74: the postcards shown - THE STORY's journal)
+  "facesMet", // (v1.8.91: the NEW FACES already announced - newfaces.ts)
   "char2",
   "unlock",
   "stickers",
@@ -8087,6 +8088,23 @@ const DICT_ROWS                             = [
     "THE RACE WITH THE BLACK HOLE BISTRO NOW HAS A LITTLE TRACK: YOUR DINER AND THEIR SAUCER, HEADING FOR THE FLAG",
     "DIE WEDLOOP MET DIE SWARTGAT-BISTRO HET NOU 'N KLEIN RENBAAN: JOU KAFEE EN HULLE PIERING, OP PAD NA DIE VLAG",
     "WYŚCIG Z BISTRO CZARNA DZIURA MA TERAZ MAŁY TOR: TWOJA KAWIARNIA I ICH SPODEK PĘDZĄ DO FLAGI",
+  ],
+  // (v1.8.91) FAMILIAR FACES
+  ["FAMILIAR FACES", "BEKENDE GESIGTE", "ZNAJOME TWARZE"],
+  [
+    "A FACE YOU'VE MET BEFORE ISN'T ANNOUNCED AS NEW AGAIN EVERY GAME",
+    "'N GESIG WAT JY AL VANTEVORE ONTMOET HET, WORD NIE ELKE SPEL WEER AS NUUT AANGEKONDIG NIE",
+    "TWARZ, KTÓRĄ JUŻ POZNAŁEŚ, NIE JEST W KAŻDEJ GRZE ZAPOWIADANA JAKO NOWA",
+  ],
+  [
+    "THEIR NAME STILL POPS UP, QUIETLY, WHEN THEY WALK IN",
+    "HULLE NAAM VERSKYN STEEDS, STILLETJIES, WANNEER HULLE INSTAP",
+    "ICH IMIĘ WCIĄŻ SIĘ POJAWIA, PO CICHU, GDY WCHODZĄ",
+  ],
+  [
+    '"THE LOCALS HERE" SHOWS WHEN A LOCAL REALLY WALKS IN',
+    '"DIE PLAASLIKE MENSE HIER" WYS WANNEER \'N PLAASLIKE MENS REGTIG INSTAP',
+    '"TUTEJSI" POKAZUJE SIĘ, GDY NAPRAWDĘ WCHODZI KTOŚ TUTEJSZY',
   ],
   // (v1.8.90) THEY COME BACK TO THANK YOU
   ["THEY COME BACK TO THANK YOU", "HULLE KOM TERUG OM DANKIE TE SÊ", "WRACAJĄ, BY CI PODZIĘKOWAĆ"],
@@ -18338,6 +18356,7 @@ function update(dt) {
         lk = FAN_LOOKS[nat][Math.floor(Math.random() * FAN_LOOKS[nat].length)];
       fan = { nation: nat, look: lk, ...fanGear(lk, nat === "za" || Math.random() < 0.5 ? 0 : 1) };
     } // lone supporters, from level 1 - most of them South Africans (Afrikaans and Black SA fans alike) waving the flag
+    localSay(type, demo); // (v1.8.91: "THE LOCALS HERE" once a local really walks in - locals.ts)
     customers.push({
       fan,
       lane,
@@ -77280,10 +77299,16 @@ function newFaceFor(type, demo) {
   if (now && !G.nfIntro && (G.served >= 2 || demo)) {
     // the first visit: a callout and a fact
     G.nfIntro = true;
-    if (!demo) {
+    // (v1.8.91) NEW ONLY THE FIRST TIME: a face this profile has met before isn't announced as NEW again every game -
+    // just their name, quietly (the store key "facesMet" is each profile's own)
+    const met0 = demo ? {} : store.get("facesMet", {});
+    if (!demo && met0[now[1]]) G.callouts.push({ text: now[2], c: "#ffd24d", life: 2, max: 2, sub: true });
+    else if (!demo) {
       callout("NEW FACE: " + now[2], "#ffd24d", 2.8);
       G.callouts.push({ text: now[3], c: "#ffe6a0", life: 3.6, max: 3.6, sub: true });
       sfx("chime", X0, 2);
+      met0[now[1]] = 1;
+      store.set("facesMet", met0);
     }
     return TYPE_OF[now[1]];
   }
@@ -80138,7 +80163,14 @@ function localFor(type, demo, homeFolk) {
   if (type.kind === "dragon" || Math.random() >= LOCAL_SHARE) return null;
   const k = LOCAL_AT[tourStop()];
   if (!k) return null;
-  if (!demo && G.localSeen !== G.level) {
+  return TYPE_OF[k];
+}
+// (v1.8.91) THE LOCALS NOTE WHEN ONE WALKS IN: said as the customer is added (update.ts), not when localFor picks one -
+// a thank-you visitor, Ali Baba, a new face or a velociraptor often took the local's place, and the note named people
+// who weren't there
+function localSay(type, demo) {
+  const k = LOCAL_AT[tourStop()];
+  if (!demo && k && type === TYPE_OF[k] && G.localSeen !== G.level) {
     // the first of them on this stop: who they are
     G.localSeen = G.level;
     G.callouts.push({
@@ -80149,7 +80181,6 @@ function localFor(type, demo, homeFolk) {
       sub: true,
     });
   }
-  return TYPE_OF[k];
 }
 
 // ---- THE TORSO (hips at 0,0, shoulders at -th, facing right): a tunic in their colour, a belt and a badge ----
@@ -85636,7 +85667,7 @@ function levelOfTour(of) {
     inTour = ((lv - 1) % LAST_LEVEL) + 1;
   return (tour > 1 ? "TOUR " + tour + "  ·  " : "") + "LEVEL " + inTour + of + LAST_LEVEL;
 }
-const GAME_VERSION = "v1.8.90",
+const GAME_VERSION = "v1.8.91",
   GAME_DATE = "26.11.2026",
   VERSION_TEXT = GAME_VERSION + "  ·  " + GAME_DATE;
 const FB = '"Chakra Petch", "Segoe UI", sans-serif';
@@ -93592,6 +93623,15 @@ profWire();
 //  the game, and where the motion capture, the folk songs and the fonts come from. Both from the menu at any time.
 // =====================================================================================
 const NEWS = [
+  {
+    ver: "v1.8.91",
+    title: "FAMILIAR FACES",
+    items: [
+      "A FACE YOU'VE MET BEFORE ISN'T ANNOUNCED AS NEW AGAIN EVERY GAME",
+      "THEIR NAME STILL POPS UP, QUIETLY, WHEN THEY WALK IN",
+      '"THE LOCALS HERE" SHOWS WHEN A LOCAL REALLY WALKS IN',
+    ],
+  },
   {
     ver: "v1.8.90",
     title: "THEY COME BACK TO THANK YOU",

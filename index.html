@@ -157,6 +157,12 @@ body.txt1 .panel :is(button, h2, button span, button small, button b), body.txt2
   #overTip { padding: 6px 10px; gap: 2px; }
   #over > .buttons button.primary { min-height: 42px; font-size: 18px; }
   #over > .buttons button { min-height: 40px; }
+  /* (v1.8.98) ONE ROW OF BUTTONS: on a phone held sideways CONTINUE and PLAY AGAIN each took a full row and the four
+     buttons covered half the panel - the results, the initials and the score table under them */
+  #over > .buttons { display: flex; gap: 8px; }
+  #over > .buttons button { flex: 1 1 0; min-height: 38px; min-width: 0; font-size: 13px; padding: 4px 6px; overflow-wrap: normal; word-break: normal; hyphens: manual; }
+  #over > .buttons button.primary { flex: 2.6 1 0; min-height: 40px; font-size: 14px; }
+  #over > .buttons button:not(.primary) { flex: 1 0 auto; } /* (never narrower than its word - Polish UDOSTĘPNIJ spilled out) */
 }
 /* (v1.4.84) GAME OVER: what took the last life, and a tip for next time */
 #overTip { display: flex; flex-direction: column; gap: 4px; padding: 10px 14px; border-radius: 14px; border: 1px solid rgba(255, 195, 77, .45);
@@ -235,6 +241,9 @@ body.txt1 .panel :is(button, h2, button span, button small, button b), body.txt2
 body.txt1 .panel { zoom: 1.12; }
 body.txt2 .panel { zoom: 1.25; }
 body.txt1 .panel, body.txt2 .panel { max-height: 80vh; overflow-y: auto; }
+/* (v1.8.98: zoomed 1.25, 80vh was the whole screen - a panel ran under the corner buttons and off the bottom) */
+body.txt1 .panel { max-height: calc((100vh - 64px) / 1.12); }
+body.txt2 .panel { max-height: calc((100vh - 64px) / 1.25); }
 /* (v1.5.48) BIGGER TEXT, PANELS STILL ON THE SCREEN: these panels are sized by the screen itself (96% of its width, 92-96%
    of its height) - and the TEXT SIZE zoom then made them 12% or 25% bigger than the screen: CONTROLS, the CUP and the
    GALAXY MAP hung off both sides of a phone, their titles cut. Now their sizes are divided by the zoom, so they fit */
@@ -8098,6 +8107,28 @@ const DICT_ROWS                             = [
     "DAILY CHALLENGE DONE!  +2 STARS",
     "DAAGLIKSE UITDAGING KLAAR!  +2 STERRE",
     "WYZWANIE DNIA UKOŃCZONE!  +2 GWIAZDKI",
+  ],
+  // (v1.8.98) MUSIC OFF MEANS OFF
+  ["MUSIC OFF MEANS OFF", "MUSIEK AF BETEKEN AF", "MUZYKA WYŁĄCZONA ZNACZY WYŁĄCZONA"],
+  [
+    "MUSIC OFF NOW ALSO STOPS A SONG FROM THE MUSIC BOX",
+    "MUSIEK AF STOP NOU OOK 'N LIEDJIE UIT DIE MUSIEKBOKS",
+    "WYŁĄCZENIE MUZYKI ZATRZYMUJE TERAZ TEŻ PIOSENKĘ Z SZAFY GRAJĄCEJ",
+  ],
+  [
+    "BLACKBEARD IS NO LONGER USED UP BY THE MENU'S DEMO",
+    "SWARTBAARD WORD NIE MEER DEUR DIE KIESLYS SE DEMO OPGEBRUIK NIE",
+    "CZARNOBRODY NIE JEST JUŻ ZUŻYWANY PRZEZ DEMO W MENU",
+  ],
+  [
+    "GAME OVER ON A PHONE HELD SIDEWAYS: THE BUTTONS IN ONE ROW",
+    "SPEL VERBY OP 'N FOON WAT DWARS GEHOU WORD: DIE KNOPPIES IN EEN RY",
+    "KONIEC GRY NA TELEFONIE TRZYMANYM POZIOMO: PRZYCISKI W JEDNYM RZĘDZIE",
+  ],
+  [
+    "BIG TEXT: THE PANELS FIT ON THE SCREEN",
+    "GROOT TEKS: DIE PANELE PAS OP DIE SKERM",
+    "DUŻY TEKST: PANELE MIESZCZĄ SIĘ NA EKRANIE",
   ],
   // (v1.8.97) FOR EVERY HAND AND EVERY EYE
   ["FOR EVERY HAND AND EVERY EYE", "VIR ELKE HAND EN ELKE OOG", "DLA KAŻDEJ RĘKI I KAŻDEGO OKA"],
@@ -16086,6 +16117,7 @@ function startLevel() {
   G.pontiffSeen = false;
   G.sesameSeen = false;
   G.dragonSeen = false;
+  G.bbSeen = false; // (v1.8.98: Blackbeard, like the others here, once a stop - he came once a page load)
   G.fans = null;
   G.fansT = rnd(25, 40);
   G.moon = 0;
@@ -18365,7 +18397,8 @@ function update(dt) {
       }
     } else if (plain && Math.random() < 0.04) {
       // PIRATES! (and, rarely, Blackbeard himself)
-      const bb = G.level >= 3 && !G.bbSeen && Math.random() < 0.3;
+      // (v1.8.98: not in the demo - he comes once a page, and the menu's demo used him up before a real game)
+      const bb = G.level >= 3 && !demo && !G.bbSeen && Math.random() < 0.3;
       type = TYPE_OF[bb ? "blackbeard" : "pirate"];
       sfx("squawk", X0);
       if (bb) {
@@ -54769,7 +54802,9 @@ function kidHud(g, s, t, fD, sx, sy) {
     // (v1.3.3: a little higher, on their own dark see-through card - so they never cover the LEVEL CLEAR words below,
     //  nor the stage show's name behind them)
     const cx = cssW / 2,
-      cy = cssH * 0.24,
+      // (v1.8.98: below the HUD and the sign's first line - at the biggest text size, on a phone held sideways and on a
+      //  tablet, the card covered the sign's second line)
+      cy = Math.max(cssH * 0.24, HUD_TOP.low + 56 * s),
       pa = Math.min(1, (G.starsT - 0.1) * 4),
       w = Math.min(cssW - 16 * s, 470 * s);
     // (v1.5.33 "polish") the line under the stars never shrinks below 11 pixels - on a phone it was about six pixels
@@ -71309,6 +71344,14 @@ function funHud(g, s, t, fD, sx, sy) {
     g.save();
     g.font = "600 " + Math.round(12 * s * TXT()) + "px " + FB;
     g.fillStyle = "rgba(255,243,226,.6)";
+    {
+      // (v1.8.98: shrunk to fit - in Polish on a narrow phone it ran off both edges)
+      const w = g.measureText(
+        T(miniSkipText().replace(" (OR K)", "").replace("MINI-GAME", "BONUS ROUND"))
+      ).width;
+      if (w > cssW - 24 * s)
+        g.font = "600 " + Math.floor((12 * s * TXT() * (cssW - 24 * s)) / w) + "px " + FB;
+    }
     g.fillText(
       miniSkipText().replace(" (OR K)", "").replace("MINI-GAME", "BONUS ROUND"),
       cssW / 2,
@@ -86018,7 +86061,7 @@ function levelOfTour(of) {
     inTour = ((lv - 1) % LAST_LEVEL) + 1;
   return (tour > 1 ? "TOUR " + tour + "  ·  " : "") + "LEVEL " + inTour + of + LAST_LEVEL;
 }
-const GAME_VERSION = "v1.8.97",
+const GAME_VERSION = "v1.8.98",
   GAME_DATE = "26.11.2026",
   VERSION_TEXT = GAME_VERSION + "  ·  " + GAME_DATE;
 const FB = '"Chakra Petch", "Segoe UI", sans-serif';
@@ -88032,11 +88075,15 @@ function drawEndingHud(g, s, fD, fB) {
       g.lineWidth = 1.5 * s;
       g.stroke();
       g.globalAlpha = 1;
+      // (v1.8.98: a line split in two pushes the ones after it down - in the narrow side column the second half of "AND
+      //  EVERY ALIEN, ROBOT, ANGEL..." lay over the next line; small() says how much lower it reached)
+      let drop = 0;
       lines.forEach(([txt, c, b], i) => {
-        const y = y0 + i * step;
+        const y = y0 + i * step + drop;
         if (!txt || y < top + 6 * s || y > bot - 6 * s) return;
         const a = Math.min(1, (y - top - 6 * s) / (40 * s), (bot - 6 * s - y) / (30 * s));
-        b ? big(txt, y, c, 20, a) : small(txt, y, c, 15, a);
+        if (b) big(txt, y, c, 20, a);
+        else drop += small(txt, y, c, 15, a) || 0;
       });
       cx = cssW / 2;
       colW = cssW * 0.92;
@@ -92571,6 +92618,9 @@ $("musicFiles").addEventListener("change", async (e) => {
 });
 function setMusicMode(m) {
   MY.mode = m;
+  // (v1.8.98: MUSIC OFF or YOUR MUSIC stops the music box's song still playing behind the menu - it played on, song
+  //  after song, until a game started, and with your own songs loaded both played at once)
+  if (m !== "original") JB.radio = null;
   store.set("musicMode", m === "mine" ? "original" : m);
   if (AC) {
     // (v1.6.15: changing the music while a tune was fading between two stops threw an error - the fade's curve was
@@ -93147,7 +93197,10 @@ function openJukebox() {
   audio();
   if (G.state !== "menu") return;
   JB.open = true;
-  if (JB.radio) JB.playing = JB.radio.i; // (v1.5.9: the song still playing from before carries on, highlighted)
+  if (JB.radio) {
+    JB.playing = JB.radio.i; // (v1.5.9: the song still playing from before carries on, highlighted)
+    JB.until = JB.radio.until; // (v1.8.98: and SHUFFLE waits for it to end - it cut it off at once on reopening)
+  }
   JB.radio = null;
   if (JB.playing < 0) JB.playing = 0;
   if (AC && myBus) myBus.gain.setTargetAtTime(0, AC.currentTime, 0.1); // your own music pauses while the music box plays
@@ -93996,6 +94049,16 @@ profWire();
 //  the game, and where the motion capture, the folk songs and the fonts come from. Both from the menu at any time.
 // =====================================================================================
 const NEWS = [
+  {
+    ver: "v1.8.98",
+    title: "MUSIC OFF MEANS OFF",
+    items: [
+      "MUSIC OFF NOW ALSO STOPS A SONG FROM THE MUSIC BOX",
+      "BLACKBEARD IS NO LONGER USED UP BY THE MENU'S DEMO",
+      "GAME OVER ON A PHONE HELD SIDEWAYS: THE BUTTONS IN ONE ROW",
+      "BIG TEXT: THE PANELS FIT ON THE SCREEN",
+    ],
+  },
   {
     ver: "v1.8.97",
     title: "FOR EVERY HAND AND EVERY EYE",

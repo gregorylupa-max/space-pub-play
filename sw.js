@@ -1,6 +1,6 @@
 // ASTRO CAFÉ - the offline helper. The first visit keeps a copy of the game; after that it starts even with no internet.
 // The page itself is always fetched fresh when there IS internet, so every new version arrives straight away.
-const CACHE = "astro-cafe-v1.8.97";
+const CACHE = "astro-cafe-v1.8.98";
 // (v1.8.57) THE MUSIC KEEPS ITS OWN SHELF: the songs (up to ~48 MB) were saved in the versioned cache and thrown away with
 // every update - an offline player lost them until each was played online again. They live in a cache of their own now
 const MUSIC = "astro-cafe-music";
@@ -81,6 +81,9 @@ self.addEventListener("fetch", (e) => {
   // everything else (icons, the fonts): the saved copy first, kept fresh in the background
   e.respondWith(
     caches.match(req).then((hit) => {
+      // (v1.8.98: a song already saved is played from the shelf, not downloaded again each time - up to 48 MB of a
+      //  phone's data; the songs don't change between versions)
+      if (music && hit) return hit;
       const net = fetch(req)
         .then((r) => {
           if (r && (r.ok || r.type === "opaque")) {

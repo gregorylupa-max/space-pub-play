@@ -1850,6 +1850,9 @@ function make2D(cv, cpuLevels) {
       ].forEach(([p, a]) => gr.addColorStop(p, "rgba(" + rgb + "," + a + ")"));
       g.fillStyle = gr;
       g.fillRect(0, 0, 64, 64);
+      // (v1.8.56: at most 256 kept - every new colour made a new little canvas, and with colours fading smoothly
+      //  several hundred piled up over an hour of play on the CPU path)
+      if (sprites.size > 256) sprites.clear();
       sprites.set(key, s);
     }
     return s;
@@ -2027,7 +2030,7 @@ function make2D(cv, cpuLevels) {
     layer(key, fn, dx, dy) {
       let L = layers.get(key);
       if (!L) {
-        if (layers.size > 12) layers.clear();
+        if (layers.size > 4) layers.clear(); // (v1.8.56: 4, was 12 - each is a full-screen canvas, ~10 MB on a sharp phone, and endless travels through stop after stop)
         const c = document.createElement("canvas");
         c.width = cv.width;
         c.height = cv.height;
@@ -8013,6 +8016,18 @@ const DICT_ROWS                             = [
     "THE RACE WITH THE BLACK HOLE BISTRO NOW HAS A LITTLE TRACK: YOUR DINER AND THEIR SAUCER, HEADING FOR THE FLAG",
     "DIE WEDLOOP MET DIE SWARTGAT-BISTRO HET NOU 'N KLEIN RENBAAN: JOU KAFEE EN HULLE PIERING, OP PAD NA DIE VLAG",
     "WYŚCIG Z BISTRO CZARNA DZIURA MA TERAZ MAŁY TOR: TWOJA KAWIARNIA I ICH SPODEK PĘDZĄ DO FLAGI",
+  ],
+  // (v1.8.56) THE LONG HAUL
+  ["THE LONG HAUL", "DIE LANG PAD", "DŁUGA TRASA"],
+  [
+    "LONG ENDLESS GAMES: THE FOLK SONGS COME ROUND AGAIN INSTEAD OF RUNNING OUT",
+    "LANG EINDLOSE SPELE: DIE VOLKSLIEDJIES KOM WEER ROND IN PLAAS VAN OM OP TE RAAK",
+    "DŁUGIE GRY W TRYBIE BEZ KOŃCA: PIOSENKI LUDOWE WRACAJĄ, ZAMIAST SIĘ SKOŃCZYĆ",
+  ],
+  [
+    "ON DEVICES WITHOUT GRAPHICS ACCELERATION THE GAME HOLDS FAR LESS IN MEMORY OVER A LONG SESSION",
+    "OP TOESTELLE SONDER GRAFIESE VERSNELLING HOU DIE SPEL BAIE MINDER IN DIE GEHEUE OOR 'N LANG SESSIE",
+    "NA URZĄDZENIACH BEZ AKCELERACJI GRAFIKI GRA ZAJMUJE DUŻO MNIEJ PAMIĘCI PODCZAS DŁUGIEJ SESJI",
   ],
   // (v1.8.55) FAIR PAIRS
   ["FAIR PAIRS", "REGVERDIGE PARE", "UCZCIWE PARY"],
@@ -66386,6 +66401,9 @@ function funLevelStart() {
     // (v1.4.65) NO TUNE TWICE IN A GAME: a folk song the band has already played is not picked again - every stage
     // keeps its own tune (all 40 are different), and each folk song turns up at most once
     const used = G.folkUsed || (G.folkUsed = []);
+    // (v1.8.56: in ENDLESS, which now travels on and on, once every folk song has been played they can all come round
+    //  again - the band ran out of them)
+    if (G.endless && pool.length && pool.every((k) => used.includes(k))) used.length = 0;
     pool = pool.filter((k) => !used.includes(k));
     G.folk =
       (nat || Math.random() < 0.25) && pool.length ? pool[Math.floor(Math.random() * pool.length)] : null;
@@ -84368,7 +84386,7 @@ function levelOfTour(of) {
     inTour = ((lv - 1) % LAST_LEVEL) + 1;
   return (tour > 1 ? "TOUR " + tour + "  ·  " : "") + "LEVEL " + inTour + of + LAST_LEVEL;
 }
-const GAME_VERSION = "v1.8.55",
+const GAME_VERSION = "v1.8.56",
   GAME_DATE = "26.11.2026",
   VERSION_TEXT = GAME_VERSION + "  ·  " + GAME_DATE;
 const FB = '"Chakra Petch", "Segoe UI", sans-serif';
@@ -90326,6 +90344,15 @@ function playStep2(tr, t0) {
           f.Q.value = 2.5;
           f.connect(B2);
           note2("sawtooth", 52 + (x % 12), st * 16, 0.06, f, t, { swell: true, vib: 5 });
+          // (v1.8.56: let go of the filter when its chord is over - one was left connected every chord)
+          setTimeout(
+            () => {
+              try {
+                f.disconnect();
+              } catch (e) {}
+            },
+            (st * 16 + 1) * 1000
+          );
         }
       break; // "aaah"
   }
@@ -92189,6 +92216,14 @@ profWire();
 //  the game, and where the motion capture, the folk songs and the fonts come from. Both from the menu at any time.
 // =====================================================================================
 const NEWS = [
+  {
+    ver: "v1.8.56",
+    title: "THE LONG HAUL",
+    items: [
+      "LONG ENDLESS GAMES: THE FOLK SONGS COME ROUND AGAIN INSTEAD OF RUNNING OUT",
+      "ON DEVICES WITHOUT GRAPHICS ACCELERATION THE GAME HOLDS FAR LESS IN MEMORY OVER A LONG SESSION",
+    ],
+  },
   {
     ver: "v1.8.55",
     title: "FAIR PAIRS",

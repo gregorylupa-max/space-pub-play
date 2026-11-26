@@ -21,6 +21,8 @@ html, body { height: 100%; margin: 0; background: var(--bg); color: var(--ink); 
 body { user-select: none; -webkit-user-select: none; -webkit-tap-highlight-color: transparent; }
 #stage { position: fixed; inset: 0; background: var(--bg); }
 #stage canvas { position: absolute; inset: 0; width: 100%; height: 100%; display: block; touch-action: none; }
+/* (v1.8.73) a double tap or pinch that starts on a button or a panel no longer zooms the page (iOS) */
+button, .panel { touch-action: manipulation; }
 #hud { pointer-events: none; }
 .panel {
   position: fixed; left: 50%; top: 50%; transform: translate(-50%, -50%); width: min(640px, calc(100% - 32px));
@@ -396,7 +398,9 @@ body.touch2p #touch .tp button.holy { width: 60px; height: 60px; font-size: 11px
   #csList { grid-template-columns: repeat(3, minmax(0, 1fr)); } #csList button small { display: none; }
   #sbList, #wdHats, #wdPets { grid-template-columns: repeat(3, minmax(0, 1fr)); } #sbList button small { display: none; }
 }
-@media (max-height: 520px) { .panel { top: 50%; gap: 9px; padding: 16px 20px; } .tag, .controls { display: none; } .logo { font-size: 40px; } }
+@media (max-height: 520px) { .panel { top: 50%; gap: 9px; padding: 16px 20px; } .tag, .controls { display: none; } .logo { font-size: 40px; }
+  /* (v1.8.74) but the map's star count, the bartender level and "You have N stars" stay - they're the only place those show */
+  #gmTag, #trTag, #wdTag { display: block; font-size: 11px; } }
 #boot { position: fixed; inset: 0; z-index: 9999; background: #07051a; display: flex; flex-direction: column; align-items: center;
   justify-content: center; gap: 18px; color: #ffd76a; font: 700 clamp(28px, 7vw, 56px) "Courier New", monospace; letter-spacing: 4px;
   transition: opacity .45s; text-shadow: 0 0 18px #ff7a3a88; }
@@ -761,6 +765,7 @@ const PROFILE_KEYS = new Set([
   "char",
   // (v1.8.60: the bartender is saved as char1 / char2 - "char" alone was never used, so every profile shared one)
   "char1",
+  "cardsSeen", // (v1.8.74: the postcards shown - THE STORY's journal)
   "char2",
   "unlock",
   "stickers",
@@ -829,13 +834,25 @@ function storeFrame(on) {
   STORE_MEM.raw.clear();
 }
 function storeRaw(sk) {
-  if (!STORE_MEM.on) return localStorage.getItem(sk);
-  const m = STORE_MEM.raw;
-  if (m.has(sk)) return m.get(sk);
-  const v = localStorage.getItem(sk);
-  m.set(sk, v);
-  return v;
+  // (v1.8.71: with the browser's storage blocked - "block site data", some private or embedded pages - even looking at
+  //  localStorage throws; read straight from here (the stars count at startup) that left the game on LOADING for good)
+  try {
+    if (!STORE_MEM.on) return localStorage.getItem(sk);
+    const m = STORE_MEM.raw;
+    if (m.has(sk)) return m.get(sk);
+    const v = localStorage.getItem(sk);
+    m.set(sk, v);
+    return v;
+  } catch (e) {
+    return null;
+  }
 }
+// (v1.8.71) THE HIGH-SCORE TABLE, CHECKED: one damaged entry (null) in it stopped the game starting - for every profile,
+// as the table is shared. Only real entries are kept, their scores as numbers
+const hiScores = () =>
+  (store.get("scores", [])         )
+    .filter((e) => e && typeof e === "object")
+    .map((e) => ({ ...e, n: String(e.n ?? "???"), s: +e.s || 0 }));
 const store = {
   // (a value that can't be read, or has turned into the wrong kind of thing - a number where a list should be - gives the
   //  default instead, so a damaged save can never break the game)
@@ -6358,6 +6375,11 @@ const DICT_ROWS                             = [
     "GELUKKIGE VRYHEIDSDAG, SUID-AFRIKA!",
     "SZCZĘŚLIWEGO DNIA WOLNOŚCI, RPA!",
   ],
+  [
+    "ŚWIĘTO NIEPODLEGŁOŚCI!  HAPPY INDEPENDENCE DAY, POLAND!",
+    "ŚWIĘTO NIEPODLEGŁOŚCI!  GELUKKIGE ONAFHANKLIKHEIDSDAG, POLE!",
+    "ŚWIĘTO NIEPODLEGŁOŚCI!  WSZYSTKIEGO NAJLEPSZEGO, POLSKO!",
+  ],
   ["OUR MILKY WAY", "ONS MELKWEG", "NASZA DROGA MLECZNA"],
   ["HYPERSPACE!", "HIPERRUIMTE!", "NADPRZESTRZEŃ!"],
   ["SPACEKOM LOAD SHEDDING", "SPACEKOM-BEURTKRAG", "SPACEKOM: WYŁĄCZENIA PRĄDU"],
@@ -7279,6 +7301,7 @@ const DICT_ROWS                             = [
   ["TILTED WITH JOY!", "SKEEF VAN VREUGDE!", "PRZECHYLONY ZE SZCZĘŚCIA!"],
   ["STORMING GOOD!", "STORMAGTIG GOED!", "BURZLIWIE DOBRY!"],
   ["FASTER THAN THE WIND!", "VINNIGER AS DIE WIND!", "SZYBSZY NIŻ WIATR!"],
+  ["TOP SPEED!", "VOLLE SPOED!", "PEŁNA PRĘDKOŚĆ!"], // (v1.8.72: endless at speed 40)
   ["STILL A PLANET IN MY HEART!", "STEEDS 'N PLANEET IN MY HART!", "W MOIM SERCU WCIĄŻ PLANETA!"],
   ["WORTH THE TRIP OUT HERE!", "DIE REIS HIERNATOE WERD!", "WART PODRÓŻY AŻ TUTAJ!"],
   [
@@ -8035,6 +8058,152 @@ const DICT_ROWS                             = [
     "THE RACE WITH THE BLACK HOLE BISTRO NOW HAS A LITTLE TRACK: YOUR DINER AND THEIR SAUCER, HEADING FOR THE FLAG",
     "DIE WEDLOOP MET DIE SWARTGAT-BISTRO HET NOU 'N KLEIN RENBAAN: JOU KAFEE EN HULLE PIERING, OP PAD NA DIE VLAG",
     "WYŚCIG Z BISTRO CZARNA DZIURA MA TERAZ MAŁY TOR: TWOJA KAWIARNIA I ICH SPODEK PĘDZĄ DO FLAGI",
+  ],
+  // (v1.8.76) EASY TO READ
+  ["EASY TO READ", "MAKLIK OM TE LEES", "ŁATWE DO CZYTANIA"],
+  [
+    "A FACT OR TIP ON TWO LINES: THE SECOND LINE NO LONGER COVERS HALF OF THE FIRST",
+    "'N FEIT OF WENK OP TWEE REËLS: DIE TWEEDE REËL BEDEK NIE MEER DIE HELFTE VAN DIE EERSTE NIE",
+    "CIEKAWOSTKA LUB WSKAZÓWKA W DWÓCH LINIJKACH: DRUGA NIE ZASŁANIA JUŻ POŁOWY PIERWSZEJ",
+  ],
+  [
+    "ON A COMPUTER A LONG FACT KEEPS CLEAR OF YOUR HOLY WATER AND THE CROSS",
+    "OP 'N REKENAAR BLY 'N LANG FEIT WEG VAN JOU WYWATER EN DIE KRUIS",
+    "NA KOMPUTERZE DŁUGA CIEKAWOSTKA NIE ZASŁANIA JUŻ WODY ŚWIĘCONEJ I KRZYŻA",
+  ],
+  // (v1.8.75) HOLIDAYS IN THEIR PLACE
+  ["HOLIDAYS IN THEIR PLACE", "VAKANSIEDAE OP HUL PLEK", "ŚWIĘTA NA SWOIM MIEJSCU"],
+  [
+    "THE SECRET CODE'S EXTRA LIFE IS FOR ONE GAME, AS IT SAYS - NOT EVERY GAME UNTIL YOU RELOAD",
+    "DIE GEHEIME KODE SE EKSTRA LEWE IS VIR EEN SPEL, SOOS DIT SÊ - NIE ELKE SPEL TOTDAT JY HERLAAI NIE",
+    "DODATKOWE ŻYCIE Z TAJNEGO KODU JEST NA JEDNĄ GRĘ, JAK OBIECUJE - NIE NA KAŻDĄ AŻ DO PRZEŁADOWANIA",
+  ],
+  [
+    "EASTER EGGS NO LONGER TURN UP IN TIME ATTACK, BOSS RUSH, THE DAILY OR A CUP",
+    "PAASEIERS DAAG NIE MEER IN TYDJAG, BAAS-STORMLOOP, DIE DAAGLIKSE UITDAGING OF 'N BEKER OP NIE",
+    "PISANKI NIE POJAWIAJĄ SIĘ JUŻ W GRZE NA CZAS, SZTURMIE NA BOSSÓW, WYZWANIU DNIA ANI PUCHARZE",
+  ],
+  [
+    "THE NATIONAL DAYS' BANNER KEEPS OFF THE BAR WHILE YOU PLAY, AND HOLIDAY: NONE SWITCHES IT OFF",
+    "DIE NASIONALE DAE SE BANIER BLY WEG VAN DIE TOONBANK TERWYL JY SPEEL, EN VAKANSIE: GEEN SKAKEL DIT AF",
+    "BANER ŚWIĄT NARODOWYCH NIE ZASŁANIA JUŻ LADY W CZASIE GRY, A ŚWIĘTO: BRAK GO WYŁĄCZA",
+  ],
+  [
+    "EASTER STARTS ON PALM SUNDAY, NOT THE DAY BEFORE",
+    "PASE BEGIN OP PALMSONDAG, NIE DIE DAG DAARVOOR NIE",
+    "WIELKANOC ZACZYNA SIĘ W NIEDZIELĘ PALMOWĄ, NIE DZIEŃ WCZEŚNIEJ",
+  ],
+  // (v1.8.74) WHERE YOU'VE BEEN
+  ["WHERE YOU'VE BEEN", "WAAR JY AL WAS", "GDZIE JUŻ BYŁEŚ"],
+  [
+    "THE STORY'S JOURNAL ONLY HOLDS THE POSTCARDS YOU'VE SEEN - ONE FAR STOP FROM THE MAP NO LONGER SPOILS THE REST",
+    "DIE STORIE SE JOERNAAL HOU NET DIE POSKAARTE WAT JY GESIEN HET - EEN VER STOP VANAF DIE KAART BEDERF NIE MEER DIE RES NIE",
+    "DZIENNIK OPOWIEŚCI MA TYLKO POCZTÓWKI, KTÓRE WIDZIAŁEŚ - JEDEN DALEKI PRZYSTANEK Z MAPY NIE ZDRADZA JUŻ RESZTY",
+  ],
+  [
+    "THE MAP'S GOLD ROUTE SHOWS WHERE YOU'VE REALLY BEEN",
+    "DIE KAART SE GOUE ROETE WYS WAAR JY REGTIG AL WAS",
+    "ZŁOTA TRASA NA MAPIE POKAZUJE, GDZIE NAPRAWDĘ BYŁEŚ",
+  ],
+  [
+    "WON TROPHIES AND THE POLISH HISTORY STICKERS ARE IN YOUR LANGUAGE",
+    "GEWENDE TROFEE EN DIE POOLSE GESKIEDENISPLAKKERS IS IN JOU TAAL",
+    "ZDOBYTE TROFEA I POLSKIE NAKLEJKI HISTORYCZNE SĄ W TWOIM JĘZYKU",
+  ],
+  [
+    "SIDEWAYS ON A PHONE: THE MAP'S STAR COUNT AND YOUR BARTENDER LEVEL ARE SHOWN",
+    "SYWAARTS OP 'N FOON: DIE KAART SE STERTELLING EN JOU KROEGMAN-VLAK WORD GEWYS",
+    "TELEFON W POZIOMIE: LICZBA GWIAZDEK NA MAPIE I POZIOM BARMANA SĄ WIDOCZNE",
+  ],
+  // (v1.8.73) GOOD TOUCH
+  ["GOOD TOUCH", "GOEIE AANRAKING", "DOBRY DOTYK"],
+  [
+    "PHONE HELD UPRIGHT: TAPPING THE SCORE OR THE STOP'S NAME NO LONGER SENDS YOU TO A BAR",
+    "FOON REGOP: AS JY DIE TELLING OF DIE STOP SE NAAM TIK, STUUR DIT JOU NIE MEER NA 'N TOONBANK NIE",
+    "TELEFON W PIONIE: STUKNIĘCIE W WYNIK LUB NAZWĘ PRZYSTANKU NIE PRZENOSI JUŻ DO LADY",
+  ],
+  [
+    "TWO THUMBS ON ONE BUTTON BOTH COUNT, AND A LONG PRESS NO LONGER CHANGES THE FLAVOUR",
+    "TWEE DUIME OP EEN KNOPPIE TEL ALBEI, EN 'N LANG DRUK VERANDER NIE MEER DIE GEUR NIE",
+    "DWA KCIUKI NA JEDNYM PRZYCISKU LICZĄ SIĘ OBA, A DŁUGIE PRZYTRZYMANIE NIE ZMIENIA JUŻ SMAKU",
+  ],
+  [
+    "ONE-BUTTON: A FINGER LIFTED DURING A PAUSE NO LONGER LEAVES POUR STUCK",
+    "EEN KNOPPIE: 'N VINGER WAT TYDENS 'N POUSE OPGELIG WORD, LAAT SKINK NIE MEER VASSIT NIE",
+    "JEDEN PRZYCISK: PALEC PODNIESIONY W CZASIE PAUZY NIE ZOSTAWIA JUŻ WCIŚNIĘTEGO NALEWANIA",
+  ],
+  // (v1.8.72) EVERY MODE TRUE
+  ["EVERY MODE TRUE", "ELKE MODUS EERLIK", "KAŻDY TRYB PRAWDZIWY"],
+  [
+    'RELAX: NO MORE "SERVED 3 / 1000000000", AND ITS LITTLE BAR FILLS UP',
+    'ONTSPAN: NIE MEER "BEDIEN 3 / 1000000000" NIE, EN SY KLEIN BALKIE VUL OP',
+    'TRYB RELAKSU: KONIEC Z "OBSŁUŻONO 3 / 1000000000", A JEGO PASEK SIĘ WYPEŁNIA',
+  ],
+  [
+    "ENDLESS: TOP SPEED IS 40, AND IT SAYS SO - NO MORE FASTER! THAT ISN'T",
+    "EINDLOSE SPEL: VOLLE SPOED IS 40, EN DIT SÊ SO - NIE MEER VINNIGER! WAT NIE IS NIE",
+    "BEZ KOŃCA: NAJWYŻSZE TEMPO TO 40 I GRA TO MÓWI - KONIEC Z SZYBCIEJ!, KTÓRE NIC NIE ZMIENIA",
+  ],
+  [
+    "ENDLESS: BOGDAN'S TOUR POSTCARDS NO LONGER TURN UP",
+    "EINDLOSE SPEL: BOGDAN SE TOERPOSKAARTE DAAG NIE MEER OP NIE",
+    "BEZ KOŃCA: POCZTÓWKI BOGDANA Z TRASY JUŻ SIĘ NIE POJAWIAJĄ",
+  ],
+  [
+    "BOSS RUSH: A TIME THAT ONLY TIES YOUR BEST TO THE TENTH ISN'T A NEW BEST",
+    "BAAS-STORMLOOP: 'N TYD WAT JOU BESTE NET TOT OP DIE TIENDE GELYKMAAK, IS NIE 'N NUWE BESTE NIE",
+    "SZTURM NA BOSSÓW: CZAS RÓWNY TWOJEMU REKORDOWI CO DO DZIESIĄTEJ SEKUNDY NIE JEST NOWYM REKORDEM",
+  ],
+  // (v1.8.71) SAFE AND SOUND
+  ["SAFE AND SOUND", "VEILIG EN GOED", "CAŁY I ZDROWY"],
+  [
+    "A DAMAGED SAVE OR BLOCKED STORAGE CAN NO LONGER LEAVE THE GAME STUCK ON LOADING",
+    "'N BESKADIGDE STOORLÊER OF GEBLOKKEERDE BERGING KAN DIE SPEL NIE MEER OP LAAI LAAT VASSIT NIE",
+    "USZKODZONY ZAPIS LUB ZABLOKOWANA PAMIĘĆ NIE ZATRZYMA JUŻ GRY NA EKRANIE ŁADOWANIA",
+  ],
+  [
+    "A DAMAGED CUP BRACKET IS SET ASIDE SO A NEW CUP CAN START",
+    "'N BESKADIGDE BEKERTABEL WORD EENKANT GESIT SODAT 'N NUWE BEKER KAN BEGIN",
+    "USZKODZONA DRABINKA PUCHARU JEST ODKŁADANA, BY MÓGŁ RUSZYĆ NOWY PUCHAR",
+  ],
+  [
+    "SAVED SCORES AND COUNTS ALWAYS ADD UP AS NUMBERS",
+    "GESTOORDE TELLINGS EN PUNTE TEL ALTYD OP AS GETALLE",
+    "ZAPISANE WYNIKI I LICZNIKI ZAWSZE SUMUJĄ SIĘ JAK LICZBY",
+  ],
+  // (v1.8.70) FAIR SHARES
+  ["FAIR SHARES", "REGVERDIGE DELE", "UCZCIWY PODZIAŁ"],
+  [
+    "VERSUS: THE CUPS ROUND'S PRIZE IS SHARED - IT ALL WENT TO PLAYER 1",
+    "TEEN MEKAAR: DIE KOPPIERONDTE SE PRYS WORD GEDEEL - DIT HET ALLES NA SPELER 1 GEGAAN",
+    "POJEDYNEK: NAGRODA Z RUNDY Z KUBKAMI JEST DZIELONA - WCZEŚNIEJ CAŁA SZŁA DO GRACZA 1",
+  ],
+  [
+    "TWO PLAYERS: POURING WITH F NO LONGER FLIPS FULL SCREEN",
+    "TWEE SPELERS: SKINK MET F SKAKEL NIE MEER VOLSKERM AAN EN AF NIE",
+    "DWÓCH GRACZY: NALEWANIE KLAWISZEM F NIE PRZEŁĄCZA JUŻ PEŁNEGO EKRANU",
+  ],
+  [
+    "VERSUS: A KNOCKED-OUT PLAYER'S PRESSES NO LONGER GO OFF WHEN THEY COME BACK",
+    "TEEN MEKAAR: 'N UITGESLANE SPELER SE DRUKKE GAAN NIE MEER AF AS HY TERUGKOM NIE",
+    "POJEDYNEK: NACIŚNIĘCIA WYELIMINOWANEGO GRACZA NIE DZIAŁAJĄ JUŻ, GDY WRACA",
+  ],
+  // (v1.8.69) MONEY'S WORTH
+  ["MONEY'S WORTH", "WAARDE VIR GELD", "WART SWOJEJ CENY"],
+  [
+    "THE LUCKY CHARM STAYS IN YOUR POCKET UNTIL IT REALLY SAVES YOU - AND ON EASY THE FREE SAVE GOES FIRST",
+    "DIE GELUKSBRINGER BLY IN JOU SAK TOTDAT DIT JOU REGTIG RED - EN OP MAKLIK GAAN DIE GRATIS REDDING EERSTE",
+    "TALIZMAN ZOSTAJE W KIESZENI, AŻ NAPRAWDĘ CIĘ URATUJE - A NA ŁATWYM NAJPIERW DZIAŁA DARMOWY RATUNEK",
+  ],
+  [
+    "A QUICK DOUBLE TAP NO LONGER WASTES A BOUGHT PEEK IN THE CUPS ROUND",
+    "'N VINNIGE DUBBELTIK MORS NIE MEER DIE WINKEL SE EKSTRA LOER IN DIE KOPPIERONDTE NIE",
+    "SZYBKIE PODWÓJNE STUKNIĘCIE NIE MARNUJE JUŻ DODATKOWEGO ZERKNIĘCIA ZE SKLEPU W RUNDZIE Z KUBKAMI",
+  ],
+  [
+    "RELAX MODE PAYS HALF ON ITS GIFTS TOO, AS PROMISED",
+    "ONTSPAN BETAAL OOK HALF OP SY GESKENKE, SOOS BELOOF",
+    "TRYB RELAKSU PŁACI POŁOWĘ RÓWNIEŻ ZA PREZENTY, JAK OBIECANO",
   ],
   // (v1.8.68) PAUSE IS BACK
   ["PAUSE IS BACK", "POUSE IS TERUG", "PAUZA WRACA"],
@@ -12572,6 +12741,8 @@ const DICT_PAT                             = [
   [/^([A-Z][A-Z ]+) (\d+)\/(\d+)$/, "$1 $2/$3", "$1 $2/$3"],
   [/^🔒 (.+)$/, "🔒 $1", "🔒 $1"],
   [/^★ (.+)$/, "★ $1", "★ $1"],
+  [/^🏆 (.+)$/, "🏆 $1", "🏆 $1"], // (v1.8.74: a trophy won - its name stayed English)
+  [/^(\d+)\/(\d+)  ·  LV (\d+)$/, "$1/$2  ·  VLK $3", "$1/$2  ·  POZ. $3"], // (v1.8.74: the TROPHIES button)
   [/^▶ (.+)$/, "▶ $1", "▶ $1"],
 ];
 const DICT = new Map                ();
@@ -15353,7 +15524,11 @@ function resetGame(demo) {
   G.end = null;
   G.servedAll = 0;
   G.score = 0;
-  G.lives = DF().lives + (!demo && EGG.konami ? 1 : 0);
+  // (v1.8.75: the secret code's life, in the next game only - and not in a mode with its own records or a cup match)
+  const eggLife =
+    !demo && EGG.lifeNext && !G.taNext && !G.brushNext && !G.dailyNext && !G.endlessNext && !CUP.match; // (v1.8.76: nor endless - it keeps a record)
+  if (eggLife) EGG.lifeNext = false;
+  G.lives = DF().lives + (eggLife ? 1 : 0);
   G.nextLife = 25000;
   G.level = demo ? 1 + Math.floor(Math.random() * LAST_LEVEL) : 1;
   G.callouts = [];
@@ -15418,6 +15593,7 @@ function startLevel() {
   G.rushT = rnd(25, 35);
   for (const e of [pressedEdge, pressedEdge2]) {
     e.up = e.down = e.left = e.right = e.lu = e.ld = false;
+    e.holy = e.cross = false; // (v1.8.70: a HOLY or cross tap during a scene no longer goes off as the stop begins)
     e.jump = -1;
   }
   spills = [];
@@ -15824,7 +16000,8 @@ window.addEventListener("keydown", (e) => {
     cycleMusic();
     return;
   }
-  if (k === "KeyF" && !held) {
+  // (v1.8.70: not while two are playing - F is one of player 1's pour keys then, and every F pour flipped full screen)
+  if (k === "KeyF" && !held && !(twoP() && ["play", "lost", "clear", "bonus", "mini"].includes(G.state))) {
     toggleFull();
     return;
   }
@@ -16265,11 +16442,17 @@ function bindHold(id, key) {
       if (key === "pour") touchHeld.pourTap = true; // (v1.8.33: kept until the game reads it - see playerInput)
       el.classList.add("on");
     },
+    // (v1.8.73) TWO THUMBS ON ONE BUTTON: each finger counts - the first one lifting let go of the button while the other
+    //  was still on it (and in TAP mode the second press was never a new one, so that pour was lost)
+    ids = new Set(),
     off = (e) => {
       e.preventDefault();
+      ids.delete(e.pointerId);
+      if (ids.size) return;
       touchHeld[key] = false;
       el.classList.remove("on");
     };
+  el.addEventListener("pointerdown", (e) => ids.add(e.pointerId));
   el.addEventListener("pointerdown", on);
   el.addEventListener("pointerup", off);
   el.addEventListener("pointercancel", off);
@@ -16354,7 +16537,13 @@ for (const n of [1, 2]) {
 const GEST = new Map();
 const TAP2 = { t: 0, x: 0, y: 0 }; // (v1.4.27: the last press on the bar - to spot a double click / double tap for TURBO)
 function laneAt(wx, wy) {
-  if (VERT) return vLaneAt(wx, wy);
+  // (v1.8.73: the tall view too - a tap on the score, the HI score or the stop's name, high above the bars' far end,
+  //  sent the barman to whichever bar was below it; well above the far end (and its customers) is no bar at all)
+  if (VERT) {
+    const far = vpt(1.5, X0, 0);
+    if (wy < far[1] - 130 * far[2]) return -1;
+    return vLaneAt(wx, wy);
+  }
   // (v1.4.17) MORE PRECISE: each bar is measured where it is really DRAWN - in perspective, at the spot along it you
   // pressed - so a press on a bar, or among the customers standing at it, picks that bar
   let lane = 0;
@@ -16387,6 +16576,8 @@ function bindPointer(canvas) {
   canvas.addEventListener("contextmenu", (e) => {
     if (G.state !== "play" || G.demo) return;
     e.preventDefault();
+    // (v1.8.73: not a finger's long press - Android sends one while you hold to pour, and the flavour changed by itself)
+    if ((e                ).pointerType === "touch") return; // (v1.8.76: by the press itself - a mouse on a touch-screen laptop still right-clicks)
     if (!(oneBtn() || DF().kid)) funCycleFlav(P1); // RIGHT-CLICK: the next flavour
   });
   canvas.addEventListener("pointerdown", (e) => {
@@ -16864,6 +17055,10 @@ function update(dt) {
           p.lives = 1;
           p.lane = (PL[1 - p.id].lane + 2) % LANES;
           p.x = TAPX - 20;
+          // (v1.8.70: what they pressed while out is forgotten - it threw holy water, raised the cross and moved them
+          //  the moment they came back)
+          const e0 = p.id ? pressedEdge2 : pressedEdge;
+          for (const k in e0) e0[k] = k === "jump" ? -1 : false;
           callout("PLAYER " + (p.id + 1) + " IS BACK!", p.id ? "#5fb0ff" : "#ff5fa8", 2.2);
           sfx("chime", X0, 2);
         }
@@ -21688,7 +21883,7 @@ function redeem(c, demo) {
     if (souls === 3 || souls === 10 || souls === 25) {
       const prize = souls === 3 ? 20 : souls === 10 ? 50 : 120;
       callout(souls + " SOULS SAVED!  +" + prize + " COINS", "#ffe070", 3);
-      addCoinsQuiet(prize);
+      addCoinsQuiet(prize, true);
     } else G.callouts.push({ text: "SOULS SAVED: " + souls, c: "#ffe070", life: 2.2, max: 2.2, sub: true });
     buzz("power");
   }
@@ -21847,8 +22042,9 @@ function thanksArrive(c, th) {
 function thanksServed(c, demo) {
   if (!c.thankful || c.thankDone || demo) return;
   c.thankDone = true;
-  const gift = 15 + Math.floor(Math.random() * 11);
-  addCoinsQuiet(gift);
+  let gift = 15 + Math.floor(Math.random() * 11);
+  if (G.free) gift = Math.ceil(gift / 2); // (v1.8.69: halved before it's shown - relax pays half)
+  addCoinsQuiet(gift, true);
   for (const p of active()) p.holy = Math.min((p.holy || 0) + 1, DF().holy + 2);
   callout("A THANK-YOU GIFT!  +" + gift + " COINS  ·  +1 HOLY WATER", "#ffe070", 2.8);
   worldText("YOU SAVED ME. I'LL NEVER FORGET IT!", c, "#ffe070");
@@ -22556,7 +22752,7 @@ function gameOver() {
         box.appendChild(d);
       }
   }
-  const table = store.get("scores", []),
+  const table = hiScores(),
     makes = G.score > 0 && (table.length < 20 || G.score > table[table.length - 1].s);
   // (v1.4.84) WHAT HAPPENED, AND HOW TO DO BETTER: the last life's cause, in plain words, with one tip for next time -
   // so a new player learns the rule they just broke (not after a cup match, or a game that was won)
@@ -22859,8 +23055,12 @@ function finishJump() {
     G.fromJump = true; // (we've done the hyperspace part: on arrival the bar just glides into orbit)
     startApproach();
     // (v1.7.4: stop 4's card is Bogdan's warning about the Black Hole Bistro - only where it really races you)
-    if (STORY[G.level] && !(G.loop && G.level === 1) && !(G.level === 4 && !rivalStop()))
+    // (v1.8.72: not in ENDLESS - since it travels it was handed the tour's postcards: Bogdan's hello again at stop 1, the
+    //  festival's welcome at stop 40 with no festival)
+    if (STORY[G.level] && !G.endless && !(G.loop && G.level === 1) && !(G.level === 4 && !rivalStop())) {
       startStory(G.level, "approach");
+      cardSeen(G.level); // (v1.8.74: remembered for THE STORY's journal)
+    }
     if (G.tourCall) {
       G.tourCall = false;
       callout("TOUR " + (G.loop + 1) + "!  EVERYTHING IS FASTER NOW", "#ff5fa8", 3.2);
@@ -22964,8 +23164,10 @@ function revealDome() {
     fireworks(3);
   } else if (b.result) {
     const pts = 3000 + 500 * G.level;
-    addScore(pts);
-    callout("FOUND IT!  +" + pts, "#5ff5c8", 2.2);
+    // (v1.8.70: in VERSUS shared between both - both players move the one spotlight, and it all went to player 1, which
+    //  could decide the match)
+    const got = G.versus ? fairBonus(pts) : addScore(pts);
+    callout("FOUND IT!  +" + (G.versus ? got : pts), "#5ff5c8", 2.2);
     sfx("tip");
     for (let k = 0; k < 40; k++) confetti(domeX(b.pos[i]) + rnd(-60, 60), 200, 1);
     fireworks(3);
@@ -53392,6 +53594,9 @@ function kidAttract() {
 // ---- the cups round: the MAGNIFYING GLASS (one peek a round) ----
 function bonusPeek() {
   const b = bonus;
+  // (v1.8.69: a second press while this cup is still showing isn't another peek - a quick double tap spent the shop's
+  //  peek on the same cup)
+  if (b && b.peekT > 0 && b.peekI === b.sel) return;
   if (b && b.phase === "pick" && (b.peeks ?? 1) <= 0 && invUse("peek")) {
     b.peeks = 1;
     callout("EXTRA PEEK FROM THE SHOP!", "#ffd24d", 1.4);
@@ -54087,7 +54292,7 @@ function buildStickers() {
       el = document.createElement("button");
     el.className = (got ? "" : "lock") + (i === SB.sel ? " on" : "");
     el.innerHTML =
-      (got ? "★ " + it.name.replace(/^[A-Z]+, [0-9 A-Z]*: /, "") : "? ? ?") +
+      (got ? "★ " + it.name : "? ? ?") + // (v1.8.74: whole - cut short, the Polish ones lost their date and their translation)
       "<small>" +
       (got ? "collected!" : "not found yet") +
       "</small>";
@@ -66373,7 +66578,7 @@ const fStats = () => FSTATS || (FSTATS = store.get("stats", {}));
 function fStat(k, add = 1, max ) {
   if (G.demo) return;
   const s = fStats();
-  s[k] = max ? Math.max(s[k] || 0, add) : (s[k] || 0) + add;
+  s[k] = max ? Math.max(+s[k] || 0, add) : (+s[k] || 0) + add; // (v1.8.71: + - a count saved as text added up as text)
   store.set("stats", s);
   fCheck();
 }
@@ -66467,7 +66672,7 @@ function fCheck() {
       if (!G.demo) {
         callout("TROPHY!  " + T.name, "#ffd24d", 2.6);
         sfx("tip");
-        addCoinsQuiet(10);
+        addCoinsQuiet(10, true);
       }
     }
   if (changed) store.set("trophies", got);
@@ -66482,8 +66687,11 @@ function fCheck() {
     }
   }
 }
-function addCoinsQuiet(n) {
+function addCoinsQuiet(n, keep = false) {
   if (G.demo || n <= 0) return; // (v1.8.48: the same safety net as addCoins)
+  // (v1.8.69: RELAX pays half here too - the stop's gift, the cocktails, the order streaks and the thank-you gifts were
+  //  paid in full; "keep" for the once-ever prizes: trophies, a new cocktail for the menu, the souls-saved milestones)
+  if (G.free && !keep) n = Math.ceil(n / 2);
   store.set("coins", fCoins() + n);
   const s = fStats();
   s.coinsEarned = (s.coinsEarned || 0) + n;
@@ -66581,10 +66789,15 @@ function funEvent() {
     M = d.getMonth() + 1,
     D = d.getDate(),
     ed = easterDate(d.getFullYear()),
-    dd = (+d - +ed) / 864e5; // (days from Easter)
+    // (v1.8.75: whole calendar days - in milliseconds a 23-hour day moved the edge, and > -8 let in a day too early)
+    dd = Math.round(
+      (Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()) -
+        Date.UTC(ed.getFullYear(), ed.getMonth(), ed.getDate())) /
+        864e5
+    ); // (days from Easter)
   if ((M === 12 && D >= 31) || (M === 1 && D <= 2)) return "newyear";
   if (M === 12) return "xmas";
-  if (dd > -8 && dd < 2) return "easter";
+  if (dd >= -7 && dd <= 1) return "easter";
   if (M === 10 && D >= 24) return "halloween";
   if (M === 9 && D >= 20 && D <= 26) return "heritage";
   if (M === 4 && D >= 25 && D <= 28) return "freedom";
@@ -66717,7 +66930,9 @@ function funGameStart() {
     // (v1.8.55: in VERSUS neither - the ROCKET SHOES only ever sped up player 1, and the LUCKY CHARM saved whoever
     //  slipped first, the opponent too)
     G.shoes = !G.versus && invUse("shoes");
-    G.charm = canLose && !G.versus && invUse("save");
+    // (v1.8.69: the LUCKY CHARM is only taken from your pocket when it actually saves you - taken at the start, an unused
+    //  one was simply gone after the game)
+    G.charm = canLose && !G.versus && (inv().save || 0) > 0;
   }
   modesGameStart(); // (TIME ATTACK, BOSS RUSH)
 }
@@ -66776,7 +66991,9 @@ function funLevelStart() {
         sub: true,
       });
   }
-  if (!G.demo && G.event === "easter")
+  // (v1.8.75: not in the modes with records or a cup match - picked on the menu, EASTER gave free points and coins there
+  //  all year)
+  if (!G.demo && G.event === "easter" && !G.ta && !G.brush && !G.daily && !CUP.match)
     for (let i = 0; i < 3; i++)
       G.eggs.push({
         lane: Math.floor(Math.random() * LANES),
@@ -66836,8 +67053,11 @@ function funServe(c, s, demo) {
     if (!DF().kid && !twoP()) fStat("endlessBest", G.endServed, true); // (v1.8.55: nor two players together - two players' serves made a record one player could hardly beat) // (v1.8.47: KID MODE never loses a life - no endless record there)
     if (G.endServed % 12 === 0) {
       G.endLvl++;
-      callout("FASTER!  SPEED " + G.endLvl, "#ff5fa8", 1.8);
-      sfx("turbo");
+      // (v1.8.72: the speed tops out at 40 (setup.ts) - past it, "FASTER! SPEED 41, 42..." promised what never came)
+      if (G.endLvl <= 40) {
+        callout(G.endLvl === 40 ? "TOP SPEED!" : "FASTER!  SPEED " + G.endLvl, "#ff5fa8", 1.8);
+        sfx("turbo");
+      }
       // (v1.8.40) ENDLESS MOVES ON: every third speed-up the café takes off for the next stop of the tour - its own bar,
       //  its music and its twist (the speed keeps climbing). Last orders: whoever is on the bar now is served, nobody
       //  new comes in, and the stop clears as usual (a bonus round, the warp) - endless used to be the one bar forever
@@ -67346,7 +67566,13 @@ function funSave(why, lane, x) {
   } else if (pet === "unicorn" && !used.u) {
     used.u = 1;
     by = "UNICORN RAINBOW SHIELD!";
-  } else if (G.charm) {
+  } else if (
+    G.charm &&
+    // (v1.8.69: not while EASY's own free save for this stop is still waiting - the charm was spent on a slip that one
+    //  would have caught; see freeSave in coach.ts)
+    (G.freeSaved || G.versus || !(difficulty === "easy" || difficulty === "kid")) &&
+    invUse("save")
+  ) {
     G.charm = false;
     by = "YOUR LUCKY CHARM SAVED YOU!";
   }
@@ -67522,7 +67748,9 @@ function giftPick() {
   const r = Math.random(),
     stars = G.starsNow || 0;
   let gift;
-  if (r < 0.06) gift = { kind: "coins", n: 50, text: "JACKPOT!  +50 COINS", big: true };
+  // (v1.8.69: in RELAX the coin gifts are half, and say so - see addCoinsQuiet)
+  const hv = (n) => (G.free ? Math.ceil(n / 2) : n);
+  if (r < 0.06) gift = { kind: "coins", n: hv(50), text: "JACKPOT!  +" + hv(50) + " COINS", big: true };
   else if (r < 0.24) {
     const it = SHOP_ITEMS.filter((x) => x.id !== "life")[Math.floor(Math.random() * 3)],
       I = inv();
@@ -67530,10 +67758,10 @@ function giftPick() {
     store.set("inv", I);
     gift = { kind: "item", n: 0, text: "A FREE " + it.name + "!", small: it.line.toUpperCase() };
   } else {
-    const n = 6 + Math.floor(Math.random() * 7) + stars * 3;
+    const n = hv(6 + Math.floor(Math.random() * 7) + stars * 3);
     gift = { kind: "coins", n, text: "+" + n + " COINS" };
   }
-  if (gift.kind === "coins") addCoinsQuiet(gift.n);
+  if (gift.kind === "coins") addCoinsQuiet(gift.n, true);
   G.gift = { ...gift, at: G.time, opened: false };
 }
 // what to save up for next: the cheapest thing in the shop (or the cafe's decorations) you haven't got and can't afford yet
@@ -67913,7 +68141,7 @@ function mixCocktail(M, x, y) {
     menu[k] = 1;
     store.set("cocktails", menu);
     fStat("cocktails", Object.keys(menu).length, true);
-    addCoinsQuiet(10);
+    addCoinsQuiet(10, true);
     miniPop(M, x, y - 120, "NEW FOR YOUR COCKTAIL MENU!");
   }
 }
@@ -68829,6 +69057,15 @@ const INTRO_LINES = [
   "FORTY STOPS, AND THIRSTY CUSTOMERS AT EVERY ONE - SOME OF THEM VERY STRANGE. SERVE THEM ALL, BARTENDER, AND THE ASTRO CAFÉ WILL BE THE TALK OF TWO GALAXIES!",
 ];
 const INTRO_PER = 6.2; // (seconds a picture - POUR moves on sooner)
+// (v1.8.74) the postcards a player has been shown, for THE STORY's journal (each profile's own)
+function cardSeen(level) {
+  if (G.demo) return;
+  const seen = store.get("cardsSeen", {});
+  if (!seen[level]) {
+    seen[level] = 1;
+    store.set("cardsSeen", seen);
+  }
+}
 function startStory(level, then) {
   const intro = level === "intro"; // (v1.7.0: the opening - see INTRO_LINES)
   let lines = intro ? INTRO_LINES : STORY[level];
@@ -70997,7 +71234,10 @@ function funHud(g, s, t, fD, sx, sy) {
 const contOn = () => store.get("contOn", true),
   contSave = () => {
     const c = store.get("cont", null);
-    return c && c.level >= 1 && c.level <= VENUES.length ? c : null;
+    if (!(c && c.level >= 1 && c.level <= VENUES.length)) return null;
+    // (v1.8.71: the numbers as numbers - a score saved as text was added to as text, "500" + 50 = "50050")
+    for (const k of ["level", "g", "p1", "p2", "n", "st", "rw"]) c[k] = +c[k] || 0;
+    return c;
   };
 function contRemember() {
   if (G.demo || G.daily || G.endless || G.ta || G.brush || G.free || CUP.match) return;
@@ -71262,7 +71502,9 @@ function buildTroph() {
   const list = $k("trList");
   list.innerHTML = "";
   for (const T of TROPHIES) {
-    const ok = !!got[T.id],
+    // (v1.8.76: a goal already reached shows as won - after MOVE MY PROGRESS it showed "10 / 10" but not won; the trophy
+    //  itself, with its coins and its fanfare, comes at your next serve in a game (in the menu nothing can be paid))
+    const ok = !!got[T.id] || trophyVal(T) >= T.n,
       el = document.createElement("button");
     el.className = ok ? "on" : "lock";
     el.innerHTML =
@@ -71328,9 +71570,13 @@ function funPanelsInit() {
     closeFP("more");
     stopAttract();
     // (v1.7.8: and then the postcards of every stop reached so far - see "journal" in funStoryUpdate)
+    // (v1.8.74: the postcards really read - those of the stops you've cleared, and any shown on the way; "reached so
+    //  far" was the furthest stop unlocked, and one stop played from the map opened every postcard before it)
+    const S0 = levelStars(),
+      seen = store.get("cardsSeen", {});
     G.journal = Object.keys(STORY)
       .map(Number)
-      .filter((l) => l <= unlocked())
+      .filter((l) => (S0[l] | 0) > 0 || seen[l])
       .sort((a, b) => a - b);
     startStory("intro", "journal");
     showPanels();
@@ -71516,9 +71762,11 @@ function funPointer(type, x, y) {
     }
     return true;
   }
+  // (v1.8.73: the finger lifting is always heard - lifted during a pause or the stop's end, POUR stayed held and the
+  //  next tap did nothing)
+  if (type === "up" && oneBtn()) touchHeld.pour = false;
   if (G.state === "play" && oneBtn()) {
     if (type === "down") touchHeld.pour = true;
-    if (type === "up") touchHeld.pour = false;
     return type === "down";
   }
   return false;
@@ -81432,7 +81680,9 @@ function drawGalaxyMap(
   // the route: dotted ahead, solid gold where you've been - and the great jump between the galaxies
   g.lineCap = "round";
   for (let i = 0; i + 1 < P.length; i++) {
-    const done = i < cur,
+    // (v1.8.74: gold only where you've really been - both ends served, or on to where the ship is now; one far stop
+    //  played from the map turned the whole route before it gold)
+    const done = !!st[i] && (!!st[i + 1] || i + 1 === cur),
       jump = i === 19;
     g.strokeStyle = done ? "rgba(255,210,77,.75)" : jump ? "rgba(255,190,240,.45)" : "rgba(200,190,255,.32)";
     g.lineWidth = done ? 2.2 : 1.4;
@@ -81836,13 +82086,25 @@ function gmRoadLine(g, s, w, h) {
 const CUP_LEVELS = 3;
                                                                                
                                                                           
+// (v1.8.71) A DAMAGED BRACKET IS FORGOTTEN, not opened: one without its rounds broke the CUP panel every time it opened,
+// before NEW CUP could be reached
+function cupLoad() {
+  const c = store.get("cup", null);
+  return c &&
+    Array.isArray(c.names) &&
+    Array.isArray(c.rounds) &&
+    c.rounds.length &&
+    c.rounds.every((r) => Array.isArray(r) && r.every((m) => m && typeof m === "object"))
+    ? c
+    : null;
+}
 const CUP   
                      
                          
                 
                                         
   = {
-  s: store.get("cup", null),
+  s: cupLoad(), // (v1.8.71: checked - see cupLoad)
   match: null,
   back: false,
 };
@@ -82252,7 +82514,7 @@ function rushNext() {
   R0.i++;
   if (R0.i >= RUSH_LEVELS.length) {
     const best = store.get("rushBest14", 0),
-      nb = (!best || R0.t < best) && !twoP() && !DF().kid; // (v1.8.47: as the time attack's)
+      nb = (!best || +R0.t.toFixed(1) < best) && !twoP() && !DF().kid; // (v1.8.72: in tenths, as shown and saved) // (v1.8.47: as the time attack's)
     if (nb) store.set("rushBest14", +R0.t.toFixed(1));
     R0.done = true;
     callout(
@@ -82277,7 +82539,7 @@ function modesTxt() {
     );
   // (v1.5.71) ENDLESS joins them up here, in the top left - it was written across the middle of the screen, where on
   // a phone held upright it ran over the announcements on the sign
-  if (G.endless) return "ENDLESS  ·  SERVED " + G.endServed + "  ·  SPEED " + G.endLvl;
+  if (G.endless) return "ENDLESS  ·  SERVED " + G.endServed + "  ·  SPEED " + Math.min(40, G.endLvl); // (v1.8.72: 40 is the top)
   return "";
 }
 function modesHud(g, s, fD) {
@@ -82315,7 +82577,17 @@ const GHOST_DT = 0.1,
   GHOST_MAX = 6000; // (ten minutes - a run slower than that isn't kept)
 function ghostLoad() {
   const g0 = store.get("taGhost", null);
-  return g0 && g0.l && g0.l.length > 10 && !twoP() ? g0 : null;
+  // (v1.8.71: and all its lists there and the same length - a damaged ghost broke Time Attack as it played back)
+  return g0 &&
+    Array.isArray(g0.l) &&
+    Array.isArray(g0.x) &&
+    Array.isArray(g0.s) &&
+    g0.l.length > 10 &&
+    g0.x.length === g0.l.length &&
+    g0.s.length >= g0.l.length && // (v1.8.76: a saved ghost has one more "served" at its end - see ghostSave)
+    !twoP()
+    ? g0
+    : null;
 }
 function ghostRecord(dt) {
   const ta = G.ta;
@@ -84177,8 +84449,7 @@ function drawAttract0(g, s, t) {
       "QUA",
       "ZED",
     ];
-    const rows = store
-      .get("scores", [])
+    const rows = hiScores() // (v1.8.76: checked, as the menu's - a damaged entry broke this page of the demo)
       .concat(
         DEF.map((n, i) => ({
           n,
@@ -84444,6 +84715,7 @@ function drawAttract0(g, s, t) {
 //   * on 27 April (Freedom Day, South Africa) or 11 November (Independence Day, Poland) the game celebrates
 // =====================================================================================
 const EGG = {
+  lifeNext: false, // (v1.8.75: the secret code's life, waiting for the next game)
   keys: "",
   konami: false,
   disco: 0,
@@ -84498,7 +84770,15 @@ window.addEventListener(
       const first = !EGG.konami;
       if (first) {
         EGG.konami = true;
-        if (G.state === "play") G.lives++;
+        // (v1.8.75: one life, once - "IN YOUR NEXT GAME" meant every game until the page was reloaded, Time Attack and
+        //  Boss Rush records included)
+        // (v1.8.76: anywhere in a game - between scenes too - it's this game's)
+        if (
+          ["play", "lost", "clear", "bonus", "mini", "approach", "story", "jump"].includes(G.state) &&
+          !G.demo
+        )
+          G.lives++;
+        else EGG.lifeNext = true;
       }
       sfx("fanfare");
       eggMsg(
@@ -84511,7 +84791,8 @@ window.addEventListener(
       );
       return;
     }
-    for (const w of EGG_WORDS) {
+    // (v1.8.75: not during play - E is the flavour key there, and E then G lost the G)
+    for (const w of G.state === "play" ? [] : EGG_WORDS) {
       const lw = w.toLowerCase();
       for (let n = 2; n <= lw.length; n++)
         if (low.endsWith(lw.slice(0, n)) && !isArrow) {
@@ -84597,6 +84878,10 @@ const EGG_CSS = (c, glow, px) =>
   px * 9 +
   "px);";
 function holiday() {
+  // (v1.8.75: HOLIDAY: NONE switches these off too, and they keep off the bar while you play - the line sat on the
+  //  phone's touch buttons and the confetti fell over the bar all day)
+  if (store.get("eventPick", "auto") === "none" || ["play", "lost", "bonus", "mini"].includes(G.state))
+    return null;
   const d = new Date(),
     m = d.getMonth() + 1,
     day = d.getDate();
@@ -84693,7 +84978,7 @@ function drawEggs(g, s) {
     g.fillText(
       hd === "za"
         ? "HAPPY FREEDOM DAY, SOUTH AFRICA!"
-        : "SWIETO NIEPODLEGLOSCI!  HAPPY INDEPENDENCE DAY, POLAND!",
+        : "ŚWIĘTO NIEPODLEGŁOŚCI!  HAPPY INDEPENDENCE DAY, POLAND!", // (v1.8.75: with its Polish letters, and translated)
       W0 / 2,
       H0 - 46 * s
     );
@@ -84792,7 +85077,7 @@ function levelOfTour(of) {
     inTour = ((lv - 1) % LAST_LEVEL) + 1;
   return (tour > 1 ? "TOUR " + tour + "  ·  " : "") + "LEVEL " + inTour + of + LAST_LEVEL;
 }
-const GAME_VERSION = "v1.8.68",
+const GAME_VERSION = "v1.8.76",
   GAME_DATE = "26.11.2026",
   VERSION_TEXT = GAME_VERSION + "  ·  " + GAME_DATE;
 const FB = '"Chakra Petch", "Segoe UI", sans-serif';
@@ -84875,6 +85160,7 @@ const HUDB = {
   signBot: 0,
   sign: null, // (v1.5.66: the box the sign's words fill this frame - {l, r, t, b} - or null)
   holyR: 0,
+  holyY: 0,
 };
 let signX = 0,
   signY = 0; // (0: the usual place, at the top)
@@ -85507,6 +85793,9 @@ function drawHud(fps) {
       keepRightOf(14 * s + g.measureText(ml).width + 12 * s, my0, my0 + (ghostDiff() !== null ? 62 : 46) * s);
     }
     if (twoP() && inGame) keepRightOf(14 * s + Math.max(coopW(), 200 * s) + 12 * s, 0, 14 * s + 80 * s);
+    // (v1.8.76: and right of the holy water and the cross - on a PC a long fact ran across the bottles)
+    if (inGame && G.level >= 2 && G.state !== "bonus" && HUDB.holyR)
+      keepRightOf(HUDB.holyR + 12 * s, HUDB.holyY - 8 * s, HUDB.holyY + 18 * s);
     // (v1.5.42) AND LEFT OF THE CORNER BUTTONS: on a phone held sideways this line sits at the same height as "Full screen"
     // and "Pause" - and with two players (pushed right of their scores) a "DID YOU KNOW?" ran in under them. When it would
     // reach them, it keeps to the room left of the buttons (breaking onto more lines there if it must - see below)
@@ -85544,8 +85833,10 @@ function drawHud(fps) {
     if (lw > room) g.font = fB((fpx * room) / lw, 700);
     const lh = 15 * s;
     subLines = lines.length;
+    // (v1.8.76: all the dark strips first, then the words - each line's strip is taller than the line spacing, and the
+    //  second line's strip was drawn over the bottom of the first line's letters)
+    lines.forEach((l, i) => backing(l, cx, lineY + i * lh, al));
     lines.forEach((l, i) => {
-      backing(l, cx, lineY + i * lh, al);
       // (v1.5.33: and a thin dark edge round the letters, so they stay sharp whatever is behind)
       g.strokeStyle = "rgba(10,6,20,.8)";
       g.lineWidth = 3 * s;
@@ -85582,7 +85873,7 @@ function drawHud(fps) {
       // (and under an announcement when one takes the sign)
       const lt = fitLine(
         // (v1.5.71: nor has ENDLESS - its "of how many" is a billion, and the line read "SERVED 21 / 1000000000")
-        G.ta || G.endless // (v1.4.76: Time Attack has no "of how many" - its customers keep coming, so just the count)
+        G.ta || G.endless || G.free // (v1.8.72: and RELAX - its "of how many" is a billion too) (v1.4.76: Time Attack has no "of how many" - its customers keep coming, so just the count)
           ? whereLine() + "   ·   SERVED " + G.served
           : whereLine() + "   ·   SERVED " + G.served + " / " + G.total
       );
@@ -85622,7 +85913,9 @@ function drawHud(fps) {
       ? Math.min(1, G.ta.served / TA_GOAL)
       : G.endless
         ? ((G.endServed || 0) % 12) / 12
-        : G.served / Math.max(1, G.total); // (Time Attack: towards its fifty)
+        : G.free
+          ? ((G.freeServed || 0) % 12) / 12 // (v1.8.72: RELAX - round and round every twelve; it never moved)
+          : G.served / Math.max(1, G.total); // (Time Attack: towards its fifty)
     rb(bx, by, bw, 4 * s, "rgba(255,255,255,.15)");
     rb(bx, by, Math.max(4 * s, bw * sk), 4 * s, "#5ff5c8");
     rb(bx + 2 * s, by + 0.5 * s, Math.max(0, bw * sk - 4 * s), 1.2 * s, "rgba(255,255,255,.45)");
@@ -85827,6 +86120,7 @@ function drawHud(fps) {
         if (!twoP()) HUDHIT.cross = [cx0 - 6 * s, cy0 - 6 * s, 22 * s, 28 * s]; // (click: show the cross)
         x0 += 20 * s;
       }
+      HUDB.holyY = y0; // (v1.8.76: and its height - a "DID YOU KNOW?" keeps clear of it, see keepRightOf)
       HUDB.holyR = x0; // (v1.5.33: where the HOLY row ends on the right - an announcement on a phone keeps clear of it)
     }
     // active power-ups: icon colour, name and a shrinking timer bar
@@ -91404,7 +91698,7 @@ function showPanels() {
   $("topbtns").hidden = false;
   // (v1.8.41: not during the story or the warp - pausing does nothing there; the arrival screen can be paused now)
   $("tPause").hidden = !["play", "lost", "clear", "bonus", "mini"].includes(G.state); // (v1.8.46: not on the arrival screen)
-  fillTable($("hiTable"), store.get("scores", []), -1);
+  fillTable($("hiTable"), hiScores(), -1);
   $("turnHint").hidden = !(coarse && window.innerHeight > window.innerWidth);
   fromText();
   $("bFrom").hidden = false;
@@ -91573,7 +91867,7 @@ $("nameForm").addEventListener("submit", (e) => {
       .replace(/[^A-Z0-9]/g, "")
       .slice(0, 3) || "GL";
   store.set("name", n);
-  const table = store.get("scores", []);
+  const table = hiScores();
   table.push({
     n,
     s: G.score,
@@ -92473,7 +92767,10 @@ window.addEventListener(
 // =====================================================================================
                                             
 const profList = ()            => {
-  const L = store.get("profiles", [])             ;
+  // (v1.8.71: only whole entries - a damaged one (null) stopped the game starting)
+  const L = (store.get("profiles", [])             )
+    .filter((p) => p && typeof p.id === "string")
+    .map((p) => ({ id: p.id, name: String(p.name || "PLAYER") }));
   return L.length ? L : [{ id: "main", name: "PLAYER 1" }];
 };
 const profNow = () => profList().find((p) => p.id === PROFILE) || profList()[0];
@@ -92685,6 +92982,80 @@ profWire();
 //  the game, and where the motion capture, the folk songs and the fonts come from. Both from the menu at any time.
 // =====================================================================================
 const NEWS = [
+  {
+    ver: "v1.8.76",
+    title: "EASY TO READ",
+    items: [
+      "A FACT OR TIP ON TWO LINES: THE SECOND LINE NO LONGER COVERS HALF OF THE FIRST",
+      "ON A COMPUTER A LONG FACT KEEPS CLEAR OF YOUR HOLY WATER AND THE CROSS",
+    ],
+  },
+  {
+    ver: "v1.8.75",
+    title: "HOLIDAYS IN THEIR PLACE",
+    items: [
+      "THE SECRET CODE'S EXTRA LIFE IS FOR ONE GAME, AS IT SAYS - NOT EVERY GAME UNTIL YOU RELOAD",
+      "EASTER EGGS NO LONGER TURN UP IN TIME ATTACK, BOSS RUSH, THE DAILY OR A CUP",
+      "THE NATIONAL DAYS' BANNER KEEPS OFF THE BAR WHILE YOU PLAY, AND HOLIDAY: NONE SWITCHES IT OFF",
+      "EASTER STARTS ON PALM SUNDAY, NOT THE DAY BEFORE",
+    ],
+  },
+  {
+    ver: "v1.8.74",
+    title: "WHERE YOU'VE BEEN",
+    items: [
+      "THE STORY'S JOURNAL ONLY HOLDS THE POSTCARDS YOU'VE SEEN - ONE FAR STOP FROM THE MAP NO LONGER SPOILS THE REST",
+      "THE MAP'S GOLD ROUTE SHOWS WHERE YOU'VE REALLY BEEN",
+      "WON TROPHIES AND THE POLISH HISTORY STICKERS ARE IN YOUR LANGUAGE",
+      "SIDEWAYS ON A PHONE: THE MAP'S STAR COUNT AND YOUR BARTENDER LEVEL ARE SHOWN",
+    ],
+  },
+  {
+    ver: "v1.8.73",
+    title: "GOOD TOUCH",
+    items: [
+      "PHONE HELD UPRIGHT: TAPPING THE SCORE OR THE STOP'S NAME NO LONGER SENDS YOU TO A BAR",
+      "TWO THUMBS ON ONE BUTTON BOTH COUNT, AND A LONG PRESS NO LONGER CHANGES THE FLAVOUR",
+      "ONE-BUTTON: A FINGER LIFTED DURING A PAUSE NO LONGER LEAVES POUR STUCK",
+    ],
+  },
+  {
+    ver: "v1.8.72",
+    title: "EVERY MODE TRUE",
+    items: [
+      'RELAX: NO MORE "SERVED 3 / 1000000000", AND ITS LITTLE BAR FILLS UP',
+      "ENDLESS: TOP SPEED IS 40, AND IT SAYS SO - NO MORE FASTER! THAT ISN'T",
+      "ENDLESS: BOGDAN'S TOUR POSTCARDS NO LONGER TURN UP",
+      "BOSS RUSH: A TIME THAT ONLY TIES YOUR BEST TO THE TENTH ISN'T A NEW BEST",
+    ],
+  },
+  {
+    ver: "v1.8.71",
+    title: "SAFE AND SOUND",
+    items: [
+      "A DAMAGED SAVE OR BLOCKED STORAGE CAN NO LONGER LEAVE THE GAME STUCK ON LOADING",
+      "A DAMAGED CUP BRACKET IS SET ASIDE SO A NEW CUP CAN START",
+      "SAVED SCORES AND COUNTS ALWAYS ADD UP AS NUMBERS",
+    ],
+  },
+  {
+    ver: "v1.8.70",
+    title: "FAIR SHARES",
+    items: [
+      "VERSUS: THE CUPS ROUND'S PRIZE IS SHARED - IT ALL WENT TO PLAYER 1",
+      "TWO PLAYERS: POURING WITH F NO LONGER FLIPS FULL SCREEN",
+      "VERSUS: A KNOCKED-OUT PLAYER'S PRESSES NO LONGER GO OFF WHEN THEY COME BACK",
+    ],
+  },
+  {
+    ver: "v1.8.69",
+    title: "MONEY'S WORTH",
+    items: [
+      "THE LUCKY CHARM STAYS IN YOUR POCKET UNTIL IT REALLY SAVES YOU - AND ON EASY THE FREE SAVE GOES FIRST",
+      "A QUICK DOUBLE TAP NO LONGER WASTES A BOUGHT PEEK IN THE CUPS ROUND",
+      "RELAX MODE PAYS HALF ON ITS GIFTS TOO, AS PROMISED",
+    ],
+  },
   {
     ver: "v1.8.68",
     title: "PAUSE IS BACK",

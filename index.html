@@ -616,7 +616,7 @@ body.touch2p #touch .tp button.holy { width: 60px; height: 60px; font-size: 11px
     <h3>THE AIM</h3>
     <p data-tr>Customers walk down the four bars towards you. Pour a shake and slide it to them: when one catches it, they slide back up the bar, drink it - and slide the empty glass back down to you. Serve everyone in the queue and the level is done; then it's off to the next stop of the tour.</p>
     <h3>POURING AND SLIDING</h3>
-    <p data-tr>Stand at the taps and <b>hold POUR</b> to fill the glass; <b>let go</b> to slide it down the bar. Let go just as it fills for a <b>PERFECT</b> pour (extra points). In TAP mode (Settings, or T) one press does it all.</p>
+    <p data-tr>Stand at the taps and <b>hold POUR</b> to fill the glass; <b>let go</b> to slide it down the bar. Let go just as it fills for a <b>PERFECT</b> pour (extra points). In TAP mode (SETTINGS, or T) one press does it all.</p>
     <h3>YOU LOSE A LIFE WHEN</h3>
     <p data-tr>&bull; a customer reaches your end of the bar &bull; a shake slides off the far end with nobody to catch it &bull; an empty glass slides back past you and smashes. So: serve them early, never slide a shake down an empty bar, and run to catch the empties!</p>
     <h3>RUNNING, TIPS AND TURBO</h3>
@@ -628,14 +628,14 @@ body.touch2p #touch .tp button.holy { width: 60px; height: 60px; font-size: 11px
     <!-- (v1.6.9) TWO PLAYERS: how to play together, and what co-op has in it (all of it was only in the news) -->
     <h3>TWO PLAYERS</h3>
     <p data-tr>Choose <b>2 · CO-OP</b> (or VERSUS) on the menu. Player 1 plays on W A S D + Space, player 2 on the arrow keys + Enter - or a controller each, or a pad each on a touch screen. A friend can <b>join a game already going</b>: START on a second controller, or + PLAYER 2 JOINS in the pause menu.</p>
-    <p data-tr>In co-op you share the lives and play as a team. Serve at the same moment for a <b>HIGH FIVE</b>; serve the <b>TWINS</b> on two bars together; run to a partner who slips for a <b>HELPING HAND</b>. Every stop has a <b>TEAM GOAL</b> (in the corner) - meet them stop after stop for a goal streak. Whoever is three serves ahead wears the <b>CROWN</b>, and the mini-games are played together: a cherry duel, a stork race and a team mixer.</p>
+    <p data-tr>In co-op you share the lives and play as a team. Serve at the same moment for a <b>HIGH FIVE</b>; serve the <b>TWINS</b> on two bars together; run to a partner who slips for a <b>HELPING HAND</b>. Every stop has a <b>TEAM GOAL</b> (in the corner) - meet it stop after stop for a goal streak. Whoever is three serves ahead wears the <b>CROWN</b>, and the mini-games are played together: a cherry duel, a stork race and a team mixer.</p>
     <!-- (v1.8.12) GRAVITY and HOUSE COCKTAILS: the two new things of the cocktails/gravity run, explained -->
     <h3>GRAVITY</h3>
     <p data-tr>Every stop has its own gravity - the arrival screen shows how strong it is. On a <b>light</b> world everyone floats, and a shake sends customers sailing further back - but they drift back in quicker. On a <b>heavy</b> world they plod in slowly - but a shake barely pushes them. In the mini-games things fall slowly or fast to match.</p>
     <h3>HOUSE COCKTAILS</h3>
     <p data-tr>Every stop has its own <b>HOUSE COCKTAIL</b>. Every 10 serves the house special is ready: your next pour comes out as the stop's cocktail. Whoever catches it tips big and leaves happy - land it on the customer with the gold <b>★ COCKTAIL</b> sign for double. Each new one goes into your <b>COCKTAIL MENU</b> in the Trophy Room.</p>
     <h3>POWER-UPS, STARS AND COINS</h3>
-    <p data-tr>Grab the <b>power-ups</b> that appear on the bar when it's quiet. Each level gives up to three <b>stars</b>, and you earn <b>coins</b> to spend in the COIN SHOP (PLAY MORE). FREE PLAY mode has no losing and no timer.</p>
+    <p data-tr>Grab the <b>power-ups</b> that appear on the bar when it's quiet. Each level gives up to three <b>stars</b>, and you earn <b>coins</b> to spend in the COIN SHOP (PLAY MORE). RELAX MODE has no losing and no hurry.</p>
   </div>
   <button id="howBack" class="primary">DONE <kbd>Esc</kbd></button>
 </section>
@@ -759,10 +759,17 @@ const PROFILE_KEYS = new Set([
   "dailyStars",
   "cont",
   "char",
+  // (v1.8.60: the bartender is saved as char1 / char2 - "char" alone was never used, so every profile shared one)
+  "char1",
+  "char2",
   "unlock",
   "stickers",
   "stars",
   "records",
+  // (v1.8.59: the mini-game bests are each player's own too - a brother's score blocked your NEW BEST)
+  "miniBest_cherry",
+  "miniBest_stork",
+  "miniBest_mixer",
   "hi",
   "decor",
   "daily",
@@ -5244,7 +5251,7 @@ const DICT_ROWS                             = [
   ],
   ["FREEDOM DAY IN SOUTH AFRICA", "VRYHEIDSDAG IN SUID-AFRIKA", "DZIEŃ WOLNOŚCI W RPA"],
   [
-    "CZESC! HELLO! I'M BOGDAN THE STORK.",
+    "CZEŚĆ! HELLO! I'M BOGDAN THE STORK.",
     "CZEŚĆ! HALLO! EK IS BOGDAN DIE OOIEVAAR.",
     "CZEŚĆ! JESTEM BOCIAN BOGDAN.",
   ],
@@ -5254,9 +5261,9 @@ const DICT_ROWS                             = [
     "NASZ DOM TO GALAKTYKA DROGA MLECZNA. ZACZYNAMY W UKŁADZIE SŁONECZNYM, TUŻ OBOK SŁOŃCA.",
   ],
   [
-    "WE'LL VISIT EVERY PLANET IN ORDER: MERCURY, VENUS, EARTH, MARS, JUPITER, SATURN, URANUS AND NEPTUNE!",
-    "ONS GAAN ELKE PLANEET IN VOLGORDE BESOEK: MERCURIUS, VENUS, DIE AARDE, MARS, JUPITER, SATURNUS, URANUS EN NEPTUNUS!",
-    "ODWIEDZIMY PO KOLEI KAŻDĄ PLANETĘ: MERKUREGO, WENUS, ZIEMIĘ, MARSA, JOWISZA, SATURNA, URANA I NEPTUNA!",
+    "WE'LL VISIT EVERY PLANET IN ORDER: MERCURY, VENUS, EARTH'S MOON, MARS, JUPITER, SATURN, URANUS AND NEPTUNE!",
+    "ONS GAAN ELKE PLANEET IN VOLGORDE BESOEK: MERCURIUS, VENUS, DIE AARDE SE MAAN, MARS, JUPITER, SATURNUS, URANUS EN NEPTUNUS!",
+    "ODWIEDZIMY PO KOLEI KAŻDĄ PLANETĘ: MERKUREGO, WENUS, KSIĘŻYC ZIEMI, MARSA, JOWISZA, SATURNA, URANA I NEPTUNA!",
   ],
   [
     "POUR THE SHAKES, SLIDE THEM DOWN, CATCH THE EMPTIES... AND HAVE FUN!",
@@ -6810,7 +6817,7 @@ const DICT_ROWS                             = [
     "Klienci idą wzdłuż czterech lad w twoją stronę. Nalej koktajl i pchnij go do nich: kiedy ktoś go złapie, cofa się wzdłuż lady, wypija go - i odsyła ci pustą szklankę. Obsłuż wszystkich w kolejce, a poziom jest zaliczony; potem ruszasz do następnego przystanku trasy.",
   ],
   [
-    "Stand at the taps and <b>hold POUR</b> to fill the glass; <b>let go</b> to slide it down the bar. Let go just as it fills for a <b>PERFECT</b> pour (extra points). In TAP mode (Settings, or T) one press does it all.",
+    "Stand at the taps and <b>hold POUR</b> to fill the glass; <b>let go</b> to slide it down the bar. Let go just as it fills for a <b>PERFECT</b> pour (extra points). In TAP mode (SETTINGS, or T) one press does it all.",
     "Staan by die krane en <b>hou SKINK</b> om die glas vol te maak; <b>los</b> om dit met die toonbank af te gly. Los net soos dit vol word vir 'n <b>PERFEKTE</b> skinkbeurt (ekstra punte). In TIK-modus (Instellings, of T) doen een druk alles.",
     "Stań przy kranach i <b>przytrzymaj NALEJ</b>, by napełnić szklankę; <b>puść</b>, by pchnąć ją wzdłuż lady. Puść dokładnie wtedy, gdy się napełni, a nalewanie będzie <b>PERFEKCYJNE</b> (dodatkowe punkty). W trybie STUKNIJ (Ustawienia albo T) wystarczy jedno naciśnięcie.",
   ],
@@ -6836,8 +6843,8 @@ const DICT_ROWS                             = [
     "Wybierz <b>2 · RAZEM</b> (albo POJEDYNEK) w menu. Gracz 1 gra na W A S D + Spacja, gracz 2 na strzałkach + Enter - albo każdy na swoim kontrolerze, albo każdy na swoim panelu na ekranie dotykowym. Przyjaciel może <b>dołączyć do trwającej gry</b>: START na drugim kontrolerze albo + GRACZ 2 DOŁĄCZA w menu pauzy.",
   ],
   [
-    "In co-op you share the lives and play as a team. Serve at the same moment for a <b>HIGH FIVE</b>; serve the <b>TWINS</b> on two bars together; run to a partner who slips for a <b>HELPING HAND</b>. Every stop has a <b>TEAM GOAL</b> (in the corner) - meet them stop after stop for a goal streak. Whoever is three serves ahead wears the <b>CROWN</b>, and the mini-games are played together: a cherry duel, a stork race and a team mixer.",
-    "In saamspeel deel julle die lewes en speel as 'n span. Bedien op dieselfde oomblik vir 'n <b>HOË VYF</b>; bedien die <b>TWEELINGE</b> op twee toonbanke saam; hardloop na 'n maat wat gly vir 'n <b>HELPENDE HAND</b>. Elke stop het 'n <b>SPANDOEL</b> (in die hoek) - bereik hulle stop na stop vir 'n doelreeks. Wie drie bedienings voor is, dra die <b>KROON</b>, en die mini-speletjies word saam gespeel: 'n kersie-tweegeveg, 'n ooievaar-wedren en 'n spanmenger.",
+    "In co-op you share the lives and play as a team. Serve at the same moment for a <b>HIGH FIVE</b>; serve the <b>TWINS</b> on two bars together; run to a partner who slips for a <b>HELPING HAND</b>. Every stop has a <b>TEAM GOAL</b> (in the corner) - meet it stop after stop for a goal streak. Whoever is three serves ahead wears the <b>CROWN</b>, and the mini-games are played together: a cherry duel, a stork race and a team mixer.",
+    "In saamspeel deel julle die lewes en speel as 'n span. Bedien op dieselfde oomblik vir 'n <b>HOË VYF</b>; bedien die <b>TWEELINGE</b> op twee toonbanke saam; hardloop na 'n maat wat gly vir 'n <b>HELPENDE HAND</b>. Elke stop het 'n <b>SPANDOEL</b> (in die hoek) - bereik dit stop na stop vir 'n doelreeks. Wie drie bedienings voor is, dra die <b>KROON</b>, en die mini-speletjies word saam gespeel: 'n kersie-tweegeveg, 'n ooievaar-wedren en 'n spanmenger.",
     "W kooperacji dzielicie życia i gracie jako drużyna. Obsłużcie w tej samej chwili, by przybić <b>PIĄTKĘ</b>; obsłużcie razem <b>BLIŹNIAKI</b> przy dwóch ladach; podbiegnij do partnera, który się poślizgnie, by podać <b>POMOCNĄ DŁOŃ</b>. Każdy przystanek ma <b>CEL DRUŻYNY</b> (w rogu) - osiągajcie je przystanek po przystanku, by zbudować serię. Kto wyprzedzi o trzy obsłużenia, nosi <b>KORONĘ</b>, a w minigry gracie razem: wiśniowy pojedynek, wyścig bocianów i mikser drużyny.",
   ],
   [
@@ -6846,9 +6853,9 @@ const DICT_ROWS                             = [
     "Nie obsługuj <b>diabłów, demonów ani wampirów</b>: podbiegnij wzdłuż lady i wskaż im drzwi albo wyślij WODĘ ŚWIĘCONĄ (H) / pokaż KRZYŻ (Q). <b>Anioły</b> są warte potrójne punkty. Klienci ze <b>stoperem</b> się spieszą - obsłuż ich szybko, a dostaniesz premię. <b>Protest</b> ucicha, gdy obsłużysz demonstrantów.",
   ],
   [
-    "Grab the <b>power-ups</b> that appear on the bar when it's quiet. Each level gives up to three <b>stars</b>, and you earn <b>coins</b> to spend in the COIN SHOP (PLAY MORE). FREE PLAY mode has no losing and no timer.",
-    "Gryp die <b>kragte</b> wat op die toonbank verskyn as dit stil is. Elke vlak gee tot drie <b>sterre</b>, en jy verdien <b>munte</b> om in die MUNTWINKEL (SPEEL MEER) te spandeer. In SPEEL VERNIET kan jy nie verloor nie en is daar geen tydhouer nie.",
-    "Łap <b>bonusy</b>, które pojawiają się na ladzie, gdy jest spokojnie. Każdy poziom daje do trzech <b>gwiazdek</b>, a do tego zarabiasz <b>monety</b> do wydania w SKLEPIE (WIĘCEJ GRANIA). W trybie GRA ZA DARMO nie da się przegrać i nie ma limitu czasu.",
+    "Grab the <b>power-ups</b> that appear on the bar when it's quiet. Each level gives up to three <b>stars</b>, and you earn <b>coins</b> to spend in the COIN SHOP (PLAY MORE). RELAX MODE has no losing and no hurry.",
+    "Gryp die <b>kragte</b> wat op die toonbank verskyn as dit stil is. Elke vlak gee tot drie <b>sterre</b>, en jy verdien <b>munte</b> om in die MUNTWINKEL (SPEEL MEER) te spandeer. In ONTSPAN kan jy nie verloor nie en is daar geen haaste nie.",
+    "Łap <b>bonusy</b>, które pojawiają się na ladzie, gdy jest spokojnie. Każdy poziom daje do trzech <b>gwiazdek</b>, a do tego zarabiasz <b>monety</b> do wydania w SKLEPIE (WIĘCEJ GRANIA). W TRYBIE RELAKSU nie da się przegrać i nie ma pośpiechu.",
   ],
   ["Drawing on:", "Teken met:", "Rysuje:"],
   ["the processor", "die verwerker", "procesor"],
@@ -6936,9 +6943,9 @@ const DICT_ROWS                             = [
     "Merkury - planeta najbliżej Słońca",
   ],
   [
-    "Venus - 50 km up, above the thick yellow clouds",
-    "Venus - 50 km hoog, bo die dik geel wolke",
-    "Wenus - 50 km w górze, nad gęstymi żółtymi chmurami",
+    "Venus - 50 km up, in the thick yellow clouds",
+    "Venus - 50 km hoog, in die dik geel wolke",
+    "Wenus - 50 km w górze, wśród gęstych żółtych chmur",
   ],
   [
     "Earth's Moon - the Sea of Tranquility",
@@ -8017,6 +8024,86 @@ const DICT_ROWS                             = [
     "DIE WEDLOOP MET DIE SWARTGAT-BISTRO HET NOU 'N KLEIN RENBAAN: JOU KAFEE EN HULLE PIERING, OP PAD NA DIE VLAG",
     "WYŚCIG Z BISTRO CZARNA DZIURA MA TERAZ MAŁY TOR: TWOJA KAWIARNIA I ICH SPODEK PĘDZĄ DO FLAGI",
   ],
+  // (v1.8.61) BACK TO THE CUP
+  ["BACK TO THE CUP", "TERUG NA DIE BEKER", "Z POWROTEM DO PUCHARU"],
+  [
+    "AFTER A CUP MATCH, START OR ENTER TAKES YOU BACK TO THE CUP - IT STARTED AN ORDINARY GAME",
+    "NA 'N BEKERWEDSTRYD NEEM START OF ENTER JOU TERUG NA DIE BEKER - DIT HET 'N GEWONE SPEL BEGIN",
+    "PO MECZU PUCHAROWYM START LUB ENTER ZABIERA CIĘ Z POWROTEM DO PUCHARU - WCZEŚNIEJ ZACZYNAŁ ZWYKŁĄ GRĘ",
+  ],
+  [
+    "TRYING TIME ATTACK, BOSS RUSH OR A CUP FIRST NO LONGER SKIPS THE OPENING STORY OF YOUR FIRST TOUR",
+    "AS JY EERS TYDJAG, BAAS-STORMLOOP OF 'N BEKER PROBEER, WORD DIE OPENINGSTORIE VAN JOU EERSTE TOER NIE MEER OORGESLAAN NIE",
+    "ZAGRANIE NAJPIERW W NA CZAS, SZTURM NA BOSSÓW LUB PUCHAR NIE POMIJA JUŻ OPOWIEŚCI NA POCZĄTEK TWOJEJ PIERWSZEJ TRASY",
+  ],
+  [
+    "TIME ATTACK: A TIME THAT ONLY TIES YOUR BEST TO THE TENTH IS NO LONGER CALLED A NEW BEST",
+    "TYDJAG: 'N TYD WAT JOU BESTE NET TOT OP DIE TIENDE GELYKMAAK, WORD NIE MEER 'N NUWE BESTE GENOEM NIE",
+    "NA CZAS: WYNIK RÓWNY TWOJEMU REKORDOWI CO DO DZIESIĄTEJ SEKUNDY NIE JEST JUŻ NAZYWANY NOWYM REKORDEM",
+  ],
+  // (v1.8.60) TYPE IN PEACE
+  ["TYPE IN PEACE", "TIK IN VREDE", "PISZ W SPOKOJU"],
+  [
+    "TYPING A NAME NO LONGER SWITCHES SETTINGS - EACH LETTER WORKED AS A SHORTCUT TOO",
+    "OM 'N NAAM TE TIK VERANDER NIE MEER INSTELLINGS NIE - ELKE LETTER HET OOK AS 'N KORTPAD GEWERK",
+    "WPISYWANIE IMIENIA NIE ZMIENIA JUŻ USTAWIEŃ - KAŻDA LITERA DZIAŁAŁA TEŻ JAK SKRÓT",
+  ],
+  [
+    "NAMES TYPE AS TYPED: GREG, MEGAN AND YURI NO LONGER LOSE A LETTER",
+    "NAME VERSKYN SOOS GETIK: GREG, MEGAN EN YURI VERLOOR NIE MEER 'N LETTER NIE",
+    "IMIONA WPISUJĄ SIĘ TAK, JAK JE PISZESZ: GREG, MEGAN I YURI NIE GUBIĄ JUŻ LITERY",
+  ],
+  [
+    "ENTER IN A NAME BOX ADDS OR RENAMES THE PLAYER, AND CTRL+C / CTRL+V NO LONGER CHANGE THE LOOK",
+    "ENTER IN 'N NAAMBLOKKIE VOEG DIE SPELER BY OF HERNOEM HOM, EN CTRL+C / CTRL+V VERANDER NIE MEER DIE VOORKOMS NIE",
+    "ENTER W POLU IMIENIA DODAJE GRACZA LUB ZMIENIA MU IMIĘ, A CTRL+C / CTRL+V NIE ZMIENIAJĄ JUŻ WYGLĄDU",
+  ],
+  [
+    "EVERY PLAYER PROFILE KEEPS ITS OWN BARTENDER",
+    "ELKE SPELERPROFIEL HOU SY EIE KROEGMAN",
+    "KAŻDY PROFIL GRACZA MA WŁASNEGO BARMANA",
+  ],
+  // (v1.8.59) EARNED FAIR AND SQUARE
+  ["EARNED FAIR AND SQUARE", "EERLIK VERDIEN", "ZDOBYTE UCZCIWIE"],
+  [
+    "GALACTIC CHAMPION NOW NEEDS A TOUR BEGUN AT THE FIRST STOP - STARTING AT THE LAST STOP NO LONGER WINS IT",
+    "GALAKTIESE KAMPIOEN VRA NOU 'N TOER WAT BY DIE EERSTE STOP BEGIN HET - BY DIE LAASTE STOP BEGIN WEN DIT NIE MEER NIE",
+    "GALAKTYCZNY MISTRZ WYMAGA TERAZ TRASY ZACZĘTEJ OD PIERWSZEGO PRZYSTANKU - START NA OSTATNIM JUŻ GO NIE DAJE",
+  ],
+  [
+    "BOSS RUSH NO LONGER FILLS IN TOUR STARS AT STOPS YOU HAVEN'T REACHED",
+    "BAAS-STORMLOOP VUL NIE MEER TOERSTERRE IN BY STOPS WAAR JY NOG NIE WAS NIE",
+    "SZTURM NA BOSSÓW NIE DAJE JUŻ GWIAZDEK TRASY NA PRZYSTANKACH, DO KTÓRYCH JESZCZE NIE DOTARŁEŚ",
+  ],
+  [
+    "EVERY PLAYER PROFILE KEEPS ITS OWN MINI-GAME BESTS",
+    "ELKE SPELERPROFIEL HOU SY EIE BESTES IN DIE MINISPELETJIES",
+    "KAŻDY PROFIL GRACZA MA WŁASNE REKORDY W MINIGRACH",
+  ],
+  [
+    "BEST FRIENDS COUNTS REAL RESCUES ONLY, NOT EVERY TIP THE PUPPY FETCHES",
+    "BESTE VRIENDE TEL NET REGTE REDDINGS, NIE ELKE FOOI WAT DIE HONDJIE GAAN HAAL NIE",
+    "NAJLEPSI PRZYJACIELE LICZY TYLKO PRAWDZIWE RATUNKI, NIE KAŻDY NAPIWEK PRZYNIESIONY PRZEZ SZCZENIAKA",
+  ],
+  // (v1.8.58) THE BOSS REMEMBERS
+  ["THE BOSS REMEMBERS", "DIE BAAS ONTHOU", "BOSS PAMIĘTA"],
+  [
+    "LOSE A LIFE IN A BOSS FIGHT AND THE BOSS NO LONGER STARTS FROM SCRATCH: HE KEEPS HALF THE SHAKES HE'D DRUNK",
+    "VERLOOR 'N LEWE IN 'N BAASGEVEG EN DIE BAAS BEGIN NIE MEER VAN VOOR AF NIE: HY HOU DIE HELFTE VAN DIE SKOMMELS WAT HY GEDRINK HET",
+    "STRAĆ ŻYCIE W WALCE Z BOSSEM, A BOSS NIE ZACZYNA JUŻ OD ZERA: ZACHOWUJE POŁOWĘ WYPITYCH KOKTAJLI",
+  ],
+  // (v1.8.57) OFFLINE AND TIDY
+  ["OFFLINE AND TIDY", "AFLYN EN NETJIES", "OFFLINE I PORZĄDNIE"],
+  [
+    "THE INSTALLED APP KEEPS ITS MUSIC WHEN IT UPDATES, AND OPENS FASTER ON A SLOW CONNECTION",
+    "DIE GEÏNSTALLEERDE TOEP HOU SY MUSIEK AS DIT OPDATEER, EN MAAK VINNIGER OOP OP 'N STADIGE VERBINDING",
+    "ZAINSTALOWANA APLIKACJA ZACHOWUJE MUZYKĘ PO AKTUALIZACJI I OTWIERA SIĘ SZYBCIEJ PRZY WOLNYM POŁĄCZENIU",
+  ],
+  [
+    "SMALL TEXT FIXES IN THE HOW TO PLAY PAGES AND THE STORY",
+    "KLEIN TEKSREGSTELLINGS IN DIE HOE-OM-TE-SPEEL-BLADSYE EN DIE STORIE",
+    "DROBNE POPRAWKI TEKSTU NA STRONACH JAK GRAĆ I W OPOWIEŚCI",
+  ],
   // (v1.8.56) THE LONG HAUL
   ["THE LONG HAUL", "DIE LANG PAD", "DŁUGA TRASA"],
   [
@@ -8888,9 +8975,9 @@ const DICT_ROWS                             = [
   ],
   ["ICE SHELF SLUSH", "YSPLAAT-SLUSH", "LODOWA KRA"],
   [
-    "CRUNCHY ICE FROM UNDER EUROPA'S FROZEN SEA.",
-    "KNARSENDE YS VAN ONDER EUROPA SE BEVRORE SEE.",
-    "CHRUPIĄCY LÓD SPOD ZAMARZNIĘTEGO MORZA EUROPY.",
+    "CRUNCHY ICE FROM EUROPA'S FROZEN SEA.",
+    "KNARSENDE YS VAN EUROPA SE BEVRORE SEE.",
+    "CHRUPIĄCY LÓD Z ZAMARZNIĘTEGO MORZA EUROPY.",
   ],
   ["RING DING", "RING-DING", "DZYŃ PIERŚCIEŃ"],
   [
@@ -12820,7 +12907,7 @@ const VENUES          = [
   {
     place: "VENUS",
     name: "VENUS CLOUD CAFE",
-    sub: "Venus - 50 km up, above the thick yellow clouds",
+    sub: "Venus - 50 km up, in the thick yellow clouds",
     art: 6,
     region: "MILKY WAY  ·  THE SOLAR SYSTEM",
     sol: true,
@@ -15283,6 +15370,7 @@ function startGame() {
   kidGameStart();
   funGameStart();
   G.level = fromLevel;
+  G.fromStart = fromLevel === 1; // (v1.8.59: a tour begun at the first stop - only that one earns GALACTIC CHAMPION, endgame.ts)
   G.callouts = [];
   startLevel();
   G.state = "play";
@@ -15460,6 +15548,27 @@ const pad2           = {
 window.addEventListener("keydown", (e) => {
   audio();
   if (e.target && (e.target          ).id === "nameIn") return;
+  // (v1.8.60) A TEXT BOX IS FOR TYPING: in the other boxes (a new player's name, a rename, the cup's eight names, the
+  // MOVE MY PROGRESS code) every letter also worked as a shortcut - "CLARA" switched on the CRT look, changed the look
+  // and the layout - and Enter started a game. Now the keys stay in the box, and Enter presses the box's own button
+  // (+ ADD, RENAME)
+  const tg = e.target          ;
+  if (tg && (tg.tagName === "INPUT" || tg.tagName === "TEXTAREA")) {
+    const nb = tg.nextElementSibling          ;
+    if (
+      (e.code === "Enter" || e.code === "NumpadEnter") &&
+      tg.tagName === "INPUT" &&
+      nb &&
+      nb.tagName === "BUTTON"
+    ) {
+      e.preventDefault();
+      nb.click();
+    }
+    return;
+  }
+  // (v1.8.60: and with Ctrl or Cmd held - copy, paste - the one-letter settings keys below stay still: Ctrl+C turned
+  //  the CRT look on, Ctrl+V changed the layout. Left Ctrl is also a POUR key, so the moves still work with it held)
+  const held = e.ctrlKey || e.metaKey;
   const k = e.code;
   if (["Space", "ArrowUp", "ArrowDown", "ArrowLeft", "ArrowRight"].includes(k)) e.preventDefault();
   if (e.repeat) {
@@ -15485,7 +15594,7 @@ window.addEventListener("keydown", (e) => {
     }
     return;
   }
-  if (k === "KeyT" && !(G.state === "bonus")) {
+  if (k === "KeyT" && !(G.state === "bonus") && !held) {
     togglePour();
     return;
   }
@@ -15508,7 +15617,7 @@ window.addEventListener("keydown", (e) => {
   if (two && k === "ArrowDown") queue(pressedEdge2, "down");
   if (two && k === "ArrowLeft") pressedEdge2.left = true;
   if (two && k === "ArrowRight") pressedEdge2.right = true;
-  if (k === "KeyV" && G.state !== "bonus") {
+  if (k === "KeyV" && G.state !== "bonus" && !held) {
     cycleLayout();
     return;
   }
@@ -15527,31 +15636,33 @@ window.addEventListener("keydown", (e) => {
     cycleFrom(e.shiftKey);
     return;
   }
-  if (k === "KeyG") {
+  if (k === "KeyG" && !held) {
     cycleGfx();
     return;
   }
-  if (k === "KeyL") {
+  if (k === "KeyL" && !held) {
     toggleLook();
     return;
   }
-  if (k === "KeyC") {
+  if (k === "KeyC" && !held) {
     toggleCrt();
     return;
   }
-  if (k === "KeyM") {
+  if (k === "KeyM" && !held) {
     toggleSound();
     return;
   }
-  if (k === "KeyN") {
+  if (k === "KeyN" && !held) {
     cycleMusic();
     return;
   }
-  if (k === "KeyF") {
+  if (k === "KeyF" && !held) {
     toggleFull();
     return;
   }
   if ((G.state === "menu" || G.state === "over") && (k === "Enter" || k === "NumpadEnter")) {
+    // (v1.8.61: on GAME OVER, a focused button - BACK TO THE CUP, MENU - takes the Enter itself, so it isn't pressed twice)
+    if (G.state === "over" && document.activeElement && document.activeElement.tagName === "BUTTON") return;
     beginGame();
     return;
   }
@@ -19293,7 +19404,8 @@ function update(dt) {
     clearStart(); // (v1.5.7: the wave of light and the golden bloom - juice.ts)
     ringBell(3, demo); // the pub bell: ding-ding-ding, LAST ORDERS!
     if (!demo) {
-      if (G.endless) G.starsNow = 0;
+      // (v1.8.59: nor BOSS RUSH - it filled the tour's stars, and the map, at boss stops not yet reached)
+      if (G.endless || G.brush) G.starsNow = 0;
       else kidLevelClear(); // (v1.8.40: an endless stop gives no tour stars - see "ENDLESS MOVES ON")
       funLevelClear();
       coopLevelClear(demo); // (v1.5.84: the TEAM REPORT in co-op)
@@ -21716,6 +21828,10 @@ function afterLoss() {
       return;
     }
   }
+  // (v1.8.58) THE BOSS REMEMBERS: a boss that was half fed when you slipped came back hungry from scratch - he now
+  // keeps half the shakes he'd drunk (never enough to come back furious), so a lost life costs ground, not the fight
+  const bc = customers.find((c) => c.type.boss && c.state !== "out" && (c.fed || 0) > 0);
+  if (bc) G.bossFed = Math.floor(Math.min(bc.fed, (bc.type.need || 1) - 1) / 2);
   customers = customers.filter((c) => c.state === "out");
   shakes = [];
   empties = [];
@@ -21919,7 +22035,9 @@ function startEnding(kind = "final") {
     return;
   }
   if (kind === "final") {
-    if (!G.free) funWon(); // (v1.8.48: not in RELAX mode, where you can't lose - GALACTIC CHAMPION is for the real tour)
+    // (v1.8.59) THE WHOLE TOUR, REALLY: START AT LEVEL (or the map) can begin at any stop - begun at stop 40, one served
+    // stop won GALACTIC CHAMPION. The ending still plays from anywhere; the trophy needs a tour begun at the first stop
+    if (!G.free && G.fromStart) funWon(); // (v1.8.48: not in RELAX mode, where you can't lose - GALACTIC CHAMPION is for the real tour)
     G.won = true;
   }
   G.fadeT = 0.6;
@@ -52725,6 +52843,7 @@ function kidLevelStart() {
   G.lvlPerf = 0;
   G.boss = false;
   G.bossDone = false;
+  G.bossFed = 0; // (v1.8.58: what the boss keeps after a lost life - twists.ts afterLoss)
   G.starsNow = 0;
   G.starsT = -1;
   if (!G.demo) {
@@ -52877,11 +52996,11 @@ function kidUpdate(dt, demo) {
         flavor: 0,
         alpha: 1,
         seed: 0.5,
-        fed: 0,
+        fed: G.bossFed || 0, // (v1.8.58: back after a lost life with half of what he'd drunk - twists.ts afterLoss)
         bornT: G.time,
       });
       sfx("dragon", X0);
-      callout("BOSS!  " + NICE[bk] + " WANTS " + T0.need + " SHAKES!", "#ff5fd8", 3);
+      callout("BOSS!  " + NICE[bk] + " WANTS " + (T0.need - (G.bossFed || 0)) + " SHAKES!", "#ff5fd8", 3);
       G.flash = 0.3;
       G.flashC = [1, 0.4, 0.9, 1];
     }
@@ -66298,9 +66417,9 @@ const STORY = {
     "HE WANTS THE FESTIVAL'S COUNTER FOR HIMSELF, SO HE'LL RACE US AT A FEW STOPS. DON'T LET HIM WIN!",
   ],
   1: [
-    "CZESC! HELLO! I'M BOGDAN THE STORK.",
+    "CZEŚĆ! HELLO! I'M BOGDAN THE STORK.",
     "OUR HOME IS THE MILKY WAY GALAXY. WE START IN THE SOLAR SYSTEM, RIGHT NEXT TO THE SUN.",
-    "WE'LL VISIT EVERY PLANET IN ORDER: MERCURY, VENUS, EARTH, MARS, JUPITER, SATURN, URANUS AND NEPTUNE!",
+    "WE'LL VISIT EVERY PLANET IN ORDER: MERCURY, VENUS, EARTH'S MOON, MARS, JUPITER, SATURN, URANUS AND NEPTUNE!",
     "THE ANDROMEDANS INVITED US TO THEIR GRAND FESTIVAL - SO WE'LL SERVE OUR WAY THERE, STOP BY STOP!", // (v1.7.0)
     "POUR THE SHAKES, SLIDE THEM DOWN, CATCH THE EMPTIES... AND HAVE FUN!",
   ],
@@ -66534,7 +66653,7 @@ const HOUSE_CK = [
     n: "ICE SHELF SLUSH",
     c: ["#e8fbff", "#7fd0f0"],
     g: "ice",
-    l: "CRUNCHY ICE FROM UNDER EUROPA'S FROZEN SEA.",
+    l: "CRUNCHY ICE FROM EUROPA'S FROZEN SEA.",
   },
   { n: "RING DING", c: ["#fff0c0", "#d8b060"], g: "ring", l: "WITH A RING OF SUGAR ALL ROUND THE RIM." },
   {
@@ -67040,7 +67159,7 @@ function funUpdate(dt, demo) {
           kidTip(false);
           fStat("tips");
           addCoins(5, "PUPPY FETCHED A TIP");
-          fStat("petSaves");
+          // (v1.8.59: a fetched tip is not a rescue - BEST FRIENDS is "your pet saves you 5 times"; it counted every tip)
         }
     if (pet === "alien" && !used.a) {
       const c = customers.find((c) => c.state === "walk" && c.x > X1 - 70 && !c.type.evil);
@@ -70648,6 +70767,7 @@ function contRemember() {
     n: G.contN || 0,
     st: G.stamps || 0,
     rw: G.rivalWins || 0,
+    fs: !!G.fromStart, // (v1.8.59: begun at the first stop - for GALACTIC CHAMPION)
     sp: !!G.stampsPaid, // (v1.8.22: already paid at the festival - the score saved above has them in it)
   });
 }
@@ -70668,6 +70788,7 @@ function continueGame() {
   // stamps are paid out now (the stop began before they were back)
   G.stamps = c.st || 0;
   G.rivalWins = c.rw || 0;
+  G.fromStart = c.fs !== false; // (v1.8.59: a continue keeps where the tour began; an older save counts as from the start)
   G.stampsPaid = !!c.sp; // (v1.8.22: a continue at the festival used to pay them again, every time)
   if (G.level === LAST_LEVEL) envoyLevelStart();
   callout("CONTINUE " + G.contN + "  ·  STAGE " + c.level + "  ·  SCORE " + c.g, "#5ff5c8", 2.6);
@@ -81604,8 +81725,11 @@ function cupPlay(m          ) {
   playMode = 2;
   fromLevel = 1;
   FP.cup = false;
+  // (v1.8.61: only for this start - kept on, it skipped the opening of a new player's first real tour too)
+  const ki = G.introShown;
   G.introShown = true;
   startGame();
+  G.introShown = ki;
   showPanels();
 }
 // the match is over (game over, or the level cap reached): the higher score goes through
@@ -81788,8 +81912,11 @@ function modeStart(which               ) {
   const keep = fromLevel;
   fromLevel = which === "ta" ? 1 : RUSH_LEVELS[0];
   G[which === "ta" ? "taNext" : "brushNext"] = true;
+  // (v1.8.61: only for this start - kept on, it skipped the opening of a new player's first real tour too)
+  const ki = G.introShown;
   G.introShown = true;
   startGame();
+  G.introShown = ki;
   fromLevel = keep;
   callout(
     which === "ta"
@@ -81817,13 +81944,15 @@ function modesServed() {
     // (v1.8.47: two players or KID MODE don't set the best time - a two-player best stopped every solo run counting
     //  as a new best, and the ghost then never changed)
     const best = store.get("taBest", 0),
-      nb = (!best || G.ta.t < best) && !twoP() && !DF().kid;
+      nb = (!best || +G.ta.t.toFixed(1) < best) && !twoP() && !DF().kid; // (v1.8.61: the time as shown and saved - a tenth that rounds the same isn't a new best)
     if (nb) {
       store.set("taBest", +G.ta.t.toFixed(1));
       ghostSave(); // (this run becomes the ghost to beat)
     }
     callout(
-      "FIFTY SERVED IN " + fmtTime(G.ta.t) + (nb ? "!  A NEW BEST TIME!" : "!  BEST " + fmtTime(best)),
+      "FIFTY SERVED IN " +
+        fmtTime(G.ta.t) +
+        (nb ? "!  A NEW BEST TIME!" : best ? "!  BEST " + fmtTime(best) : "!"), // (v1.8.59: no "BEST 0:00.0" before there is one)
       "#ffd24d",
       3
     );
@@ -84060,6 +84189,13 @@ window.addEventListener(
   "keydown",
   (e) => {
     if (e.repeat) return;
+    // (v1.8.60) NAMES TYPE AS TYPED: in a text box (a player's name, the cup's names, the high-score initials) this
+    // listener swallowed the letters after the start of a secret word - "GREG" came out "GRE", "MEGAN" "MEAN"
+    const tg = e.target          ;
+    if (tg && (tg.tagName === "INPUT" || tg.tagName === "TEXTAREA")) {
+      EGG.keys = "";
+      return;
+    }
     const k = e.code,
       ch =
         k === "ArrowUp"
@@ -84386,7 +84522,7 @@ function levelOfTour(of) {
     inTour = ((lv - 1) % LAST_LEVEL) + 1;
   return (tour > 1 ? "TOUR " + tour + "  ·  " : "") + "LEVEL " + inTour + of + LAST_LEVEL;
 }
-const GAME_VERSION = "v1.8.56",
+const GAME_VERSION = "v1.8.61",
   GAME_DATE = "26.11.2026",
   VERSION_TEXT = GAME_VERSION + "  ·  " + GAME_DATE;
 const FB = '"Chakra Petch", "Segoe UI", sans-serif';
@@ -91595,8 +91731,10 @@ function refreshChars() {
 // change) and START goes straight into the game, instead of asking again before every single game
 function beginGame() {
   // (v1.8.47: on GAME OVER, Enter / a controller's A or START do what PLAY AGAIN does - the same mode again)
-  if (G.state === "over" && !$("oAgain").hidden) {
-    $("oAgain").click();
+  // (v1.8.61: after a CUP match PLAY AGAIN is hidden - START / Enter then started an ordinary game with no bracket;
+  //  now they press BACK TO THE CUP, the card's own button)
+  if (G.state === "over") {
+    ($("oAgain").hidden ? $("oMenu") : $("oAgain")).click();
     return;
   }
   if (G.state !== "menu") {
@@ -92216,6 +92354,50 @@ profWire();
 //  the game, and where the motion capture, the folk songs and the fonts come from. Both from the menu at any time.
 // =====================================================================================
 const NEWS = [
+  {
+    ver: "v1.8.61",
+    title: "BACK TO THE CUP",
+    items: [
+      "AFTER A CUP MATCH, START OR ENTER TAKES YOU BACK TO THE CUP - IT STARTED AN ORDINARY GAME",
+      "TRYING TIME ATTACK, BOSS RUSH OR A CUP FIRST NO LONGER SKIPS THE OPENING STORY OF YOUR FIRST TOUR",
+      "TIME ATTACK: A TIME THAT ONLY TIES YOUR BEST TO THE TENTH IS NO LONGER CALLED A NEW BEST",
+    ],
+  },
+  {
+    ver: "v1.8.60",
+    title: "TYPE IN PEACE",
+    items: [
+      "TYPING A NAME NO LONGER SWITCHES SETTINGS - EACH LETTER WORKED AS A SHORTCUT TOO",
+      "NAMES TYPE AS TYPED: GREG, MEGAN AND YURI NO LONGER LOSE A LETTER",
+      "ENTER IN A NAME BOX ADDS OR RENAMES THE PLAYER, AND CTRL+C / CTRL+V NO LONGER CHANGE THE LOOK",
+      "EVERY PLAYER PROFILE KEEPS ITS OWN BARTENDER",
+    ],
+  },
+  {
+    ver: "v1.8.59",
+    title: "EARNED FAIR AND SQUARE",
+    items: [
+      "GALACTIC CHAMPION NOW NEEDS A TOUR BEGUN AT THE FIRST STOP - STARTING AT THE LAST STOP NO LONGER WINS IT",
+      "BOSS RUSH NO LONGER FILLS IN TOUR STARS AT STOPS YOU HAVEN'T REACHED",
+      "EVERY PLAYER PROFILE KEEPS ITS OWN MINI-GAME BESTS",
+      "BEST FRIENDS COUNTS REAL RESCUES ONLY, NOT EVERY TIP THE PUPPY FETCHES",
+    ],
+  },
+  {
+    ver: "v1.8.58",
+    title: "THE BOSS REMEMBERS",
+    items: [
+      "LOSE A LIFE IN A BOSS FIGHT AND THE BOSS NO LONGER STARTS FROM SCRATCH: HE KEEPS HALF THE SHAKES HE'D DRUNK",
+    ],
+  },
+  {
+    ver: "v1.8.57",
+    title: "OFFLINE AND TIDY",
+    items: [
+      "THE INSTALLED APP KEEPS ITS MUSIC WHEN IT UPDATES, AND OPENS FASTER ON A SLOW CONNECTION",
+      "SMALL TEXT FIXES IN THE HOW TO PLAY PAGES AND THE STORY",
+    ],
+  },
   {
     ver: "v1.8.56",
     title: "THE LONG HAUL",

@@ -8103,6 +8103,45 @@ const DICT_ROWS                             = [
     "DAAGLIKSE UITDAGING KLAAR!  +2 STERRE",
     "WYZWANIE DNIA UKOŃCZONE!  +2 GWIAZDKI",
   ],
+  // (v1.8.96) ONE BUTTON IS ENOUGH
+  ["ONE BUTTON IS ENOUGH", "EEN KNOPPIE IS GENOEG", "JEDEN PRZYCISK WYSTARCZY"],
+  [
+    "ONE-BUTTON MODE: THE MINI-GAMES CAN BE PLAYED WITH THE ONE BUTTON",
+    "EEN-KNOPPIE-MODUS: DIE MINI-SPELETJIES KAN MET DIE EEN KNOPPIE GESPEEL WORD",
+    "TRYB JEDNEGO PRZYCISKU: W MINIGRY MOŻNA GRAĆ JEDNYM PRZYCISKIEM",
+  ],
+  [
+    "THE CROSS GOES UP BY ITSELF, AND NO SHAKE IS POURED FOR A DEVIL",
+    "DIE KRUIS GAAN VANSELF OP, EN GEEN SKOMMEL WORD VIR 'N DUIWEL GESKINK NIE",
+    "KRZYŻ UNOSI SIĘ SAM I ŻADEN KOKTAJL NIE JEST NALEWANY DIABŁU",
+  ],
+  [
+    "GAME OVER AND PAUSE NO LONGER WAIT FOR A KEY YOU DON'T HAVE",
+    "SPEL VERBY EN POUSE WAG NIE MEER VIR 'N KNOPPIE WAT JY NIE HET NIE",
+    "KONIEC GRY I PAUZA NIE CZEKAJĄ JUŻ NA KLAWISZ, KTÓREGO NIE MASZ",
+  ],
+  [
+    "AFTER TYPING YOUR INITIALS, CONTINUE IS READY TO PRESS",
+    "NADAT JY JOU VOORLETTERS GETIK HET, IS GAAN VOORT GEREED OM TE DRUK",
+    "PO WPISANIU INICJAŁÓW PRZYCISK KONTYNUUJ JEST GOTOWY DO NACIŚNIĘCIA",
+  ],
+  // (v1.8.95) BOTH ON THE PODIUM
+  ["BOTH ON THE PODIUM", "ALBEI OP DIE PODIUM", "OBOJE NA PODIUM"],
+  [
+    "VERSUS: A PLAYER WHO IS OUT WHEN THE TOUR ENDS STILL GETS THE PRIZE",
+    "TEEN MEKAAR: 'N SPELER WAT UIT IS WANNEER DIE TOER EINDIG, KRY STEEDS DIE PRYS",
+    "POJEDYNEK: GRACZ, KTÓRY ODPADŁ, GDY TRASA SIĘ KOŃCZY, I TAK DOSTAJE NAGRODĘ",
+  ],
+  [
+    "A LIFE WON WHILE YOU'RE OUT IS WAITING FOR YOU WHEN YOU'RE BACK",
+    "'N LEWE WAT JY WEN TERWYL JY UIT IS, WAG VIR JOU WANNEER JY TERUG IS",
+    "ŻYCIE ZDOBYTE, GDY CIĘ NIE MA, CZEKA NA CIEBIE, GDY WRÓCISZ",
+  ],
+  [
+    "THE SCORE BAR SAYS WHEN YOU'RE BACK: BACK IN 5",
+    "DIE TELLINGSTREEP SÊ WANNEER JY TERUG IS: TERUG OOR 5",
+    "PASEK WYNIKU MÓWI, KIEDY WRÓCISZ: WRACA ZA 5",
+  ],
   // (v1.8.94) A FAIRER CUP
   ["A FAIRER CUP", "'N REGVERDIGER BEKER", "UCZCIWSZY TURNIEJ"],
   [
@@ -13102,6 +13141,13 @@ const DICT_PAT                             = [
   [/^REACHED LEVEL (\d+)$/, "VLAK $1 BEREIK", "OSIĄGNIĘTY POZIOM $1"],
   [/^POUR: (TAP|HOLD)  \(T to change\)$/, "SKINK: $1  (T om te verander)", "NALEWANIE: $1  (T, aby zmienić)"],
   [/^POUR: (TAP|HOLD)$/, "SKINK: $1", "NALEWANIE: $1"],
+  // (v1.8.96: ONE-BUTTON mode's first devil)
+  [
+    /^A (DEVIL|DEMON|VAMPIRE|WEREWOLF)! THE CROSS GOES UP BY ITSELF - DON'T POUR FOR IT$/,
+    "'N $1! DIE KRUIS GAAN VANSELF OP - MOENIE VIR HOM SKINK NIE",
+    "$1! KRZYŻ UNOSI SIĘ SAM - NIE NALEWAJ MU",
+  ],
+  [/^BACK IN (\d+)$/, "TERUG OOR $1", "WRACA ZA $1"], // (v1.8.95: versus - serves until the player who's out is back)
   // (v1.8.94: moved up from below - standing alone, "ZOE IS THE CHAMPION!" was caught by the catch-all first)
   [/^(.+) IS THE CHAMPION!$/, "$1 IS DIE KAMPIOEN!", "$1 ZOSTAJE MISTRZEM!"],
   // (v1.4.79) v1.5.2
@@ -17536,7 +17582,7 @@ function update(dt) {
       for (const p of PL)
         if (!p.alive) {
           p.alive = true;
-          p.lives = 1;
+          p.lives = 1 + Math.max(0, p.lives); // (v1.8.95: a life won while out - the milestone, PLAY ON, an extra life - comes on top)
           p.lane = (PL[1 - p.id].lane + 2) % LANES;
           p.x = TAPX - 20;
           // (v1.8.70: what they pressed while out is forgotten - it threw holy water, raised the cross and moved them
@@ -17904,7 +17950,19 @@ function update(dt) {
     const evilHere = customers.some(
       (c) => c.type.evil && c.state === "walk" && c.lane === P.lane && c.x > X0 + 30
     );
-    if ((inp.cross && !demo) || (demo && evilHere && P.crossCD <= 0 && Math.random() < dt * 0.7)) {
+    // (v1.8.96: in ONE-BUTTON mode the cross goes up by itself, as in the demo - its own key can't be pressed there)
+    if (
+      (inp.cross && !demo) ||
+      (demo && evilHere && P.crossCD <= 0 && Math.random() < dt * 0.7) ||
+      // (only once it's within the cross's reach - shown from afar it just pushed the devil back, and the cross was then
+      //  still recharging when the devil came close)
+      (!demo &&
+        P.crossCD <= 0 &&
+        oneBtn() &&
+        customers.some(
+          (c) => c.type.evil && c.state === "walk" && c.lane === P.lane && c.x > X0 + 30 && P.x - c.x < 430
+        ))
+    ) {
       if (P.crossCD <= 0) showCross(P, demo);
       else {
         sfx("tick");
@@ -18209,18 +18267,26 @@ function update(dt) {
     }
     if (!demo && type.evil && !G.evilIntro) {
       G.evilIntro = true;
-      callout(
-        "A " +
-          type.kind.toUpperCase() +
-          "! SHOW THE CROSS (" +
-          // (v1.6.1: with two players on the keyboard, both players' keys - player 2's are , and .)
-          (lastDev === "pad" ? "B" : lastDev === "touch" ? "CROSS" : twoP() ? "Q / ," : "Q") +
-          "), SEND HOLY WATER (" +
-          (lastDev === "pad" ? "Y" : lastDev === "touch" ? "HOLY" : twoP() ? "H / ." : "H") +
-          ") OR RUN UP TO IT",
-        "#ff3b4f",
-        3.4
-      );
+      // (v1.8.96: ONE-BUTTON mode has no cross or holy water key - it's told what happens instead)
+      if (oneBtn())
+        callout(
+          "A " + type.kind.toUpperCase() + "! THE CROSS GOES UP BY ITSELF - DON'T POUR FOR IT",
+          "#ff3b4f",
+          3.4
+        );
+      else
+        callout(
+          "A " +
+            type.kind.toUpperCase() +
+            "! SHOW THE CROSS (" +
+            // (v1.6.1: with two players on the keyboard, both players' keys - player 2's are , and .)
+            (lastDev === "pad" ? "B" : lastDev === "touch" ? "CROSS" : twoP() ? "Q / ," : "Q") +
+            "), SEND HOLY WATER (" +
+            (lastDev === "pad" ? "Y" : lastDev === "touch" ? "HOLY" : twoP() ? "H / ." : "H") +
+            ") OR RUN UP TO IT",
+          "#ff3b4f",
+          3.4
+        );
     }
     if (!demo && type.kind === "vampire" && !G.vampIntro) {
       G.vampIntro = true;
@@ -21884,7 +21950,9 @@ function coopTwinServed(c, s, demo) {
 // controller (or choose PLAYER 2 JOINS in the pause menu) and they're in, behind the bar, as player 2 in co-op: with
 // their own bartender, on a bar of their own, bringing two more lives to the team's pool. Not in the demo, the Cup or
 // versus (those are chosen at the start)
-const canJoin = () => !G.demo && !twoP() && !CUP.match && ["play", "paused"].includes(G.state);
+// (v1.8.96: not in ONE-BUTTON mode - a partner dropping in switched the one-button helper off in the middle of a stop)
+const canJoin = () =>
+  !G.demo && !twoP() && !CUP.match && !store.get("onebtn", false) && ["play", "paused"].includes(G.state);
 function joinP2() {
   if (!canJoin()) return false;
   G.players = 2;
@@ -23004,9 +23072,12 @@ function startEnding(kind = "final") {
     // end the whole game) - just the galaxy bonus, a cheer, and straight on to the great jump to Andromeda. The big
     // celebration comes once, at the very end, after Andromeda.
     const lives = G.versus ? 0 : Math.max(0, G.lives);
-    for (const p of active()) {
+    // (v1.8.95: in versus a player sitting out the 8 serves gets the galaxy bonus too - see the ending below)
+    for (const p of G.versus ? PL : active()) {
       SCORER = p;
-      addScore(G.versus ? 25000 + p.lives * 5000 : Math.round((25000 + lives * 5000) / active().length));
+      addScore(
+        G.versus ? 25000 + Math.max(0, p.lives) * 5000 : Math.round((25000 + lives * 5000) / active().length)
+      );
     }
     SCORER = null;
     callout("THE WHOLE MILKY WAY SERVED!  ON TO ANDROMEDA!", "#ffd24d", 3.2);
@@ -23041,9 +23112,12 @@ function startEnding(kind = "final") {
   const big = kind === "final" ? 2 : 1,
     lives = G.versus ? 0 : Math.max(0, G.lives),
     prize = (25000 + lives * 5000) * big;
-  for (const p of active()) {
+  // (v1.8.95) THE PRIZE FOR BOTH IN VERSUS: a player who was out (sitting out the 8 serves) when the tour ended got no
+  // prize at all, and the one ahead could drop behind on the podium for it - like the festival stamps (v1.8.20), both
+  // get the galaxy bonus; the lives still left add to it
+  for (const p of G.versus ? PL : active()) {
     SCORER = p;
-    addScore(G.versus ? (25000 + p.lives * 5000) * big : Math.round(prize / active().length));
+    addScore(G.versus ? (25000 + Math.max(0, p.lives) * 5000) * big : Math.round(prize / active().length));
   }
   SCORER = null;
   // who stands where: versus - the winner on top; co-op - side by side; one player - alone at the top
@@ -23244,6 +23318,11 @@ const OVER_TIPS = {
     "After a customer drinks, the glass slides back to you - run along the bar to catch it.",
   ],
 };
+// (v1.8.96) where the GAME OVER screen's focus goes: CONTINUE when there is one (also after saving initials - PLAY AGAIN
+// there started over at stop 1 with CONTINUE FROM STAGE 6 on the screen), else PLAY AGAIN; after a cup match, back
+function overFocus(cupM ) {
+  (cupM ? $("oMenu") : $("oCont").hidden ? $("oAgain") : $("oCont")).focus();
+}
 function gameOver() {
   G.state = "over";
   // (v1.8.19: CONTINUE is remembered before the cup's result clears the match - a cup game used to overwrite the tour's
@@ -23347,6 +23426,9 @@ function gameOver() {
   }
   $("nameForm").hidden = !makes;
   $("nameIn").value = store.get("name", "GL");
+  // (v1.8.96) ONE BUTTON, NO TYPING: with the initials box up the menu keys wait for it, so a one-button player could
+  // never leave GAME OVER - the score goes in the table at once, under the initials saved last time
+  if (makes && oneBtn()) setTimeout(keepScore, 0);
   fillTable($("overTable"), table, -1);
   funGameOver();
   showPanels();
@@ -23393,11 +23475,13 @@ function gameOver() {
         $("over").scrollTop = 0;
         return;
       }
-      if (makes) {
+      // (v1.8.96: not in ONE-BUTTON mode - every press of the one button typed a space into the box, and nothing ever
+      //  moved on; the score is kept under the saved initials anyway when the screen is left - keepScore)
+      if (makes && !oneBtn()) {
         $("nameIn").focus();
         if (lastDev === "pad") $("nameIn").setSelectionRange(0, 1);
         else $("nameIn").select();
-      } else (cupM ? $("oMenu") : $("oCont").hidden ? $("oAgain") : $("oCont")).focus();
+      } else overFocus(cupM);
     } catch (e) {}
   }, 50);
 }
@@ -68394,6 +68478,11 @@ function funUpdate(dt, demo) {
 }
 function funOneButton(inp) {
   if (!oneBtn()) return;
+  // (v1.8.96) NO SHAKE FOR A DEVIL: pressing the one button cancelled the helper's walk up the bar to refuse one, and
+  // the shake slid to the devil (-300 and the combo gone) - with a devil, demon, vampire or werewolf next on the bar
+  // the button doesn't pour (the cross goes up by itself - update.ts). Checked first, so the walk below goes ahead
+  const nx = nextOnLane(P1.lane);
+  if (nx && nx.type.evil) inp.pour = false;
   const ai = demoInput(1 / 60);
   inp.up = ai.up;
   inp.down = ai.down;
@@ -68846,6 +68935,34 @@ function miniStars(M) {
 // round (left / right change bar, up / down run - playerInput), but a mini-game isn't turned - so in CHERRY CATCH the
 // left and right keys did nothing and up / down slid the glass sideways, and in the stork game LEFT flew up. Turned
 // back here for the mini-games (a mirror bar's swap of the running keys too)
+// (v1.8.96) THE MINI-GAMES WITH ONE BUTTON: in ONE-BUTTON mode the stork and the catching games read only the arrows,
+// so the glass never moved and the stork crashed - a one-button player got the 3-coin minimum every time. Now the stork
+// flies up while the button is held and sinks when it's let go, and the glass sweeps along by itself (a little slower)
+// and turns round at each press
+function miniOne(M, inp) {
+  // (a finger or the mouse on the field keeps steering as before)
+  if (!oneBtn() || M.gl || M.phase !== "go" || M.ptr) return inp;
+  const p = !!inp.pour,
+    o = { ...inp, up: false, down: false, left: false, right: false, upHeld: false, downHeld: false };
+  if (M.kind === "stork") {
+    o.upHeld = p;
+    o.downHeld = !p;
+    return o;
+  }
+  if (M.oneDir === undefined) {
+    M.oneDir = 1;
+    M.oneP = p; // (a button still held from the start doesn't turn the glass at once)
+  }
+  if (p && !M.oneP) M.oneDir = -M.oneDir;
+  M.oneP = p;
+  const lo = MINI_TALL() ? 190 : 70,
+    hi = MINI_TALL() ? 770 : 890;
+  if (M.x >= hi - 2) M.oneDir = -1;
+  else if (M.x <= lo + 2) M.oneDir = 1;
+  o.left = M.oneDir < 0;
+  o.right = M.oneDir > 0;
+  return o;
+}
 function miniInp(inp) {
   if (!VERT) return inp;
   const flip = mirrorPlay();
@@ -68882,7 +68999,7 @@ function funMiniUpdate(dt) {
   M.t += dt;
   if (M.pops) M.pops = M.pops.filter((p) => (p.t += dt) < 1);
   M.hurt = Math.max(0, M.hurt - dt);
-  const inp = miniInp(playerInput(M.who || 0)), // (v1.5.90: whoever's turn it is) (v1.8.33: miniInp)
+  const inp = miniOne(M, miniInp(playerInput(M.who || 0))), // (v1.5.90: whoever's turn it is) (v1.8.33: miniInp) (v1.8.96: miniOne)
     go = M.phase === "go",
     // (v1.5.96) in a duel or race either player may start it early or move on from the result (player 2 read only
     // then: reading the controls uses up a key press, and in play each duel step reads its own player)
@@ -68990,7 +69107,7 @@ function funMiniUpdate(dt) {
     // (v1.4.78: after a wrong catch in CHERRY CATCH the glass stands still, so you can see what landed in it)
     if (!(M.kind === "cherry" && M.wrong)) {
       if (M.ptr && !inp.left && !inp.right) M.x += (M.px - M.x) * Math.min(1, dt * 12);
-      else M.x += ((Rt ? 1 : 0) - (L ? 1 : 0)) * 560 * dt;
+      else M.x += ((Rt ? 1 : 0) - (L ? 1 : 0)) * 560 * dt * (oneBtn() && !M.ptr ? 0.55 : 1); // (v1.8.96: one button - a gentler sweep)
     }
     M.x = clamp(M.x, MINI_TALL() ? 190 : 70, MINI_TALL() ? 770 : 890); // (v1.4.74: a narrower field on a tall screen)
     M.spawn -= dt;
@@ -69053,7 +69170,8 @@ function funMiniUpdate(dt) {
         if (M.kind === "cherry" && M.wrong) continue; // (the round's over - nothing more goes in)
         // (v1.8.36) KID MODE: the wrong thing bounces off the glass (as in the cocktail mixer) instead of ending the
         //  round - one sock or banana was the end of CHERRY CATCH for the youngest players too
-        if (M.kind === "cherry" && it.kind !== "cherry" && kidOn()) {
+        // (v1.8.96: and in ONE-BUTTON mode - the glass sweeps along by itself there and can't stop to let one go by)
+        if (M.kind === "cherry" && it.kind !== "cherry" && (kidOn() || oneBtn())) {
           it.vx = (dx >= 0 ? 1 : -1) * rnd(160, 260);
           it.vy = -rnd(320, 420);
           it.spin = rnd(-9, 9);
@@ -85868,7 +85986,7 @@ function levelOfTour(of) {
     inTour = ((lv - 1) % LAST_LEVEL) + 1;
   return (tour > 1 ? "TOUR " + tour + "  ·  " : "") + "LEVEL " + inTour + of + LAST_LEVEL;
 }
-const GAME_VERSION = "v1.8.94",
+const GAME_VERSION = "v1.8.96",
   GAME_DATE = "26.11.2026",
   VERSION_TEXT = GAME_VERSION + "  ·  " + GAME_DATE;
 const FB = '"Chakra Petch", "Segoe UI", sans-serif';
@@ -86787,7 +86905,13 @@ function drawHud(fps) {
           );
         }
         // (v1.8.89: at most six bars, then "x14" - a long match drew them on into the sign)
-        if (G.versus) {
+        // (v1.8.95: a player who's out sees when they're back - "BACK IN 5" serves - where the lives were)
+        if (G.versus && p.alive === false && G.rejoinLeft > 0) {
+          g.font = fB(11);
+          g.globalAlpha = 1; // (bright, though the rest of an out player's line is faded)
+          g.fillText("BACK IN " + G.rejoinLeft, pad + 170 * s, y + 3 * s);
+          g.font = fD(18);
+        } else if (G.versus) {
           for (let i = 0; i < Math.min(6, Math.max(0, p.lives)); i++) {
             g.fillRect(pad + 170 * s + i * 9 * s, y + 4 * s, 6 * s, 12 * s);
           }
@@ -92564,6 +92688,9 @@ function pause(on) {
   }
   if (!on) $("pAfk").hidden = true;
   showPanels();
+  // (v1.8.96: in ONE-BUTTON mode RESUME has the focus, so the one button resumes - after the game paused itself (the
+  //  window lost focus, a controller unplugged) nothing had it, and only P, Esc or Enter could carry on)
+  if (on && G.state === "paused" && oneBtn()) setTimeout(() => $("pResume").focus(), 30);
 }
 // (v1.8.14) WHERE YOU ARE, ON THE PAUSE SCREEN: the stop's name, its gravity and its house cocktail - each line its own
 // text, so the page's translator can find it (the cocktail's name in its own, readable, colour)
@@ -92720,7 +92847,7 @@ $("nameForm").addEventListener("submit", (e) => {
   );
   $("nameForm").hidden = true;
   sfx("power");
-  $("oAgain").focus();
+  overFocus(); // (v1.8.96: CONTINUE first, when there is one - endgame.ts)
 });
 $("bGfx").onclick = cycleGfx;
 $("pGfx").onclick = cycleGfx;
@@ -93837,6 +93964,25 @@ profWire();
 //  the game, and where the motion capture, the folk songs and the fonts come from. Both from the menu at any time.
 // =====================================================================================
 const NEWS = [
+  {
+    ver: "v1.8.96",
+    title: "ONE BUTTON IS ENOUGH",
+    items: [
+      "ONE-BUTTON MODE: THE MINI-GAMES CAN BE PLAYED WITH THE ONE BUTTON",
+      "THE CROSS GOES UP BY ITSELF, AND NO SHAKE IS POURED FOR A DEVIL",
+      "GAME OVER AND PAUSE NO LONGER WAIT FOR A KEY YOU DON'T HAVE",
+      "AFTER TYPING YOUR INITIALS, CONTINUE IS READY TO PRESS",
+    ],
+  },
+  {
+    ver: "v1.8.95",
+    title: "BOTH ON THE PODIUM",
+    items: [
+      "VERSUS: A PLAYER WHO IS OUT WHEN THE TOUR ENDS STILL GETS THE PRIZE",
+      "A LIFE WON WHILE YOU'RE OUT IS WAITING FOR YOU WHEN YOU'RE BACK",
+      "THE SCORE BAR SAYS WHEN YOU'RE BACK: BACK IN 5",
+    ],
+  },
   {
     ver: "v1.8.94",
     title: "A FAIRER CUP",

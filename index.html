@@ -301,6 +301,7 @@ button b { color: var(--amber); font-weight: 700; }
   border-radius: 16px; padding: 12px; min-height: 48px; box-sizing: border-box; display: flex; align-items: center; justify-content: center; background: rgba(40, 30, 10, .35); }
 .add:hover { box-shadow: 0 0 14px rgba(255, 195, 77, .35); }
 kbd { font: 600 11px var(--body); color: var(--dim); border: 1px solid var(--line); border-radius: 4px; padding: 1px 5px; }
+@media (pointer: coarse) and (not (any-pointer: fine)) { kbd { display: none; } } /* (v1.8.99: no keyboard badges on a phone or tablet, held either way) */
 .info { margin: 0; font-size: 13px; color: var(--dim); line-height: 1.45; min-height: 2.9em; }
 .info b { color: var(--ink); font-weight: 600; }
 .controls { display: grid; grid-template-columns: 1fr; gap: 14px; } /* (v1.4.1: one list under the other - side by side they were squeezed and ran into each other) */
@@ -618,8 +619,8 @@ body.touch2p #touch .tp button.holy { width: 60px; height: 60px; font-size: 11px
   <h2>HOW TO PLAY</h2>
   <!-- (v1.4.82) THE GAME IN THREE STEPS, before the details -->
   <div class="quick" aria-label="The game in three steps">
-    <div><i>1</i><b>POUR</b><small>Hold POUR at the taps</small></div>
-    <div><i>2</i><b>SLIDE</b><small>Let go - it slides to the customer</small></div>
+    <div><i>1</i><b>POUR</b><small id="qs1">Hold POUR at the taps</small></div>
+    <div><i>2</i><b>SLIDE</b><small id="qs2">Let go - it slides to the customer</small></div>
     <div><i>3</i><b>CATCH</b><small>Catch the empty glass coming back</small></div>
   </div>
   <p class="quickNo">Don't let a customer reach your end of the bar, and never drop a glass.</p>
@@ -4048,6 +4049,11 @@ const DICT_ROWS                             = [
     "DRUK 'N SLEUTEL... (Esc: kanselleer)",
     "NACIŚNIJ KLAWISZ... (Esc: anuluj)",
   ],
+  [
+    "THAT KEY IS THE GAME'S OWN - PRESS ANOTHER",
+    "DIE SPEL GEBRUIK DAARDIE SLEUTEL SELF - DRUK 'N ANDER",
+    "TEN KLAWISZ NALEŻY DO GRY - NACIŚNIJ INNY",
+  ], // (v1.8.99: the key-choosing screen refuses the game's own keys)
   ["SHUFFLE ▶", "SKOMMEL ▶", "LOSOWO ▶"],
   ["PLAY ALL VOLKSLIEDJIES ▶", "SPEEL AL DIE VOLKSLIEDJIES ▶", "ZAGRAJ WSZYSTKIE VOLKSLIEDJIES ▶"],
   ["THE MILKY WAY", "DIE MELKWEG", "DROGA MLECZNA"],
@@ -6338,8 +6344,8 @@ const DICT_ROWS                             = [
   ],
   [
     "WHERE'S THE ALIEN?  TAP A CUP",
-    "WAAR IS DIE RUIMTEWESE?  TIK 'N KOPPIE",
-    "GDZIE JEST KOSMITA?  STUKNIJ KUBEK",
+    "WAAR IS DIE RUIMTEWESE?  TIK 'N KOEPEL", // (v1.8.99: the round's metal domes - not a mug)
+    "GDZIE JEST KOSMITA?  STUKNIJ KLOSZ",
   ],
   [
     "WHERE'S THE ALIEN?  ← →, THEN SPACE",
@@ -6870,6 +6876,8 @@ const DICT_ROWS                             = [
   // (v1.4.79) TRANSLATIONS, v1.4.82: how to play in three steps
   ["CATCH", "VANG", "ŁAP"],
   ["Hold POUR at the taps", "Hou SKINK by die krane", "Przytrzymaj NALEJ przy kranach"],
+  ["Tap POUR at the taps", "Tik SKINK by die krane", "Stuknij NALEJ przy kranach"], // (v1.8.99: TAP mode)
+  ["It slides to the customer by itself", "Dit gly vanself na die klant", "Koktajl sam pojedzie do klienta"],
   ["Let go - it slides to the customer", "Los - dit gly na die klant", "Puść - koktajl pojedzie do klienta"],
   ["Catch the empty glass coming back", "Vang die leë glas wat terugkom", "Złap pustą szklankę, która wraca"],
   [
@@ -8107,6 +8115,23 @@ const DICT_ROWS                             = [
     "DAILY CHALLENGE DONE!  +2 STARS",
     "DAAGLIKSE UITDAGING KLAAR!  +2 STERRE",
     "WYZWANIE DNIA UKOŃCZONE!  +2 GWIAZDKI",
+  ],
+  // (v1.8.99) THE WHOLE STORY
+  ["THE WHOLE STORY", "DIE HELE STORIE", "CAŁA HISTORIA"],
+  [
+    "IN AFRIKAANS AND POLISH THE STORY CARDS SHOW THEIR LAST WORDS",
+    "IN AFRIKAANS EN POOLS WYS DIE STORIEKAARTE HULLE LAASTE WOORDE",
+    "PO AFRIKAANS I PO POLSKU KARTKI OPOWIEŚCI POKAZUJĄ OSTATNIE SŁOWA",
+  ],
+  [
+    "YOUR OWN KEYS: NO MORE STUCK KEYS, AND A KEY ALREADY USED SWAPS",
+    "JOU EIE SLEUTELS: GEEN VASGEHAAKTE SLEUTELS MEER NIE, EN 'N SLEUTEL WAT AL GEBRUIK WORD, RUIL OM",
+    "WŁASNE KLAWISZE: KONIEC Z ZACIĘTYMI KLAWISZAMI, A UŻYWANY JUŻ KLAWISZ SIĘ ZAMIENIA",
+  ],
+  [
+    "ON A PHONE: HOW TO PLAY SAYS TAP, AND NO KEYBOARD BADGES",
+    "OP 'N FOON: HOE OM TE SPEEL SÊ TIK, EN GEEN SLEUTELBORD-ETIKETTE NIE",
+    "NA TELEFONIE: JAK GRAĆ MÓWI STUKNIJ, I BEZ ZNACZKÓW KLAWISZY",
   ],
   // (v1.8.98) MUSIC OFF MEANS OFF
   ["MUSIC OFF MEANS OFF", "MUSIEK AF BETEKEN AF", "MUZYKA WYŁĄCZONA ZNACZY WYŁĄCZONA"],
@@ -9558,7 +9583,7 @@ const DICT_ROWS                             = [
   // (v1.8.12) HOW TO PLAY: gravity and the house cocktails
   [
     "Every stop has its own gravity - the arrival screen shows how strong it is. On a <b>light</b> world everyone floats, and a shake sends customers sailing further back - but they drift back in quicker. On a <b>heavy</b> world they plod in slowly - but a shake barely pushes them. In the mini-games things fall slowly or fast to match.",
-    "Elke stop het sy eie swaartekrag - die aankomsskerm wys hoe sterk dit is. Op 'n <b>ligte</b> wêreld sweef almal, en 'n skudding laat klante verder terugsweef - maar hulle dryf vinniger terug. Op 'n <b>swaar</b> wêreld slof hulle stadig nader - maar 'n skudding stoot hulle skaars terug. In die mini-speletjies val dinge ooreenkomstig stadig of vinnig.",
+    "Elke stop het sy eie swaartekrag - die aankomsskerm wys hoe sterk dit is. Op 'n <b>ligte</b> wêreld sweef almal, en 'n melkskommel laat klante verder terugsweef - maar hulle dryf vinniger terug. Op 'n <b>swaar</b> wêreld slof hulle stadig nader - maar 'n melkskommel stoot hulle skaars terug. In die mini-speletjies val dinge ooreenkomstig stadig of vinnig.",
     "Każdy przystanek ma własną grawitację - ekran przylotu pokazuje, jak jest silna. Na <b>lekkim</b> świecie wszyscy się unoszą, a koktajl odsyła klientów dalej - ale szybciej wracają. Na <b>ciężkim</b> świecie człapią powoli - ale koktajl ledwo ich odpycha. W minigrach rzeczy spadają odpowiednio wolno albo szybko.",
   ],
   [
@@ -13022,9 +13047,9 @@ const DICT_PAT                             = [
   [
     /^PRESS (\w+) TO POUR - IT SLIDES BY ITSELF$/,
     "DRUK $1 OM TE SKINK - DIT GLY VANSELF",
-    "NACIŚNIJ $1, BY NALAĆ - SAM SIĘ PRZESUNIE",
+    "NACIŚNIJ $1, BY NALAĆ - KOKTAJL SAM POJEDZIE", // (v1.8.99: clearer what slides)
   ],
-  [/^TAP POUR - IT SLIDES BY ITSELF$/, "TIK SKINK - DIT GLY VANSELF", "STUKNIJ NALEJ - SAM SIĘ PRZESUNIE"],
+  [/^TAP POUR - IT SLIDES BY ITSELF$/, "TIK SKINK - DIT GLY VANSELF", "STUKNIJ NALEJ - KOKTAJL SAM POJEDZIE"],
   [
     /^AN EMPTY GLASS! GO TO THAT BAR \((.+)\)$/,
     "'N LEË GLAS! GAAN NA DAARDIE TOONBANK ($1)",
@@ -13046,7 +13071,7 @@ const DICT_PAT                             = [
   [
     /^ORDER ON THIS BAR: (\w+) - SWITCH WITH (.+)$/,
     "BESTELLING BY HIERDIE TOONBANK: $1 - WISSEL MET $2",
-    "ZAMÓWIENIE NA TYM BARZE: $1 - ZMIEŃ: $2",
+    "ZAMÓWIENIE NA TYM BARZE: $1 - ZMIEŃ PRZYCISKIEM $2", // (v1.8.99: it read as "change to $2")
   ],
   [/^RIGHT ORDER!  (\w+)!$/, "REGTE BESTELLING!  $1!", "DOBRE ZAMÓWIENIE!  $1!"],
   [/^(\d) PLAYERS$/, "$1 SPELERS", "$1 GRACZY"],
@@ -13421,18 +13446,46 @@ const KM_DEFAULT = {
     cross: "Comma",
   },
 };
-const KM                                                                                     = {
+const KM   
+                               
+                              
+                      
+                                      
+               
+  = {
   bind: store.get("keymap", {}),
   map: {},
   wait: null,
+  sent: {}, // (v1.8.99: what each key held down was passed on as - its key-up goes the same way)
 };
+// (v1.8.99) THE GAME'S OWN KEYS CAN'T BE TAKEN: P (pause), F (full screen), M / N (sound, music), T (pour mode), V, G,
+// L, C (the view settings), E / R (flavour) - chosen for an action, they no longer did their own job (with P taken,
+// the mini-games and the bonus round could not be paused from the keyboard at all)
+const KM_RESERVED = [
+  "KeyP",
+  "KeyF",
+  "KeyM",
+  "KeyN",
+  "KeyT",
+  "KeyV",
+  "KeyG",
+  "KeyL",
+  "KeyC",
+  "KeyE",
+  "KeyR",
+  "KeyJ",
+  "KeyB",
+].concat(
+  ["Digit1", "Digit2", "Digit3", "Digit4"] // (and J, B - the music box, the bartenders - and 1-4, straight to a bar)
+);
 function kmBuild() {
   KM.map = {};
   for (const id in KM.bind) {
     const [p, a] = id.split("."),
       canon = KM_DEFAULT[p] && KM_DEFAULT[p][a],
       phys = KM.bind[id];
-    if (canon && phys && phys !== canon) KM.map[phys] = canon;
+    // (v1.8.99: not a key the game keeps for itself - chosen before that was refused, it went on taking pause & co.)
+    if (canon && phys && phys !== canon && !KM_RESERVED.includes(phys)) KM.map[phys] = canon;
   }
 }
 kmBuild();
@@ -13475,13 +13528,30 @@ function kmDoor(e) {
   if (KM.wait && e.type === "keydown") {
     e.preventDefault();
     e.stopImmediatePropagation();
+    if (e.code !== "Escape" && KM_RESERVED.includes(e.code)) {
+      KM.no = true; // (refused - the row asks for another key)
+      sfx("aww");
+      if (typeof buildKeys === "function") buildKeys();
+      return;
+    }
     if (e.code !== "Escape") {
+      // (v1.8.99) A KEY ONLY DOES ONE THING: one already used (by the other action, or the other player) was taken
+      //  silently - P1's UP set to the up arrow left player 2 without an UP. Now the two swap: the action that had
+      //  this key gets the one being replaced
+      const [wp, wa] = KM.wait.split("."),
+        old = KM.bind[KM.wait] || KM_DEFAULT[wp][wa];
+      for (const p of [1, 2])
+        for (const [a] of KM_ACTIONS) {
+          const id = p + "." + a;
+          if (id !== KM.wait && (KM.bind[id] || KM_DEFAULT[p][a]) === e.code) KM.bind[id] = old;
+        }
       KM.bind[KM.wait] = e.code;
       store.set("keymap", KM.bind);
       kmBuild();
       sfx("chime", undefined, 1);
     }
     KM.wait = null;
+    KM.no = false;
     if (typeof buildKeys === "function") buildKeys();
     return;
   }
@@ -13496,8 +13566,29 @@ function kmDoor(e) {
   //  to the up arrow, the arrow reached the menus as W and no longer moved the menu cursor
   // (v1.8.46: key-downs only - a key let go after pausing or game over must still be let go as the key it stood for,
   //  or that key stayed held: on resume the barman kept pouring or running until it was pressed again)
-  if (e.type === "keydown" && (["menu", "paused", "over"].includes(G.state) || panelNav())) return;
-  const canon = KM.map[e.code];
+  // (v1.8.99) ...AND LET GO AS IT WAS PRESSED: a key pressed on the menu, the pause or GAME OVER went in as itself, but
+  //  its key-up went out as the key it stands for - so the pressed key never let go (POUR set to Enter, then Enter on
+  //  the menu: the game thought Enter was held for good and never poured again). Each key-down notes how it went
+  //  (KM.sent), and its key-up follows it
+  if (e.type === "keyup" && e.code in KM.sent) {
+    const was = KM.sent[e.code];
+    delete KM.sent[e.code];
+    if (!was) return;
+    e.preventDefault();
+    e.stopImmediatePropagation();
+    window.dispatchEvent(
+      new KeyboardEvent("keyup", { code: was, key: e.key, bubbles: true, cancelable: true })
+    );
+    return;
+  }
+  if (e.type === "keydown" && (["menu", "paused", "over"].includes(G.state) || panelNav())) {
+    if (!e.repeat) KM.sent[e.code] = null;
+    return;
+  }
+  // (a key still held from the menu or the pause repeats as it was first pressed - its repeats went in as the key it
+  //  stands for, which was then never let go)
+  const canon = e.type === "keydown" && e.repeat && e.code in KM.sent ? KM.sent[e.code] : KM.map[e.code];
+  if (e.type === "keydown" && !e.repeat) KM.sent[e.code] = canon || null;
   if (!canon) return;
   e.preventDefault();
   e.stopImmediatePropagation();
@@ -13534,13 +13625,16 @@ function buildKeys() {
         label +
         "<small>" +
         (KM.wait === id
-          ? "PRESS A KEY... (Esc: cancel)"
+          ? KM.no
+            ? "THAT KEY IS THE GAME'S OWN - PRESS ANOTHER" // (v1.8.99)
+            : "PRESS A KEY... (Esc: cancel)"
           : keyName(mine || KM_DEFAULT[p][a]) +
             (mine && mine !== KM_DEFAULT[p][a] ? "  ·  (USUAL: " + keyName(KM_DEFAULT[p][a]) + ")" : "")) +
         "</small>";
       if (KM.wait === id) b.className = "on";
       b.onclick = () => {
         KM.wait = id;
+        KM.no = false;
         sfx("click");
         buildKeys();
       };
@@ -71762,7 +71856,9 @@ function funHud(g, s, t, fD, sx, sy) {
     }
     g.fillStyle = "#2a1a3a";
     g.font = Math.round(storySz(s)) + "px " + FD;
-    let left = Math.floor(S0.lines[i].length * k);
+    // (v1.8.99: counted on the lines as shown - the English line's length cut the end off a longer translation, so in
+    //  Polish and Afrikaans the story's cards never showed their last words)
+    let left = Math.floor(ls.reduce((n, l) => n + l.length + 1, 0) * k);
     ls.forEach((ln, j) => {
       const part = ln.slice(0, Math.max(0, left));
       left -= ln.length + 1;
@@ -72250,6 +72346,14 @@ function openFP(id) {
       FP_PARENT = p;
     }
   FP[id] = true;
+  // (v1.8.99) THE FIRST TWO STEPS AS YOU POUR: in TAP mode (a phone's own) HOW TO PLAY said "Hold POUR" and "Let go"
+  if (id === "howto" && $k("qs1")) {
+    const tap = pourMode === "tap" || oneBtn(); // (one-button mode pours with a tap too)
+    $k("qs1").textContent = tap ? "Tap POUR at the taps" : "Hold POUR at the taps";
+    $k("qs2").textContent = tap
+      ? "It slides to the customer by itself"
+      : "Let go - it slides to the customer";
+  }
   ({
     shop: buildShop,
     trophies: buildTroph,
@@ -86061,7 +86165,7 @@ function levelOfTour(of) {
     inTour = ((lv - 1) % LAST_LEVEL) + 1;
   return (tour > 1 ? "TOUR " + tour + "  ·  " : "") + "LEVEL " + inTour + of + LAST_LEVEL;
 }
-const GAME_VERSION = "v1.8.98",
+const GAME_VERSION = "v1.8.99",
   GAME_DATE = "26.11.2026",
   VERSION_TEXT = GAME_VERSION + "  ·  " + GAME_DATE;
 const FB = '"Chakra Petch", "Segoe UI", sans-serif';
@@ -87661,7 +87765,7 @@ function drawHelp(g, s, t, fD, fB, sx, sy) {
       Math.sin(t * 10) > -0.5
     ) {
       const [x, y] = projL(p.lane, TAPX - 20, LY(p.lane, TAPX) - 70, VSIDE.bar);
-      g.font = fD(9);
+      g.font = fD(Math.max(9, 10 / s)); // (v1.8.99: at least 10 pixels - about 5 on a phone)
       g.fillStyle = "#ff5f5f";
       g.fillText(
         customers.some((c) => c.lane === p.lane && c.state === "walk") ? "DEVILS ONLY!" : "NOBODY THERE!",
@@ -94049,6 +94153,15 @@ profWire();
 //  the game, and where the motion capture, the folk songs and the fonts come from. Both from the menu at any time.
 // =====================================================================================
 const NEWS = [
+  {
+    ver: "v1.8.99",
+    title: "THE WHOLE STORY",
+    items: [
+      "IN AFRIKAANS AND POLISH THE STORY CARDS SHOW THEIR LAST WORDS",
+      "YOUR OWN KEYS: NO MORE STUCK KEYS, AND A KEY ALREADY USED SWAPS",
+      "ON A PHONE: HOW TO PLAY SAYS TAP, AND NO KEYBOARD BADGES",
+    ],
+  },
   {
     ver: "v1.8.98",
     title: "MUSIC OFF MEANS OFF",

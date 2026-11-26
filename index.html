@@ -2629,14 +2629,23 @@ function createRenderer(mode) {
         (e) => {
           e.preventDefault();
           clearTimeout(lostT);
-          lostT = setTimeout(() => {
+          // (v1.8.62: lost while the tab is hidden - a phone app in the background - the browser may only give it back
+          //  once the tab is seen again: the 2 seconds start then, not while hidden)
+          const fall = () => {
             if (cv !== mine) return;
+            if (document.hidden) {
+              document.addEventListener("visibilitychange", () => (lostT = setTimeout(fall, 2000)), {
+                once: true,
+              });
+              return;
+            }
             createRenderer("cpu");
             gfxNote =
               "The video card stopped responding, so the game switched to CPU drawing (it tries the video card again next start).";
             updateGfxText();
             GL_FALLBACK.n++;
-          }, 2000);
+          };
+          lostT = setTimeout(fall, 2000);
         },
         false
       );
@@ -2715,7 +2724,7 @@ const DICT_ROWS                             = [
   ["Full screen", "Volskerm", "Pełny ekran"],
   ["Pause", "Pouse", "Pauza"],
   ["↻ Reset", "↻ Herbegin", "↻ Reset"],
-  ["↻ Start over", "↻ Begin van voor af", "↻ Od nowa"],
+  ["↻ Start over", "↻ Herbegin", "↻ Od nowa"], // (v1.8.63: shorter - on an upright phone it squeezed the stop's name)
   ["Tap again to start over", "Tik weer om van voor af te begin", "Stuknij jeszcze raz, by zacząć od nowa"],
   ["Skip ▶▶", "Slaan oor ▶▶", "Pomiń ▶▶"],
   [
@@ -3712,7 +3721,7 @@ const DICT_ROWS                             = [
     "Twoje inicjały do tabeli wyników",
   ],
   ["SAVE", "STOOR", "ZAPISZ"],
-  ["▶ CONTINUE FROM", "▶ GAAN VOORT VANAF", "▶ KONTYNUUJ OD"],
+  ["▶ CONTINUE FROM", "▶ GAAN VOORT VANAF", "▶ KONTYNUUJ:"], // (v1.8.63: "OD ETAP 1" was wrong - it would be "OD ETAPU 1")
   ["PLAY AGAIN", "SPEEL WEER", "ZAGRAJ JESZCZE RAZ"],
   ["MENU", "KIESLYS", "MENU"],
   ["SHARE ▶", "DEEL ▶", "UDOSTĘPNIJ ▶"],
@@ -6737,6 +6746,9 @@ const DICT_ROWS                             = [
   ["HOLO-SHOW", "HOLO-VERTONING", "HOLO-SHOW"],
   ["ENTER", "ENTER", "ENTER"],
   ["MEDIUM", "MEDIUM", "ŚREDNIA"],
+  // (v1.8.63) the pause screen's tech line
+  ["AUTO QUALITY MEDIUM", "OUTO-GEHALTE MEDIUM", "AUTOMATYCZNA JAKOŚĆ ŚREDNIA"],
+  ["AUTO QUALITY LOW", "OUTO-GEHALTE LAAG", "AUTOMATYCZNA JAKOŚĆ NISKA"],
 
   // (v1.4.79) TRANSLATIONS, v1.4.81: the clearer menu
   ["▶ START", "▶ BEGIN", "▶ START"],
@@ -8023,6 +8035,150 @@ const DICT_ROWS                             = [
     "THE RACE WITH THE BLACK HOLE BISTRO NOW HAS A LITTLE TRACK: YOUR DINER AND THEIR SAUCER, HEADING FOR THE FLAG",
     "DIE WEDLOOP MET DIE SWARTGAT-BISTRO HET NOU 'N KLEIN RENBAAN: JOU KAFEE EN HULLE PIERING, OP PAD NA DIE VLAG",
     "WYŚCIG Z BISTRO CZARNA DZIURA MA TERAZ MAŁY TOR: TWOJA KAWIARNIA I ICH SPODEK PĘDZĄ DO FLAGI",
+  ],
+  // (v1.8.68) PAUSE IS BACK
+  ["PAUSE IS BACK", "POUSE IS TERUG", "PAUZA WRACA"],
+  [
+    "THE PAUSE BUTTON SHOWS AGAIN DURING A GAME - ON A PHONE THERE WAS NO WAY TO PAUSE",
+    "DIE POUSE-KNOPPIE WYS WEER TYDENS 'N SPEL - OP 'N FOON WAS DAAR GEEN MANIER OM TE POUSEER NIE",
+    "PRZYCISK PAUZY ZNÓW JEST WIDOCZNY W CZASIE GRY - NA TELEFONIE NIE DAŁO SIĘ ZATRZYMAĆ GRY",
+  ],
+  [
+    "A TAP SKIPS THE WARP BETWEEN STOPS AND THE LONG ANDROMEDA SCENES, AS A KEY DOES",
+    "'N TIK SLAAN DIE SPRONG TUSSEN STOPS EN DIE LANG ANDROMEDA-TONELE OOR, SOOS 'N SLEUTEL",
+    "STUKNIĘCIE POMIJA SKOK MIĘDZY PRZYSTANKAMI I DŁUGIE SCENY Z ANDROMEDY, TAK JAK KLAWISZ",
+  ],
+  [
+    "ESC SKIPS THE WARP TOO, AND A CONTROLLER'S START MOVES THE STORY, THE ARRIVAL AND THE WARP ON",
+    "ESC SLAAN OOK DIE SPRONG OOR, EN 'N BEHEERDER SE START SKUIF DIE STORIE, DIE AANKOMS EN DIE SPRONG AAN",
+    "ESC TEŻ POMIJA SKOK, A START NA PADZIE PRZESUWA DALEJ OPOWIEŚĆ, PRZYLOT I SKOK",
+  ],
+  [
+    "MUTING OR GOING FULL SCREEN ON THE ARRIVAL SCREEN NO LONGER STARTS THE STOP",
+    "OM DIE KLANK AF TE SIT OF VOLSKERM TE GAAN OP DIE AANKOMSSKERM BEGIN NIE MEER DIE STOP NIE",
+    "WYCISZENIE LUB PEŁNY EKRAN NA EKRANIE PRZYLOTU NIE ZACZYNA JUŻ PRZYSTANKU",
+  ],
+  // (v1.8.67) FIND YOUR WAY
+  ["FIND YOUR WAY", "VIND JOU PAD", "ZNAJDŹ DROGĘ"],
+  [
+    "RESUMING WITH A CONTROLLER NO LONGER MOVES YOUR BARTENDER OR SETS OFF THE CROSS",
+    "AS JY MET 'N BEHEERDER VOORTGAAN, SKUIF JOU KROEGMAN NIE MEER NIE EN GAAN DIE KRUIS NIE AF NIE",
+    "WZNOWIENIE GRY PADEM NIE PRZESUWA JUŻ BARMANA ANI NIE UŻYWA KRZYŻA",
+  ],
+  [
+    "HOW TO PLAY AND WHAT'S NEW SCROLL WITH THE ARROWS AND THE D-PAD",
+    "HOE OM TE SPEEL EN WAT IS NUUT ROL MET DIE PYLE EN DIE RIGTINGSKNOPPIE",
+    "JAK GRAĆ I CO NOWEGO PRZEWIJAJĄ SIĘ STRZAŁKAMI I KRZYŻAKIEM",
+  ],
+  [
+    "ENTER STARTS OR RESUMES AFTER YOU CLICKED A BUTTON - IT PRESSED THAT BUTTON AGAIN",
+    "ENTER BEGIN OF GAAN VOORT NADAT JY 'N KNOPPIE GEKLIK HET - DIT HET DAARDIE KNOPPIE WEER GEDRUK",
+    "ENTER ZACZYNA LUB WZNAWIA GRĘ PO KLIKNIĘCIU PRZYCISKU - WCZEŚNIEJ NACISKAŁ TEN PRZYCISK PONOWNIE",
+  ],
+  [
+    "THE NAME BOXES CAN BE REACHED WITH THE KEYBOARD, AND P PAUSES THE BONUS ROUND",
+    "DIE NAAMBLOKKIES IS MET DIE SLEUTELBORD BEREIKBAAR, EN P POUSEER DIE BONUSRONDTE",
+    "DO PÓL NA IMIONA MOŻNA DOJŚĆ KLAWIATURĄ, A P PAUZUJE RUNDĘ BONUSOWĄ",
+  ],
+  // (v1.8.66) ONE TUNE AT A TIME
+  ["ONE TUNE AT A TIME", "EEN WYSIE OP 'N SLAG", "JEDNA MELODIA NA RAZ"],
+  [
+    "WITH YOUR OWN MUSIC ON, CLOSING THE MUSIC BOX NO LONGER LEAVES ITS SONG PLAYING OVER YOURS",
+    "MET JOU EIE MUSIEK AAN LAAT DIE MUSIEKDOOS SE LIEDJIE NIE MEER OOR JOUNE SPEEL AS JY DIT TOEMAAK NIE",
+    "Z WŁASNĄ MUZYKĄ ZAMKNIĘCIE SZAFY GRAJĄCEJ NIE ZOSTAWIA JUŻ JEJ PIOSENKI GRAJĄCEJ NA TWOJEJ",
+  ],
+  [
+    "EFFECTS VOLUME AT 0 SILENCES THE READ-ALOUD VOICE TOO, AND SOUND OFF STOPS IT MID-SENTENCE",
+    "EFFEKTE-VOLUME OP 0 MAAK OOK DIE VOORLEESSTEM STIL, EN KLANK AF STOP DIT MIDDEL IN 'N SIN",
+    "GŁOŚNOŚĆ EFEKTÓW NA 0 WYCISZA TEŻ LEKTORA, A WYŁĄCZENIE DŹWIĘKU PRZERYWA GO W PÓŁ ZDANIA",
+  ],
+  [
+    "THE QUIET SCREENSAVER DEMO STAYS QUIET IN THE DOWNLOADED COPY",
+    "DIE STIL SKERMBEWAARDER-DEMO BLY STIL IN DIE AFGELAAIDE KOPIE",
+    "CICHE DEMO WYGASZACZA EKRANU POZOSTAJE CICHE W POBRANEJ KOPII",
+  ],
+  // (v1.8.65) GENTLER STILL
+  ["GENTLER STILL", "NOG SAGTER", "JESZCZE ŁAGODNIEJ"],
+  [
+    "KID MODE: A SLIP IS A LITTLE STUMBLE - NO MORE BARTENDER THROWN DOWN THE BAR, NO HARD SHAKE, NO DRAGON'S ROAR",
+    "KINDERMODUS: 'N GLIPSIE IS 'N KLEIN STRUIKEL - GEEN KROEGMAN WAT MEER LANGS DIE TOONBANK GEGOOI WORD NIE, GEEN HARDE SKUD, GEEN DRAKEBRUL",
+    "TRYB DZIECIĘCY: POTKNIĘCIE TO MAŁE ZACHWIANIE - BARMAN NIE LECI JUŻ WZDŁUŻ LADY, BEZ MOCNEGO WSTRZĄSU I RYKU SMOKA",
+  ],
+  [
+    "CALM MODE: THE HYPERSPACE JUMP BETWEEN STOPS IS SLOWER AND STEADY, AND TWO STORY FLASHES ARE SOFTER",
+    "RUSTIGE MODUS: DIE HIPERRUIMTESPRONG TUSSEN STOPS IS STADIGER EN BESTENDIG, EN TWEE STORIEFLITSE IS SAGTER",
+    "TRYB SPOKOJNY: SKOK W NADPRZESTRZEŃ MIĘDZY PRZYSTANKAMI JEST WOLNIEJSZY I STABILNY, A DWA BŁYSKI W OPOWIEŚCI SĄ ŁAGODNIEJSZE",
+  ],
+  [
+    "BIG AND HUGE TEXT NOW REACH THE MINI-GAME INSTRUCTIONS",
+    "GROOT EN BAIE GROOT TEKS GELD NOU OOK VIR DIE MINISPELETJIES SE AANWYSINGS",
+    "DUŻY I OGROMNY TEKST OBEJMUJE TERAZ TEŻ INSTRUKCJE MINIGIER",
+  ],
+  [
+    "THE STRETCH BREAK'S COUNTDOWN IS TRANSLATED",
+    "DIE REKPOUSE SE AFTELLING IS VERTAAL",
+    "ODLICZANIE PRZERWY NA ROZCIĄGANIE JEST PRZETŁUMACZONE",
+  ],
+  // (v1.8.64) STORY STRAIGHTENED
+  ["STORY STRAIGHTENED", "STORIE REGGESTEL", "OPOWIEŚĆ UPORZĄDKOWANA"],
+  [
+    "AN ENVOY FROM ANDROMEDA COMES BACK AFTER A SLIP - THE STOP'S STAMP WAS LOST",
+    "'N GESANT VAN ANDROMEDA KOM TERUG NA 'N GLIPSIE - DIE STOP SE STEMPEL HET VERLORE GEGAAN",
+    "POSEŁ Z ANDROMEDY WRACA PO POTKNIĘCIU - PIECZĄTKA Z PRZYSTANKU PRZEPADAŁA",
+  ],
+  [
+    "RELAX MODE NO LONGER USES UP THE TOUR'S OPENING STORY",
+    "ONTSPAN GEBRUIK NIE MEER DIE TOER SE OPENINGSTORIE OP NIE",
+    "TRYB RELAKSU NIE ZUŻYWA JUŻ OPOWIEŚCI NA POCZĄTEK TRASY",
+  ],
+  [
+    "THE WELCOME LINES OF RELAX, ENDLESS, TIME ATTACK, BOSS RUSH AND CONTINUE ARE SHOWN AGAIN",
+    "DIE WELKOMSREËLS VAN ONTSPAN, EINDLOSE SPEL, TYDJAG, BAAS-STORMLOOP EN GAAN VOORT WORD WEER GEWYS",
+    "POWITANIA TRYBU RELAKSU, BEZ KOŃCA, NA CZAS, SZTURMU NA BOSSÓW I KONTYNUACJI ZNÓW SIĘ POKAZUJĄ",
+  ],
+  [
+    "CHEF GRUMBLO NO LONGER GETS ANNOUNCED AND THEN STAYS AWAY",
+    "SJEF GRUMBLO WORD NIE MEER AANGEKONDIG EN BLY DAN WEG NIE",
+    "SZEF GRUMBLO NIE JEST JUŻ ZAPOWIADANY, BY POTEM SIĘ NIE ZJAWIĆ",
+  ],
+  // (v1.8.63) IN YOUR LANGUAGE
+  ["IN YOUR LANGUAGE", "IN JOU TAAL", "W TWOIM JĘZYKU"],
+  [
+    "THE PAUSE SCREEN'S MUSIC LABEL AND QUALITY NOTE ARE TRANSLATED TOO",
+    "DIE POUSESKERM SE MUSIEKETIKET EN GEHALTENOTA IS OOK VERTAAL",
+    "ETYKIETA MUZYKI I UWAGA O JAKOŚCI NA EKRANIE PAUZY SĄ TEŻ PRZETŁUMACZONE",
+  ],
+  [
+    "AFRIKAANS: A SHORTER RESTART BUTTON, SO THE STOP'S NAME FITS ON A PHONE",
+    "AFRIKAANS: 'N KORTER HERBEGIN-KNOPPIE, SODAT DIE STOP SE NAAM OP 'N FOON PAS",
+    "AFRIKAANS: KRÓTSZY PRZYCISK RESTARTU, BY NAZWA PRZYSTANKU MIEŚCIŁA SIĘ NA TELEFONIE",
+  ],
+  [
+    "POLISH: THE CONTINUE BUTTON READS RIGHT",
+    "POOLS: DIE GAAN VOORT-KNOPPIE LEES REG",
+    "POLSKI: PRZYCISK KONTYNUUJ BRZMI POPRAWNIE",
+  ],
+  // (v1.8.62) HOLD THAT THOUGHT
+  ["HOLD THAT THOUGHT", "WAG 'N BIETJIE", "CHWILECZKĘ"],
+  [
+    "THE MINI-GAMES AND THE BONUS ROUND PAUSE TOO WHEN YOU SWITCH WINDOWS OR APPS",
+    "DIE MINISPELETJIES EN DIE BONUSRONDTE WAG OOK AS JY NA 'N ANDER VENSTER OF TOEP GAAN",
+    "MINIGRY I RUNDA BONUSOWA TEŻ SIĘ ZATRZYMUJĄ, GDY PRZEŁĄCZASZ OKNO LUB APLIKACJĘ",
+  ],
+  [
+    "A PAUSE NO LONGER EATS INTO A CO-OP TWIN PAIR, A COMBO OR A STORY VISITOR'S TIMING",
+    "'N POUSE VAT NIE MEER TYD AF VAN 'N TWEELINGPAAR IN SAAMSPEEL, 'N KOMBO OF 'N STORIEBESOEKER NIE",
+    "PAUZA NIE ZJADA JUŻ CZASU PARY BLIŹNIAKÓW W KOOPERACJI, COMBO ANI GOŚCIA Z OPOWIEŚCI",
+  ],
+  [
+    "TURN YOUR PHONE MID-GAME AND THE TOUCH ARROWS SAY RUN OR BAR RIGHT AWAY",
+    "DRAAI JOU FOON IN DIE SPEL EN DIE RAAKPYLE SÊ DADELIK HARDLOOP OF TOONBANK",
+    "OBRÓĆ TELEFON W TRAKCIE GRY, A STRZAŁKI OD RAZU POKAŻĄ BIEGNIJ ALBO LADA",
+  ],
+  [
+    "A PAUSE JUST AFTER A STOP NO LONGER LOSES THE FLAWLESS OR DREAM SHIFT MESSAGE",
+    "'N POUSE NET NA 'N STOP VERLOOR NIE MEER DIE FOUTLOOS- OF DROOMSKOF-BOODSKAP NIE",
+    "PAUZA TUŻ PO PRZYSTANKU NIE GUBI JUŻ KOMUNIKATU BEZBŁĘDNIE ANI WYMARZONA ZMIANA",
   ],
   // (v1.8.61) BACK TO THE CUP
   ["BACK TO THE CUP", "TERUG NA DIE BEKER", "Z POWROTEM DO PUCHARU"],
@@ -12195,6 +12351,8 @@ const DICT_PAT                             = [
   [/^TEAM (\d+)(\s+)HI (\d+)$/, "SPAN $1$2BESTE $3", "DRUŻYNA $1$2REKORD $3"], // (v1.6.13: co-op's team score)
   [/^VERSUS(\s+)HI (\d+)$/, "TEEN$1BESTE $2", "POJEDYNEK$1REKORD $2"],
   [/^SCORE (\d+)$/, "TELLING $1", "WYNIK $1"],
+  // (v1.8.65) the break reminder's countdown
+  [/^STRETCH FOR (\d+)\.\.\.$/, "REK VIR $1...", "ROZCIĄGAJ SIĘ JESZCZE $1..."],
   [/^STAGE (\d+)$/, "VLAK $1", "ETAP $1"],
   [
     /^PRESS (\w+) TO POUR - LET GO TO SLIDE IT$/,
@@ -12805,8 +12963,17 @@ function resize() {
   hud.height = Math.round(cssH * hdpr);
   pxScale = (cv ? RH : cssH) / H;
   u = cssH / H;
+  // (v1.8.62) TURNED MID-GAME: the touch buttons' labels (RUN / BAR) were only set when the panels were next shown -
+  // after turning the phone, the arrows changed bar while they still said RUN, until the next pause or stop
+  if ($("tLeftL")) {
+    $("tLeftL").textContent = $("tRightL").textContent = VERT ? "BAR" : "RUN";
+    $("tUpL").textContent = $("tDownL").textContent = VERT ? "RUN" : "";
+  }
+  if ($("turnHint") && typeof coarse !== "undefined") $("turnHint").hidden = !(coarse && cssH > cssW);
 }
 window.addEventListener("resize", resize);
+// (v1.8.62: and on a phone's turn itself - some browsers send the resize before the new size is known)
+window.addEventListener("orientationchange", () => setTimeout(resize, 150));
 // LOOK: 0 = ARCADE (16-bit pixels, 512 colours, dithered), 1 = 8-BIT (chunky pixels, 64 colours), 2 = SMOOTH HD
 const LOOKS_UI = ["ARCADE PIXELS", "8-BIT", "SMOOTH HD"],
   LOOK_PX = [1.25, 2, 1], // (v1.4.13: ARCADE a little finer - 1.25 units a pixel, so faces, hands and clothes read)
@@ -15390,6 +15557,7 @@ function keepScore() {
 }
 function toMenu() {
   keepScore();
+  G.mini = null; // (v1.8.62: quit from a paused mini-game, it stayed set - and kept the cosmic weather away next game)
   if (CUP.match) {
     CUP.match = null;
     if (CUP.keep) {
@@ -15666,11 +15834,20 @@ window.addEventListener("keydown", (e) => {
     beginGame();
     return;
   }
-  if (G.state === "jump" && ["Space", "Enter", "KeyX", "KeyK", "ControlLeft", "ControlRight"].includes(k)) {
+  // (v1.8.68: Esc too, as it skips every other scene)
+  if (
+    G.state === "jump" &&
+    ["Space", "Enter", "KeyX", "KeyK", "ControlLeft", "ControlRight", "Escape"].includes(k)
+  ) {
     skipJump();
     return;
   }
   if (G.state === "bonus" && bonus && bonus.phase === "pick") {
+    // (v1.8.67: P pauses here too - this block returned before the pause key was looked at)
+    if (k === "KeyP") {
+      pause(true);
+      return;
+    }
     if (k === "ArrowUp" || k === "KeyW" || k === "KeyE") {
       bonusPeek();
     }
@@ -15699,7 +15876,9 @@ window.addEventListener("keydown", (e) => {
 window.addEventListener("keyup", (e) => keys.delete(e.code));
 window.addEventListener("blur", () => {
   keys.clear();
-  if (G.state === "play") pause(true);
+  // (v1.8.62: the mini-games and the bonus round too - clicking another window let the round play on, with the
+  //  keys let go, and it was lost)
+  if (["play", "bonus", "mini"].includes(G.state)) pause(true);
 });
 // (v1.8.53) A CONTROLLER UNPLUGGED (or its battery flat) PAUSES THE GAME: it played on - and with two players the other
 // controller, now the only one, was read as player 2's, so player 1 steered the wrong bartender and lost lives
@@ -15833,6 +16012,7 @@ function readPads() {
   // menus: D-pad moves between buttons, A chooses, B goes back
   if (csTwo) for (const k in pressedEdge2) pressedEdge2[k] = false; // (player 2's pad only chooses here - no moves left over)
   if (typeof panelNav === "function" && panelNav()) {
+    const wasPaused = G.state === "paused"; // (v1.8.67: see below)
     const own = csTwo ? (CS.who ? pad2 : pad) : null; // (v1.5.83: whose turn it is - only their pad counts)
     const e = (k) =>
       own ? own[k] && !own[k + "W"] : (pad[k] && !pad[k + "W"]) || (pad2[k] && !pad2[k + "W"]);
@@ -15873,6 +16053,9 @@ function readPads() {
         else if (G.state === "over") beginGame();
       }
     }
+    // (v1.8.67: back from the pause menu, this frame's buttons are done with - A on RESUME in the bonus round's pick
+    //  also picked the cup under the spotlight, A being POUR too)
+    if (wasPaused && G.state !== "paused") return;
     if (pad.start && !pad.startW && JB.open) {
       closeJukebox();
       return;
@@ -15914,6 +16097,20 @@ function readPads() {
   }
   if (G.state === "story" && G.story && G.story.t > 0.5 && bEdge) {
     G.story.skip = true;
+    return;
+  }
+  // (v1.8.68: START moves the scenes on too - in the story, on the arrival screen and in the warp it did nothing, as
+  //  those can't be paused)
+  if (pad.start && !pad.startW && G.state === "story" && G.story && G.story.t > 0.5) {
+    G.story.skip = true;
+    return;
+  }
+  if (pad.start && !pad.startW && G.state === "approach" && G.appr && G.appr.t > 0.5) {
+    G.appr.skip = true;
+    return;
+  }
+  if (pad.start && !pad.startW && G.state === "jump") {
+    skipJump();
     return;
   }
   if (pad.start && !pad.startW) {
@@ -16628,7 +16825,9 @@ function update(dt) {
   musxUpdate(dt); // (v1.4.7) ...and how well you are doing
   voiceUpdate();
   modesUpdate(dt);
-  G.time += dt;
+  // (v1.8.62) THE CLOCK STOPS FOR A PAUSE: G.time ran on behind the pause screen - a co-op twin's 4 seconds, the combo's
+  // window and the story's visitors all counted the pause as time gone (pause after one twin: the pair was lost)
+  if (G.state !== "paused") G.time += dt;
   G.fadeT = Math.max(0, (G.fadeT || 0) - dt);
   if (G.state === "play" && G.fever > 0) {
     G.fever = Math.max(0, G.fever - dt);
@@ -16745,7 +16944,10 @@ function update(dt) {
   }
   if (G.state === "lost") {
     G.lostT -= dt;
-    for (const p of PL) p.throwT = Math.max(0, p.throwT - dt);
+    for (const p of PL) {
+      p.throwT = Math.max(0, p.throwT - dt);
+      if (DF().kid) p.slipT = Math.max(0, (p.slipT || 0) - dt); // (v1.8.68: kid mode's stumble plays out here)
+    }
     if (G.lostT <= 0) afterLoss();
     return;
   }
@@ -20842,7 +21044,7 @@ function coopLevelClear(demo) {
     addCoins(10, "DREAM SHIFT");
     fStat("dreamShifts");
     setTimeout(() => {
-      if (G.state !== "clear") return;
+      if (G.state !== "clear" && !(G.state === "paused" && G.prev === "clear")) return; // (v1.8.62: not lost to a pause)
       callout("DREAM SHIFT!  +" + got + " EACH", "#ffd24d", 2.8);
       sfx("fanfare", PW / 2);
       for (let k = 0; k < (COMFORT.calm ? 12 : 40); k++) confetti(rnd(0, PW), -10, 1);
@@ -21783,9 +21985,19 @@ function lose(why, lane, x) {
   const y = LY(lane, x);
   if (why === "shake" || why === "empty") {
     smash(x, y - 14, lane);
+    // (v1.8.65: smash() shakes hard and jolts the screen - in kid mode the small shake set above wins after all)
+    if (DF().kid) {
+      G.shake = 3;
+      G.kick = 0;
+    }
     sfx(DF().kid ? "boing" : "smash", x); // (v1.8.48: see above)
     // (v1.5.39: the reason goes straight to the front of the sign - see calloutNow in endgame.ts)
     if (!DF().kid) calloutNow(why === "shake" ? "NOBODY CAUGHT IT!" : "YOU MISSED THE EMPTY!", "#ff5fa8", 2);
+  } else if (DF().kid) {
+    // (v1.8.65) KID MODE: A STUMBLE, NOT A THROW - the bartender was still flung spinning down the bar
+    P.slipT = 1.3;
+    P.slipDir = 1;
+    sfx("boing", P.x);
   } else {
     P.throwT = 1.6;
     P.lane = lane;
@@ -21832,6 +22044,8 @@ function afterLoss() {
   // keeps half the shakes he'd drunk (never enough to come back furious), so a lost life costs ground, not the fight
   const bc = customers.find((c) => c.type.boss && c.state !== "out" && (c.fed || 0) > 0);
   if (bc) G.bossFed = Math.floor(Math.min(bc.fed, (bc.type.need || 1) - 1) / 2);
+  // (v1.8.64: an envoy not yet served comes back a little later - cleared away with the rest, the stop's stamp was lost)
+  if (customers.some((c) => c.envoy && c.state !== "out")) G.envoyAt = G.time + 3;
   customers = customers.filter((c) => c.state === "out");
   shakes = [];
   empties = [];
@@ -22516,6 +22730,15 @@ function updateBonus(dt) {
     const tx = domePos(b.sel)[0];
     b.spotX = b.spotX === undefined ? tx : b.spotX + (tx - b.spotX) * Math.min(1, dt * 16);
   } // (the spotlight glides from cup to cup)
+  // (v1.8.65) ONE-BUTTON MODE: the spotlight moves along the cups by itself, one a second, and POUR picks the lit one -
+  // with one button there was no way to move it, only the cup it started on could be chosen
+  if (b.phase === "pick" && oneBtn() && !G.demo) {
+    b.obT = (b.obT || 0) + dt;
+    if (b.obT >= 1.1) {
+      b.obT = 0;
+      bonusStep(1);
+    }
+  }
   if (b.phase === "show") {
     if (b.t < 0.5) b.lift = Math.max(0, b.t / 0.5);
     if (b.t <= 0) {
@@ -34298,7 +34521,8 @@ function drawPlayer(t) {
     y = LY(lane, P.x) + 30,
     rot = 0,
     flying = false;
-  if (G.state === "lost" && G.lost && G.lost.why === "grab" && G.lost.lane === lane) {
+  // (v1.8.68: not in kid mode - there the bartender stumbles where they stand instead of being thrown)
+  if (G.state === "lost" && G.lost && G.lost.why === "grab" && G.lost.lane === lane && !DF().kid) {
     const k = 1 - P.throwT / 1.6;
     x = X1 - k * 360;
     y = LY(lane, x) - 6 - Math.sin(k * Math.PI) * 50;
@@ -36495,8 +36719,8 @@ function drawVert(V, t) {
   }
   for (const pl of shownPlayers()) {
     let x = pl.x;
-    if (G.state === "lost" && G.lost && G.lost.why === "grab" && G.lost.lane === pl.lane)
-      x = X1 - (1 - pl.throwT / 1.6) * 360; // thrown back up the bar
+    if (G.state === "lost" && G.lost && G.lost.why === "grab" && G.lost.lane === pl.lane && !DF().kid)
+      x = X1 - (1 - pl.throwT / 1.6) * 360; // thrown back up the bar (v1.8.68: not in kid mode - a stumble there)
     list.push({ x: x + 0.9, f: () => drawSpeedTrails(t, pl) });
     list.push({
       x: x + 1,
@@ -45879,7 +46103,11 @@ function drawJump(t) {
       const sp = 0.4 + hash(i * 2.3) * 1.6,
         y = T + hash(i * 5.1) * h,
         len = smear * w * (0.08 + sp * 0.25) + 2,
-        x = Rr - ((t * sp * (300 + smear * 2600) + hash(i * 9.7) * (w + len)) % (w + len));
+        // (v1.8.65: CALM MODE - the stars stream past at a third of the speed)
+        x =
+          Rr -
+          ((t * (COMFORT.calm ? 0.35 : 1) * sp * (300 + smear * 2600) + hash(i * 9.7) * (w + len)) %
+            (w + len));
       line(
         x,
         y,
@@ -45917,7 +46145,10 @@ function drawJump(t) {
     for (let i = 0; i < 80; i++) {
       const y = T + hash(i * 3.7) * h,
         len = w * (0.2 + hash(i) * 0.5),
-        x = Rr - ((t * (2600 + hash(i * 1.3) * 2400) + hash(i * 8.1) * (w + len)) % (w + len));
+        x =
+          Rr -
+          ((t * (COMFORT.calm ? 0.35 : 1) * (2600 + hash(i * 1.3) * 2400) + hash(i * 8.1) * (w + len)) %
+            (w + len)); // (v1.8.65: calm - slower)
       line(x, y, x + len, y, 1 + hash(i * 4) * 2, withA(col(i % 3 ? "#8ab0ff" : "#ffffff"), 0.42 * hk));
     }
     R.setAdd(false);
@@ -45938,7 +46169,8 @@ function drawJump(t) {
           ? w * 0.06
           : w * 0.06 * (1 - ease(arr))),
     cy =
-      (VERT ? T + h * 0.5 : T + h * 0.2 + 330 * K) + (hyper ? Math.sin(t * 47) * 2 : Math.sin(t * 1.3) * 4); // (wide: the straw's tip just under the title)
+      (VERT ? T + h * 0.5 : T + h * 0.2 + 330 * K) +
+      (hyper && !COMFORT.calm ? Math.sin(t * 47) * 2 : Math.sin(t * 1.3) * 4); // (v1.8.65: no shudder in calm mode) (wide: the straw's tip just under the title)
   if (hyper || (j > 7 && dec > 0)) {
     const a = hyper ? 1 : dec;
     R.setAdd(true);
@@ -52999,7 +53231,7 @@ function kidUpdate(dt, demo) {
         fed: G.bossFed || 0, // (v1.8.58: back after a lost life with half of what he'd drunk - twists.ts afterLoss)
         bornT: G.time,
       });
-      sfx("dragon", X0);
+      sfx(DF().kid ? "boing" : "dragon", X0); // (v1.8.65: no dragon's roar for the little ones)
       callout("BOSS!  " + NICE[bk] + " WANTS " + (T0.need - (G.bossFed || 0)) + " SHAKES!", "#ff5fd8", 3);
       G.flash = 0.3;
       G.flashC = [1, 0.4, 0.9, 1];
@@ -55724,7 +55956,11 @@ function freeStart() {
   if (G.state !== "menu") return;
   sfx("click");
   G.freeNext = true;
+  // (v1.8.64: the tour's opening isn't played in RELAX mode - played there first, it was then missing from the real tour)
+  const ki = G.introShown;
+  G.introShown = true;
   startGame();
+  G.introShown = ki;
   callout("RELAX MODE  ·  NO LOSING, NO HURRY - JUST ENJOY IT", "#5ff5c8", 3.2);
 }
 function kids2GameStart() {
@@ -59040,7 +59276,7 @@ function drawInterJump(t) {
     cy =
       T +
       h * ((VERT ? 0.62 : 0.66) + 0.12 * arr - 0.42 * dep) +
-      (hyper ? Math.sin(t * 47) * 2 : Math.sin(t * 1.3) * 4);
+      (hyper && !COMFORT.calm ? Math.sin(t * 47) * 2 : Math.sin(t * 1.3) * 4); // (v1.8.65: no shudder in calm mode)
   push();
   translate(cx, cy);
   scaleBy(K * (1 - 0.3 * arr) * (1 - 0.45 * dep));
@@ -59751,7 +59987,7 @@ function drawInvasion(L, Rr, T, B, f, t) {
     pixText(invT("FOR SHAKES!"), px, py - 67 * k, 1.15 * k, A(0.08));
   }
   // THE OLD FILM: flicker, grain, scratches, a dark vignette, the odd jump in the picture
-  const fl = 0.06 + 0.05 * Math.sin(t * 37) * Math.sin(t * 13);
+  const fl = 0.06 + (COMFORT.calm ? 0 : 0.05 * Math.sin(t * 37) * Math.sin(t * 13)); // (v1.8.65: no flicker in calm mode)
   rect(L, T, w, h, A(0, fl));
   for (let i = 0; i < 70; i++)
     rect(
@@ -67532,6 +67768,12 @@ function breakRefresh() {
 // (v1.4.74) on a phone held upright the mini-games play on a narrower field (the middle of the wide one), so the
 // whole thing can be drawn about a third bigger and fill more of the screen
 const MINI_TALL = () => VERT;
+// (v1.8.68) THE STORK FLIES WHERE YOU CAN SEE HIM: at x 200 he sat at the very left edge of a phone held upright (that view
+// starts further right), his tail and a wing cut off all round - he keeps 150 units clear of the screen's left edge
+const storkX = () => {
+  const F = typeof miniFit === "function" ? miniFit() : null; // (the tall view's own camera for the mini-games, draw.ts)
+  return F ? Math.max(200, PW / 2 - W / (2 * F.s) + 150) : 200;
+};
 const MINI_KINDS = ["cherry", "stork", "mixer"],
   MINI_NAMES = { cherry: "CHERRY CATCH", stork: "BOGDAN'S SPACE DELIVERY", mixer: "THE SHAKE MIXER" };
 // (v1.5.95) the cherry duel's own instructions
@@ -67612,7 +67854,8 @@ function startMiniGame() {
     const M = G.mini,
       mk = (id, x, y) =>
         Object.assign(Object.create(M), { id, x, y, vy: 0, crashed: false, spin: 0, hurt: 0, score: 0 });
-    M.gl = [mk(0, 230, 200), mk(1, 230, 360)]; // (v1.8.33: side by side - player 2 started 130 px further on, first to every star and later warned of every rock)
+    const sx0 = storkX() + 30; // (v1.8.68: clear of the left edge on an upright phone too)
+    M.gl = [mk(0, sx0, 200), mk(1, sx0, 360)]; // (v1.8.33: side by side - player 2 started 130 px further on, first to every star and later warned of every rock)
   }
   G.callouts = [];
   // (v1.8.3) GRAVITY IN THE MINI-GAMES: what drops into the glass falls slowly on a light world and fast on a heavy one
@@ -67809,7 +68052,7 @@ function funMiniUpdate(dt) {
     for (const it of M.items) {
       it.x += it.vx * dt;
       it.rot += dt;
-      const d = Math.hypot(it.x - 200, it.y - M.y);
+      const d = Math.hypot(it.x - storkX(), it.y - M.y);
       if (!it.dead && !M.crashed && d < it.r + 22) {
         if (it.kind === "star") {
           it.dead = true;
@@ -68391,7 +68634,7 @@ function drawMini(t) {
             const a = i * 1.05,
               dd = k * 70;
             push();
-            translate((f.bx ?? 200) + Math.cos(a) * dd, (f.by ?? M.y) + Math.sin(a) * dd - k * 20); // (v1.5.96: whose)
+            translate((f.bx ?? storkX()) + Math.cos(a) * dd, (f.by ?? M.y) + Math.sin(a) * dd - k * 20); // (v1.5.96: whose)
             rotate(a + k * 4);
             disc(0, 0, 4, withA(C.white, 1 - k), 1.6);
             pop();
@@ -68400,7 +68643,7 @@ function drawMini(t) {
     }
     // (v1.5.96: in the stork race, two storks - each with a pink or blue glow round it, whose is whose)
     for (const b of M.gl || [M]) {
-      const bx = M.gl ? b.x : 200;
+      const bx = M.gl ? b.x : storkX();
       if (M.gl) {
         R.setAdd(true);
         glow(bx, b.y, 58, withA(col(b.id ? "#5fb0ff" : "#ff5fa8"), b.crashed ? 0.12 : 0.3));
@@ -68742,6 +68985,7 @@ const ENVOY_LINES = [
 ];
 const envoyTour = () => !G.demo && !G.endless && !G.free && !G.ta && !G.brush && !G.daily && !CUP.match; // (v1.7.2: not in a cup match either)
 function envoyLevelStart() {
+  G.stamps0 = G.stamps || 0; // (v1.8.64: the stamps at the start of this stop - what CONTINUE remembers, see contRemember)
   // (one envoy on about six stops in ten, a little while into the stop - never on the festival's own stop)
   G.envoyAt = envoyTour() && G.level < LAST_LEVEL && Math.random() < 0.6 ? G.time + rnd(8, 20) : -1;
   // (v1.8.19: paid once a game - a crash recovery starting the stop again used to pay them twice)
@@ -68992,7 +69236,7 @@ function rivalClear() {
   fStat("races");
   G.rivalWins = (G.rivalWins || 0) + 1;
   setTimeout(() => {
-    if (G.state !== "clear") return;
+    if (G.state !== "clear" && !(G.state === "paused" && G.prev === "clear")) return; // (v1.8.62: not lost to a pause)
     callout("YOU BEAT THE BLACK HOLE BISTRO!  +" + got * active().length, "#c69bff", 2.8);
     G.callouts.push({
       text: RIVAL_WIN_LINES[(G.rivalWins - 1) % RIVAL_WIN_LINES.length],
@@ -69200,7 +69444,10 @@ function queenServed(c, s, demo) {
 // (a guest of his own, with a purple CHEF GRUMBLO sign): serve your old rival a shake and he finally admits it
 function grumbloUpdate() {
   if (!G.queenDone || G.grumbloDone || G.level !== LAST_LEVEL || !envoyTour() || G.state !== "play") return;
+  // (v1.8.64: and only with a few customers still to come - with the crowd done before he walked in, he was announced
+  //  and never came)
   if (G.time - (G.queenT || 0) < 4 || G.served >= G.total) return;
+  if (!(G.grumbloAt > 0) && G.total - G.served < 3) return;
   if (customers.some((o) => o.grumblo && o.state !== "out")) return;
   if (!(G.grumbloAt > 0)) {
     G.grumbloAt = G.time + 2;
@@ -70048,7 +70295,7 @@ function funHud(g, s, t, fD, sx, sy) {
           16 * s,
           M.who ? "#5fb0ff" : "#ff5fa8"
         );
-      g.font = "600 " + Math.round(15 * s) + "px " + FB;
+      g.font = "600 " + Math.round(15 * s * TXT()) + "px " + FB; // (v1.8.65: BIG / HUGE TEXT too - the spacing had it already)
       g.fillStyle = "#fff3e2";
       wrapLines(
         g,
@@ -70081,7 +70328,7 @@ function funHud(g, s, t, fD, sx, sy) {
         g.fillStyle = /LOW/.test(M.grav) ? "#9fe8ff" : "#ffb08a";
         fitText(g, M.grav, cssW / 2, cssH * 0.74, cssW - 40, "700 ", 14 * s, g.fillStyle);
         g.fillStyle = "#fff3e2";
-        g.font = "600 " + Math.round(15 * s) + "px " + FB;
+        g.font = "600 " + Math.round(15 * s * TXT()) + "px " + FB; // (v1.8.65)
       }
       // (v1.8.8) the mixer: today's recipe is the house cocktail
       if (M.ck !== undefined && HOUSE_CK[M.ck]) {
@@ -70109,7 +70356,7 @@ function funHud(g, s, t, fD, sx, sy) {
           ckText(ck)
         );
         g.fillStyle = "#fff3e2";
-        g.font = "600 " + Math.round(15 * s) + "px " + FB;
+        g.font = "600 " + Math.round(15 * s * TXT()) + "px " + FB; // (v1.8.65)
       }
       if (cd > 0) {
         g.fillText("GET READY...", cssW / 2, cssH * 0.5);
@@ -70765,7 +71012,7 @@ function contRemember() {
     p1: P1.score || 0,
     p2: P2.score || 0,
     n: G.contN || 0,
-    st: G.stamps || 0,
+    st: G.stamps0 ?? (G.stamps || 0), // (v1.8.64: as the stop began - a continue plays it again, and its envoy with it)
     rw: G.rivalWins || 0,
     fs: !!G.fromStart, // (v1.8.59: begun at the first stop - for GALACTIC CHAMPION)
     sp: !!G.stampsPaid, // (v1.8.22: already paid at the festival - the score saved above has them in it)
@@ -70787,6 +71034,7 @@ function continueGame() {
   // (v1.8.19) the festival stamps and races won come back too - and continuing at the Grand Festival itself, the
   // stamps are paid out now (the stop began before they were back)
   G.stamps = c.st || 0;
+  G.stamps0 = G.stamps; // (v1.8.64)
   G.rivalWins = c.rw || 0;
   G.fromStart = c.fs !== false; // (v1.8.59: a continue keeps where the tour began; an older save counts as from the start)
   G.stampsPaid = !!c.sp; // (v1.8.22: a continue at the festival used to pay them again, every time)
@@ -70890,8 +71138,11 @@ function openFP(id) {
   showPanels();
   sfx("click");
   setTimeout(() => {
-    const box = $k(FP_FIRST[id]),
-      el = box && (box.tagName === "BUTTON" ? box : box.children[0]);
+    const box = $k(FP_FIRST[id]);
+    let el = box && (box.tagName === "BUTTON" ? box : box.children[0]);
+    // (v1.8.68: with a controller, a name box isn't where to start - the CUP opened with the cursor in PLAYER 1's name)
+    if (el && el.tagName === "INPUT" && lastDev === "pad")
+      el = ((el.closest("section.panel") || box).querySelector("button")                     ) || el;
     // (v1.5.44) THE PANEL OPENS AT ITS TOP: putting the focus on its first button scrolled the panel to it - WHAT'S NEW
     // (whose first button is DONE, pinned at the bottom) opened part-way down, its title and the newest version out of
     // sight. Now the focus goes there without scrolling, and the panel only scrolls if that button can't be seen
@@ -71210,13 +71461,28 @@ function funPanelsInit() {
     if (G.state === "story" && G.story && ["Escape", "Enter", "Space"].includes(e.code) && G.story.t > 0.5) {
       if (e.code === "Escape") G.story.skip = true;
     }
-    if (G.state === "approach" && G.appr && G.appr.t > 0.5 && !["F11"].includes(e.code)) G.appr.skip = true;
+    // (v1.8.68: not the settings keys - M to mute, F for full screen... changed the setting AND threw you into the stop)
+    if (
+      G.state === "approach" &&
+      G.appr &&
+      G.appr.t > 0.5 &&
+      !e.ctrlKey &&
+      !e.metaKey &&
+      !["F11", "KeyM", "KeyN", "KeyG", "KeyL", "KeyC", "KeyF", "KeyV", "KeyT"].includes(e.code)
+    )
+      G.appr.skip = true;
   });
   funMenuText();
 }
 // taps and drags on the game picture (from the game's own pointer handling)
 function funPointer(type, x, y) {
   if (G.state === "castaway") return castawayPointer(type, x, y); // (v1.4.10: CASTAWAY ISLAND)
+  // (v1.8.68: a tap skips the warp between stops, as a key does - and the crossing to Andromeda and its heart (which say
+  //  TAP TWICE TO SKIP) - touch had no way past them)
+  if (G.state === "jump" && G.jump) {
+    if (type === "down") skipJump();
+    return true;
+  }
   if (G.state === "mini" && G.mini) {
     const M = G.mini;
     if (type === "down") {
@@ -71387,7 +71653,9 @@ function funApproachUpdate(dt) {
   if ((inp.pour && !A0.held && A0.t > 0.5) || A0.skip || A0.t >= APPROACH_LEN) {
     G.appr = null;
     G.state = "play";
-    G.callouts = G.apprCalls || [];
+    // (v1.8.64: and what was said during the arrival screen is kept too - the CONTINUE line, the festival stamps paid on a
+    //  continue at stop 40, RELAX / ENDLESS / TIME ATTACK / BOSS RUSH's opening lines were all thrown away here)
+    G.callouts = (G.apprCalls || []).concat(G.callouts || []);
     G.readyT = 1.9;
     G.pourLock = [true, true];
     G.fadeT = 0.45;
@@ -80616,8 +80884,9 @@ function drawTon618(L, Rr, T, B, f, t) {
   const flash = Math.max(0, 1 - Math.abs(f - 0.865) / 0.025);
   if (flash > 0) {
     R.setAdd(true);
-    glow(cx, cy, Rd * 6, C2("#ffffff", 0.6 * flash));
-    rect(L, T, w, h, C2("#dfe8ff", 0.25 * flash));
+    // (v1.8.65: through FLASH() - a quarter as bright in calm mode)
+    glow(cx, cy, Rd * 6, C2("#ffffff", 0.6 * flash * FLASH()));
+    rect(L, T, w, h, C2("#dfe8ff", 0.25 * flash * FLASH()));
     R.setAdd(false);
   }
 }
@@ -80851,7 +81120,8 @@ function levelClearMech(demo) {
   if (G.perfect) {
     G.flawless = (G.flawless || 0) + 1;
     setTimeout(() => {
-      if (G.state === "clear")
+      // (v1.8.62: or paused on the clear screen - a pause then lost the FLAWLESS message)
+      if (G.state === "clear" || (G.state === "paused" && G.prev === "clear"))
         G.callouts.push({
           text: "FLAWLESS!  SCORE x" + flawMul().toFixed(1) + " FROM NOW ON",
           c: "#ffd24d",
@@ -82995,7 +83265,7 @@ function drawGravFail(t, L, T, w, h) {
     flash = d.t < GF_ALARM ? 0.16 * pulse : on ? 0.045 * pulse : 0;
   if (flash > 0) {
     R.setAdd(true);
-    rect(L, T, w, h, withA(red, flash * (MOTION() < 0.5 ? 0.5 : 1)));
+    rect(L, T, w, h, withA(red, flash * (MOTION() < 0.5 ? 0.5 : 1) * Math.min(1, FLASH() * 2))); // (v1.8.65: softer in kid mode, as calm)
     R.setAdd(false);
   }
   // two spinning beacons, high up in the corners of the room
@@ -84522,7 +84792,7 @@ function levelOfTour(of) {
     inTour = ((lv - 1) % LAST_LEVEL) + 1;
   return (tour > 1 ? "TOUR " + tour + "  ·  " : "") + "LEVEL " + inTour + of + LAST_LEVEL;
 }
-const GAME_VERSION = "v1.8.61",
+const GAME_VERSION = "v1.8.68",
   GAME_DATE = "26.11.2026",
   VERSION_TEXT = GAME_VERSION + "  ·  " + GAME_DATE;
 const FB = '"Chakra Petch", "Segoe UI", sans-serif';
@@ -84919,7 +85189,9 @@ function drawHud(fps) {
     //  line just under the buttons)
     // (v1.4.77: the bonus round's long "BONUS · FIND THE ALIEN" too - with Skip showing there is hardly any room up there)
     // (v1.4.79: and whenever else the gap is that small - in Time Attack on a phone the venue's name had shrunk to 4px)
-    const drop = btnL && btnL - scoreW < 110;
+    // (v1.8.68: 170, not 110 - on GAME OVER on a phone held upright (no Pause button, so a little more room) the stop's
+    //  name stayed up in that gap and ran over the score and under "Full screen")
+    const drop = btnL && btnL - scoreW < 170;
     // (v1.4.79) how much of that row the LIVES take, measured - "LEWENS 9" and "ŻYCIA 9" are longer than "LIVES 9"
     let livesW = 84 * s;
     if (drop && !G.versus) {
@@ -84927,8 +85199,13 @@ function drawHud(fps) {
       livesW = Math.max(livesW, g.measureText(T("LIVES") + " 99").width + 34 * s);
       g.font = fD(px);
     }
+    // (v1.8.68: dropped to its own row, it starts after the holy water and crosses too - it ran over them from stop 2 on)
+    const dropL = Math.max(
+      scoreW,
+      G.level >= 2 && G.state !== "bonus" && HUDB.holyR ? HUDB.holyR + 8 * s : 0
+    ); // (not in the bonus round - no holy row there)
     signX = drop
-      ? (scoreW + cssW - (G.versus ? 0 : livesW)) / 2
+      ? (dropL + cssW - (G.versus ? 0 : livesW)) / 2
       : btnL
         ? (scoreW + btnL) / 2
         : cssW < 700
@@ -84942,7 +85219,7 @@ function drawHud(fps) {
     HUDB.scoreW = scoreW;
     signY = drop ? HUDB.b + 4 * s : 0;
     const room = drop
-        ? cssW - scoreW - (G.versus ? 16 : livesW + 16 * s) // (beside the LIVES on that row, when it's one player)
+        ? cssW - dropL - (G.versus ? 16 : livesW + 16 * s) // (beside the LIVES on that row, when it's one player)
         : btnL
           ? btnL - scoreW - 8
           : G.state === "menu"
@@ -85892,7 +86169,12 @@ function drawHud(fps) {
     //  cut short, and on a very narrow one only the frame rate is left)
     g.font = fB(12, 500);
     const room = cssW - 12 - g.measureText(VERSION_TEXT).width - 24 - 34 * s - 16 - songW,
-      tail = "  ·  " + fps + " FPS" + (QUAL < 2 ? "  ·  AUTO QUALITY " + (QUAL ? "MEDIUM" : "LOW") : "");
+      // (v1.8.63: AUTO QUALITY MEDIUM / LOW in the player's language - the line as a whole has no row)
+      tail =
+        "  ·  " +
+        fps +
+        " FPS" +
+        (QUAL < 2 ? "  ·  " + T(QUAL ? "AUTO QUALITY MEDIUM" : "AUTO QUALITY LOW") : "");
     let d = dev.length > 60 ? dev.slice(0, 58) + "…" : dev;
     while (d.length > 8 && g.measureText(d + tail).width > room)
       d = d.slice(0, -4).replace(/[\s·,(…]+$/, "") + "…";
@@ -86724,7 +87006,8 @@ function nowPlayingHud(g, s) {
   const a = 1;
   if (a <= 0.01) return;
   const tr = TRACKS[curTrack],
-    txt = "\u266A  " + tr.title + (tr.where ? "  \u00B7  " + tr.where.toUpperCase() : ""),
+    // (v1.8.63: the place translated first - "plays at the stops" has its row in lowercase, so in capitals it stayed English)
+    txt = "\u266A  " + tr.title + (tr.where ? "  \u00B7  " + T(tr.where).toUpperCase() : ""),
     px = Math.round(12 * s * TXT());
   g.save();
   g.font = "700 " + px + "px " + FB;
@@ -91069,6 +91352,7 @@ function toggleSound() {
   store.set("muted", muted);
   audio();
   if (master) master.gain.setTargetAtTime(muted ? 0 : 0.9, AC.currentTime, 0.02);
+  if (muted) voiceHush(); // (v1.8.66: the sentence being read stops too, not just the ones waiting)
   const t = muted ? "OFF" : "ON";
   $("vSound").textContent = t;
   $("vSound2").textContent = t;
@@ -91140,6 +91424,10 @@ function pause(on) {
   } else if (!on && G.state === "paused") {
     G.state = G.prev || "play";
     G.pourLock = [true, true];
+    // (v1.8.67) WHAT YOU PRESSED IN THE PAUSE MENU STAYS THERE: a controller's D-pad and B, used to move about the pause
+    // menu, were also kept as moves - after READY... GO! the bartender jumped a bar and the cross went off by itself
+    for (const E0 of [pressedEdge, pressedEdge2]         )
+      for (const k in E0) E0[k] = k === "jump" ? -1 : false;
     lastInput = performance.now();
     // (v1.4.81) BACK FROM A PAUSE, A MOMENT TO GET READY: the bar stays still for just over a second - READY? ... GO! -
     // so nobody loses a shake in the instant their hands are getting back on the keys
@@ -91510,7 +91798,7 @@ window.addEventListener(
 $("tFull").onclick = toggleFull;
 $("pFull").onclick = toggleFull;
 document.addEventListener("visibilitychange", () => {
-  if (document.hidden && G.state === "play") pause(true);
+  if (document.hidden && ["play", "bonus", "mini"].includes(G.state)) pause(true); // (v1.8.62: mini-games, bonus round too)
 });
 
 // =====================================================================================
@@ -91598,6 +91886,8 @@ function closeJukebox() {
     JB.playing >= 0 && G.state === "menu"
       ? { i: JB.playing, until: (JB.since || performance.now()) + jbTuneSecs(JB.playing) * 1000 }
       : null;
+  // (v1.8.66: not with YOUR MUSIC chosen - your own songs come back now, and the music box's song played on over them)
+  if (MY.mode === "mine") JB.radio = null;
   JB.playing = -1;
   if (AC && myBus) myBus.gain.setTargetAtTime(0.9, AC.currentTime, 0.1);
   showPanels();
@@ -91851,7 +92141,7 @@ function visiblePanel() {
 function navButtons() {
   const p = visiblePanel();
   return p
-    ? Array.from(p.querySelectorAll        ("button, label.add"))
+    ? Array.from(p.querySelectorAll        ("button, label.add, #prof input, #prof textarea, #cup input")) // (v1.8.67: the name and code boxes too - the keyboard couldn't reach them)
         .filter((b) => !b.hidden && b.offsetParent !== null)
         .map((b) => {
           if (b.tagName === "LABEL" && b.tabIndex < 0) b.tabIndex = 0;
@@ -91870,7 +92160,23 @@ function navMove(d) {
   bs[i].scrollIntoView({ block: "nearest" });
   sfx("nav", undefined, i); // (v1.4.31: a soft marimba note, its own for each option)
 }
-const NAVT = { key: 0, pad: 0, padDir: "", padHeld: 0, a: 0, col: null, colEl: null, side: "L" }; // (menu timing: so a twitchy stick or a held button doesn't race through the options)
+const NAVT = {
+  key: 0,
+  pad: 0,
+  padDir: "",
+  padHeld: 0,
+  a: 0,
+  col: null,
+  colEl: null,
+  side: "L",
+  clicked: null                  ,
+};
+// (v1.8.68: the button last pressed with a mouse or a finger - see "CLICKED WITH THE MOUSE, THEN ENTER")
+window.addEventListener(
+  "pointerdown",
+  (e) => (NAVT.clicked = (e.target           )?.closest ? (e.target           ).closest("button") : null),
+  true
+); // (menu timing: so a twitchy stick or a held button doesn't race through the options)
 // arrows and the D-pad move the way they point: down goes to the button BELOW, right to the one on the RIGHT (wrapping round at the edges)
 function navDir(dx, dy) {
   const bs = navButtons();
@@ -91923,7 +92229,14 @@ function navDir(dx, dy) {
     const ahead = bs.filter((b) => b !== a && (ctr(b)[1] - cy) * dy > 4),
       behind = bs.filter((b) => b !== a && (ctr(b)[1] - cy) * dy < -4),
       pool = ahead.length ? ahead : behind;
-    if (!pool.length) return;
+    // (v1.8.67: no button that way - a long page with one button (HOW TO PLAY, WHAT'S NEW) scrolls instead; arrows and
+    //  a controller could only ever read its first screen)
+    if (!pool.length) {
+      const p = visiblePanel();
+      if (dy && p && p.scrollHeight > p.clientHeight + 4)
+        p.scrollBy({ top: dy * p.clientHeight * 0.6, behavior: COMFORT.calm ? "auto" : "smooth" });
+      return;
+    }
     const key = (b) => (ctr(b)[1] - cy) * dy,
       target = Math.min(...pool.map(key)), // (the nearest row ahead - or, wrapping round, the row at the far end)
       first = pool.reduce((m, b) => (key(b) < key(m) ? b : m), pool[0]),
@@ -92028,18 +92341,21 @@ window.addEventListener(
     // (v1.5.49) A TEXT BOX DOESN'T TRAP THE KEYBOARD: with the focus in a name box (the CUP's eight players, a new
     // profile's name) every key went to the box - Esc didn't close the panel and the arrows couldn't get out of it. Now
     // Esc closes the panel and up / down leave the box for the buttons; left / right and the letters still type
-    if (panelNav() && e.target && (e.target          ).tagName === "INPUT") {
+    // (v1.8.67: a TEXTAREA - the progress code - too: its arrows moved the cursor out of the box)
+    if (panelNav() && e.target && ["INPUT", "TEXTAREA"].includes((e.target          ).tagName)) {
       const t = e.target                    ;
       if (e.code === "Escape" || e.code === "ArrowUp" || e.code === "ArrowDown") {
         e.preventDefault();
         e.stopImmediatePropagation();
-        t.blur();
-        if (e.code === "Escape") navBack();
-        else navDir(0, e.code === "ArrowUp" ? -1 : 1);
+        // (v1.8.67: up / down go on from the box itself - blurred first, the cursor started again at the top)
+        if (e.code === "Escape") {
+          t.blur();
+          navBack();
+        } else navDir(0, e.code === "ArrowUp" ? -1 : 1);
       }
       return;
     }
-    if (!panelNav() || (e.target && (e.target          ).tagName === "INPUT")) return;
+    if (!panelNav() || (e.target && ["INPUT", "TEXTAREA"].includes((e.target          ).tagName))) return;
     const k = e.code;
     if (k === "KeyO" && G.state === "menu" && !JB.open && !SB.open && !WD.open && !fpAny()) {
       // (v1.4.6) O: the Solar System tour, the Sun to Pluto
@@ -92078,6 +92394,21 @@ window.addEventListener(
       e.preventDefault();
       e.stopImmediatePropagation();
       navMove(e.shiftKey ? -1 : 1);
+      return;
+    }
+    // (v1.8.67) CLICKED WITH THE MOUSE, THEN ENTER: the button last clicked kept the (unseen) focus, and Enter pressed it
+    // again - DIFFICULTY flipped instead of the game starting, SOUND toggled instead of resuming. On the main menu and
+    // the pause menu, when the cursor isn't being shown, Enter does what it says on screen (START / RESUME)
+    if (
+      ["Enter", "NumpadEnter"].includes(k) &&
+      !document.body.classList.contains("padnav") &&
+      (G.state === "paused" ||
+        (G.state === "menu" && !JB.open && !SB.open && !WD.open && !CS.open && !fpAny())) &&
+      document.activeElement &&
+      document.activeElement === NAVT.clicked // (v1.8.68: only a button the MOUSE put the focus on - not I'M BACK, the goodbye's or the crash box's, which the game focuses itself)
+    ) {
+      e.preventDefault(); // (so the browser doesn't click it either)
+      (document.activeElement               ).blur();
       return;
     }
     if (
@@ -92354,6 +92685,74 @@ profWire();
 //  the game, and where the motion capture, the folk songs and the fonts come from. Both from the menu at any time.
 // =====================================================================================
 const NEWS = [
+  {
+    ver: "v1.8.68",
+    title: "PAUSE IS BACK",
+    items: [
+      "THE PAUSE BUTTON SHOWS AGAIN DURING A GAME - ON A PHONE THERE WAS NO WAY TO PAUSE",
+      "A TAP SKIPS THE WARP BETWEEN STOPS AND THE LONG ANDROMEDA SCENES, AS A KEY DOES",
+      "ESC SKIPS THE WARP TOO, AND A CONTROLLER'S START MOVES THE STORY, THE ARRIVAL AND THE WARP ON",
+      "MUTING OR GOING FULL SCREEN ON THE ARRIVAL SCREEN NO LONGER STARTS THE STOP",
+    ],
+  },
+  {
+    ver: "v1.8.67",
+    title: "FIND YOUR WAY",
+    items: [
+      "RESUMING WITH A CONTROLLER NO LONGER MOVES YOUR BARTENDER OR SETS OFF THE CROSS",
+      "HOW TO PLAY AND WHAT'S NEW SCROLL WITH THE ARROWS AND THE D-PAD",
+      "ENTER STARTS OR RESUMES AFTER YOU CLICKED A BUTTON - IT PRESSED THAT BUTTON AGAIN",
+      "THE NAME BOXES CAN BE REACHED WITH THE KEYBOARD, AND P PAUSES THE BONUS ROUND",
+    ],
+  },
+  {
+    ver: "v1.8.66",
+    title: "ONE TUNE AT A TIME",
+    items: [
+      "WITH YOUR OWN MUSIC ON, CLOSING THE MUSIC BOX NO LONGER LEAVES ITS SONG PLAYING OVER YOURS",
+      "EFFECTS VOLUME AT 0 SILENCES THE READ-ALOUD VOICE TOO, AND SOUND OFF STOPS IT MID-SENTENCE",
+      "THE QUIET SCREENSAVER DEMO STAYS QUIET IN THE DOWNLOADED COPY",
+    ],
+  },
+  {
+    ver: "v1.8.65",
+    title: "GENTLER STILL",
+    items: [
+      "KID MODE: A SLIP IS A LITTLE STUMBLE - NO MORE BARTENDER THROWN DOWN THE BAR, NO HARD SHAKE, NO DRAGON'S ROAR",
+      "CALM MODE: THE HYPERSPACE JUMP BETWEEN STOPS IS SLOWER AND STEADY, AND TWO STORY FLASHES ARE SOFTER",
+      "BIG AND HUGE TEXT NOW REACH THE MINI-GAME INSTRUCTIONS",
+      "THE STRETCH BREAK'S COUNTDOWN IS TRANSLATED",
+    ],
+  },
+  {
+    ver: "v1.8.64",
+    title: "STORY STRAIGHTENED",
+    items: [
+      "AN ENVOY FROM ANDROMEDA COMES BACK AFTER A SLIP - THE STOP'S STAMP WAS LOST",
+      "RELAX MODE NO LONGER USES UP THE TOUR'S OPENING STORY",
+      "THE WELCOME LINES OF RELAX, ENDLESS, TIME ATTACK, BOSS RUSH AND CONTINUE ARE SHOWN AGAIN",
+      "CHEF GRUMBLO NO LONGER GETS ANNOUNCED AND THEN STAYS AWAY",
+    ],
+  },
+  {
+    ver: "v1.8.63",
+    title: "IN YOUR LANGUAGE",
+    items: [
+      "THE PAUSE SCREEN'S MUSIC LABEL AND QUALITY NOTE ARE TRANSLATED TOO",
+      "AFRIKAANS: A SHORTER RESTART BUTTON, SO THE STOP'S NAME FITS ON A PHONE",
+      "POLISH: THE CONTINUE BUTTON READS RIGHT",
+    ],
+  },
+  {
+    ver: "v1.8.62",
+    title: "HOLD THAT THOUGHT",
+    items: [
+      "THE MINI-GAMES AND THE BONUS ROUND PAUSE TOO WHEN YOU SWITCH WINDOWS OR APPS",
+      "A PAUSE NO LONGER EATS INTO A CO-OP TWIN PAIR, A COMBO OR A STORY VISITOR'S TIMING",
+      "TURN YOUR PHONE MID-GAME AND THE TOUCH ARROWS SAY RUN OR BAR RIGHT AWAY",
+      "A PAUSE JUST AFTER A STOP NO LONGER LOSES THE FLAWLESS OR DREAM SHIFT MESSAGE",
+    ],
+  },
   {
     ver: "v1.8.61",
     title: "BACK TO THE CUP",
@@ -95330,6 +95729,7 @@ function voiceFor(lang) {
 function say(text, important = false) {
   if (!VOICE.on || !text || (typeof G !== "undefined" && G.demo) || !("speechSynthesis" in window)) return;
   if (typeof muted !== "undefined" && muted) return; // (v1.8.50: SOUND off means the voice too)
+  if (VOL.fx <= 0) return; // (v1.8.66: and the effects volume at 0 - the voice's 30% floor still spoke)
   try {
     let s = String(T(text))
       .replace(/[★☆▶◀✔✓♪·]/g, " ")
@@ -95661,6 +96061,15 @@ function frameWork(ts) {
     const tw = touchWanted(),
       te = $("touch");
     if (te && te.hidden === tw) te.hidden = !tw;
+    // (v1.8.68) THE PAUSE BUTTON FOLLOWS THE GAME TOO: it was only set when the panels were redrawn - a game begins on
+    // the arrival screen (no pause there), so from v1.8.46 on the button never came back once the stop began, and a
+    // phone had no way to pause
+    const tp = $("tPause"),
+      ph = !["play", "lost", "clear", "bonus", "mini"].includes(G.state);
+    if (tp && tp.hidden !== ph) {
+      tp.hidden = ph;
+      HUDB.t = -9;
+    }
   }
   const real = Math.max(0, (ts - last) / 1000);
   last = ts;
@@ -95673,8 +96082,12 @@ function frameWork(ts) {
     frameDebt += use - dt;
     dt = use;
   } else frameDebt = 0;
-  fpsN++;
-  fpsT += real;
+  // (v1.8.62: back from a hidden tab - the gap isn't a slow frame for AUTO QUALITY: it starts the count afresh)
+  if (real > 1) fpsN = fpsT = 0;
+  else {
+    fpsN++;
+    fpsT += real;
+  }
   if (fpsT >= 0.5) {
     fps = Math.round(fpsN / fpsT);
     fpsN = 0;
@@ -97494,7 +97907,9 @@ function recElTick(i) {
   }
   // its volume follows the music channel: the fades, the slider, MUTE
   const lvl = musicBus ? musicBus.gain.value / 0.3 : 1;
-  el.volume = muted ? 0 : clamp(lvl * VOL.music * 0.5 * (r.trim || 1), 0, 1); // (v1.5.10: the per-record trim turns the lively ones down)
+  // (v1.8.66: the music volume as it really is now - the quiet demo fades it to nothing; the slider alone played a record
+  //  at full volume through the silent screensaver, in the downloaded copy opened from disk)
+  el.volume = muted ? 0 : clamp(lvl * (musVol ? musVol.gain.value : VOL.music) * 0.5 * (r.trim || 1), 0, 1); // (v1.5.10: the per-record trim turns the lively ones down)
 }
 // the music changed tune (music.ts schedule): the old record, now faded right down, stops; a new one starts
 function recSwitch(want) {

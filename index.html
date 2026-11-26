@@ -3744,6 +3744,7 @@ const DICT_ROWS                             = [
   ["SHARE ▶", "DEEL ▶", "UDOSTĘPNIJ ▶"],
   ["BACK TO THE CUP ▶", "TERUG NA DIE BEKER ▶", "WRÓĆ DO TURNIEJU ▶"],
   ["RUN", "HARDLOOP", "BIEG"],
+  ["BAR", "TOONBANK", "LADA"], // (v1.8.83: the touch arrows' other label - it stayed English)
   ["FLAVOUR", "GEUR", "SMAK"],
   ["CROSS", "KRUIS", "KRZYŻ"],
   ["HOLY", "WY", "WODA"],
@@ -7329,7 +7330,7 @@ const DICT_ROWS                             = [
   ["TILTED WITH JOY!", "SKEEF VAN VREUGDE!", "PRZECHYLONY ZE SZCZĘŚCIA!"],
   ["STORMING GOOD!", "STORMAGTIG GOED!", "BURZLIWIE DOBRY!"],
   ["FASTER THAN THE WIND!", "VINNIGER AS DIE WIND!", "SZYBSZY NIŻ WIATR!"],
-  ["TOP SPEED!", "VOLLE SPOED!", "PEŁNA PRĘDKOŚĆ!"], // (v1.8.72: endless at speed 40)
+  ["TOP SPEED!", "HOOGSTE SPOED!", "NAJWYŻSZE TEMPO!"], // (v1.8.72: endless at speed 40)
   ["STILL A PLANET IN MY HEART!", "STEEDS 'N PLANEET IN MY HART!", "W MOIM SERCU WCIĄŻ PLANETA!"],
   ["WORTH THE TRIP OUT HERE!", "DIE REIS HIERNATOE WERD!", "WART PODRÓŻY AŻ TUTAJ!"],
   [
@@ -8087,6 +8088,73 @@ const DICT_ROWS                             = [
     "DIE WEDLOOP MET DIE SWARTGAT-BISTRO HET NOU 'N KLEIN RENBAAN: JOU KAFEE EN HULLE PIERING, OP PAD NA DIE VLAG",
     "WYŚCIG Z BISTRO CZARNA DZIURA MA TERAZ MAŁY TOR: TWOJA KAWIARNIA I ICH SPODEK PĘDZĄ DO FLAGI",
   ],
+  // (v1.8.85) TEAMWORK THAT COUNTS
+  ["TEAMWORK THAT COUNTS", "SPANWERK WAT TEL", "PRACA ZESPOŁOWA, KTÓRA SIĘ LICZY"],
+  [
+    "CO-OP: AFTER A SLIP NEW TWINS STILL COME - A TWINS TEAM GOAL COULD BE LOST FOR THE WHOLE STOP",
+    "SAAMSPEEL: NA 'N GLIPSIE KOM NUWE TWEELINGE STEEDS - 'N TWEELING-SPANDOEL KON VIR DIE HELE STOP VERLORE GAAN",
+    "KOOPERACJA: PO POTKNIĘCIU WCIĄŻ PRZYCHODZĄ NOWE BLIŹNIAKI - CEL DRUŻYNY Z BLIŹNIAKAMI MÓGŁ PRZEPAŚĆ NA CAŁY PRZYSTANEK",
+  ],
+  [
+    "CO-OP: THE SAME TWIN SERVED TWICE IS NO LONGER A PAIR",
+    "SAAMSPEEL: DIESELFDE TWEELING TWEE KEER BEDIEN IS NIE MEER 'N PAAR NIE",
+    "KOOPERACJA: TEN SAM BLIŹNIAK OBSŁUŻONY DWA RAZY NIE JEST JUŻ PARĄ",
+  ],
+  [
+    "VERSUS: A PLAYER WHO'S OUT NO LONGER TAKES HALF OF THE SHARED BONUSES",
+    "TEEN MEKAAR: 'N SPELER WAT UIT IS, KRY NIE MEER DIE HELFTE VAN DIE GEDEELDE BONUSSE NIE",
+    "POJEDYNEK: WYELIMINOWANY GRACZ NIE DOSTAJE JUŻ POŁOWY WSPÓLNYCH PREMII",
+  ],
+  // (v1.8.84) STARS WHERE YOU'VE EARNED THEM
+  [
+    "STARS WHERE YOU'VE EARNED THEM",
+    "STERRE WAAR JY HULLE VERDIEN HET",
+    "GWIAZDKI TAM, GDZIE NA NIE ZASŁUŻYŁEŚ",
+  ],
+  [
+    "THE DAILY CHALLENGE AND CUP MATCHES NO LONGER ADD TOUR STARS OR UNLOCK STOPS YOU HAVEN'T REACHED",
+    "DIE DAAGLIKSE UITDAGING EN BEKERWEDSTRYDE GEE NIE MEER TOERSTERRE OF SLUIT STOPS OOP WAAR JY NOG NIE WAS NIE",
+    "WYZWANIE DNIA I MECZE PUCHAROWE NIE DAJĄ JUŻ GWIAZDEK TRASY ANI NIE ODBLOKOWUJĄ PRZYSTANKÓW, DO KTÓRYCH NIE DOTARŁEŚ",
+  ],
+  [
+    "PAUSING ON THE STARS SCREEN NO LONGER THROWS AWAY THE SURPRISE GIFT",
+    "AS JY OP DIE STERRESKERM POUSEER, GOOI DIT NIE MEER DIE VERRASSINGSGESKENK WEG NIE",
+    "PAUZA NA EKRANIE GWIAZDEK NIE WYRZUCA JUŻ PREZENTU-NIESPODZIANKI",
+  ],
+  // (v1.8.83) BOSS FIGHTS FAIR
+  ["BOSS FIGHTS FAIR", "BAASGEVEGTE REGVERDIG", "UCZCIWE WALKI Z BOSSAMI"],
+  [
+    "A BOSS YOU'VE FILLED STAYS BEATEN, EVEN IF YOU SLIP BEFORE HE REACHES THE DOOR",
+    "'N BAAS WAT JY VOLGEMAAK HET, BLY VERSLAAN, SELFS AS JY GLIP VOORDAT HY BY DIE DEUR KOM",
+    "BOSS, KTÓREGO NAPEŁNIŁEŚ, ZOSTAJE POKONANY, NAWET GDY POTKNIESZ SIĘ, ZANIM DOJDZIE DO DRZWI",
+  ],
+  [
+    "A BOSS'S EMPTY GLASS STARTS FAR ENOUGH OUT TO CATCH",
+    "'N BAAS SE LEË GLAS BEGIN VER GENOEG OM TE VANG",
+    "PUSTA SZKLANKA BOSSA RUSZA DOŚĆ DALEKO, BY JĄ ZŁAPAĆ",
+  ],
+  [
+    "A FAST, FURIOUS BOSS NO LONGER LANDS RIGHT IN FRONT OF YOU",
+    "'N VINNIGE, WOEDENDE BAAS LAND NIE MEER REG VOOR JOU NIE",
+    "SZYBKI, WŚCIEKŁY BOSS NIE LĄDUJE JUŻ TUŻ PRZED TOBĄ",
+  ],
+  // (v1.8.82) FAIR CATCHES
+  ["FAIR CATCHES", "REGVERDIGE VANGE", "UCZCIWE CHWYTY"],
+  [
+    "CHERRY DUEL AND TEAM MIXER: A CHERRY LANDING IN PLAYER 2'S GLASS NO LONGER BOUNCES OFF PLAYER 1'S",
+    "KERSIE-TWEEGEVEG EN SPANMENGER: 'N KERSIE WAT IN SPELER 2 SE GLAS LAND, BONS NIE MEER VAN SPELER 1 S'N AF NIE",
+    "WIŚNIOWY POJEDYNEK I MIKSER DRUŻYNY: WIŚNIA LĄDUJĄCA W SZKLANCE GRACZA 2 NIE ODBIJA SIĘ JUŻ OD SZKLANKI GRACZA 1",
+  ],
+  [
+    "THE MIXER'S NEW GLASS STARTS EMPTY - THE LAST SHAKE'S BITS NO LONGER FALL INTO IT",
+    "DIE MENGER SE NUWE GLAS BEGIN LEEG - DIE VORIGE SKOMMEL SE STUKKIES VAL NIE MEER DAARIN NIE",
+    "NOWA SZKLANKA W MIKSERZE ZACZYNA PUSTA - KAWAŁKI POPRZEDNIEGO KOKTAJLU JUŻ DO NIEJ NIE WPADAJĄ",
+  ],
+  [
+    "THE MINI-GAMES' GRAVITY LINE MATCHES HOW FAST THINGS REALLY FALL",
+    "DIE MINISPELETJIES SE SWAARTEKRAGREËL PAS BY HOE VINNIG DINGE REGTIG VAL",
+    "LINIJKA O GRAWITACJI W MINIGRACH ZGADZA SIĘ Z TYM, JAK SZYBKO RZECZY NAPRAWDĘ SPADAJĄ",
+  ],
   // (v1.8.81) POWER TO THE RIGHT PLAYER
   ["POWER TO THE RIGHT PLAYER", "KRAG VIR DIE REGTE SPELER", "MOC DLA WŁAŚCIWEGO GRACZA"],
   [
@@ -8096,7 +8164,7 @@ const DICT_ROWS                             = [
   ],
   [
     "VERSUS: PICKING UP THE SAME POWER-UP NO LONGER STEALS YOUR OPPONENT'S - AND ITS GLOW SHOWS ONLY ON ITS OWNER",
-    "TEEN MEKAAR: DIESELFDE KRAG OPTEL STEEL NIE MEER JOU TEENSTANDER S'N NIE - EN SY GLOED WYS NET OP SY EIENAAR",
+    "TEEN MEKAAR: AS JY DIESELFDE KRAG OPTEL, STEEL DIT NIE MEER JOU TEENSTANDER S'N NIE - EN SY GLOED WYS NET OP SY EIENAAR",
     "POJEDYNEK: PODNIESIENIE TEGO SAMEGO BONUSU NIE KRADNIE JUŻ BONUSU PRZECIWNIKA - A JEGO BLASK WIDAĆ TYLKO U WŁAŚCICIELA",
   ],
   [
@@ -8119,7 +8187,7 @@ const DICT_ROWS                             = [
   [
     "RELAX MODE NO LONGER FREEZES WHEN A SHAKE OR A GLASS FALLS",
     "ONTSPAN VRIES NIE MEER AS 'N SKOMMEL OF 'N GLAS VAL NIE",
-    "TRYB RELAKSU NIE ZAMARZA JUŻ, GDY SPADNIE KOKTAJL LUB SZKLANKA",
+    "TRYB RELAKSU NIE ZAWIESZA SIĘ JUŻ, GDY SPADNIE KOKTAJL LUB SZKLANKA",
   ],
   [
     "A QUICK CUSTOMER CAN'T STEP STRAIGHT THROUGH A SHAKE ANY MORE",
@@ -8135,7 +8203,7 @@ const DICT_ROWS                             = [
   ["CLEAN SLATE", "SKOON BEGIN", "CZYSTA KARTA"],
   [
     "THE SHAKE THIEF'S FOOTPRINTS NO LONGER FOLLOW YOU TO EVERY LATER STOP",
-    "DIE SKOMMELDIEF SE VOETSPORE VOLG JOU NIE MEER NA ELKE LATER STOP NIE",
+    "DIE SKOMMELDIEF SE VOETSPORE VOLG JOU NIE MEER NA ELKE LATERE STOP NIE",
     "ŚLADY ZŁODZIEJA KOKTAJLI NIE IDĄ JUŻ ZA TOBĄ NA KAŻDY KOLEJNY PRZYSTANEK",
   ],
   [
@@ -8150,7 +8218,7 @@ const DICT_ROWS                             = [
   ],
   [
     "A BUMP OR A GUST NO LONGER PULLS THE QUEUE OUTSIDE THE DOOR INSIDE",
-    "'N STAMP OF 'N WINDVLAAG TREK NIE MEER DIE TOU BUITE DIE DEUR NAAR BINNE NIE",
+    "'N STAMP OF 'N WINDVLAAG TREK NIE MEER DIE TOU BUITE DIE DEUR NA BINNE NIE",
     "WSTRZĄS LUB PODMUCH NIE WCIĄGA JUŻ DO ŚRODKA KOLEJKI SPRZED DRZWI",
   ],
   // (v1.8.78) EVERY POINT COUNTED
@@ -8218,7 +8286,7 @@ const DICT_ROWS                             = [
   ],
   [
     "THE NATIONAL DAYS' BANNER KEEPS OFF THE BAR WHILE YOU PLAY, AND HOLIDAY: NONE SWITCHES IT OFF",
-    "DIE NASIONALE DAE SE BANIER BLY WEG VAN DIE TOONBANK TERWYL JY SPEEL, EN VAKANSIE: GEEN SKAKEL DIT AF",
+    "DIE NASIONALE DAE SE BANIER BLY WEG VAN DIE TOONBANK TERWYL JY SPEEL, EN VAKANSIEDAG: GEEN SKAKEL DIT AF",
     "BANER ŚWIĄT NARODOWYCH NIE ZASŁANIA JUŻ LADY W CZASIE GRY, A ŚWIĘTO: BRAK GO WYŁĄCZA",
   ],
   [
@@ -8240,7 +8308,7 @@ const DICT_ROWS                             = [
   ],
   [
     "WON TROPHIES AND THE POLISH HISTORY STICKERS ARE IN YOUR LANGUAGE",
-    "GEWENDE TROFEE EN DIE POOLSE GESKIEDENISPLAKKERS IS IN JOU TAAL",
+    "GEWONNE TROFEË EN DIE POOLSE GESKIEDENISPLAKKERS IS IN JOU TAAL",
     "ZDOBYTE TROFEA I POLSKIE NAKLEJKI HISTORYCZNE SĄ W TWOIM JĘZYKU",
   ],
   [
@@ -8274,7 +8342,7 @@ const DICT_ROWS                             = [
   ],
   [
     "ENDLESS: TOP SPEED IS 40, AND IT SAYS SO - NO MORE FASTER! THAT ISN'T",
-    "EINDLOSE SPEL: VOLLE SPOED IS 40, EN DIT SÊ SO - NIE MEER VINNIGER! WAT NIE IS NIE",
+    "EINDLOSE SPEL: HOOGSTE SPOED IS 40, EN DIT SÊ SO - GEEN VALS VINNIGER! MEER NIE",
     "BEZ KOŃCA: NAJWYŻSZE TEMPO TO 40 I GRA TO MÓWI - KONIEC Z SZYBCIEJ!, KTÓRE NIC NIE ZMIENIA",
   ],
   [
@@ -8284,11 +8352,11 @@ const DICT_ROWS                             = [
   ],
   [
     "BOSS RUSH: A TIME THAT ONLY TIES YOUR BEST TO THE TENTH ISN'T A NEW BEST",
-    "BAAS-STORMLOOP: 'N TYD WAT JOU BESTE NET TOT OP DIE TIENDE GELYKMAAK, IS NIE 'N NUWE BESTE NIE",
-    "SZTURM NA BOSSÓW: CZAS RÓWNY TWOJEMU REKORDOWI CO DO DZIESIĄTEJ SEKUNDY NIE JEST NOWYM REKORDEM",
+    "BAAS-STORMLOOP: 'N TYD WAT JOU BESTE NET TOT OP 'N TIENDE SEKONDE GELYKMAAK, IS NIE 'N NUWE BESTE NIE",
+    "SZTURM NA BOSSÓW: CZAS RÓWNY TWOJEMU REKORDOWI CO DO DZIESIĄTEJ CZĘŚCI SEKUNDY NIE JEST NOWYM REKORDEM",
   ],
   // (v1.8.71) SAFE AND SOUND
-  ["SAFE AND SOUND", "VEILIG EN GOED", "CAŁY I ZDROWY"],
+  ["SAFE AND SOUND", "VEILIG EN ONGEDEERD", "CAŁY I ZDROWY"],
   [
     "A DAMAGED SAVE OR BLOCKED STORAGE CAN NO LONGER LEAVE THE GAME STUCK ON LOADING",
     "'N BESKADIGDE STOORLÊER OF GEBLOKKEERDE BERGING KAN DIE SPEL NIE MEER OP LAAI LAAT VASSIT NIE",
@@ -8313,13 +8381,13 @@ const DICT_ROWS                             = [
   ],
   [
     "TWO PLAYERS: POURING WITH F NO LONGER FLIPS FULL SCREEN",
-    "TWEE SPELERS: SKINK MET F SKAKEL NIE MEER VOLSKERM AAN EN AF NIE",
+    "TWEE SPELERS: OM MET F TE SKINK, SKAKEL NIE MEER VOLSKERM AAN EN AF NIE",
     "DWÓCH GRACZY: NALEWANIE KLAWISZEM F NIE PRZEŁĄCZA JUŻ PEŁNEGO EKRANU",
   ],
   [
     "VERSUS: A KNOCKED-OUT PLAYER'S PRESSES NO LONGER GO OFF WHEN THEY COME BACK",
     "TEEN MEKAAR: 'N UITGESLANE SPELER SE DRUKKE GAAN NIE MEER AF AS HY TERUGKOM NIE",
-    "POJEDYNEK: NACIŚNIĘCIA WYELIMINOWANEGO GRACZA NIE DZIAŁAJĄ JUŻ, GDY WRACA",
+    "POJEDYNEK: ZALEGŁE NACIŚNIĘCIA WYELIMINOWANEGO GRACZA NIE ODPALAJĄ SIĘ JUŻ, GDY WRACA",
   ],
   // (v1.8.69) MONEY'S WORTH
   ["MONEY'S WORTH", "WAARDE VIR GELD", "WART SWOJEJ CENY"],
@@ -8365,7 +8433,7 @@ const DICT_ROWS                             = [
   [
     "RESUMING WITH A CONTROLLER NO LONGER MOVES YOUR BARTENDER OR SETS OFF THE CROSS",
     "AS JY MET 'N BEHEERDER VOORTGAAN, SKUIF JOU KROEGMAN NIE MEER NIE EN GAAN DIE KRUIS NIE AF NIE",
-    "WZNOWIENIE GRY PADEM NIE PRZESUWA JUŻ BARMANA ANI NIE UŻYWA KRZYŻA",
+    "WZNOWIENIE GRY PADEM NIE PRZESUWA JUŻ BARMANA ANI NIE ODPALA KRZYŻA",
   ],
   [
     "HOW TO PLAY AND WHAT'S NEW SCROLL WITH THE ARROWS AND THE D-PAD",
@@ -8387,11 +8455,11 @@ const DICT_ROWS                             = [
   [
     "WITH YOUR OWN MUSIC ON, CLOSING THE MUSIC BOX NO LONGER LEAVES ITS SONG PLAYING OVER YOURS",
     "MET JOU EIE MUSIEK AAN LAAT DIE MUSIEKDOOS SE LIEDJIE NIE MEER OOR JOUNE SPEEL AS JY DIT TOEMAAK NIE",
-    "Z WŁASNĄ MUZYKĄ ZAMKNIĘCIE SZAFY GRAJĄCEJ NIE ZOSTAWIA JUŻ JEJ PIOSENKI GRAJĄCEJ NA TWOJEJ",
+    "Z WŁASNĄ MUZYKĄ ZAMKNIĘCIE SZAFY GRAJĄCEJ NIE ZOSTAWIA JUŻ JEJ PIOSENKI GRAJĄCEJ RAZEM Z TWOJĄ",
   ],
   [
     "EFFECTS VOLUME AT 0 SILENCES THE READ-ALOUD VOICE TOO, AND SOUND OFF STOPS IT MID-SENTENCE",
-    "EFFEKTE-VOLUME OP 0 MAAK OOK DIE VOORLEESSTEM STIL, EN KLANK AF STOP DIT MIDDEL IN 'N SIN",
+    "EFFEKTE-VOLUME OP 0 MAAK OOK DIE VOORLEESSTEM STIL, EN KLANK AF STOP DIT MIDDE-IN 'N SIN",
     "GŁOŚNOŚĆ EFEKTÓW NA 0 WYCISZA TEŻ LEKTORA, A WYŁĄCZENIE DŹWIĘKU PRZERYWA GO W PÓŁ ZDANIA",
   ],
   [
@@ -8403,7 +8471,7 @@ const DICT_ROWS                             = [
   ["GENTLER STILL", "NOG SAGTER", "JESZCZE ŁAGODNIEJ"],
   [
     "KID MODE: A SLIP IS A LITTLE STUMBLE - NO MORE BARTENDER THROWN DOWN THE BAR, NO HARD SHAKE, NO DRAGON'S ROAR",
-    "KINDERMODUS: 'N GLIPSIE IS 'N KLEIN STRUIKEL - GEEN KROEGMAN WAT MEER LANGS DIE TOONBANK GEGOOI WORD NIE, GEEN HARDE SKUD, GEEN DRAKEBRUL",
+    "KINDERMODUS: 'N GLIPSIE IS 'N KLEIN STRUIKELING - GEEN KROEGMAN WAT MEER LANGS DIE TOONBANK GEGOOI WORD NIE, GEEN HARDE SKUD, GEEN DRAKEBRUL",
     "TRYB DZIECIĘCY: POTKNIĘCIE TO MAŁE ZACHWIANIE - BARMAN NIE LECI JUŻ WZDŁUŻ LADY, BEZ MOCNEGO WSTRZĄSU I RYKU SMOKA",
   ],
   [
@@ -8470,17 +8538,17 @@ const DICT_ROWS                             = [
   [
     "A PAUSE NO LONGER EATS INTO A CO-OP TWIN PAIR, A COMBO OR A STORY VISITOR'S TIMING",
     "'N POUSE VAT NIE MEER TYD AF VAN 'N TWEELINGPAAR IN SAAMSPEEL, 'N KOMBO OF 'N STORIEBESOEKER NIE",
-    "PAUZA NIE ZJADA JUŻ CZASU PARY BLIŹNIAKÓW W KOOPERACJI, COMBO ANI GOŚCIA Z OPOWIEŚCI",
+    "PAUZA NIE ZJADA JUŻ CZASU PARY BLIŹNIAKÓW W KOOPERACJI, KOMBO ANI GOŚCIA Z OPOWIEŚCI",
   ],
   [
     "TURN YOUR PHONE MID-GAME AND THE TOUCH ARROWS SAY RUN OR BAR RIGHT AWAY",
     "DRAAI JOU FOON IN DIE SPEL EN DIE RAAKPYLE SÊ DADELIK HARDLOOP OF TOONBANK",
-    "OBRÓĆ TELEFON W TRAKCIE GRY, A STRZAŁKI OD RAZU POKAŻĄ BIEGNIJ ALBO LADA",
+    "OBRÓĆ TELEFON W TRAKCIE GRY, A STRZAŁKI OD RAZU POKAŻĄ BIEG ALBO LADA",
   ],
   [
     "A PAUSE JUST AFTER A STOP NO LONGER LOSES THE FLAWLESS OR DREAM SHIFT MESSAGE",
     "'N POUSE NET NA 'N STOP VERLOOR NIE MEER DIE FOUTLOOS- OF DROOMSKOF-BOODSKAP NIE",
-    "PAUZA TUŻ PO PRZYSTANKU NIE GUBI JUŻ KOMUNIKATU BEZBŁĘDNIE ANI WYMARZONA ZMIANA",
+    "PAUZA TUŻ PO PRZYSTANKU NIE GUBI JUŻ KOMUNIKATU „BEZBŁĘDNIE” ANI „WYMARZONA ZMIANA”",
   ],
   // (v1.8.61) BACK TO THE CUP
   ["BACK TO THE CUP", "TERUG NA DIE BEKER", "Z POWROTEM DO PUCHARU"],
@@ -8492,12 +8560,12 @@ const DICT_ROWS                             = [
   [
     "TRYING TIME ATTACK, BOSS RUSH OR A CUP FIRST NO LONGER SKIPS THE OPENING STORY OF YOUR FIRST TOUR",
     "AS JY EERS TYDJAG, BAAS-STORMLOOP OF 'N BEKER PROBEER, WORD DIE OPENINGSTORIE VAN JOU EERSTE TOER NIE MEER OORGESLAAN NIE",
-    "ZAGRANIE NAJPIERW W NA CZAS, SZTURM NA BOSSÓW LUB PUCHAR NIE POMIJA JUŻ OPOWIEŚCI NA POCZĄTEK TWOJEJ PIERWSZEJ TRASY",
+    "ZAGRANIE NAJPIERW W TRYB NA CZAS, SZTURM NA BOSSÓW LUB PUCHAR NIE POMIJA JUŻ OPOWIEŚCI NA POCZĄTEK TWOJEJ PIERWSZEJ TRASY",
   ],
   [
     "TIME ATTACK: A TIME THAT ONLY TIES YOUR BEST TO THE TENTH IS NO LONGER CALLED A NEW BEST",
-    "TYDJAG: 'N TYD WAT JOU BESTE NET TOT OP DIE TIENDE GELYKMAAK, WORD NIE MEER 'N NUWE BESTE GENOEM NIE",
-    "NA CZAS: WYNIK RÓWNY TWOJEMU REKORDOWI CO DO DZIESIĄTEJ SEKUNDY NIE JEST JUŻ NAZYWANY NOWYM REKORDEM",
+    "TYDJAG: 'N TYD WAT JOU BESTE NET TOT OP 'N TIENDE SEKONDE GELYKMAAK, WORD NIE MEER 'N NUWE BESTE GENOEM NIE",
+    "NA CZAS: WYNIK RÓWNY TWOJEMU REKORDOWI CO DO DZIESIĄTEJ CZĘŚCI SEKUNDY NIE JEST JUŻ NAZYWANY NOWYM REKORDEM",
   ],
   // (v1.8.60) TYPE IN PEACE
   ["TYPE IN PEACE", "TIK IN VREDE", "PISZ W SPOKOJU"],
@@ -8525,7 +8593,7 @@ const DICT_ROWS                             = [
   ["EARNED FAIR AND SQUARE", "EERLIK VERDIEN", "ZDOBYTE UCZCIWIE"],
   [
     "GALACTIC CHAMPION NOW NEEDS A TOUR BEGUN AT THE FIRST STOP - STARTING AT THE LAST STOP NO LONGER WINS IT",
-    "GALAKTIESE KAMPIOEN VRA NOU 'N TOER WAT BY DIE EERSTE STOP BEGIN HET - BY DIE LAASTE STOP BEGIN WEN DIT NIE MEER NIE",
+    "GALAKTIESE KAMPIOEN VRA NOU 'N TOER WAT BY DIE EERSTE STOP BEGIN HET - OM BY DIE LAASTE STOP TE BEGIN, WEN DIT NIE MEER NIE",
     "GALAKTYCZNY MISTRZ WYMAGA TERAZ TRASY ZACZĘTEJ OD PIERWSZEGO PRZYSTANKU - START NA OSTATNIM JUŻ GO NIE DAJE",
   ],
   [
@@ -8541,7 +8609,7 @@ const DICT_ROWS                             = [
   [
     "BEST FRIENDS COUNTS REAL RESCUES ONLY, NOT EVERY TIP THE PUPPY FETCHES",
     "BESTE VRIENDE TEL NET REGTE REDDINGS, NIE ELKE FOOI WAT DIE HONDJIE GAAN HAAL NIE",
-    "NAJLEPSI PRZYJACIELE LICZY TYLKO PRAWDZIWE RATUNKI, NIE KAŻDY NAPIWEK PRZYNIESIONY PRZEZ SZCZENIAKA",
+    "TROFEUM „NAJLEPSI PRZYJACIELE” LICZY TYLKO PRAWDZIWE RATUNKI, NIE KAŻDY NAPIWEK PRZYNIESIONY PRZEZ SZCZENIAKA",
   ],
   // (v1.8.58) THE BOSS REMEMBERS
   ["THE BOSS REMEMBERS", "DIE BAAS ONTHOU", "BOSS PAMIĘTA"],
@@ -12405,7 +12473,7 @@ const DICT_PAT                             = [
   ], // (v1.4.76: Time Attack)
   [/^LEVEL (\d+) OF (\d+)$/, "VLAK $1 VAN $2", "POZIOM $1 Z $2"],
   [/^LEVEL (\d+) (EASY|HARD|KID MODE)$/, "VLAK $1 $2", "POZIOM $1 $2"],
-  [/^LEVEL (\d+)(.*)  ·  QUIT$/, "VLAK $1$2  ·  OPGEHOU", "POZIOM $1$2  ·  PRZERWANA"], // (v1.8.77: a game left half-way) // (v1.6.6: a high score's line, played on another difficulty)
+  [/^LEVEL (\d+)(.*)  ·  QUIT$/, "VLAK $1$2  ·  OPGEHOU", "POZIOM $1$2  ·  PRZERWANO"], // (v1.8.77: a game left half-way) // (v1.6.6: a high score's line, played on another difficulty)
   // (v1.4.77) the second tour and after: "TOUR 2  ·  LEVEL 7 / 40  ·  SERVED 3 / 38", translated piece by piece
   [/^TOUR (\d+)$/, "TOER $1", "TRASA $1"],
   [/^LEVEL (\d+) \/ (\d+)$/, "VLAK $1 / $2", "POZIOM $1 / $2"],
@@ -12655,7 +12723,7 @@ const DICT_PAT                             = [
   [/^VERSUS(\s+)HI (\d+)$/, "TEEN$1BESTE $2", "POJEDYNEK$1REKORD $2"],
   [/^SCORE (\d+)$/, "TELLING $1", "WYNIK $1"],
   // (v1.8.65) the break reminder's countdown
-  [/^STRETCH FOR (\d+)\.\.\.$/, "REK VIR $1...", "ROZCIĄGAJ SIĘ JESZCZE $1..."],
+  [/^STRETCH FOR (\d+)\.\.\.$/, "REK NOG $1...", "ROZCIĄGAJ SIĘ JESZCZE $1..."],
   [/^STAGE (\d+)$/, "VLAK $1", "ETAP $1"],
   [
     /^PRESS (\w+) TO POUR - LET GO TO SLIDE IT$/,
@@ -12890,7 +12958,7 @@ const DICT_PAT                             = [
   [/^🔒 (.+)$/, "🔒 $1", "🔒 $1"],
   [/^★ (.+)$/, "★ $1", "★ $1"],
   [/^🏆 (.+)$/, "🏆 $1", "🏆 $1"], // (v1.8.74: a trophy won - its name stayed English)
-  [/^(\d+)\/(\d+)  ·  LV (\d+)$/, "$1/$2  ·  VLK $3", "$1/$2  ·  POZ. $3"], // (v1.8.74: the TROPHIES button)
+  [/^(\d+)\/(\d+)  ·  LV (\d+)$/, "$1/$2  ·  VLAK $3", "$1/$2  ·  POZ. $3"], // (v1.8.74: the TROPHIES button)
   [/^▶ (.+)$/, "▶ $1", "▶ $1"],
 ];
 const DICT = new Map                ();
@@ -18673,7 +18741,10 @@ function update(dt) {
           (c.hopWarn !== undefined ? 0 : 1) * // (v1.8.51: a boss crouching to jump stands still - he kept walking, up to 230 px)
           ((DF().easy || DF().kid) && c.x > X1 - 170 && !c.type.boss ? 0.6 : 1); // (v1.8.48: KID MODE too) // (v1.4.42: on EASY, near your end they slow right down - time to serve them) (v1.4.71: but not a boss - he keeps coming)
         c.x += v;
-        c.vps = v / dt / c.spd; // (v1.8.31: how fast a full step goes, in pixels a second - for the alarm below)
+        // (v1.8.31: how fast a full step goes, in pixels a second - for the alarm below)
+        // (v1.8.83: not while a boss crouches to jump - standing still there read as 0, and the jump's "not near your end"
+        //  limit, which grows with this speed, fell back to its smallest)
+        if (c.hopWarn === undefined) c.vps = v / dt / c.spd;
         // (v1.4.65) nobody walks INTO a boss: a customer coming up behind one on the same bar waits a step behind it,
         // instead of disappearing inside its huge body
         // (and a boss coming up behind someone waits behind them too - it doesn't trample over them)
@@ -19181,7 +19252,9 @@ function update(dt) {
       // (v1.8.80) ROOM TO CATCH THE EMPTY: a heavy customer caught right at your end, on a heavy stop, slid back only a
       // little and sent the empty from so close to the taps that it arrived in a third of a second - too quick for the
       // warning. Pushed back far enough that it starts about a second out
-      if (!catcher.type.glutton)
+      // (v1.8.83: a big eater too, while he still wants more - his empty came from so close to your end that it arrived
+      //  in a third of a second; the last shake that fills him isn't followed by an empty)
+      if (!catcher.type.glutton || (catcher.fed || 0) + 1 < (catcher.type.need || GLUTTON_FED))
         catcher.left = Math.max(catcher.left, catcher.x - (TAPX - 0.9 * prm.empty * emptyK()));
       catcher.leftMax = catcher.left; // (v1.8.2: how far the push goes - for the arc on a light world, gravArc)
       catcher.happy = 1.2;
@@ -20002,6 +20075,8 @@ function update(dt) {
     ringBell(3, demo); // the pub bell: ding-ding-ding, LAST ORDERS!
     if (!demo) {
       // (v1.8.59: nor BOSS RUSH - it filled the tour's stars, and the map, at boss stops not yet reached)
+      // (v1.8.84: the DAILY CHALLENGE and a CUP match keep their stars card - but save no stars beyond the stops you've
+      //  unlocked, see kidLevelClear)
       if (G.endless || G.brush) G.starsNow = 0;
       else kidLevelClear(); // (v1.8.40: an endless stop gives no tour stars - see "ENDLESS MOVES ON")
       funLevelClear();
@@ -20028,7 +20103,8 @@ function update(dt) {
         3
       );
       // (v1.8.40: an endless stop doesn't unlock the tour's stops or give the tour's milestone life)
-      if (!G.endless && !G.brush && G.level + 1 > unlocked())
+      if (!G.endless && !G.brush && !G.daily && !CUP.match && G.level + 1 > unlocked())
+        // (v1.8.84: see above)
         store.set("unlock", Math.min(LAST_LEVEL, G.level + 1));
       // (v1.8.47: and not in BOSS RUSH - its bosses gave the tour's milestone lives, more on NORMAL than on EASY)
       if (
@@ -21523,6 +21599,9 @@ function coopTwins(dt, demo) {
 }
 function coopTwinServed(c, s, demo) {
   if (demo || !c.twin || !G.twin) return;
+  // (v1.8.85: the same twin twice isn't the pair - one walked back up after his first shake and was served again, and
+  //  that counted as TWINS SERVED TOGETHER without the other ever being served)
+  if (c.twinServed) return;
   c.twinServed = true;
   if (G.twin.served1 === undefined) {
     G.twin.served1 = G.time;
@@ -21627,10 +21706,13 @@ function fairBonus(pts, who , x , y ) {
     SCORER = null;
     return got;
   }
+  // (v1.8.85: between the players still in - in versus one who was out still took half of every shared bonus)
+  const inn = PL.filter((p) => p.alive !== false);
+  const share = inn.length ? inn : PL;
   let got = 0;
-  PL.forEach((p, i) => {
+  share.forEach((p, i) => {
     SCORER = p;
-    got += addScore(Math.round(pts / 2), i ? undefined : x, i ? undefined : y) || 0;
+    got += addScore(Math.round(pts / share.length), i ? undefined : x, i ? undefined : y) || 0;
     SCORER = null;
   });
   return got;
@@ -22444,11 +22526,20 @@ function afterLoss() {
   }
   // (v1.8.58) THE BOSS REMEMBERS: a boss that was half fed when you slipped came back hungry from scratch - he now
   // keeps half the shakes he'd drunk (never enough to come back furious), so a lost life costs ground, not the fight
-  const bc = customers.find((c) => c.type.boss && c.state !== "out" && (c.fed || 0) > 0);
+  // (v1.8.83) A FULL BOSS STAYS BEATEN: fed to the brim and still sliding back to the door when a life was lost on
+  // another bar, he was cleared away with the rest - and came back hungry, with no BOSS BEATEN and no prize (the
+  // Galactic Glutton too). A big eater who is full keeps leaving, and is counted as beaten at the door as usual
+  const full = (c) => c.type.glutton && (c.fed || 0) >= (c.type.need || GLUTTON_FED);
+  const bc = customers.find((c) => c.type.boss && c.state !== "out" && (c.fed || 0) > 0 && !full(c));
   if (bc) G.bossFed = Math.floor(Math.min(bc.fed, (bc.type.need || 1) - 1) / 2);
   // (v1.8.64: an envoy not yet served comes back a little later - cleared away with the rest, the stop's stamp was lost)
   if (customers.some((c) => c.envoy && c.state !== "out")) G.envoyAt = G.time + 3;
-  customers = customers.filter((c) => c.state === "out");
+  // (v1.8.85: the twins go with everyone else - their pair stayed "waiting", and no new twins came that stop)
+  if (G.twin) {
+    G.twin = null;
+    G.twinT = rnd(8, 14);
+  }
+  customers = customers.filter((c) => c.state === "out" || full(c));
   shakes = [];
   empties = [];
   tips = [];
@@ -53536,7 +53627,9 @@ function kidLevelClear() {
   const n = 1 + (G.perfect ? 1 : 0) + (G.perfect && (G.lvlPerf || 0) >= 4 ? 1 : 0),
     S = levelStars(),
     before = totalStars();
-  if ((S[G.level] | 0) < n) {
+  // (v1.8.84: not saved past the stops you've unlocked from the DAILY CHALLENGE or a CUP match - a new player's daily at
+  //  stop 8 put two stars there)
+  if ((S[G.level] | 0) < n && !((G.daily || CUP.match) && G.level > unlocked())) {
     S[G.level] = n;
     store.set("stars", S);
   }
@@ -53778,7 +53871,9 @@ function bossTricks(c, dt) {
     c.hopWarn = undefined;
     // (v1.8.51: and not if he has come too close to your end meanwhile - he could land on the next bar a step from
     //  the grab line, with no time to get there)
-    if (!free(to) || c.x > X1 - 200) {
+    // (v1.8.83: "not near your end" grows with his speed, as the alarm does - a fast, furious boss landed 200 px out and
+    //  reached you half a second later)
+    if (!free(to) || c.x > X1 - 12 - Math.max(190, 1.4 * (c.vps || 0))) {
       c.hopT = 1;
       return;
     }
@@ -53799,7 +53894,8 @@ function bossTricks(c, dt) {
     return;
   }
   c.hopT = (c.hopT ?? rnd(5, 8)) - dt;
-  if (c.hopT > 0 || c.state !== "walk" || c.x > X1 - 200 || c.x < X0 + 60) return;
+  if (c.hopT > 0 || c.state !== "walk" || c.x > X1 - 12 - Math.max(190, 1.4 * (c.vps || 0)) || c.x < X0 + 60)
+    return; // (v1.8.83: see above)
   const dirs = [c.lane - 1, c.lane + 1].filter((l) => l >= 0 && l < LANES);
   if (Math.random() < 0.5) dirs.reverse();
   const to = dirs.find(free);
@@ -68044,6 +68140,7 @@ function giftGoal() {
 function giftHud(g, s, t, fD) {
   const G0 = G.gift;
   if (!G0 || G.demo) return;
+  if (G.state === "paused") return; // (v1.8.84: paused on the stars screen, the present was thrown away - its coins given, never shown)
   if (G.state !== "clear") {
     G.gift = null;
     return;
@@ -68356,11 +68453,13 @@ function startMiniGame() {
   // (v1.8.3) GRAVITY IN THE MINI-GAMES: what drops into the glass falls slowly on a light world and fast on a heavy one
   // (miniGrav) - said as the game starts, when it's far from the Earth's
   if (kind === "cherry" || kind === "mixer") {
-    const g = gravNow();
+    // (v1.8.82: by the fall speed the mini-game really uses - in KID MODE it's never faster than on Earth, and the card
+    //  still said HEAVY GRAVITY; a stop only a little heavier said it too)
+    const g = miniGrav();
     // (v1.8.5 review: shown on the mini-game's own intro card - the callouts aren't drawn during a mini-game)
-    if (g < 0.45 || g >= 1.25)
+    if (g <= 0.85 || g >= 1.12)
       G.mini.grav =
-        g < 0.45 ? "LOW GRAVITY: EVERYTHING FALLS SLOWLY HERE" : "HEAVY GRAVITY: EVERYTHING FALLS FAST HERE";
+        g <= 0.85 ? "LOW GRAVITY: EVERYTHING FALLS SLOWLY HERE" : "HEAVY GRAVITY: EVERYTHING FALLS FAST HERE";
   }
   if (kind === "mixer") G.mini.ck = tourStop(); // (v1.8.8: the house cocktail of the stop just played)
   customers = [];
@@ -68612,6 +68711,7 @@ function funMiniUpdate(dt) {
     // things drop INTO the glass: past the rim they sink down inside and pile up; a near miss bounces off the side; a sock gets flung back out
     M.pile = M.pile || [];
     for (const it of M.items) {
+      if (it.dead) continue; // (v1.8.83: cleared this frame - after SHAKE MADE! it still dropped into the new glass)
       const py = it.y;
       it.vy += (it.vx !== undefined ? 700 : 0) * dt;
       it.y += it.vy * dt;
@@ -68705,6 +68805,7 @@ function funMiniUpdate(dt) {
             newRecipe(M);
             it.dead = true;
             M.pile = [];
+            for (const o of M.items) if (o.inG) o.dead = true; // (v1.8.82: the last shake's sinking bits don't land in the new glass)
           }
         }
         continue;
@@ -68848,12 +68949,17 @@ function miniDuelStep(M, dt, inp0) {
       continue;
     }
     if (it.dead || it.vx !== undefined) continue;
+    // (v1.8.82) A CATCH BEFORE A CLINK: the glasses were looked at one by one, catch-then-clink each - with the two side by
+    // side, player 1's clink zone overlaps player 2's rim, so a cherry landing in player 2's glass on that side bounced off
+    // player 1's instead. Every glass's rim first; only then the sides
+    let caughtNow = false;
     for (const gl of M.gl) {
       const dx = it.x - gl.x;
       if (py < rim && it.y >= rim && Math.abs(dx) < MINI_HW + 11) {
         if (gl.wrong) continue; // (that glass is out - it falls on past)
         if (M.team) {
           teamMixCatch(M, gl, it, dx);
+          caughtNow = true;
           break;
         }
         it.inG = true;
@@ -68877,16 +68983,21 @@ function miniDuelStep(M, dt, inp0) {
           sfx("chime", it.x, gl.score % 4);
           miniPop(M, it.x, it.y - 30, "+1");
         }
+        caughtNow = true;
         break;
       }
-      if (it.y > rim && it.y < MINI_GY && Math.abs(Math.abs(dx) - (MINI_HW + 14)) < 7) {
-        it.vx = (dx >= 0 ? 1 : -1) * rnd(120, 200);
-        it.vy = -rnd(140, 220);
-        it.spin = rnd(-8, 8);
-        sfx("clink");
-        break;
-      } // clink! off the side of a glass
     }
+    if (!caughtNow)
+      for (const gl of M.gl) {
+        const dx = it.x - gl.x;
+        if (it.y > rim && it.y < MINI_GY && Math.abs(Math.abs(dx) - (MINI_HW + 14)) < 7) {
+          it.vx = (dx >= 0 ? 1 : -1) * rnd(120, 200);
+          it.vy = -rnd(140, 220);
+          it.spin = rnd(-8, 8);
+          sfx("clink");
+          break;
+        } // clink! off the side of a glass
+      }
   }
 }
 // (v1.5.97) THE TEAM MIXER: something drops into one of the two glasses
@@ -85363,7 +85474,7 @@ function levelOfTour(of) {
     inTour = ((lv - 1) % LAST_LEVEL) + 1;
   return (tour > 1 ? "TOUR " + tour + "  ·  " : "") + "LEVEL " + inTour + of + LAST_LEVEL;
 }
-const GAME_VERSION = "v1.8.81",
+const GAME_VERSION = "v1.8.85",
   GAME_DATE = "26.11.2026",
   VERSION_TEXT = GAME_VERSION + "  ·  " + GAME_DATE;
 const FB = '"Chakra Petch", "Segoe UI", sans-serif';
@@ -93294,6 +93405,41 @@ profWire();
 //  the game, and where the motion capture, the folk songs and the fonts come from. Both from the menu at any time.
 // =====================================================================================
 const NEWS = [
+  {
+    ver: "v1.8.85",
+    title: "TEAMWORK THAT COUNTS",
+    items: [
+      "CO-OP: AFTER A SLIP NEW TWINS STILL COME - A TWINS TEAM GOAL COULD BE LOST FOR THE WHOLE STOP",
+      "CO-OP: THE SAME TWIN SERVED TWICE IS NO LONGER A PAIR",
+      "VERSUS: A PLAYER WHO'S OUT NO LONGER TAKES HALF OF THE SHARED BONUSES",
+    ],
+  },
+  {
+    ver: "v1.8.84",
+    title: "STARS WHERE YOU'VE EARNED THEM",
+    items: [
+      "THE DAILY CHALLENGE AND CUP MATCHES NO LONGER ADD TOUR STARS OR UNLOCK STOPS YOU HAVEN'T REACHED",
+      "PAUSING ON THE STARS SCREEN NO LONGER THROWS AWAY THE SURPRISE GIFT",
+    ],
+  },
+  {
+    ver: "v1.8.83",
+    title: "BOSS FIGHTS FAIR",
+    items: [
+      "A BOSS YOU'VE FILLED STAYS BEATEN, EVEN IF YOU SLIP BEFORE HE REACHES THE DOOR",
+      "A BOSS'S EMPTY GLASS STARTS FAR ENOUGH OUT TO CATCH",
+      "A FAST, FURIOUS BOSS NO LONGER LANDS RIGHT IN FRONT OF YOU",
+    ],
+  },
+  {
+    ver: "v1.8.82",
+    title: "FAIR CATCHES",
+    items: [
+      "CHERRY DUEL AND TEAM MIXER: A CHERRY LANDING IN PLAYER 2'S GLASS NO LONGER BOUNCES OFF PLAYER 1'S",
+      "THE MIXER'S NEW GLASS STARTS EMPTY - THE LAST SHAKE'S BITS NO LONGER FALL INTO IT",
+      "THE MINI-GAMES' GRAVITY LINE MATCHES HOW FAST THINGS REALLY FALL",
+    ],
+  },
   {
     ver: "v1.8.81",
     title: "POWER TO THE RIGHT PLAYER",

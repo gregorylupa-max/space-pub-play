@@ -1,13 +1,47 @@
 // ASTRO CAFÉ - the offline helper. The first visit keeps a copy of the game; after that it starts even with no internet.
 // The page itself is always fetched fresh when there IS internet, so every new version arrives straight away.
-const CACHE = "astro-cafe-v1.8.93";
+const CACHE = "astro-cafe-v1.8.94";
 // (v1.8.57) THE MUSIC KEEPS ITS OWN SHELF: the songs (up to ~48 MB) were saved in the versioned cache and thrown away with
 // every update - an offline player lost them until each was played online again. They live in a cache of their own now
 const MUSIC = "astro-cafe-music";
 // (v1.8.57: "./" was listed too - the 4 MB page was stored twice, and only ./index.html is ever read)
-const CORE = ["./index.html", "./manifest.webmanifest", "./icon-192.png", "./icon-512.png", "./icon-maskable-512.png", "./apple-touch-icon.png"];
+// (v1.8.94: the page itself is saved from "./" in install below, so ./index.html isn't listed here any more)
+const CORE = ["./manifest.webmanifest", "./icon-192.png", "./icon-512.png", "./icon-maskable-512.png", "./apple-touch-icon.png"];
+// (v1.8.94) the game's fonts, saved on the first visit - they were only saved when seen loading, and on the first
+// visit they load before this helper is there, so a first-visit-then-offline player got plain fonts
+const FONTS =
+  "https://fonts.googleapis.com/css2?family=Bungee&family=Press+Start+2P&family=Chakra+Petch:wght@500;600;700&display=swap";
 self.addEventListener("install", (e) => {
-  e.waitUntil(caches.open(CACHE).then((c) => c.addAll(CORE)).then(() => self.skipWaiting()));
+  // (v1.8.94) FRESH, AND ONLY ONCE: the files were taken from the browser's own 10-minute store, so after an update the
+  // offline copy could be the OLD page; and the page was downloaded twice on a first visit ("./" for the visit,
+  // ./index.html here - two addresses). Now the page comes from "./" asked with "no-cache": the server answers
+  // "not changed" for the copy just loaded (no second 4 MB), or sends the new one
+  e.waitUntil(
+    caches
+      .open(CACHE)
+      .then(async (c) => {
+        const pg = await fetch("./", { cache: "no-cache" });
+        if (pg && pg.ok) await c.put("./index.html", pg);
+        else await c.add(new Request("./index.html", { cache: "no-cache" }));
+        await c.addAll(CORE.map((u) => new Request(u, { cache: "no-cache" })));
+        try {
+          const css = await fetch(FONTS, { mode: "cors" });
+          if (css.ok) {
+            const txt = await css.clone().text();
+            await c.put(FONTS, css);
+            const urls = [...txt.matchAll(/url\((https:[^)]+)\)/g)].map((m) => m[1]);
+            await Promise.all(
+              urls.map((u) =>
+                fetch(u, { mode: "cors" })
+                  .then((r) => r.ok && c.put(u, r))
+                  .catch(() => {})
+              )
+            );
+          }
+        } catch (err) {} // (no fonts saved - they still come the old way, on a later visit)
+      })
+      .then(() => self.skipWaiting())
+  );
 });
 self.addEventListener("activate", (e) => {
   e.waitUntil(

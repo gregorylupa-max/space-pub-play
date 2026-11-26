@@ -68,7 +68,7 @@ body:not(.padnav) button:hover { border-color: var(--cyan); box-shadow: 0 0 14px
 body.padnav button.on:not(.navsel) { box-shadow: none !important; }   /* (with a controller the chosen item keeps only its amber frame - the glow is for where you are) */
 #oCont b { color: #3a0a4a; }
 #bExit { border-color: rgba(255, 95, 95, .55); }
-#bExit.sure { background: rgba(255, 70, 70, .35); }
+#bExit.sure, #cupList button.sure { background: rgba(255, 70, 70, .35); }
 #bye { position: fixed; inset: 0; z-index: 60; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 18px; background: #07040f; color: #fff3e2; text-align: center; padding: 16px; }
 #bye[hidden] { display: none; }
 #bye h1 { font-family: "Bungee", Impact, sans-serif; color: #ff5fa8; font-size: clamp(26px, 6vw, 54px); margin: 0; }
@@ -8089,6 +8089,7 @@ const DICT_ROWS                             = [
     "DIE WEDLOOP MET DIE SWARTGAT-BISTRO HET NOU 'N KLEIN RENBAAN: JOU KAFEE EN HULLE PIERING, OP PAD NA DIE VLAG",
     "WYŚCIG Z BISTRO CZARNA DZIURA MA TERAZ MAŁY TOR: TWOJA KAWIARNIA I ICH SPODEK PĘDZĄ DO FLAGI",
   ],
+  ["PRESS AGAIN: NEW CUP", "DRUK WEER: NUWE BEKER", "NACIŚNIJ PONOWNIE: NOWY TURNIEJ"], // (v1.8.94)
   // (v1.8.93) TEXTS BUILT IN PLAY that had no row (the rest are patterns, in DICT_PAT): who got to you, the exorcisms,
   // the daily challenge done
   ["A DEVIL GOT TO YOU!", "'N DUIWEL HET BY JOU UITGEKOM!", "DIABEŁ DOTARŁ DO CIEBIE!"],
@@ -8101,6 +8102,28 @@ const DICT_ROWS                             = [
     "DAILY CHALLENGE DONE!  +2 STARS",
     "DAAGLIKSE UITDAGING KLAAR!  +2 STERRE",
     "WYZWANIE DNIA UKOŃCZONE!  +2 GWIAZDKI",
+  ],
+  // (v1.8.94) A FAIRER CUP
+  ["A FAIRER CUP", "'N REGVERDIGER BEKER", "UCZCIWSZY TURNIEJ"],
+  [
+    "YOUR NAMES STAY YOUR NAMES - A PLAYER CALLED STAR IS NO LONGER TRANSLATED",
+    "JOU NAME BLY JOU NAME - 'N SPELER GENAAMD STAR WORD NIE MEER VERTAAL NIE",
+    "TWOJE IMIONA ZOSTAJĄ TWOIMI IMIONAMI - GRACZ O IMIENIU STAR NIE JEST JUŻ TŁUMACZONY",
+  ],
+  [
+    "A CUP MATCH NO LONGER COUNTS AS A HIGH SCORE OR A RECORD",
+    "'N BEKERWEDSTRYD TEL NIE MEER AS 'N HOË TELLING OF 'N REKORD NIE",
+    "MECZ TURNIEJOWY NIE LICZY SIĘ JUŻ JAKO NAJLEPSZY WYNIK ANI REKORD",
+  ],
+  [
+    "A TIE GOES TO THE PLAYER WITH MORE LIVES LEFT, AND NEW CUP ASKS TWICE",
+    "'N GELYKOPUNT GAAN NA DIE SPELER MET MEER LEWENS OOR, EN NUWE BEKER VRA TWEE KEER",
+    "REMIS WYGRYWA GRACZ Z WIĘKSZĄ LICZBĄ ŻYĆ, A NOWY TURNIEJ PYTA DWA RAZY",
+  ],
+  [
+    "PLAYING OFFLINE: THE GAME'S FONTS ARE KEPT FROM THE FIRST VISIT",
+    "SPEEL SONDER INTERNET: DIE SPEL SE LETTERTIPES WORD VANAF DIE EERSTE BESOEK GEHOU",
+    "GRA OFFLINE: CZCIONKI GRY SĄ ZAPISYWANE OD PIERWSZEJ WIZYTY",
   ],
   // (v1.8.93) EVERY WORD IN YOUR LANGUAGE
   ["EVERY WORD IN YOUR LANGUAGE", "ELKE WOORD IN JOU TAAL", "KAŻDE SŁOWO W TWOIM JĘZYKU"],
@@ -13079,6 +13102,8 @@ const DICT_PAT                             = [
   [/^REACHED LEVEL (\d+)$/, "VLAK $1 BEREIK", "OSIĄGNIĘTY POZIOM $1"],
   [/^POUR: (TAP|HOLD)  \(T to change\)$/, "SKINK: $1  (T om te verander)", "NALEWANIE: $1  (T, aby zmienić)"],
   [/^POUR: (TAP|HOLD)$/, "SKINK: $1", "NALEWANIE: $1"],
+  // (v1.8.94: moved up from below - standing alone, "ZOE IS THE CHAMPION!" was caught by the catch-all first)
+  [/^(.+) IS THE CHAMPION!$/, "$1 IS DIE KAMPIOEN!", "$1 ZOSTAJE MISTRZEM!"],
   // (v1.4.79) v1.5.2
   [/^([A-Z][A-Z\- ]{2,})!$/, "$1!", "$1!"],
   // (v1.4.79) v1.5.4 redemption
@@ -13106,7 +13131,6 @@ const DICT_PAT                             = [
     "$1:  $2  (SPELER 1)  teen  $3  (SPELER 2)",
     "$1:  $2  (GRACZ 1)  kontra  $3  (GRACZ 2)",
   ],
-  [/^(.+) IS THE CHAMPION!$/, "$1 IS DIE KAMPIOEN!", "$1 ZOSTAJE MISTRZEM!"],
   [/^HARD RESET IN ([\d.]+) s$/, "VOLLE HERSTEL OOR $1 s", "PEŁNY RESET ZA $1 s"],
   [/^Loading (\d+) songs?…$/, "Laai $1 liedjie(s)…", "Wczytywanie utworów: $1…"],
   [
@@ -13164,8 +13188,15 @@ const DICT_I = LANG === "af" ? 1 : 2;
 if (LANG !== "en") for (const r of DICT_ROWS) DICT.set(r[0], r[DICT_I]);
 const TCACHE = new Map                ();
 // translate one text (exact, a pattern, or piece by piece around " · " and "  ·  ")
+// (v1.8.94) NAMES ARE NAMES: the cup's players typed their names, and one called TAP, STAR, FOX or GHOST was turned into
+// STUKNIJ, GWIAZDKA, LIS, DUCH everywhere it showed. cup.ts keeps this set (the names and the score bar's shortened ones)
+let T_KEEP              = new Set();
+// (only while the cup is up - its screen open or a match on; a player named MENU or BACK left those words in English
+//  everywhere else for as long as the bracket was saved. cup.ts sets it once everything is loaded)
+let T_KEEP_ON = () => false;
 function T(s) {
   if (LANG === "en" || typeof s !== "string" || !s) return s;
+  if (T_KEEP.size && T_KEEP_ON() && T_KEEP.has(s.trim())) return s;
   // (v1.8.43) NOTHING TO TRANSLATE WITHOUT LETTERS: the rolling score, the timers and the counters are new strings
   //  almost every frame - each went through the cache, a trim and up to 250 patterns, and in a long endless game they
   //  filled the cache until it was emptied, so every fixed word had to be looked up again. (No row is without letters)
@@ -23221,7 +23252,9 @@ function gameOver() {
   const cupM = cupResult(); // (a cup match: the result goes into the bracket)
   say("GAME OVER", true);
   if (twoP()) G.score = G.versus ? Math.max(P1.score, P2.score) : P1.score + P2.score;
-  const best = G.score > G.hi;
+  // (v1.8.94: a cup match is a party game - it went into the high-score table, HI and YOUR RECORDS; leaving it out, as
+  //  quitScore already did)
+  const best = !cupM && G.score > G.hi;
   if (best) {
     G.hi = G.score;
     store.set("hi", G.hi);
@@ -23262,11 +23295,11 @@ function gameOver() {
       ["combo", "BEST COMBO"],
       ["served", "SERVED"],
     ]) {
-      const nw = now[k] > (R0[k] || 0) && now[k] > 0;
+      const nw = !cupM && now[k] > (R0[k] || 0) && now[k] > 0; // (v1.8.94: a cup match sets no records)
       if (now[k] > (R0[k] || 0)) R1[k] = now[k];
       rows.push([label, String(now[k]), nw ? "NEW RECORD!" : "RECORD " + (R0[k] || 0), nw]);
     }
-    store.set("records", R1);
+    if (!cupM) store.set("records", R1); // (v1.8.94: not from a cup match)
     // (v1.5.93) THE TEAM AWARDS: after a co-op game, a little friendly rivalry in the results - who served the most,
     // caught the most empty glasses, lent the most helping hands and won the crown most often, with both counts
     if (coopOn() && G.coopG)
@@ -23300,7 +23333,7 @@ function gameOver() {
       }
   }
   const table = hiScores(),
-    makes = G.score > 0 && (table.length < 20 || G.score > table[table.length - 1].s);
+    makes = !cupM && G.score > 0 && (table.length < 20 || G.score > table[table.length - 1].s); // (v1.8.94: nor the table)
   // (v1.4.84) WHAT HAPPENED, AND HOW TO DO BETTER: the last life's cause, in plain words, with one tip for next time -
   // so a new player learns the rule they just broke (not after a cup match, or a game that was won)
   {
@@ -82811,7 +82844,22 @@ const CUP
   match: null,
   back: false,
 };
-const cupSave = () => store.set("cup", CUP.s);
+// (v1.8.94) the players' names, kept out of the translation (lang.ts T_KEEP) - in full and as the score bar shows them
+const cupCut = (nm        ) => nm.slice(0, 6);
+function cupKeep() {
+  T_KEEP = new Set();
+  for (const nm of (CUP.s && CUP.s.names) || []) {
+    T_KEEP.add(nm);
+    T_KEEP.add(cupCut(nm));
+  }
+  TCACHE.clear(); // (lines with a name in them are worked out again)
+}
+cupKeep();
+T_KEEP_ON = () => !!(CUP.match || CUP.back || FP.cup); // (back: the match's GAME OVER, "X WINS THE MATCH!")
+const cupSave = () => {
+  store.set("cup", CUP.s);
+  cupKeep();
+};
 // draw the bracket: shuffle the names, pad to 4 or 8 with byes - a bye is a free pass into the next round
 function cupDraw(names          ) {
   const n = names.length <= 2 ? 2 : names.length <= 4 ? 4 : 8,
@@ -82874,7 +82922,7 @@ function buildCup() {
   $k("cupCanvas").hidden = !S; // (no bracket yet: just the names)
   const btn = (txt, fn, cls = "") => {
     const b = document.createElement("button");
-    b.innerHTML = txt;
+    b.textContent = txt; // (v1.8.94: not innerHTML - the PLAY button carries typed names, and "<I>ZOE" restyled it)
     if (cls) b.className = cls;
     b.onclick = fn;
     list.appendChild(b);
@@ -82933,14 +82981,33 @@ function buildCup() {
   if (S.champ) {
     $k("cupTag").textContent = S.champ + " WINS THE ASTRO CAFÉ CUP!";
     btn("SHARE THE CHAMPION ▶", () => shareNow("cup"), "primary").style.gridColumn = "1 / -1";
-    btn("NEW CUP", () => cupReset(), "wide").style.gridColumn = "1 / -1";
+    newCupBtn();
   } else if (nx) {
     const r = S.rounds.findIndex((R0) => R0.includes(nx));
     $k("cupTag").textContent =
       roundName(r, S.rounds.length) + ":  " + nx.a + "  (PLAYER 1)  vs  " + nx.b + "  (PLAYER 2)";
     const play = btn("▶ PLAY: " + nx.a + " vs " + nx.b, () => cupPlay(nx), "primary");
     play.style.gridColumn = "1 / -1";
-    btn("NEW CUP", () => cupReset(), "wide").style.gridColumn = "1 / -1";
+    newCupBtn();
+  }
+  // (v1.8.94) NEW CUP ASKS TWICE: one stray tap (or Enter) threw away a half-played bracket for good - like the other
+  // buttons that can't be undone, the first press only asks
+  function newCupBtn() {
+    const b = btn(
+      "NEW CUP",
+      () => {
+        if (b.classList.contains("sure")) return cupReset();
+        b.classList.add("sure");
+        b.textContent = T("PRESS AGAIN: NEW CUP");
+        sfx("tick");
+        setTimeout(() => {
+          b.classList.remove("sure");
+          b.textContent = T("NEW CUP");
+        }, 3000);
+      },
+      "wide"
+    );
+    b.style.gridColumn = "1 / -1";
   }
 }
 function cupReset() {
@@ -82983,13 +83050,15 @@ function cupResult() {
       ? m.a
       : P2.score > P1.score
         ? m.b
-        : G.loser === P1
-          ? m.b
-          : G.loser === P2
+        : // (v1.8.94: a tie goes to the one with more lives left - then to the one who didn't slip last; it went to the
+          //  last slip first, so a player with fewer lives could go through)
+          P1.lives !== P2.lives
+          ? P1.lives > P2.lives
             ? m.a
-            : P1.lives >= P2.lives
-              ? m.a
-              : m.b;
+            : m.b
+          : G.loser === P1
+            ? m.b
+            : m.a;
   cupAdvance();
   cupSave();
   CUP.back = true;
@@ -83025,9 +83094,11 @@ function drawCupPanel() {
   g.lineCap = "round";
   // each round is a column; each match a pair of name boxes, with lines joining the winner to the next round
   const slotY = (r0, i, which) => {
-    const n = S.rounds[r0].length,
-      cell = h / n;
-    return cell * i + cell * (which ? 0.7 : 0.3);
+    // (v1.8.94: below a strip for the round names - with 8 players the first name box sat under "ROUND 1")
+    const top = fs + 8,
+      n = S.rounds[r0].length,
+      cell = (h - top) / n;
+    return top + cell * i + cell * (which ? 0.7 : 0.3);
   };
   for (let r0 = 0; r0 < R; r0++) {
     const x = colW * r0 + 10,
@@ -85797,7 +85868,7 @@ function levelOfTour(of) {
     inTour = ((lv - 1) % LAST_LEVEL) + 1;
   return (tour > 1 ? "TOUR " + tour + "  ·  " : "") + "LEVEL " + inTour + of + LAST_LEVEL;
 }
-const GAME_VERSION = "v1.8.93",
+const GAME_VERSION = "v1.8.94",
   GAME_DATE = "26.11.2026",
   VERSION_TEXT = GAME_VERSION + "  ·  " + GAME_DATE;
 const FB = '"Chakra Petch", "Segoe UI", sans-serif';
@@ -86697,7 +86768,17 @@ function drawHud(fps) {
         g.fillStyle = c;
         g.shadowColor = c;
         g.font = fD(12);
-        g.fillText(cupName(p.id) ? cupName(p.id).slice(0, 4) : p.id ? "2UP" : "1UP", pad, y + 4 * s); // (in a cup match: the names)
+        // (v1.8.94: six letters, not four - MARIA and MARIUSZ were both MARI - and if the two still look the same, 1UP and
+        //  2UP; squeezed to fit before the score)
+        {
+          const nm = cupName(p.id),
+            cut = nm ? cupCut(nm) : "",
+            same = nm && cut === cupCut(cupName(1 - p.id) || ""),
+            tx = !nm || same ? (p.id ? "2UP" : "1UP") : cut,
+            tw = g.measureText(tx).width;
+          if (tw > 42 * s) g.font = fD((12 * 42 * s) / tw);
+          g.fillText(tx, pad, y + 4 * s); // (in a cup match: the names)
+        }
         g.font = fD(18);
         {
           const sv = hudRoll(p.id, p.score);
@@ -93756,6 +93837,16 @@ profWire();
 //  the game, and where the motion capture, the folk songs and the fonts come from. Both from the menu at any time.
 // =====================================================================================
 const NEWS = [
+  {
+    ver: "v1.8.94",
+    title: "A FAIRER CUP",
+    items: [
+      "YOUR NAMES STAY YOUR NAMES - A PLAYER CALLED STAR IS NO LONGER TRANSLATED",
+      "A CUP MATCH NO LONGER COUNTS AS A HIGH SCORE OR A RECORD",
+      "A TIE GOES TO THE PLAYER WITH MORE LIVES LEFT, AND NEW CUP ASKS TWICE",
+      "PLAYING OFFLINE: THE GAME'S FONTS ARE KEPT FROM THE FIRST VISIT",
+    ],
+  },
   {
     ver: "v1.8.93",
     title: "EVERY WORD IN YOUR LANGUAGE",

@@ -330,7 +330,7 @@ body.retro .table { font-size: 10px; gap: 5px; }
 #touch button.on { background: rgba(95, 245, 200, .4); transform: scale(.95); }
 #touch button.act.on { background: rgba(255, 95, 168, .45); }
 #touch button.holy { width: 112px; height: 46px; border-radius: 14px; font-size: 13px; flex-direction: row; gap: 5px; border-color: rgba(127, 216, 255, .8); background: rgba(20, 60, 110, .55); }
-#touch button.holy small { font-size: 9px; }
+#touch button.holy small { font-size: 9px; } #touch .row2 button.holy small { font-size: 8px; } /* (v1.8.97: Polish ŚWIĘCONA stuck out of the narrow button) */
 /* (v1.6.10) left-handed or not, player 1's pad stays bottom left and player 2's bottom right (as HOW TO PLAY says) */
 body.lefty.touch2p #touch { flex-direction: row; }
 /* (v1.6.8) two players on one touch screen: each gets a little pad - HOLY, up, POUR / left, down, right - in their colour */
@@ -362,7 +362,7 @@ body.touch2p #touch .tp button.holy { width: 60px; height: 60px; font-size: 11px
   #touch .col button { width: calc(var(--c) * .82); height: max(44px, calc(var(--c) * .72)); border-radius: 14px; font-size: calc(var(--c) * .26); }
   #touch button.act { width: calc(var(--c) * 1.27); height: calc(var(--c) * 1.27); font-size: calc(var(--c) * .22); }
   #touch .row2 { gap: 4px; }
-  #touch .row2 button.holy { width: calc(var(--c) * .615); height: max(40px, calc(var(--c) * .52)); font-size: calc(var(--c) * .15); }
+  #touch .row2 button.holy { width: max(40px, calc(var(--c) * .615)); height: max(44px, calc(var(--c) * .52)); font-size: calc(var(--c) * .15); } /* (v1.8.97: at least 44px tall - 39x42 on a 390-wide phone; 40 wide, so a 320-wide phone keeps its side margin) */
   #touch button small { font-size: 9px; letter-spacing: .04em; }
 }
 #crash { position: fixed; inset: 0; z-index: 50; display: flex; align-items: center; justify-content: center; background: rgba(4, 2, 12, .82); }
@@ -2772,7 +2772,7 @@ const DICT_ROWS                             = [
   ["COIN SHOP", "MUNTWINKEL", "SKLEP"],
   ["TROPHIES", "TROFEË", "TROFEA"],
   ["ENDLESS MODE", "EINDLOSE SPEL", "TRYB BEZ KOŃCA"],
-  ["GALAXY MAP", "STERRESTELSEL-KAART", "MAPA GALAKTYKI"],
+  ["GALAXY MAP", "STERREKAART", "MAPA GALAKTYKI"], // (v1.8.97: shorter - the panel title wrapped and pushed its button over the map)
   ["CUP TOURNAMENT", "BEKERTOERNOOI", "TURNIEJ O PUCHAR"],
   ["WHAT'S NEW & CREDITS", "WAT IS NUUT & ERKENNINGS", "NOWOŚCI I TWÓRCY"],
   ["ONE-BUTTON:", "EEN KNOPPIE:", "JEDEN PRZYCISK:"],
@@ -2824,11 +2824,11 @@ const DICT_ROWS                             = [
   ["CPU · SOFTWARE", "CPU · SAGTEWARE", "CPU · PROGRAMOWO"],
   ["SOUND:", "KLANK:", "DŹWIĘK:"],
   ["MUSIC:", "MUSIEK:", "MUZYKA:"],
-  ["ORIGINAL", "OORSPRONKLIK", "ORYGINALNA"],
+  ["ORIGINAL", "ORIGINEEL", "ORYGINALNA"], // (v1.8.97: shorter - it split in three at the biggest text size)
   ["YOUR MUSIC", "JOU MUSIEK", "TWOJA MUZYKA"],
   ["MUSIC VOLUME", "MUSIEK-VOLUME", "GŁOŚNOŚĆ MUZYKI"],
   ["EFFECTS VOLUME", "EFFEKTE-VOLUME", "GŁOŚNOŚĆ EFEKTÓW"],
-  ["BACKGROUND SOUNDS", "AGTERGRONDGELUIDE", "DŹWIĘKI TŁA"],
+  ["BACKGROUND SOUNDS", "AGTERGROND-GELUIDE", "DŹWIĘKI TŁA"],
   ["FREE PLAY MODE", "VRYE SPEL", "TRYB SWOBODNY"],
   ["NO LOSING, NO TIMER", "GEEN VERLOOR, GEEN HORLOSIE", "BEZ PRZEGRYWANIA, BEZ ZEGARA"],
   ["RELAX MODE", "ONTSPAN", "TRYB RELAKSU"],
@@ -4043,7 +4043,7 @@ const DICT_ROWS                             = [
   ["PLAY ALL VOLKSLIEDJIES ▶", "SPEEL AL DIE VOLKSLIEDJIES ▶", "ZAGRAJ WSZYSTKIE VOLKSLIEDJIES ▶"],
   ["THE MILKY WAY", "DIE MELKWEG", "DROGA MLECZNA"],
   ["OUR HOME GALAXY", "ONS TUISSTERRESTELSEL", "NASZA GALAKTYKA"],
-  ["THE ANDROMEDA GALAXY", "DIE ANDROMEDA-STERRESTELSEL", "GALAKTYKA ANDROMEDY"],
+  ["THE ANDROMEDA GALAXY", "DIE ANDROMEDASTELSEL", "GALAKTYKA ANDROMEDY"], // (v1.8.97: shorter - cut off at the edge of the map on a phone)
   ["2.5 MILLION LIGHT-YEARS AWAY", "2,5 MILJOEN LIGJARE VER", "2,5 MILIONA LAT ŚWIETLNYCH STĄD"],
   ["2.5 MILLION LIGHT-YEARS", "2,5 MILJOEN LIGJARE", "2,5 MILIONA LAT ŚWIETLNYCH"],
   ["THE SUN", "DIE SON", "SŁOŃCE"],
@@ -4894,7 +4894,7 @@ const DICT_ROWS                             = [
   ["LEGEND OF THE COSMOS", "LEGENDE VAN DIE KOSMOS", "LEGENDA KOSMOSU"],
   ["GOLDEN FOOTSTEPS", "GOUE VOETSPORE", "ZŁOTE ŚLADY"],
   ["RAINBOW TRAIL", "REËNBOOGSPOOR", "TĘCZOWY ŚLAD"],
-  ["VICTORY FIREWORKS", "OORWINNINGSVUURWERKE", "FAJERWERKI ZWYCIĘSTWA"],
+  ["VICTORY FIREWORKS", "OORWINNINGS-VUURWERKE", "FAJERWERKI ZWYCIĘSTWA"], // (v1.8.97: a hyphen to break at)
   ["GOLDEN GLOW", "GOUE GLOED", "ZŁOTY BLASK"],
   ["CROWN OF STARS", "KROON VAN STERRE", "KORONA Z GWIAZD"],
   ["BOSS BEATEN", "BAAS VERSLAAN", "BOSS POKONANY"],
@@ -5376,7 +5376,7 @@ const DICT_ROWS                             = [
     "DIE OOIEVAARKUIKEN HET DIE SKOMMEL GEVANG!",
     "BOCIANIE PISKLĘ ZŁAPAŁO KOKTAJL!",
   ],
-  ["YOUR LUCKY CHARM SAVED YOU!", "JOU GELUKSBRINGER HET JOU GERED!", "TWÓJ TALIZMAN CIĘ URATOWAŁ!"],
+  ["YOUR LUCKY CHARM SAVED YOU!", "JOU TALISMAN HET JOU GERED!", "TWÓJ TALIZMAN CIĘ URATOWAŁ!"],
   ["BABY ALIEN FREEZES A CUSTOMER!", "BABA-RUIMTEWESE VRIES 'N KLANT!", "MAŁY KOSMITA ZAMRAŻA KLIENTA!"],
   ["BABY DRAGON PUFF!  BACK YOU GO", "BABADRAKIE BLAAS!  TERUG IS JY", "DMUCHNIĘCIE SMOCZKA!  WRACAJ"],
   ["THE SHAKE MIXER", "DIE SKOMMELMENGER", "MIKSER KOKTAJLI"],
@@ -5670,7 +5670,7 @@ const DICT_ROWS                             = [
   ],
   [
     "THE ANDROMEDA GALAXY: ABOUT 220,000 LIGHT-YEARS ACROSS - TWICE THE SIZE OF OURS",
-    "DIE ANDROMEDA-STERRESTELSEL: OMTRENT 220 000 LIGJARE BREED - TWEE KEER SO GROOT AS ONS S'N",
+    "DIE ANDROMEDASTELSEL: OMTRENT 220 000 LIGJARE BREED - TWEE KEER SO GROOT AS ONS S'N",
     "GALAKTYKA ANDROMEDY: OKOŁO 220 000 LAT ŚWIETLNYCH ŚREDNICY - DWA RAZY WIĘKSZA OD NASZEJ",
   ],
   [
@@ -5680,11 +5680,7 @@ const DICT_ROWS                             = [
   ],
   ["WELCOME TO ANDROMEDA!", "WELKOM IN ANDROMEDA!", "WITAJ W ANDROMEDZIE!"],
   ["TO ANDROMEDA!", "NA ANDROMEDA!", "DO ANDROMEDY!"],
-  [
-    "WELCOME TO THE ANDROMEDA GALAXY!",
-    "WELKOM IN DIE ANDROMEDA-STERRESTELSEL!",
-    "WITAJ W GALAKTYCE ANDROMEDY!",
-  ],
+  ["WELCOME TO THE ANDROMEDA GALAXY!", "WELKOM IN DIE ANDROMEDASTELSEL!", "WITAJ W GALAKTYCE ANDROMEDY!"],
   ["WE COME IN PEACE", "ONS KOM IN VREDE", "PRZYBYWAMY W POKOJU"],
   ["FOR SHAKES!", "VIR SKOMMELS!", "PO KOKTAJLE!"],
   ["ZIBBLE THE GREEN", "ZIBBLE DIE GROENE", "ZIBBLE ZIELONY"],
@@ -6347,9 +6343,9 @@ const DICT_ROWS                             = [
   ["NEXT, PLEASE!", "VOLGENDE, ASSEBLIEF!", "NASTĘPNY, PROSZĘ!"],
   ["SHOO!", "SJOE WEG!", "A KYSZ!"],
   ["EXTRA LIFE!", "EKSTRA LEWE!", "DODATKOWE ŻYCIE!"],
-  ["LUCKY CHARM", "GELUKSBRINGER", "TALIZMAN"],
+  ["LUCKY CHARM", "TALISMAN", "TALIZMAN"], // (v1.8.97: shorter - it split mid-word in the shop on a phone)
   ["EXTRA LIFE", "EKSTRA LEWE", "DODATKOWE ŻYCIE"],
-  ["ROCKET SHOES", "VUURPYLSKOENE", "RAKIETOWE BUTY"],
+  ["ROCKET SHOES", "VUURPYL-SKOENE", "RAKIETOWE BUTY"],
   ["EXTRA PEEK", "EKSTRA LOER", "DODATKOWE ZERKNIĘCIE"],
   ["FLAG BUNTING", "VLAGGIES", "GIRLANDA Z FLAG"],
   ["NEON GL SIGN", "NEON-GL-BORD", "NEON GL"],
@@ -6365,7 +6361,7 @@ const DICT_ROWS                             = [
   ["HERITAGE DAY - BRAAI TIME!", "ERFENISDAG - BRAAITYD!", "DZIEŃ DZIEDZICTWA - CZAS NA BRAAI!"],
   ["POLISH INDEPENDENCE DAY", "POLE SE ONAFHANKLIKHEIDSDAG", "NARODOWE ŚWIĘTO NIEPODLEGŁOŚCI"],
   ["POLISH CONSTITUTION DAY", "POLE SE GRONDWETDAG", "ŚWIĘTO KONSTYTUCJI 3 MAJA"],
-  ["ROCKET SHOES!  SUPER SPEED", "VUURPYLSKOENE!  SUPERSPOED", "RAKIETOWE BUTY!  SUPERSZYBKOŚĆ"],
+  ["ROCKET SHOES!  SUPER SPEED", "VUURPYL-SKOENE!  SUPERSPOED", "RAKIETOWE BUTY!  SUPERSZYBKOŚĆ"],
   ["LEVEL CLEAR", "VLAK KLAAR", "POZIOM UKOŃCZONY"],
   ["CHERRY CATCH", "KERSIEVANG", "ŁAPANIE WIŚNI"],
   ["BOGDAN'S SPACE DELIVERY", "BOGDAN SE RUIMTE-AFLEWERING", "KOSMICZNA DOSTAWA BOGDANA"],
@@ -6460,17 +6456,17 @@ const DICT_ROWS                             = [
   ["RIGHT CTRL", "REGTER-CTRL", "PRAWY CTRL"],
   ["LEFT ALT", "LINKER-ALT", "LEWY ALT"],
   ["RIGHT ALT", "REGTER-ALT", "PRAWY ALT"],
-  ["PARTY HAT", "PARTYTJIEHOED", "CZAPECZKA URODZINOWA"],
+  ["PARTY HAT", "PARTYHOED", "CZAPKA IMPREZOWA"], // (v1.8.97: shorter - on a phone held upright the long hat and pet names split mid-word)
   ["CHEF'S HAT", "SJEFSMUS", "CZAPKA KUCHARSKA"],
-  ["COWBOY HAT", "KOEIWAGTERHOED", "KAPELUSZ KOWBOJSKI"],
-  ["PROPELLER CAP", "PROPELLERPET", "CZAPKA ZE ŚMIGŁEM"],
-  ["PIRATE HAT", "SEEROWERSHOED", "KAPELUSZ PIRACKI"],
+  ["COWBOY HAT", "COWBOYHOED", "KAPELUSZ KOWBOJSKI"],
+  ["PROPELLER CAP", "SKROEFPET", "CZAPKA ZE ŚMIGŁEM"],
+  ["PIRATE HAT", "PIRAATHOED", "KAPELUSZ PIRACKI"],
   ["VIKING HELMET", "VIKINGHELM", "HEŁM WIKINGA"],
-  ["WIZARD HAT", "TOWENAARSHOED", "KAPELUSZ CZARODZIEJA"],
+  ["WIZARD HAT", "TOWERHOED", "KAPELUSZ MAGA"],
   ["SPACE HELMET", "RUIMTEHELM", "HEŁM KOSMICZNY"],
   ["GOLDEN CROWN", "GOUE KROON", "ZŁOTA KORONA"],
   ["DETECTIVE DROID", "SPEURDER-DROÏDE", "DROID DETEKTYW"],
-  ["STORK CHICK", "OOIEVAARKUIKEN", "BOCIANIE PISKLĘ"],
+  ["STORK CHICK", "OOIEVAARTJIE", "BOCIANIE PISKLĘ"],
   ["BABY ALIEN", "BABA-RUIMTEWESE", "MAŁY KOSMITA"],
   ["BABY DRAGON", "BABADRAKIE", "SMOCZEK"],
   ["SPACE MINER", "RUIMTEMYNWERKER", "KOSMICZNY GÓRNIK"],
@@ -8103,6 +8099,28 @@ const DICT_ROWS                             = [
     "DAAGLIKSE UITDAGING KLAAR!  +2 STERRE",
     "WYZWANIE DNIA UKOŃCZONE!  +2 GWIAZDKI",
   ],
+  // (v1.8.97) FOR EVERY HAND AND EVERY EYE
+  ["FOR EVERY HAND AND EVERY EYE", "VIR ELKE HAND EN ELKE OOG", "DLA KAŻDEJ RĘKI I KAŻDEGO OKA"],
+  [
+    "THE ORDER TICKETS AND TAP LIGHTS SHOW THE FLAVOUR'S SHAPE, NOT ONLY ITS COLOUR",
+    "DIE BESTELKAARTJIES EN KRAANLIGTE WYS DIE GEUR SE VORM, NIE NET SY KLEUR NIE",
+    "BILECIKI ZAMÓWIEŃ I LAMPKI KRANÓW POKAZUJĄ KSZTAŁT SMAKU, NIE TYLKO JEGO KOLOR",
+  ],
+  [
+    "YOUR TAP POURS IN YOUR FLAVOUR'S COLOUR",
+    "JOU KRAAN SKINK IN JOU GEUR SE KLEUR",
+    "TWÓJ KRAN NALEWA W KOLORZE TWOJEGO SMAKU",
+  ],
+  [
+    "LEFT-HANDED: ON A MIRROR STOP THE BUTTONS NO LONGER COVER THE TAPS",
+    "LINKSHANDIG: OP 'N SPIEËLHALTE BEDEK DIE KNOPPIES NIE MEER DIE KRANE NIE",
+    "DLA LEWORĘCZNYCH: NA LUSTRZANYM PRZYSTANKU PRZYCISKI NIE ZASŁANIAJĄ JUŻ KRANÓW",
+  ],
+  [
+    "SHORTER AFRIKAANS AND POLISH NAMES THAT FIT ON A PHONE",
+    "KORTER AFRIKAANSE EN POOLSE NAME WAT OP 'N FOON PAS",
+    "KRÓTSZE AFRIKAANSKIE I POLSKIE NAZWY, KTÓRE MIESZCZĄ SIĘ NA TELEFONIE",
+  ],
   // (v1.8.96) ONE BUTTON IS ENOUGH
   ["ONE BUTTON IS ENOUGH", "EEN KNOPPIE IS GENOEG", "JEDEN PRZYCISK WYSTARCZY"],
   [
@@ -8408,7 +8426,7 @@ const DICT_ROWS                             = [
   ["SAVED MEANS SAVED", "GERED IS GERED", "URATOWANY ZNACZY URATOWANY"],
   [
     "A SHIELD, A FREE SAVE, A PET OR THE CHARM THAT SAVES A DROPPED SHAKE REALLY SAVES YOU - THE NEXT MOMENT TOOK THE LIFE ANYWAY",
-    "'N SKILD, 'N GRATIS REDDING, 'N TROETELDIER OF DIE GELUKSBRINGER WAT 'N GEVALLE SKOMMEL RED, RED JOU REGTIG - DIE VOLGENDE OOMBLIK HET DIE LEWE TOG GEVAT",
+    "'N SKILD, 'N GRATIS REDDING, 'N TROETELDIER OF DIE TALISMAN WAT 'N GEVALLE SKOMMEL RED, RED JOU REGTIG - DIE VOLGENDE OOMBLIK HET DIE LEWE TOG GEVAT",
     "TARCZA, DARMOWY RATUNEK, ZWIERZAK LUB TALIZMAN, KTÓRY RATUJE UPUSZCZONY KOKTAJL, NAPRAWDĘ CIĘ RATUJE - CHWILĘ PÓŹNIEJ ŻYCIE I TAK PRZEPADAŁO",
   ],
   [
@@ -8620,7 +8638,7 @@ const DICT_ROWS                             = [
   ["MONEY'S WORTH", "WAARDE VIR GELD", "WART SWOJEJ CENY"],
   [
     "THE LUCKY CHARM STAYS IN YOUR POCKET UNTIL IT REALLY SAVES YOU - AND ON EASY THE FREE SAVE GOES FIRST",
-    "DIE GELUKSBRINGER BLY IN JOU SAK TOTDAT DIT JOU REGTIG RED - EN OP MAKLIK GAAN DIE GRATIS REDDING EERSTE",
+    "DIE TALISMAN BLY IN JOU SAK TOTDAT DIT JOU REGTIG RED - EN OP MAKLIK GAAN DIE GRATIS REDDING EERSTE",
     "TALIZMAN ZOSTAJE W KIESZENI, AŻ NAPRAWDĘ CIĘ URATUJE - A NA ŁATWYM NAJPIERW DZIAŁA DARMOWY RATUNEK",
   ],
   [
@@ -8873,7 +8891,7 @@ const DICT_ROWS                             = [
   ["FAIR PAIRS", "REGVERDIGE PARE", "UCZCIWE PARY"],
   [
     "VERSUS: THE ROCKET SHOES AND THE LUCKY CHARM STAY IN THE SHOP - THEY ONLY EVER HELPED ONE OF YOU",
-    "TEEN MEKAAR: DIE VUURPYLSKOENE EN DIE GELUKSBRINGER BLY IN DIE WINKEL - HULLE HET NOOIT NET EEN VAN JULLE GEHELP NIE",
+    "TEEN MEKAAR: DIE VUURPYL-SKOENE EN DIE TALISMAN BLY IN DIE WINKEL - HULLE HET NOOIT NET EEN VAN JULLE GEHELP NIE",
     "POJEDYNEK: RAKIETOWE BUTY I TALIZMAN ZOSTAJĄ W SKLEPIE - ZAWSZE POMAGAŁY TYLKO JEDNEMU Z WAS",
   ],
   [
@@ -8904,7 +8922,7 @@ const DICT_ROWS                             = [
   ["ON THE MAP", "OP DIE KAART", "NA MAPIE"],
   [
     "THE GALAXY MAP PARKS YOUR SHIP AT YOUR NEXT TOUR STOP AND OPENS ON YOUR START AT LEVEL CHOICE",
-    "DIE STERRESTELSEL-KAART PARKEER JOU SKIP BY JOU VOLGENDE TOERHALTE EN MAAK OOP BY JOU BEGIN BY VLAK-KEUSE",
+    "DIE STERREKAART PARKEER JOU SKIP BY JOU VOLGENDE TOERHALTE EN MAAK OOP BY JOU BEGIN BY VLAK-KEUSE",
     "MAPA GALAKTYKI PARKUJE TWÓJ STATEK NA NASTĘPNYM PRZYSTANKU TRASY I OTWIERA SIĘ NA TWOIM WYBORZE START OD POZIOMU",
   ],
   [
@@ -29299,7 +29317,10 @@ function drawTap(lane, t, V) {
     y = LY(lane, TAPX),
     on = active().some((p) => p.lane === lane),
     pouring = active().some((p) => p.lane === lane && p.pouring);
-  const fc = FLAVORS[lane % 3][0],
+  // (v1.8.97: the tap you stand at pours - and glows - in YOUR flavour; it was the bar's number, so a mint pour on the
+  //  first bar ran strawberry pink. The empty taps keep their mix of colours)
+  const atTap = active().find((p) => p.lane === lane),
+    fc = FLAVORS[atTap ? (atTap.flav ?? 0) : lane % 3][0],
     hand = on ? C.red : col("#8a2030");
   // (v1.4.73: the spout and the pull handle on every machine are rounded - they were little square blocks)
   const spout = (c1, c2) => {
@@ -70787,7 +70808,16 @@ function drawOrderTicket(lane, t) {
   translate(x - 1, y + 4);
   scaleBy(0.5);
   drawGlass(0, 0, o, 1, 0);
+  // (v1.8.97) THE TICKET NOT BY COLOUR ALONE: like the order bubble (v1.8.42), the flavour's shape is always on it -
+  //  under red-green colour blindness the strawberry and mint glasses on the little ticket looked the same
+  if (!COMFORT.shapes) flavorMark(0, -15, o, 1.35);
   pop();
+  // (and a tick when your tap is set right - the green and amber rings are close to one colour for those players too)
+  if (ok) {
+    disc(x + 10, y - 15, 5.5, col("#1f6a4a"));
+    line(x + 7.4, y - 15, x + 9.4, y - 12.8, 1.4, C.white);
+    line(x + 9.4, y - 12.8, x + 12.8, y - 17.4, 1.4, C.white);
+  }
   arc(
     x - 1,
     y - 2,
@@ -70812,7 +70842,7 @@ function funTapLight(lane, t) {
       R.setAdd(true);
       glow(x, y, 16, withA(col(FLAV_HEX[f]), 0.4 + 0.15 * Math.sin(t * 5)));
       R.setAdd(false);
-      if (COMFORT.shapes) flavorMark(x, y, f, 0.6); // (v1.8.42: FLAVOUR SHAPES on the tap's light too)
+      flavorMark(x, y, f, 0.6); // (v1.8.42: FLAVOUR SHAPES on the tap's light too) (v1.8.97: always - the dot's colour alone wasn't enough for colour-blind players)
     }
 }
 function funLaneDraw(lane, t) {
@@ -71943,12 +71973,14 @@ function funHud(g, s, t, fD, sx, sy) {
               (lastDev === "pad"
                 ? "SELECT"
                 : lastDev === "touch" || coarse
-                  ? "\u{1F353}" // (v1.5.42: the strawberry on the FLAVOUR button - "THE FLAVOUR BUTTON" didn't fit on a phone)
+                  ? FLAV_ICON[P1.flav ?? 0] // (v1.5.42: the strawberry on the FLAVOUR button - "THE FLAVOUR BUTTON" didn't fit on a phone) (v1.8.97: the icon the button really shows - your flavour now; it always said 🍓)
                   : "E");
           // (v1.5.42) NEVER UNDER THE BUTTONS: on a phone held upright the long line ("...SWITCH WITH THE FLAVOUR BUTTON")
           // reached past the left-hand buttons and ran in under RUN and POUR - now it shrinks to fit the room left of them
           if (tbs) {
-            const room = tbs.rx - 16 * s - 8 * s,
+            // (v1.8.97: the whole width when the line is above both groups of buttons - left-handed on a phone held
+            //  upright it shrank to 7 pixels for nothing; as the coach's line does)
+            const room = (fy > tbs.r - 4 * s ? tbs.rx : cssW) - 16 * s - 8 * s,
               ow = g.measureText(ot).width;
             if (room > 40 && ow > room) g.font = fD(Math.max(7, (11 * room) / ow));
           }
@@ -85986,7 +86018,7 @@ function levelOfTour(of) {
     inTour = ((lv - 1) % LAST_LEVEL) + 1;
   return (tour > 1 ? "TOUR " + tour + "  ·  " : "") + "LEVEL " + inTour + of + LAST_LEVEL;
 }
-const GAME_VERSION = "v1.8.96",
+const GAME_VERSION = "v1.8.97",
   GAME_DATE = "26.11.2026",
   VERSION_TEXT = GAME_VERSION + "  ·  " + GAME_DATE;
 const FB = '"Chakra Petch", "Segoe UI", sans-serif';
@@ -87390,7 +87422,7 @@ function drawHud(fps) {
   }
   // which renderer and how fast; the author's initials and the version
   // (v1.5.41: lifted to just above the touch buttons on that side, measured - it was a fixed 120 pixels, under them)
-  const tbs = G.state === "play" ? touchTops() : null,
+  const tbs = G.state === "play" || G.state === "mini" ? touchTops() : null, // (v1.8.97: in the mini-games too - under P2's pad)
     lift = tbs ? Math.max(0, cssH - tbs.r + 4, TOUCHB.help ? cssH - TOUCHB.help + 4 : 0) : 0;
   g.font = fB(12, 500);
   g.textAlign = "left";
@@ -93965,6 +93997,16 @@ profWire();
 // =====================================================================================
 const NEWS = [
   {
+    ver: "v1.8.97",
+    title: "FOR EVERY HAND AND EVERY EYE",
+    items: [
+      "THE ORDER TICKETS AND TAP LIGHTS SHOW THE FLAVOUR'S SHAPE, NOT ONLY ITS COLOUR",
+      "YOUR TAP POURS IN YOUR FLAVOUR'S COLOUR",
+      "LEFT-HANDED: ON A MIRROR STOP THE BUTTONS NO LONGER COVER THE TAPS",
+      "SHORTER AFRIKAANS AND POLISH NAMES THAT FIT ON A PHONE",
+    ],
+  },
+  {
     ver: "v1.8.96",
     title: "ONE BUTTON IS ENOUGH",
     items: [
@@ -97610,6 +97652,17 @@ function frameWork(ts) {
     if (tp && tp.hidden !== ph) {
       tp.hidden = ph;
       HUDB.t = -9;
+    }
+    // (v1.8.97) LEFT-HANDED ON A MIRROR STOP: there the taps are at the left edge, and the left-handed buttons (POUR,
+    // HOLY, CROSS, the arrows) sat right over them - on those stops the buttons go to the right, away from the taps, as
+    // they are for everyone else there (one player, wide view; the tall view and the two players' pads are fine)
+    {
+      const lf = COMFORT.lefty && !(!VERT && !twoP() && !G.demo && mirrorPlay());
+      if (document.body.classList.contains("lefty") !== lf) {
+        document.body.classList.toggle("lefty", lf);
+        HUDB.t = -9;
+        TOUCHB.at = 0; // (measure the buttons again at once)
+      }
     }
     // (v1.8.86) THE FLAVOUR BUTTON SHOWS YOUR FLAVOUR: it was only redrawn when pressed - a bartender who started on
     // mint (or was set by the automatic pick, a tap on the HUD line, the E key) showed a strawberry

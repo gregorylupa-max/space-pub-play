@@ -2555,7 +2555,9 @@ const RM_Q = (() => {
   })(),
   // (v1.8.48: and KID MODE gentler too - shakes and flashes at 40% at most; seventeen places shake the screen)
   KIDK = () => (typeof kidOn === "function" && kidOn() ? 0.4 : 1),
-  MOTION = () => Math.min(COMFORT.calm ? 0.15 : RM_Q && RM_Q.matches ? 0.35 : 1, KIDK()),
+  // (v1.8.52: MOTION itself is as before - it also slows the scenery and the customers' little movements, which kid
+  //  mode should keep; the kid cap goes on the screen's shake (draw.ts) and on the flashes)
+  MOTION = () => (COMFORT.calm ? 0.15 : RM_Q && RM_Q.matches ? 0.35 : 1),
   FLASH = () => Math.min(COMFORT.calm ? 0.25 : 1, KIDK()); // CALM MODE (in the settings): flashes a quarter as bright, almost no shaking
 // can this device buzz or rumble? (a phone or tablet, or a controller)
 const canBuzz = () => {
@@ -6288,6 +6290,10 @@ const DICT_ROWS                             = [
   ["DISCO BALL", "DISKOBAL", "KULA DYSKOTEKOWA"],
   ["POTTED PLANTS", "POTPLANTE", "ROŚLINY W DONICZKACH"],
   ["FISH TANK", "VISTENK", "AKWARIUM"],
+  // (v1.8.54) three dearer decorations
+  ["BRASS ORRERY", "KOPER-PLANETARIUM", "MOSIĘŻNE PLANETARIUM"],
+  ["ROCKET MODEL", "VUURPYLMODEL", "MODEL RAKIETY"],
+  ["STARLIT CEILING", "STERRE-PLAFON", "GWIAŹDZISTY SUFIT"],
   ["HAPPY NEW YEAR!", "GELUKKIGE NUWEJAAR!", "SZCZĘŚLIWEGO NOWEGO ROKU!"],
   ["SPOOKY HALLOWEEN NIGHTS", "SPOOKAGTIGE HALLOWEEN-NAGTE", "STRASZNE NOCE HALLOWEEN"],
   ["HERITAGE DAY - BRAAI TIME!", "ERFENISDAG - BRAAITYD!", "DZIEŃ DZIEDZICTWA - CZAS NA BRAAI!"],
@@ -8007,6 +8013,95 @@ const DICT_ROWS                             = [
     "THE RACE WITH THE BLACK HOLE BISTRO NOW HAS A LITTLE TRACK: YOUR DINER AND THEIR SAUCER, HEADING FOR THE FLAG",
     "DIE WEDLOOP MET DIE SWARTGAT-BISTRO HET NOU 'N KLEIN RENBAAN: JOU KAFEE EN HULLE PIERING, OP PAD NA DIE VLAG",
     "WYŚCIG Z BISTRO CZARNA DZIURA MA TERAZ MAŁY TOR: TWOJA KAWIARNIA I ICH SPODEK PĘDZĄ DO FLAGI",
+  ],
+  // (v1.8.55) FAIR PAIRS
+  ["FAIR PAIRS", "REGVERDIGE PARE", "UCZCIWE PARY"],
+  [
+    "VERSUS: THE ROCKET SHOES AND THE LUCKY CHARM STAY IN THE SHOP - THEY ONLY EVER HELPED ONE OF YOU",
+    "TEEN MEKAAR: DIE VUURPYLSKOENE EN DIE GELUKSBRINGER BLY IN DIE WINKEL - HULLE HET NOOIT NET EEN VAN JULLE GEHELP NIE",
+    "POJEDYNEK: RAKIETOWE BUTY I TALIZMAN ZOSTAJĄ W SKLEPIE - ZAWSZE POMAGAŁY TYLKO JEDNEMU Z WAS",
+  ],
+  [
+    "WITH TWO PLAYERS, HOUSE SPECIAL READY SAYS WHOSE IT IS, AND ENDLESS RECORDS ARE FOR ONE PLAYER",
+    "MET TWEE SPELERS SÊ HUISSPESIAAL GEREED WIE S'N DIT IS, EN EINDLOSE REKORDS IS VIR EEN SPELER",
+    "PRZY DWÓCH GRACZACH SPECJAŁ DOMU GOTOWY MÓWI, CZYJ JEST, A REKORDY TRYBU BEZ KOŃCA SĄ DLA JEDNEGO GRACZA",
+  ],
+  // (v1.8.54) SAVING UP
+  ["SAVING UP", "SPAAR OP", "OSZCZĘDZANIE"],
+  [
+    "THREE NEW DECORATIONS IN THE COIN SHOP TO SAVE UP FOR: A BRASS ORRERY, A ROCKET MODEL AND A STARLIT CEILING",
+    "DRIE NUWE VERSIERINGS IN DIE MUNTWINKEL OM VOOR TE SPAAR: 'N KOPER-PLANETARIUM, 'N VUURPYLMODEL EN 'N STERRE-PLAFON",
+    "TRZY NOWE DEKORACJE W SKLEPIE ZA MONETY, NA KTÓRE WARTO ODŁOŻYĆ: MOSIĘŻNE PLANETARIUM, MODEL RAKIETY I GWIAŹDZISTY SUFIT",
+  ],
+  // (v1.8.53) PLUGGED IN
+  ["PLUGGED IN", "INGEPROP", "PODŁĄCZONE"],
+  [
+    "A CONTROLLER UNPLUGGED OR OUT OF BATTERY PAUSES THE GAME - WITH TWO PLAYERS, NOBODY STEERS THE WRONG BARTENDER",
+    "'N BEHEERDER WAT UITGEPROP WORD OF SE BATTERY PAP IS, POUSEER DIE SPEL - MET TWEE SPELERS STUUR NIEMAND DIE VERKEERDE KROEGMAN NIE",
+    "ODŁĄCZONY LUB ROZŁADOWANY KONTROLER PAUZUJE GRĘ - PRZY DWÓCH GRACZACH NIKT NIE STERUJE NIEWŁAŚCIWYM BARMANEM",
+  ],
+  [
+    "B PRESSED AS A STOP ENDS NO LONGER SKIPS THE MINI-GAME BEFORE IT BEGINS",
+    "B WAT GEDRUK WORD AS 'N HALTE KLAAR IS, SLAAN NIE MEER DIE MINISPELETJIE OOR VOOR DIT BEGIN NIE",
+    "B WCIŚNIĘTE NA KOŃCU PRZYSTANKU NIE POMIJA JUŻ MINIGRY, ZANIM SIĘ ZACZNIE",
+  ],
+  // (v1.8.52) ON THE MAP
+  ["ON THE MAP", "OP DIE KAART", "NA MAPIE"],
+  [
+    "THE GALAXY MAP PARKS YOUR SHIP AT YOUR NEXT TOUR STOP AND OPENS ON YOUR START AT LEVEL CHOICE",
+    "DIE STERRESTELSEL-KAART PARKEER JOU SKIP BY JOU VOLGENDE TOERHALTE EN MAAK OOP BY JOU BEGIN BY VLAK-KEUSE",
+    "MAPA GALAKTYKI PARKUJE TWÓJ STATEK NA NASTĘPNYM PRZYSTANKU TRASY I OTWIERA SIĘ NA TWOIM WYBORZE START OD POZIOMU",
+  ],
+  [
+    "ON A TOUCH SCREEN THE FIRST TAP ON THE MAP PICKS A STOP - IT NO LONGER STARTS A GAME BY ACCIDENT",
+    "OP 'N RAAKSKERM KIES DIE EERSTE TIK OP DIE KAART 'N HALTE - DIT BEGIN NIE MEER PER ONGELUK 'N SPEL NIE",
+    "NA EKRANIE DOTYKOWYM PIERWSZE STUKNIĘCIE W MAPĘ WYBIERA PRZYSTANEK - NIE ZACZYNA JUŻ GRY PRZYPADKIEM",
+  ],
+  [
+    "KID MODE KEEPS ITS GENTLER SHAKES BUT NO LONGER SLOWS THE SCENERY, AND A TAP SKIPS A STORY LINE BEING READ",
+    "KINDERMODUS HOU SY SAGTER SKUDDINGS, MAAR MAAK NIE MEER DIE TONEEL STADIGER NIE, EN 'N TIK SLAAN 'N STORIEREËL OOR WAT GELEES WORD",
+    "TRYB DZIECIĘCY ZACHOWUJE ŁAGODNIEJSZE WSTRZĄSY, ALE NIE SPOWALNIA JUŻ SCENERII, A STUKNIĘCIE POMIJA CZYTANĄ LINIJKĘ HISTORII",
+  ],
+  // (v1.8.51) BOSS MANNERS
+  ["BOSS MANNERS", "BAAS SE MANIERE", "MANIERY BOSSA"],
+  [
+    "A BOSS CROUCHING TO JUMP NOW STANDS STILL, AND NEVER LANDS RIGHT AT YOUR END OF THE BAR",
+    "'N BAAS WAT HURK OM TE SPRING, STAAN NOU STIL, EN LAND NOOIT REG BY JOU KANT VAN DIE TOONBANK NIE",
+    "BOSS PRZYKUCAJĄCY DO SKOKU STOI TERAZ W MIEJSCU I NIGDY NIE LĄDUJE TUŻ PRZY TWOIM KOŃCU LADY",
+  ],
+  [
+    "AFTER A BOSS JUMPS, THE ALARM SOUNDS AGAIN ON HIS NEW BAR, AND IT COMES SOONER FOR A FURIOUS BOSS",
+    "NADAT 'N BAAS GESPRING HET, KLINK DIE ALARM WEER BY SY NUWE TOONBANK, EN DIT KOM VROEËR VIR 'N WOEDENDE BAAS",
+    "PO SKOKU BOSSA ALARM ROZBRZMIEWA ZNOWU PRZY JEGO NOWEJ LADZIE I PRZYCHODZI WCZEŚNIEJ PRZY WŚCIEKŁYM BOSSIE",
+  ],
+  // (v1.8.50) READ TO ME
+  ["READ TO ME", "LEES VIR MY", "CZYTAJ MI"],
+  [
+    "WITH VOICE ON, THE OPENING STORY AND BOGDAN'S POSTCARDS ARE READ ALOUD - EACH LINE WAITS FOR THE READING",
+    "MET STEM AAN WORD DIE OPENINGSVERHAAL EN BOGDAN SE POSKAARTE HARDOP GELEES - ELKE REËL WAG VIR DIE LEES",
+    "Z WŁĄCZONYM GŁOSEM HISTORIA NA POCZĄTEK I POCZTÓWKI BOGDANA SĄ CZYTANE NA GŁOS - KAŻDA LINIJKA CZEKA NA CZYTANIE",
+  ],
+  [
+    "THE ARRIVAL IS READ TOO: THE STOP'S NAME AND ITS DID YOU KNOW? FACT",
+    "DIE AANKOMS WORD OOK GELEES: DIE HALTE SE NAAM EN SY HET JY GEWEET?-FEIT",
+    "PRZYBYCIE TEŻ JEST CZYTANE: NAZWA PRZYSTANKU I JEGO CIEKAWOSTKA CZY WIESZ, ŻE...?",
+  ],
+  [
+    "URGENT NEWS IS READ AT ONCE, A TIP ONLY ONCE A STOP, AND THE VOICE STOPS WHEN YOU PAUSE OR TURN THE SOUND OFF",
+    "DRINGENDE NUUS WORD DADELIK GELEES, 'N WENK NET EEN KEER 'N HALTE, EN DIE STEM STOP WANNEER JY POUSEER OF DIE KLANK AFSIT",
+    "PILNE WIADOMOŚCI SĄ CZYTANE OD RAZU, WSKAZÓWKA TYLKO RAZ NA PRZYSTANEK, A GŁOS MILKNIE PRZY PAUZIE LUB WYŁĄCZONYM DŹWIĘKU",
+  ],
+  // (v1.8.49) A FULL BOOK
+  ["A FULL BOOK", "'N VOL BOEK", "PEŁNY ALBUM"],
+  [
+    "THE STICKER BOOK CAN BE FINISHED: THE SPACE SHOW'S STICKERS COME FROM WATCHING IT THROUGH THE WINDOW WHILE YOU PLAY",
+    "DIE PLAKBOEK KAN VOLTOOI WORD: DIE RUIMTEVERTONING SE PLAKKERS KOM DEUR DIT DEUR DIE VENSTER TE KYK TERWYL JY SPEEL",
+    "ALBUM NAKLEJEK DA SIĘ UKOŃCZYĆ: NAKLEJKI Z KOSMICZNEGO POKAZU DOSTAJESZ, OGLĄDAJĄC GO PRZEZ OKNO PODCZAS GRY",
+  ],
+  [
+    "THE FAMOUS PLACES OF HOME GIVE THEIR STICKERS WHEN THEY DRIFT PAST THE WINDOWS",
+    "DIE BEROEMDE PLEKKE VAN TUIS GEE HUL PLAKKERS WANNEER HULLE VERBY DIE VENSTERS DRYF",
+    "SŁYNNE MIEJSCA Z DOMU DAJĄ SWOJE NAKLEJKI, GDY PRZEPŁYWAJĄ ZA OKNAMI",
   ],
   // (v1.8.48) LITTLE ONES
   ["LITTLE ONES", "KLEINTJIES", "MALUCHY"],
@@ -10236,6 +10331,13 @@ const DICT_ROWS                             = [
   ["sparkles over the bars", "vonkel oor die kroeë", "błyszczy nad barami"],
   ["a little green", "'n bietjie groen", "odrobina zieleni"],
   ["space goldfish", "ruimte-goudvissies", "kosmiczne złote rybki"],
+  [
+    "a little solar system that turns",
+    "'n klein sonnestelsel wat draai",
+    "mały układ słoneczny, który się kręci",
+  ],
+  ["it puffs now and then", "dit blaas af en toe rook", "co jakiś czas wypuszcza dymek"],
+  ["twinkling stars over the bars", "flikkerende sterre bo die toonbanke", "migoczące gwiazdy nad ladami"],
   ["with dancing lights", "met dansende ligte", "z tańczącymi światłami"],
   ["serve 10 customers", "bedien 10 klante", "obsłuż 10 klientów"],
   ["serve 100 customers", "bedien 100 klante", "obsłuż 100 klientów"],
@@ -11729,6 +11831,8 @@ const DICT_PAT                             = [
     "DO NASTĘPNEGO BARU!$1$2PERFEKCYJNA OBSŁUGA!",
   ],
   [/^ON TO THE NEXT BAR!(.*)$/, "OP NA DIE VOLGENDE KROEG!$1", "DO NASTĘPNEGO BARU!$1"],
+  // (v1.8.55) whose house special it is, with two players
+  [/^HOUSE SPECIAL READY - P(\d)!$/, "HUISSPESIAAL GEREED - P$1!", "SPECJAŁ DOMU GOTOWY - P$1!"],
   [
     /^LEVEL (\d+) \/ (\d+)(\s+)·(\s+)SERVED (\d+) \/ (\d+)$/,
     "VLAK $1 / $2$3·$4BEDIEN $5 / $6",
@@ -15471,10 +15575,24 @@ window.addEventListener("blur", () => {
   keys.clear();
   if (G.state === "play") pause(true);
 });
+// (v1.8.53) A CONTROLLER UNPLUGGED (or its battery flat) PAUSES THE GAME: it played on - and with two players the other
+// controller, now the only one, was read as player 2's, so player 1 steered the wrong bartender and lost lives
+window.addEventListener("gamepaddisconnected", () => {
+  if (["play", "lost", "clear", "bonus", "mini"].includes(G.state)) pause(true);
+});
+// (v1.8.53: when the game last changed screen - B / SELECT only skip a mini-game or bonus round after half a second)
+const PADSTATE = { s: "", t: 0 };
 const anyKey = (...ks) => ks.some((k) => keys.has(k));
 const DROPIN = { w: false, hold: false }; // (v1.6.0: was the second controller's START held last frame) (v1.6.4: hold - still held since it joined)
 function readPads() {
   const wasAttract = typeof ATTRACT !== "undefined" && ATTRACT.on;
+  if (G.state !== PADSTATE.s) {
+    PADSTATE.s = G.state;
+    PADSTATE.t = performance.now();
+  }
+  // (v1.8.53: B shows the cross in play and skips a mini-game - a B pressed as the stop ended skipped the mini-game
+  //  before it began)
+  const skipOK = performance.now() - PADSTATE.t > 500;
   let list = [];
   try {
     list = Array.from(navigator.getGamepads ? navigator.getGamepads() : []).filter((p) => p && p.connected);
@@ -15540,11 +15658,12 @@ function readPads() {
     if (b(3) && !pd.y) edge.holy = true;
     pd.y = b(3); // Y / triangle: holy water
     if (b(1) && !pd.bx) {
-      if (G.state === "mini" || G.state === "bonus") skipMini();
-      else edge.cross = true;
+      if (G.state === "mini" || G.state === "bonus") {
+        if (skipOK) skipMini();
+      } else edge.cross = true;
     }
     pd.bx = b(1); // B / circle: show the cross (in a mini-game: skip it)
-    if (b(8) && !pd.bk && (G.state === "mini" || G.state === "bonus") && !b(9)) skipMini();
+    if (b(8) && !pd.bk && (G.state === "mini" || G.state === "bonus") && !b(9) && skipOK) skipMini();
     pd.bk = b(8); // BACK / SELECT: skip a mini-game too
     if (lb && !pd.lb) edge.lu = true;
     if (rb && !pd.rb) edge.ld = true;
@@ -17840,6 +17959,7 @@ function update(dt) {
           (c.wolf ? 1.6 : 1) *
           (c.hyde ? 1.6 : 1) *
           (G.twC || 1) *
+          (c.hopWarn !== undefined ? 0 : 1) * // (v1.8.51: a boss crouching to jump stands still - he kept walking, up to 230 px)
           ((DF().easy || DF().kid) && c.x > X1 - 170 && !c.type.boss ? 0.6 : 1); // (v1.8.48: KID MODE too) // (v1.4.42: on EASY, near your end they slow right down - time to serve them) (v1.4.71: but not a boss - he keeps coming)
         c.x += v;
         c.vps = v / dt / c.spd; // (v1.8.31: how fast a full step goes, in pixels a second - for the alarm below)
@@ -17890,7 +18010,7 @@ function update(dt) {
       //  s for an ordinary customer on the last stops, but a sprinter (a raptor, a cyclist), a werewolf or Mr Hyde cover
       //  that in a quarter of a second or less, sometimes in one step. Now it goes off at least 0.62 s of their own
       //  speed ahead (ordinary walkers: the same 83 pixels as before; never more than 220)
-      if (!demo && c.x > X1 - 12 - clamp(0.62 * (c.vps || 0), 83, 220)) {
+      if (!demo && c.x > X1 - 12 - clamp(0.62 * (c.vps || 0), 83, c.type.boss ? 300 : 220)) {
         const [lx, ly] = at(c.lane, X1, LY(c.lane, X1) - 40);
         if (!c.alarmed) {
           c.alarmed = true;
@@ -22197,7 +22317,7 @@ function callout(text, c, sec) {
 function calloutNow(text, c, sec) {
   if (!text) return;
   G.callouts.unshift({ text, c, life: sec, max: sec, urgent: true });
-  say(text);
+  say(text, true); // (v1.8.50: urgent - read at once, not dropped behind a tip)
 }
 
 // =====================================================================================
@@ -23272,8 +23392,8 @@ function draw() {
       ? (Math.sin(sq * 1.37 + 0.6) * 0.6 + Math.sin(sq * 2.71 + 2.2) * 0.4) * G.shake * 0.6 +
         (G.kick || 0) * (G.kick || 0) * 7 * MOTION()
       : 0;
-  SHK[0] = sx * MOTION();
-  SHK[1] = sy * MOTION(); // (a smooth rattle, not a random jump every frame)
+  SHK[0] = sx * MOTION() * KIDK(); // (v1.8.52: KIDK - kid mode's gentler shake)
+  SHK[1] = sy * MOTION() * KIDK(); // (a smooth rattle, not a random jump every frame)
   drawBackdrop(V, t);
   // the camera leans gently towards you, so near things slide more than far things (parallax)
   const cdt = clamp(G.time - CAM.t, 0, 0.1);
@@ -25925,6 +26045,9 @@ function skyTraffic(L, Rr, y0, yb, t, v) {
         hx = Rr + 70 - (e.s / 26) * (w + 140),
         hy = y0 + Math.min(70, ym(hx) * 0.55);
       if (ICON_FNS[what]) ICON_FNS[what](hx + px, hy + py, q, t);
+      // (v1.8.49: and its sticker - the famous places were only stuck in by the menu's show, which hasn't flown them
+      //  past since v1.4.8; ten stickers nobody could get)
+      if (e.s > 6 && !G.demo && G.state === "play" && PLACE_NAMES[what]) stick("p:" + what);
     }
   }
   // A SPACE ZEPPELIN drifts by, slow and stately, a banner trailing; and a SPACE SUBMARINE cruises past, periscope up
@@ -36858,22 +36981,25 @@ function sceneNow(t)                         {
 function spaceScenes(L, Rr, y0, yb, t, k, tall) {
   const now = sceneNow(t);
   if (!now) return;
-  const [sc, ph] = now,
-    S           = {
-      L,
-      Rr,
-      y0,
-      yb,
-      t,
-      k,
-      tall,
-      ph,
-      len: sc.len,
-      fade: Math.min(1, ph / 1.5, (sc.len - ph) / 1.5),
-      x0: tall ? L + 10 : 84,
-      x1: tall ? Rr - 10 : 740,
-      yt: tall ? y0 + 80 * k : Math.max(y0, 10),
-    };
+  const [sc, ph] = now;
+  // (v1.8.49) A SPACE SHOW SEEN THROUGH THE WINDOW COUNTS: the space-show stickers were only stuck in by the menu's show,
+  //  which no longer plays these scenes - twenty stickers nobody could get. Watching one a few seconds during play does it
+  if (ph > 3 && !G.demo && G.state === "play") stick("s:" + sc.name);
+  const S           = {
+    L,
+    Rr,
+    y0,
+    yb,
+    t,
+    k,
+    tall,
+    ph,
+    len: sc.len,
+    fade: Math.min(1, ph / 1.5, (sc.len - ph) / 1.5),
+    x0: tall ? L + 10 : 84,
+    x1: tall ? Rr - 10 : 740,
+    yt: tall ? y0 + 80 * k : Math.max(y0, 10),
+  };
   S.yb2 = (x) => yb(x) - 6 * k;
   S.my = (x) => (S.yt + S.yb2(x)) / 2;
   S.ex0 = S.x0; // (in the window, the glass ends the picture)
@@ -52434,7 +52560,9 @@ function stickerCats()                                       {
     },
     {
       name: "HISTORY",
-      items: HISTORY.map((sc) => ({
+      // (v1.8.49: only the history moments that are ever shown - the space show leaves three out (DEMO_HISTORY), so
+      //  they could never be stuck in and STICKER MASTER could never be won)
+      items: DEMO_HISTORY().map((sc) => ({
         key: "h:" + sc.name,
         name: sc.name,
         kind: "space",
@@ -52838,7 +52966,9 @@ function bossTricks(c, dt) {
     if (G.time - c.hopWarn < (c.rage ? BOSS_WARN_RAGE : BOSS_WARN)) return;
     const to = c.hopTo;
     c.hopWarn = undefined;
-    if (!free(to)) {
+    // (v1.8.51: and not if he has come too close to your end meanwhile - he could land on the next bar a step from
+    //  the grab line, with no time to get there)
+    if (!free(to) || c.x > X1 - 200) {
       c.hopT = 1;
       return;
     }
@@ -52850,6 +52980,7 @@ function bossTricks(c, dt) {
     c.hopFrom = c.lane;
     c.hopAt = G.time;
     c.lane = to;
+    c.alarmed = c.warned = false; // (v1.8.51: a new bar, a new alarm - and in co-op the call for who should go)
     dust(to, c.x, 0, 10, true);
     sfx("bump", c.x);
     G.shake = Math.max(G.shake || 0, 7 * MOTION());
@@ -66036,6 +66167,11 @@ const DECOR = [
   { id: "plants", name: "POTTED PLANTS", line: "a little green", price: 30 },
   { id: "fish", name: "FISH TANK", line: "space goldfish", price: 70 },
   { id: "juke", name: "JUKEBOX", line: "with dancing lights", price: 90 },
+  // (v1.8.54) SOMETHING TO SAVE UP FOR: the six decorations were all bought within about five stops, and coins meant
+  //  little after that - three dearer ones
+  { id: "orrery", name: "BRASS ORRERY", line: "a little solar system that turns", price: 150 },
+  { id: "rocket", name: "ROCKET MODEL", line: "it puffs now and then", price: 250 },
+  { id: "stars", name: "STARLIT CEILING", line: "twinkling stars over the bars", price: 400 },
 ];
 const inv = () => store.get("inv", {}),
   decor = () => store.get("decor", {});
@@ -66208,8 +66344,10 @@ function funGameStart() {
       G.lives++;
       G.startMsg = "EXTRA LIFE FROM THE SHOP!";
     }
-    G.shoes = invUse("shoes");
-    G.charm = canLose && invUse("save");
+    // (v1.8.55: in VERSUS neither - the ROCKET SHOES only ever sped up player 1, and the LUCKY CHARM saved whoever
+    //  slipped first, the opponent too)
+    G.shoes = !G.versus && invUse("shoes");
+    G.charm = canLose && !G.versus && invUse("save");
   }
   modesGameStart(); // (TIME ATTACK, BOSS RUSH)
 }
@@ -66322,7 +66460,7 @@ function funServe(c, s, demo) {
   if (c.type.bot || ["robot", "bots", "robogob"].includes(c.type.kind)) fStat("robots");
   if (G.endless) {
     G.endServed++;
-    if (!DF().kid) fStat("endlessBest", G.endServed, true); // (v1.8.47: KID MODE never loses a life - no endless record there)
+    if (!DF().kid && !twoP()) fStat("endlessBest", G.endServed, true); // (v1.8.55: nor two players together - two players' serves made a record one player could hardly beat) // (v1.8.47: KID MODE never loses a life - no endless record there)
     if (G.endServed % 12 === 0) {
       G.endLvl++;
       callout("FASTER!  SPEED " + G.endLvl, "#ff5fa8", 1.8);
@@ -66557,7 +66695,8 @@ function ckCount(demo, id = 0) {
   G.ckConn = false; // (a connoisseur is looked for while the special waits - ckConnTick)
   for (const o of customers) o.conn = false;
   const ck = HOUSE_CK[tourStop()];
-  calloutNow("HOUSE SPECIAL READY!", "#ffd24d", 2.2); // (straight to the front of the queue - it's about your next pour)
+  // (straight to the front of the queue - it's about your next pour) (v1.8.55: with two players, whose it is)
+  calloutNow(twoP() ? "HOUSE SPECIAL READY - P" + (id + 1) + "!" : "HOUSE SPECIAL READY!", "#ffd24d", 2.2);
   G.callouts.push({ text: ck.n, c: ckText(ck), life: 2.4, max: 2.4, sub: true });
   G.callouts.push({
     text: "YOUR NEXT POUR IS THE HOUSE COCKTAIL - SLIDE IT TO ANYONE",
@@ -68351,8 +68490,27 @@ function funStoryUpdate(dt) {
   if (i2 && i2.pour) inp.pour = true;
   const per = S0.per || 3.2, // (v1.7.0: the opening takes longer over each picture)
     total = S0.lines.length * per + 1.2;
+  // (v1.8.50) THE STORY READ ALOUD: with VOICE on, each line of the opening and of Bogdan's postcards is read as it
+  //  appears (they were never read), and the next line waits for the reading to finish - up to six seconds more. A
+  //  press still moves straight on
+  if (VOICE.on) {
+    const li = Math.min(S0.lines.length - 1, Math.floor(S0.t / per));
+    if (li !== S0.said) {
+      if (S0.said !== undefined && "speechSynthesis" in window && speechSynthesis.speaking && !inp.pour) {
+        S0.holdT = (S0.holdT || 0) + dt;
+        if (S0.holdT < 6) S0.t = li * per - 0.001; // (wait at the end of the line being read)
+      }
+      const l2 = Math.min(S0.lines.length - 1, Math.floor(S0.t / per));
+      if (l2 !== S0.said) {
+        S0.said = l2;
+        S0.holdT = 0;
+        say(S0.lines[l2], true);
+      }
+    }
+  }
   if (inp.pour && !S0.held && S0.t > 0.6) {
     S0.t = Math.max(S0.t, (Math.floor(S0.t / per) + 1) * per);
+    if (VOICE.on) voiceHush(); // (v1.8.52: a press moves on at once - the line being read stops, so it isn't held)
   }
   S0.held = inp.pour;
   if (S0.t >= total || S0.skip) {
@@ -69442,6 +69600,39 @@ function funDecor(V, t, layer) {
       );
       polyline([x + 6, y - 9, x + 6, y + 9, x + 20, y + 9], 2.4, col(on ? "#9ff8ff" : "#2a4a50"));
     }
+    // (v1.8.54) THE STARLIT CEILING: little stars twinkling along the top of the room
+    if (D.stars) {
+      R.setAdd(true);
+      for (let i = 0; i < 70; i++) {
+        const sx = 20 + hash(i * 4.1) * 920,
+          sy = 6 + hash(i * 2.9) * 96,
+          tw = 0.35 + 0.65 * Math.max(0, Math.sin(t * (1.2 + hash(i) * 2) + i * 1.7));
+        disc(sx, sy, 1 + hash(i * 7.3) * 1.4, withA(col(i % 5 ? "#fff3e2" : "#ffd24d"), 0.75 * tw));
+        if (tw > 0.95) glow(sx, sy, 6, withA(C.white, 0.25));
+      }
+      R.setAdd(false);
+    }
+    // (v1.8.54) THE BRASS ORRERY: a little model of the solar system hanging high up on the right, slowly turning
+    if (D.orrery) {
+      const x = 760,
+        y = 96;
+      line(x, 0, x, y - 8, 1, col("#8a8a96"));
+      disc(x, y, 8, col("#ffd24d"));
+      R.setAdd(true);
+      glow(x, y, 16, withA(col("#ffb040"), 0.35));
+      R.setAdd(false);
+      for (let i = 0; i < 4; i++) {
+        const rr = 16 + i * 9,
+          a = t * (1.1 - i * 0.22) + i * 1.9;
+        line(x - rr, y, x + rr, y, 0.6, withA(col("#c8a050"), 0.5)); // (the brass arm)
+        disc(
+          x + Math.cos(a) * rr,
+          y + Math.sin(a) * rr * 0.35,
+          2.2 + i * 0.4,
+          col(["#c8c8d0", "#ffb070", "#5fb0ff", "#ff7a5a"][i])
+        );
+      }
+    }
     if (D.disco) {
       const x = 480,
         y = 64;
@@ -69525,6 +69716,40 @@ function funDecor(V, t, layer) {
         const f = (t * 0.5 + i / 4) % 1;
         disc(x + 20, y + 14 - f * 34, 1.6, withA(C.white, 0.7 * (1 - f)));
       }
+    }
+    // (v1.8.54) THE ROCKET MODEL: a little red-and-white rocket on a stand, puffing smoke every few seconds
+    if (D.rocket) {
+      const x = 640,
+        y = 500,
+        puff = (t * 0.4) % 1;
+      rect(x - 14, y + 26, 28, 6, col("#3a2a1a")); // (the stand)
+      line(x, y + 26, x, y + 18, 2, col("#8a8a96"));
+      quad4(
+        x - 6,
+        y - 18,
+        x + 6,
+        y - 18,
+        x + 6,
+        y + 14,
+        x - 6,
+        y + 14,
+        col("#f0f0f4"),
+        col("#f0f0f4"),
+        col("#c8c8d0"),
+        col("#c8c8d0")
+      );
+      tri(x - 6, y - 18, x + 6, y - 18, x, y - 30, col("#ff5f5f")); // (the nose)
+      tri(x - 6, y + 4, x - 13, y + 16, x - 6, y + 14, col("#ff5f5f")); // (the fins)
+      tri(x + 6, y + 4, x + 13, y + 16, x + 6, y + 14, col("#ff5f5f"));
+      disc(x, y - 6, 3, col("#5fb0ff"));
+      if (puff < 0.35 && !COMFORT.calm)
+        for (let i = 0; i < 4; i++)
+          disc(
+            x + (i - 1.5) * 3,
+            y + 18 + puff * 30 + i * 2,
+            3 + puff * 8,
+            withA(C.white, 0.35 * (1 - puff / 0.35))
+          );
     }
     if (D.juke) {
       const x = 110,
@@ -71009,6 +71234,13 @@ function funApproachUpdate(dt) {
     return;
   }
   A0.t += dt;
+  // (v1.8.50: with VOICE on, the arrival is read - the stop's name, then its DID YOU KNOW? fact)
+  if (VOICE.on && A0.t > 0.6 && !A0.said) {
+    A0.said = true;
+    const v = here();
+    say(v.name, true);
+    if (v.fact) say(T("DID YOU KNOW?") + " " + T(v.fact)); // (each part translated - joined they'd match no row)
+  }
   // (v1.5.96: with two players either of you can skip the arrival)
   const inp = playerInput(0),
     i2 = twoP() ? playerInput(1) : null;
@@ -80390,7 +80622,11 @@ function coachHud(g, s, t, fD, sx, sy) {
     };
   }
   if (!tip) return;
-  say(tip.text); // (read out for the youngest players, when VOICE is on)
+  // (read out for the youngest players, when VOICE is on) (v1.8.50: once a stop - it was read again every six seconds)
+  if (G.saidTip !== G.level + "|" + tip.text) {
+    G.saidTip = G.level + "|" + tip.text;
+    say(tip.text);
+  }
   const [x, y] = at(tip.lane, tip.x, tip.y),
     b = Math.abs(Math.sin(t * 5)) * 10 * s;
   g.save();
@@ -80525,7 +80761,7 @@ function flawHud(g, s, pad, fD) {
 //  (with a gold dot for each star), your little flying diner waits at the next one. In the menu (GALAXY MAP) you can pick
 //  any stop and PLAY it; after every level the map slides in under the stars and the ship hops on.
 // =====================================================================================
-const GMV = { hover: -1, t0: 0, cur: 0, sel: 0 };
+const GMV = { hover: -1, t0: 0, cur: 0, sel: 0, armed: false }; // (v1.8.52: armed - see the tap in buildMap)
 const GM_REGIONS = [
   { from: 0, to: 11, name: "THE SOLAR SYSTEM", c: "#ffb060" },
   { from: 12, to: 19, name: "BEYOND THE SUN", c: "#6fb4ff" },
@@ -80906,12 +81142,18 @@ function drawGalaxyMap(
 function buildMap() {
   const st = gmStars(),
     got = st.reduce((a, b) => a + b, 0),
-    best = Math.max(0, ...Object.keys(levelStars()).map((k) => +k)),
-    cur = clamp(best, 0, VENUES.length - 1);
+    // (v1.8.52: only number keys - a bad key in hand-edited saved data made this NaN, and the map threw)
+    best = Math.max(0, ...Object.keys(levelStars()).map(Number).filter(Number.isFinite)),
+    // (v1.8.52) THE SHIP PARKS AT YOUR NEXT TOUR STOP: it parked after the highest stop with stars - and BOSS RUSH gives
+    //  stars at its bosses, so after a boss rush to stop 38 the ship sat at 39 with the whole route drawn as done. The
+    //  tour's own unlocked stop is used now (boss rush and endless don't unlock); and the map opens on your START AT
+    //  LEVEL choice, as the menu shows it
+    cur = clamp(typeof unlocked === "function" ? unlocked() - 1 : best, 0, VENUES.length - 1);
   GMV.hover = -1;
   GMV.t0 = performance.now();
   GMV.cur = cur;
-  GMV.sel = cur;
+  GMV.sel = clamp((fromLevel || cur + 1) - 1, 0, VENUES.length - 1);
+  GMV.armed = false; // (v1.8.52: see the tap below)
   $k("gmTag").textContent =
     "★ " +
     got +
@@ -81037,10 +81279,13 @@ function gmInfoLine(g, w, h) {
     c.addEventListener("pointerdown", (e) => {
       const i = near(e);
       if (i < 0) return;
-      if (i === GMV.sel && e.pointerType !== "mouse") {
+      // (v1.8.52: only once you've picked it here - the stop that's picked as the map opens glows, and the first tap on
+      //  or near it started a game at once)
+      if (i === GMV.sel && e.pointerType !== "mouse" && GMV.armed) {
         gmPlay();
         return;
       } // (tap the picked stop again to play it)
+      GMV.armed = true;
       GMV.sel = i;
       gmPlayText();
       sfx("click");
@@ -81055,12 +81300,8 @@ window.addEventListener(
   "keydown",
   (e) => {
     if (!FP.map) return;
-    const d =
-      e.code === "ArrowLeft" || e.code === "ArrowUp"
-        ? -1
-        : e.code === "ArrowRight" || e.code === "ArrowDown"
-          ? 1
-          : 0;
+    // (v1.8.52: left / right step along the route; up / down move between PLAY and DONE, as on a controller)
+    const d = e.code === "ArrowLeft" ? -1 : e.code === "ArrowRight" ? 1 : 0;
     if (!d) return;
     e.preventDefault();
     e.stopImmediatePropagation();
@@ -84127,8 +84368,8 @@ function levelOfTour(of) {
     inTour = ((lv - 1) % LAST_LEVEL) + 1;
   return (tour > 1 ? "TOUR " + tour + "  ·  " : "") + "LEVEL " + inTour + of + LAST_LEVEL;
 }
-const GAME_VERSION = "v1.8.48",
-  GAME_DATE = "25.11.2026",
+const GAME_VERSION = "v1.8.55",
+  GAME_DATE = "26.11.2026",
   VERSION_TEXT = GAME_VERSION + "  ·  " + GAME_DATE;
 const FB = '"Chakra Petch", "Segoe UI", sans-serif';
 let FD = '"Bungee", "Impact", sans-serif';
@@ -90729,6 +90970,7 @@ function pause(on) {
   // (v1.8.46: taken back out - paused there, the picture behind the pause screen showed the empty bar, and resuming
   //  with a key skipped the arrival; the PAUSE button is hidden on the arrival screen instead)
   if (on && ["play", "lost", "clear", "bonus", "mini"].includes(G.state)) {
+    voiceHush(); // (v1.8.50: the reading stops while paused)
     G.prev = G.state;
     G.state = "paused";
     pauseWhere();
@@ -91947,6 +92189,63 @@ profWire();
 //  the game, and where the motion capture, the folk songs and the fonts come from. Both from the menu at any time.
 // =====================================================================================
 const NEWS = [
+  {
+    ver: "v1.8.55",
+    title: "FAIR PAIRS",
+    items: [
+      "VERSUS: THE ROCKET SHOES AND THE LUCKY CHARM STAY IN THE SHOP - THEY ONLY EVER HELPED ONE OF YOU",
+      "WITH TWO PLAYERS, HOUSE SPECIAL READY SAYS WHOSE IT IS, AND ENDLESS RECORDS ARE FOR ONE PLAYER",
+    ],
+  },
+  {
+    ver: "v1.8.54",
+    title: "SAVING UP",
+    items: [
+      "THREE NEW DECORATIONS IN THE COIN SHOP TO SAVE UP FOR: A BRASS ORRERY, A ROCKET MODEL AND A STARLIT CEILING",
+    ],
+  },
+  {
+    ver: "v1.8.53",
+    title: "PLUGGED IN",
+    items: [
+      "A CONTROLLER UNPLUGGED OR OUT OF BATTERY PAUSES THE GAME - WITH TWO PLAYERS, NOBODY STEERS THE WRONG BARTENDER",
+      "B PRESSED AS A STOP ENDS NO LONGER SKIPS THE MINI-GAME BEFORE IT BEGINS",
+    ],
+  },
+  {
+    ver: "v1.8.52",
+    title: "ON THE MAP",
+    items: [
+      "THE GALAXY MAP PARKS YOUR SHIP AT YOUR NEXT TOUR STOP AND OPENS ON YOUR START AT LEVEL CHOICE",
+      "ON A TOUCH SCREEN THE FIRST TAP ON THE MAP PICKS A STOP - IT NO LONGER STARTS A GAME BY ACCIDENT",
+      "KID MODE KEEPS ITS GENTLER SHAKES BUT NO LONGER SLOWS THE SCENERY, AND A TAP SKIPS A STORY LINE BEING READ",
+    ],
+  },
+  {
+    ver: "v1.8.51",
+    title: "BOSS MANNERS",
+    items: [
+      "A BOSS CROUCHING TO JUMP NOW STANDS STILL, AND NEVER LANDS RIGHT AT YOUR END OF THE BAR",
+      "AFTER A BOSS JUMPS, THE ALARM SOUNDS AGAIN ON HIS NEW BAR, AND IT COMES SOONER FOR A FURIOUS BOSS",
+    ],
+  },
+  {
+    ver: "v1.8.50",
+    title: "READ TO ME",
+    items: [
+      "WITH VOICE ON, THE OPENING STORY AND BOGDAN'S POSTCARDS ARE READ ALOUD - EACH LINE WAITS FOR THE READING",
+      "THE ARRIVAL IS READ TOO: THE STOP'S NAME AND ITS DID YOU KNOW? FACT",
+      "URGENT NEWS IS READ AT ONCE, A TIP ONLY ONCE A STOP, AND THE VOICE STOPS WHEN YOU PAUSE OR TURN THE SOUND OFF",
+    ],
+  },
+  {
+    ver: "v1.8.49",
+    title: "A FULL BOOK",
+    items: [
+      "THE STICKER BOOK CAN BE FINISHED: THE SPACE SHOW'S STICKERS COME FROM WATCHING IT THROUGH THE WINDOW WHILE YOU PLAY",
+      "THE FAMOUS PLACES OF HOME GIVE THEIR STICKERS WHEN THEY DRIFT PAST THE WINDOWS",
+    ],
+  },
   {
     ver: "v1.8.48",
     title: "LITTLE ONES",
@@ -94795,7 +95094,7 @@ setTimeout(() => {
 //  (English and Polish voices are on nearly every device; an Afrikaans voice only on some - without one it reads in
 //  the device's own voice.) Switched on in the settings: VOICE.
 // =====================================================================================
-const VOICE = { on: !!store.get("voice", false), last: "", lastT: 0 };
+const VOICE = { on: !!store.get("voice", false), last: "", lastT: 0, q: []             };
 const VOICE_LANG = { en: "en-GB", af: "af-ZA", pl: "pl-PL" };
 function voiceFor(lang) {
   try {
@@ -94813,6 +95112,7 @@ function voiceFor(lang) {
 // read one text out (translated; quietly skipped if the same was just said, or if something more important is talking)
 function say(text, important = false) {
   if (!VOICE.on || !text || (typeof G !== "undefined" && G.demo) || !("speechSynthesis" in window)) return;
+  if (typeof muted !== "undefined" && muted) return; // (v1.8.50: SOUND off means the voice too)
   try {
     let s = String(T(text))
       .replace(/[★☆▶◀✔✓♪·]/g, " ")
@@ -94822,8 +95122,16 @@ function say(text, important = false) {
     if (!s) return;
     const now = performance.now();
     if (s === VOICE.last && now - VOICE.lastT < 6000) return;
-    if (speechSynthesis.speaking && !important) return;
-    if (important) speechSynthesis.cancel();
+    // (v1.8.50) A SHORT QUEUE: a line that came while another was being read was simply dropped - the arrival's fact
+    //  after its name, a tip after an announcement. Up to two now wait their turn (and are read when the voice is free)
+    if (speechSynthesis.speaking && !important) {
+      if (!VOICE.q.includes(text) && VOICE.q.length < 2) VOICE.q.push(text);
+      return;
+    }
+    if (important) {
+      speechSynthesis.cancel();
+      VOICE.q.length = 0;
+    }
     VOICE.last = s;
     VOICE.lastT = now;
     s = s.toLowerCase().replace(/(^|[.!?]\s+)([a-ząćęłńóśźżêôë])/g, (m, a, b) => a + b.toUpperCase()); // (sentences, not shouting)
@@ -94834,6 +95142,10 @@ function say(text, important = false) {
     u.rate = 1.02;
     u.pitch = 1.1;
     u.volume = clamp(VOL.fx, 0.3, 1);
+    u.onend = () => {
+      const next = VOICE.q.shift(); // (v1.8.50: the next waiting line)
+      if (next) setTimeout(() => say(next), 120);
+    };
     speechSynthesis.speak(u);
   } catch (e) {
     /* (no voice on this device - fine) */
@@ -94868,6 +95180,32 @@ function toggleVoice() {
     try {
       speechSynthesis.cancel();
     } catch (e) {}
+}
+
+// (v1.8.50) THE VOICE WAKES UP WITH THE FIRST TOUCH: phones only let a page speak after a tap, and the list of voices
+// arrives late - a player who had VOICE on heard nothing (or the wrong voice) until something was said inside a tap
+try {
+  if ("speechSynthesis" in window) {
+    speechSynthesis.getVoices();
+    speechSynthesis.onvoiceschanged = () => speechSynthesis.getVoices();
+    const wake = () => {
+      window.removeEventListener("pointerdown", wake, true);
+      window.removeEventListener("keydown", wake, true);
+      if (VOICE.on)
+        try {
+          speechSynthesis.speak(new SpeechSynthesisUtterance(" "));
+        } catch (e) {}
+    };
+    window.addEventListener("pointerdown", wake, true);
+    window.addEventListener("keydown", wake, true);
+  }
+} catch (e) {}
+// (v1.8.50: pausing - or leaving the tab - stops the reading)
+function voiceHush() {
+  VOICE.q.length = 0;
+  try {
+    if ("speechSynthesis" in window) speechSynthesis.cancel();
+  } catch (e) {}
 }
 // =====================================================================================
 //  MAIN LOOP

@@ -8089,6 +8089,28 @@ const DICT_ROWS                             = [
     "DIE WEDLOOP MET DIE SWARTGAT-BISTRO HET NOU 'N KLEIN RENBAAN: JOU KAFEE EN HULLE PIERING, OP PAD NA DIE VLAG",
     "WYŚCIG Z BISTRO CZARNA DZIURA MA TERAZ MAŁY TOR: TWOJA KAWIARNIA I ICH SPODEK PĘDZĄ DO FLAGI",
   ],
+  // (v1.8.92) OAK BARRELS AND EGGS
+  ["OAK BARRELS AND EGGS", "EIKEHOUTVATE EN EIERS", "DĘBOWE BECZKI I JAJKA"],
+  [
+    "THE BARREL TAPS ARE OAK NOW - NO LONGER LOST AGAINST DARK AND RED WALLS",
+    "DIE VAT-KRANE IS NOU EIKEHOUT - NIE MEER VERLORE TEEN DONKER EN ROOI MURE NIE",
+    "KRANY Z BECZEK SĄ TERAZ DĘBOWE - NIE GINĄ JUŻ NA TLE CIEMNYCH I CZERWONYCH ŚCIAN",
+  ],
+  [
+    "A PET STILL IN ITS EGG HAS NO POWERS YET - HATCH IT FIRST",
+    "'N TROETELDIER WAT NOG IN SY EIER IS, HET NOG GEEN KRAGTE NIE - BROEI DIT EERS UIT",
+    "ZWIERZAK, KTÓRY JEST JESZCZE W JAJKU, NIE MA JESZCZE MOCY - NAJPIERW GO WYKLUJ",
+  ],
+  [
+    "PHONE HELD UPRIGHT: YOUR PET SITS AT YOUR FEET, NOT ON A TAP",
+    "FOON REGOP: JOU TROETELDIER SIT BY JOU VOETE, NIE OP 'N KRAAN NIE",
+    "TELEFON W PIONIE: TWÓJ ZWIERZAK SIEDZI U TWOICH STÓP, NIE NA KRANIE",
+  ],
+  [
+    "HOLIDAYS ARE ANNOUNCED ONCE A GAME, AND CALM MODE HAS NO FLICKERING LIGHTS",
+    "VAKANSIEDAE WORD EENKEER PER SPEL AANGEKONDIG, EN KALM MODUS HET GEEN FLIKKERENDE LIGTE NIE",
+    "ŚWIĘTA SĄ OGŁASZANE RAZ NA GRĘ, A TRYB SPOKOJNY NIE MA MIGAJĄCYCH ŚWIATEŁ",
+  ],
   // (v1.8.91) FAMILIAR FACES
   ["FAMILIAR FACES", "BEKENDE GESIGTE", "ZNAJOME TWARZE"],
   [
@@ -12423,6 +12445,9 @@ const DICT_ROWS                             = [
 ];
 // the texts that carry numbers or names: patterns
 const DICT_PAT                             = [
+  // (v1.8.92) the HOLIDAY button during a holiday, and the holo-show's countdown
+  [/^BY DATE \((.+)\)$/, "VOLGENS DATUM ($1)", "WEDŁUG DATY ($1)"],
+  [/^HOLO-SHOW\s+(\d+)$/, "HOLO-VERTONING  $1", "HOLO-SHOW  $1"],
   // (v1.5.41) the lives left, between stops
   [/^LIVES LEFT: (\d+)$/, "LEWENS OOR: $1", "POZOSTAŁE ŻYCIA: $1"],
   // (v1.5.42) the endings' counts and credits, the trip to Andromeda, arriving at a stop
@@ -15837,6 +15862,7 @@ function resetGame(demo) {
     G.endless = G.free = false;
   }
   G.loser = null;
+  G.eventSaid = false; // (v1.8.92: the holiday is announced once a game - fun.ts)
   G.streak = 0;
   G.chain = 0; // (v1.4.76: shakes served in a row without a slip - twists.ts)
   G.fever = 0;
@@ -20143,6 +20169,7 @@ function update(dt) {
   empties = empties.filter((m) => !m.dead);
   // ---- tips ----
   for (const t of tips) {
+    if (t.dead) continue; // (v1.8.92: one the puppy fetched this frame isn't picked up - and paid - a second time)
     t.t += dt;
     t.x = clamp(t.x, X0 + 52, X1 - 20); // (always where the barman can reach it - he can't walk past X0 + 40)
     const by =
@@ -20603,8 +20630,12 @@ function loadShedding(dt, demo) {
   const d = G.ls;
   d.t += dt;
   // dark... the generator outside is cranked (it coughs black smoke), splutters, CATCHES - and hums away until Spacekom is back
-  G.dark =
-    d.t < 0.6
+  // (v1.8.92: in calm mode no strobing - the lights go down and come back smoothly)
+  G.dark = COMFORT.calm
+    ? d.t < 5.6
+      ? Math.min(1, d.t / 0.8)
+      : Math.min(1, Math.max(0, 1 - (d.t - 6.6) * 2))
+    : d.t < 0.6
       ? Math.sin(d.t * 40) > 0
         ? 0.9
         : 0.2
@@ -20982,7 +21013,8 @@ function updateTwist(dt, demo) {
   }
   // ---- LIGHTS OUT: a flicker, then darkness and sweeping spotlights ----
   if (kind === "dark") {
-    if (W.next <= 0 && !W.d) {
+    // (v1.8.92: not while Spacekom's load shedding is on - a second power cut came in the middle of its generator's hum)
+    if (W.next <= 0 && !W.d && !G.ls) {
       W.d = { t: 0 };
       sfx("powerdown");
       if (!demo) {
@@ -20994,8 +21026,15 @@ function updateTwist(dt, demo) {
     if (W.d) {
       const d = W.d;
       d.t += dt;
-      G.dark =
-        d.t < 0.6 ? (Math.sin(d.t * 40) > 0 ? 0.9 : 0.2) : d.t < 7 ? 1 : Math.max(0, 1 - (d.t - 7) * 2);
+      G.dark = COMFORT.calm
+        ? Math.min(1, d.t / 0.8, Math.max(0, 1 - (d.t - 7) * 2)) // (v1.8.92: calm mode - no flicker)
+        : d.t < 0.6
+          ? Math.sin(d.t * 40) > 0
+            ? 0.9
+            : 0.2
+          : d.t < 7
+            ? 1
+            : Math.max(0, 1 - (d.t - 7) * 2);
       if (d.t > 7.5) {
         W.d = null;
         G.dark = 0;
@@ -29129,11 +29168,15 @@ function drawTap(lane, t, V) {
     // a barrel on a stand with a brass spigot
     rect(x + 4, y + 2, 4, 36, col("#4a3020"));
     rect(x + 36, y + 2, 4, 36, col("#4a3020"));
-    disc(x + 22, y - 30, 22, shade(V.face, 1.1), 34);
+    // (v1.8.92) BARRELS YOU CAN SEE: the barrel was the bar front's own colour (shade(V.face)), so on dark or red stops
+    // (Ember, Titan, Alpha Centauri, Mars, M110) it melted into the wall behind - now oak, only tinted by the stop, with a
+    // pale rim and brighter hoops
+    disc(x + 22, y - 30, 23.6, withA(col("#f0d6a0"), 0.45), 35.6);
+    disc(x + 22, y - 30, 22, mixC(shade(V.face, 1.1), col("#b07a40"), 0.62), 34);
     barrelShade(x + 22, y - 30, 22, 34); // (v1.4.40: round, lit on one side)
     for (const dy of [-52, -30, -8]) {
       line(x + 2, y + dy, x + 42, y + dy, 3, C.chromeDk);
-      line(x + 4, y + dy - 1, x + 22, y + dy - 1, 0.8, withA(C.white, 0.35)); // (the light on each hoop)
+      line(x + 4, y + dy - 1, x + 22, y + dy - 1, 0.8, withA(C.white, 0.55)); // (the light on each hoop)
     }
     for (let j = -2; j <= 2; j++)
       line(x + 22 + j * 8, y - 62, x + 22 + j * 8.5, y + 2, 1, withA(C.black, 0.35));
@@ -29262,11 +29305,13 @@ function drawTap(lane, t, V) {
     handle(col("#ffd060"));
   } else {
     // a ship's cask with a little wheel for a handle
-    disc(x + 22, y - 32, 20, shade(V.face, 1.15), 30);
+    // (v1.8.92: oak with a pale rim, like the barrel above - in the bar front's colour it vanished on dark stops)
+    disc(x + 22, y - 32, 21.6, withA(col("#f0d6a0"), 0.45), 31.6);
+    disc(x + 22, y - 32, 20, mixC(shade(V.face, 1.15), col("#a8703a"), 0.62), 30);
     barrelShade(x + 22, y - 32, 20, 30); // (v1.4.40)
     for (const dy of [-54, -32, -10]) {
       line(x + 3, y + dy, x + 41, y + dy, 3, col("#4a4a4a"));
-      line(x + 5, y + dy - 1, x + 22, y + dy - 1, 0.8, withA(C.white, 0.3));
+      line(x + 5, y + dy - 1, x + 22, y + dy - 1, 0.8, withA(C.white, 0.5));
     }
     rect(x + 4, y - 4, 36, 44, col("#3a2c1e"));
     disc(x + 22, y - 70, 9, fc, 3);
@@ -37394,12 +37439,12 @@ function drawVert(V, t) {
       x: x + 1,
       f: () => {
         vAt(pl.lane, x, VSIDE.p, () => {
-          kidDrawPet(pl, t);
           funPerks(pl, t);
           P = pl;
           drawPlayer(t);
           playerCheer(pl, t); // (v1.5.6)
           P = P1;
+          kidDrawPet(pl, t); // (v1.8.92: after the bartender - the pet sits in front, at the feet; see kidDrawPet)
         });
         if (G.fire && clouded(pl)) vAt(pl.lane, pl.x, VSIDE.p, () => drawCloud(pl, t));
       },
@@ -54349,7 +54394,9 @@ function drawKidPet(pet, x, y, t, moving, joy, face) {
 function kidDrawPet(pl, t) {
   const pet = kidPetFor(pl);
   if (!pet) return;
-  const tx = pl.x + 8 - (pl.face || 1) * 40,
+  // (v1.8.92: in the tall view, phone held upright, the bar runs into the screen and this offset turns sideways - at the
+  //  taps the pet sat on the next tap's front; there it sits at the bartender's feet, in front - tall.ts draws it after)
+  const tx = pl.x + 8 - (pl.face || 1) * (VERT ? 12 : 40),
     dt = clamp(G.time - (pl.petT ?? G.time), 0, 0.05);
   pl.petT = G.time;
   if (pl.petLane !== pl.lane) {
@@ -54362,7 +54409,7 @@ function kidDrawPet(pl, t) {
   if (mv) pl.petFace = Math.sign(pl.petX - before) || pl.petFace || 1;
   else if (Math.abs(tx - pl.petX) < 4) pl.petFace = pl.face || 1;
   const px = pl.petX,
-    py = LY(pl.lane, pl.petX) + 30;
+    py = LY(pl.lane, pl.petX) + (VERT ? 40 : 30);
   drawGrowPet(pl, pet, px, py, t, mv); // (an egg, or the pet at its size - doing a trick, now and then)
 }
 // a golden VIP: a floating crown, a sparkle and a soft golden glow
@@ -56456,6 +56503,13 @@ function growPet(pl) {
   if (G.demo || CS.open || WD.open) return "";
   const id = kidPetFor(pl);
   return id && id === petOf(pl.id || 0) ? id : "";
+}
+// (v1.8.92) AN EGG HAS NO POWERS YET: the wardrobe says "an egg - hatches after N more shakes" and hides the power, but
+// in play the egg already caught glasses, fetched tips and puffed customers back - what a pet DOES goes by this
+function petPower(pl) {
+  const id = kidPetFor(pl),
+    g = growPet(pl);
+  return g && petRec(g).s < PET_HATCH ? "" : id;
 }
 const petName = (id) => (PETS.find((p) => p.id === id) || { name: "PET" }).name;
 function petLevelStart() {
@@ -67490,8 +67544,19 @@ function funLevelStart() {
         c: ["#ff9fe0", "#7fd8ff", "#ffe070"][i],
         got: false,
       });
-  if (!G.demo && G.event && EVENT_NAMES[G.event])
+  // (v1.8.92) THE HOLIDAY SAID ONCE A GAME: said at every stop, it filled the queue of little captions, so the stop's
+  // region line, the fun fact and the band's song were dropped unseen all holiday long; and no egg hunt where there
+  // are no eggs (see above)
+  if (
+    !G.demo &&
+    G.event &&
+    EVENT_NAMES[G.event] &&
+    !G.eventSaid &&
+    !(G.event === "easter" && (G.ta || G.brush || G.daily || CUP.match))
+  ) {
+    G.eventSaid = true;
     G.callouts.push({ text: EVENT_NAMES[G.event], c: "#ffd24d", life: 2.4, max: 2.4, sub: true });
+  }
   if (!G.demo && G.shoes) {
     G.shoes = false;
     G.pw.speed = 12;
@@ -68061,7 +68126,7 @@ function funSave(why, lane, x) {
       (LOSER && active().includes(LOSER) ? LOSER : null) ||
       active().find((p) => p.lane === lane) ||
       active()[0],
-    pet = P0 ? kidPetFor(P0) : "",
+    pet = P0 ? petPower(P0) : "", // (v1.8.92: not while it's still an egg)
     all = G.petUsed || (G.petUsed = {}),
     used = P0 ? all["p" + P0.id] || (all["p" + P0.id] = {}) : all;
   let by = null;
@@ -68115,7 +68180,7 @@ function funUpdate(dt, demo) {
   const all = G.petUsed || (G.petUsed = {});
   for (const P0 of active()) {
     const used = all["p" + P0.id] || (all["p" + P0.id] = {}); // (v1.8.32: each player's pet its own saves)
-    const pet = kidPetFor(P0);
+    const pet = petPower(P0); // (v1.8.92: not while it's still an egg)
     if (pet === "puppy")
       for (const tp of tips)
         if (tp.lane === P0.lane && tp.t > 1 && !tp.dead) {
@@ -68132,8 +68197,13 @@ function funUpdate(dt, demo) {
             G.showT = 3.6;
             callout("TIP!  HOLO-SHOW TIME", "#ffc34d", 2.2);
           }
-          sfx("tip");
+          sfx("tip", tp.x);
           kidTip(false);
+          // (v1.8.92: as a tip you pick up yourself - the coach's GRAB THE TIP counts as learned, the phone buzzes, the
+          //  coins fly, and a good-service tip says thank you)
+          coachTip(false);
+          coins(tp.lane, tp.x, LY(tp.lane, tp.x) - 10, tp.v ? 6 : 12);
+          if (tp.v) worldText("THANKS FOR THE GOOD SERVICE!", { lane: tp.lane, x: tp.x }, "#ffd24d");
           fStat("tips");
           addCoins(5, "PUPPY FETCHED A TIP");
           // (v1.8.59: a fetched tip is not a rescue - BEST FRIENDS is "your pet saves you 5 times"; it counted every tip)
@@ -68200,7 +68270,7 @@ function funUpdate(dt, demo) {
         sparkle(e.x, LY(e.lane, e.x) - 10, [1, 0.8, 0.9, 1], 14, e.lane);
       }
   }
-  if (G.event === "newyear" && Math.random() < dt * 0.15) fireworks(1);
+  if (G.event === "newyear" && !COMFORT.calm && Math.random() < dt * 0.15) fireworks(1); // (v1.8.92: not in calm mode, like the festival's)
   // (v1.7.2) THE GRAND FESTIVAL IS A PARTY: at the last stop of the tour fireworks go up now and then (not in calm mode)
   if (
     envoyTour() &&
@@ -70558,7 +70628,7 @@ function funRobWarn(c, t) {
     c.state === "walk" &&
     c.robWarn &&
     c.x > X1 - 170 &&
-    active().some((p) => kidPetFor(p) === "robot") &&
+    active().some((p) => petPower(p) === "robot") &&
     Math.sin(t * 12) > 0
   ) {
     const y = LY(c.lane, c.x) - 150;
@@ -73288,7 +73358,7 @@ function funThiefFx(c, t) {
     star(c.x + 16, fy - 92, 3.6, withA(C.white, 0.9));
     R.setAdd(false);
   } // a shifty glint
-  if (active().some((p) => kidPetFor(p) === "droid") || DF().kid) {
+  if (active().some((p) => petPower(p) === "droid") || DF().kid) {
     const r = 34 + Math.sin(t * 5) * 2;
     arc(c.x + 12, fy - 60, r, 0, 6.283, 2.4, withA(col("#c89a40"), 0.9), 30);
     line(c.x + 12 + r * 0.7, fy - 60 + r * 0.7, c.x + 12 + r * 1.3, fy - 60 + r * 1.3, 5, col("#6a3a1a"));
@@ -85667,7 +85737,7 @@ function levelOfTour(of) {
     inTour = ((lv - 1) % LAST_LEVEL) + 1;
   return (tour > 1 ? "TOUR " + tour + "  ·  " : "") + "LEVEL " + inTour + of + LAST_LEVEL;
 }
-const GAME_VERSION = "v1.8.91",
+const GAME_VERSION = "v1.8.92",
   GAME_DATE = "26.11.2026",
   VERSION_TEXT = GAME_VERSION + "  ·  " + GAME_DATE;
 const FB = '"Chakra Petch", "Segoe UI", sans-serif';
@@ -86996,9 +87066,10 @@ function drawHud(fps) {
     // (v1.4.49: shorter, and see-through after the first second - it used to hide the top bar for nearly four seconds)
     if (B.t > 2.6 || G.state !== "play") G.lsBanner = null;
     else {
-      const on = B.t > 0.5 || Math.sin(B.t * 47) > 0,
+      // (v1.8.92: in calm mode the banner fades in and out without the dying-tube buzz)
+      const on = COMFORT.calm || B.t > 0.5 || Math.sin(B.t * 47) > 0,
         k = Math.min(1, B.t * 4, (2.6 - B.t) * 2.5) * (B.t > 1 ? 0.55 : 1),
-        fl = B.t > 0.5 && Math.sin(B.t * 31) > 0.93 ? 0.35 : 1;
+        fl = !COMFORT.calm && B.t > 0.5 && Math.sin(B.t * 31) > 0.93 ? 0.35 : 1;
       g.save();
       g.textAlign = "center";
       g.textBaseline = "middle";
@@ -93623,6 +93694,16 @@ profWire();
 //  the game, and where the motion capture, the folk songs and the fonts come from. Both from the menu at any time.
 // =====================================================================================
 const NEWS = [
+  {
+    ver: "v1.8.92",
+    title: "OAK BARRELS AND EGGS",
+    items: [
+      "THE BARREL TAPS ARE OAK NOW - NO LONGER LOST AGAINST DARK AND RED WALLS",
+      "A PET STILL IN ITS EGG HAS NO POWERS YET - HATCH IT FIRST",
+      "PHONE HELD UPRIGHT: YOUR PET SITS AT YOUR FEET, NOT ON A TAP",
+      "HOLIDAYS ARE ANNOUNCED ONCE A GAME, AND CALM MODE HAS NO FLICKERING LIGHTS",
+    ],
+  },
   {
     ver: "v1.8.91",
     title: "FAMILIAR FACES",

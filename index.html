@@ -8116,6 +8116,23 @@ const DICT_ROWS                             = [
     "DAAGLIKSE UITDAGING KLAAR!  +2 STERRE",
     "WYZWANIE DNIA UKOŃCZONE!  +2 GWIAZDKI",
   ],
+  // (v1.9.2) SEE WHAT THEY WANT
+  ["SEE WHAT THEY WANT", "SIEN WAT HULLE WIL HÊ", "ZOBACZ, CZEGO CHCĄ"],
+  [
+    "A NAME TAG NEVER COVERS A CUSTOMER'S ORDER BUBBLE",
+    "'N NAAMPLAATJIE BEDEK NOOIT 'N KLANT SE BESTELBORREL NIE",
+    "PLAKIETKA Z IMIENIEM NIGDY NIE ZASŁANIA DYMKA Z ZAMÓWIENIEM KLIENTA",
+  ],
+  [
+    "SIGNS AND PLACARDS STAY CLEAR OF THE SCORE, SHAKE FEVER AND EACH OTHER",
+    "BORDE EN PLAKKATE BLY WEG VAN DIE TELLING, SKOMMELKOORS EN MEKAAR",
+    "TABLICZKI I TRANSPARENTY NIE ZASŁANIAJĄ WYNIKU, GORĄCZKI KOKTAJLI ANI SIEBIE NAWZAJEM",
+  ],
+  [
+    "HARD: STAR RIVER RAPIDS INN NO LONGER STANDS OUT AS A SPIKE",
+    "MOEILIK: STAR RIVER RAPIDS INN STAAN NIE MEER UIT AS 'N PIEK NIE",
+    "TRUDNY: STAR RIVER RAPIDS INN NIE WYRÓŻNIA SIĘ JUŻ JAKO SKOK TRUDNOŚCI",
+  ],
   // (v1.9.1) ROUND AGAIN
   ["ROUND AGAIN", "WEER RONDOM", "JESZCZE JEDNA RUNDA"],
   [
@@ -15908,6 +15925,7 @@ const STOP_EVEN_HARD = {
   THALASSA: 0.55, // (v1.8.30: 12.5 lives against about 5.8 either side - the biggest spike on HARD)
   "THE WANDERER": 0.3,
   "NGC 206": 0.3,
+  "THE GIANT STREAM": 0.2, // (v1.9.2: 13.6 lives against 11.2 and 11.8 either side, 12 tries)
   "S ANDROMEDAE": 0.45,
 };
 const evened = (p) => {
@@ -57421,6 +57439,28 @@ function nameTagsHud(g, s, sx, sy) {
       )
         y = K.y + K.h / 2 + 11 * s;
     }
+    // (v1.9.2) THE ORDER FIRST: held down under the HUD, or onto a caption, a tag could still land on an order bubble -
+    //  and hid the flavour wanted for seconds; nor over the stage comedian's joke. Then that tag waits (a name is only
+    //  a name; the order is the game)
+    if (bubbles.some((b) => Math.abs(b.x - x) < w / 2 + b.hw && Math.abs(b.y - y) < b.h / 2 + 9 * s))
+      continue;
+    // (nor over a sign or a placard drawn this frame - an ENVOY sign held under the HUD shared a line with a tag)
+    if (
+      HUD_OBS.cur.some(
+        (b) => b.c !== c && Math.abs(b.x - x) < w / 2 + b.hw && Math.abs(b.y - y) < b.h / 2 + 7 * s
+      )
+    )
+      continue; // (another customer's sign - its own is just above it, as always)
+    {
+      const J = STAGE_CAP.joke;
+      if (
+        J &&
+        performance.now() - J.t < 500 &&
+        Math.abs(J.x - x) < J.hw + w / 2 &&
+        Math.abs(J.y - y) < J.h / 2 + 9 * s
+      )
+        continue;
+    }
     if (used.some((r) => Math.abs(r[0] - x) < (r[2] + w) / 2 && Math.abs(r[1] - y) < 20 * s)) continue; // (never one on top of another)
     used.push([x, y, w]);
     const near = busy.some(([bx, by]) => Math.abs(bx - x) < w / 2 + 24 * s && Math.abs(by - y) < 26 * s),
@@ -77596,7 +77636,10 @@ function drawStage(t) {
   }); // (a crisp ink outline round every performer, like everyone else in the pub)
 }
 // (v1.5.78) where the "LIVE:" caption was last drawn - the customers' name tags keep off it (kids2.ts nameTagsHud)
-const STAGE_CAP = { box: null                                                                      };
+const STAGE_CAP = {
+  box: null                                                                     ,
+  joke: null                                                                     , // (v1.9.2: the comedian's bubble)
+};
 // ---- the words: the name of tonight's act on a board at the front of the stage, the Shaolin shouts, the comedian's jokes ----
 function stageHud(g, s, t, fD, sx, sy) {
   if (!["play", "lost", "clear"].includes(G.state)) return;
@@ -77702,6 +77745,7 @@ function stageHud(g, s, t, fD, sx, sy) {
       roundRect(g, bx - w / 2, by - 10 * s, w, bh, 8 * s);
       g.fill();
       hudObs(bx, by - 10 * s + bh / 2, w, bh); // (v1.5.45: and the floating words keep clear of the joke's bubble)
+      STAGE_CAP.joke = { x: bx, y: by - 10 * s + bh / 2, hw: w / 2, h: bh, t: performance.now() }; // (v1.9.2: name tags too)
       g.fillStyle = "#1a0a1e";
       lines.forEach((l, i) => g.fillText(l, bx, by + i * lh, w - 10 * s));
     } else {
@@ -86268,7 +86312,7 @@ function levelOfTour(of) {
     inTour = ((lv - 1) % LAST_LEVEL) + 1;
   return (tour > 1 ? "TOUR " + tour + "  ·  " : "") + "LEVEL " + inTour + of + LAST_LEVEL;
 }
-const GAME_VERSION = "v1.9.1",
+const GAME_VERSION = "v1.9.2",
   GAME_DATE = "27.11.2026",
   VERSION_TEXT = GAME_VERSION + "  ·  " + GAME_DATE;
 const FB = '"Chakra Petch", "Segoe UI", sans-serif';
@@ -86295,11 +86339,12 @@ const HUD_TOP = { low: 0, plate: 0 }, // (v1.5.63: "plate" - where the meters' p
 // clear of last frame's boxes (they hardly move from one frame to the next, and some are drawn after the words)
 const COMBO_BOX = { last: null                                                           }; // (v1.5.66: where the combo was drawn)
 const HUD_OBS = {
-  prev: []                                                     ,
-  cur: []                                                     ,
+  prev: []                                                              ,
+  cur: []                                                              ,
+  owner: null       , // (v1.9.2: whose sign is being drawn - a name tag never steps aside for its own customer's sign)
 };
 function hudObs(x, y, w, h) {
-  HUD_OBS.cur.push({ x, y, hw: w / 2, h });
+  HUD_OBS.cur.push({ x, y, hw: w / 2, h, c: HUD_OBS.owner });
 }
 // (v1.5.41) WHERE THE TOUCH BUTTONS START, on each side of the screen (screen pixels from the top; the screen's height
 // when there are none on that side). The words along the bottom - your FLAVOUR on the left, the tune's name and GL on
@@ -87854,6 +87899,7 @@ function drawHelp(g, s, t, fD, fB, sx, sy) {
     g.font = fD(9);
     g.fillStyle = "#ffffff";
     g.fillText("!", X, Y - r * 0.15);
+    hudObs(X, Y, r * 2.4, r * 2.4); // (v1.9.2: a floating "+300" no longer covers it)
     // (v1.6.1) in co-op, whose bar to run to: "P1" or "P2" under the arrow, in their colour (as the call - twists.ts)
     const who = coopOn() ? coopWho(l) : null;
     if (who) {
@@ -87939,10 +87985,15 @@ const JUMP_SAYS                             = [
 ];
 // ---- what the protesters' placards say (written over the cardboard, following the sign as it bobs) ----
 function drawSigns(g, s, t, sx, sy) {
+  // (v1.9.2) THE SIGNS OVER HEADS STAY BELOW THE HUD: on a phone held sideways "✉ ENVOY" sat on "SHAKE FEVER x2" and
+  //  neither could be read - ENVOY, COCKTAIL, THE QUEEN, CHEF GRUMBLO, TWINS and the others are held just under it
+  //  (by 14 pixels at most - further down it came onto the customer's own order bubble)
+  const sgY = (y) => Math.max(sy(y), Math.min((HUD_TOP.low || 0) + 8 * s, sy(y) + 14 * s));
   if (G.state === "bonus" || CS.open || (ATTRACT.on && ATTRACT.phase !== "demo")) return;
   g.textAlign = "center";
   g.textBaseline = "middle";
   for (const c of customers) {
+    HUD_OBS.owner = c;
     // the outlaw's challenge, and a VIP's patience running out
     if (c.type.glutton && c.state !== "out") {
       const [x, y] = projL(c.lane, c.x + 12, LY(c.lane, c.x) - 190, VSIDE.c);
@@ -87953,14 +88004,14 @@ function drawSigns(g, s, t, sx, sy) {
       const lw = g.measureText(lbl).width + 16 * s,
         lh = 20 * s;
       g.fillStyle = "rgba(14,6,24,.82)";
-      rbox(g, sx(x) - lw / 2, sy(y) - lh / 2, lw, lh, lh / 2);
+      rbox(g, sx(x) - lw / 2, sgY(y) - lh / 2, lw, lh, lh / 2);
       g.fill();
       g.strokeStyle = "rgba(255,95,216,.7)";
       g.lineWidth = 1.5 * s;
       g.stroke();
       g.fillStyle = "#ff8ae6";
-      g.fillText(lbl, sx(x), sy(y) + 1);
-      hudObs(sx(x), sy(y), lw, lh);
+      g.fillText(lbl, sx(x), sgY(y) + 1);
+      hudObs(sx(x), sgY(y), lw, lh);
     } // how hungry is he still?
     // (v1.7.1) an envoy from Andromeda: a light-blue ENVOY sign over their head (fun.ts envoySpawn)
     if (c.envoy && c.state === "walk") {
@@ -87969,9 +88020,9 @@ function drawSigns(g, s, t, sx, sy) {
       g.fillStyle = Math.sin(t * 5) > -0.6 ? "#9fe8ff" : "#ffffff";
       g.strokeStyle = "rgba(10,6,20,.85)";
       g.lineWidth = 3 * s;
-      g.strokeText("✉ ENVOY", sx(x), sy(y));
-      g.fillText("✉ ENVOY", sx(x), sy(y));
-      hudObs(sx(x), sy(y), g.measureText(T("✉ ENVOY")).width + 8 * s, 14 * s);
+      g.strokeText("✉ ENVOY", sx(x), sgY(y));
+      g.fillText("✉ ENVOY", sx(x), sgY(y));
+      hudObs(sx(x), sgY(y), g.measureText(T("✉ ENVOY")).width + 8 * s, 14 * s);
     }
     // (v1.8.6) the connoisseur: a gold sign - they want the house cocktail
     if (c.conn && c.state === "walk") {
@@ -87980,9 +88031,9 @@ function drawSigns(g, s, t, sx, sy) {
       g.fillStyle = Math.sin(t * 5) > -0.5 ? "#ffd24d" : "#fff3c0";
       g.strokeStyle = "rgba(10,6,20,.85)";
       g.lineWidth = 3 * s;
-      g.strokeText("★ COCKTAIL", sx(x), sy(y));
-      g.fillText("★ COCKTAIL", sx(x), sy(y));
-      hudObs(sx(x), sy(y), g.measureText("★ COCKTAIL").width + 8 * s, 14 * s);
+      g.strokeText("★ COCKTAIL", sx(x), sgY(y));
+      g.fillText("★ COCKTAIL", sx(x), sgY(y));
+      hudObs(sx(x), sgY(y), g.measureText("★ COCKTAIL").width + 8 * s, 14 * s);
     }
     // (v1.7.4) the Queen of Andromeda: a gold QUEEN sign over her head, gently pulsing
     if (c.queen && c.state === "walk") {
@@ -87991,9 +88042,9 @@ function drawSigns(g, s, t, sx, sy) {
       g.fillStyle = Math.sin(t * 4) > -0.5 ? "#ffd24d" : "#fff3c0";
       g.strokeStyle = "rgba(10,6,20,.85)";
       g.lineWidth = 3 * s;
-      g.strokeText("THE QUEEN", sx(x), sy(y));
-      g.fillText("THE QUEEN", sx(x), sy(y));
-      hudObs(sx(x), sy(y), g.measureText("THE QUEEN").width + 8 * s, 16 * s);
+      g.strokeText("THE QUEEN", sx(x), sgY(y));
+      g.fillText("THE QUEEN", sx(x), sgY(y));
+      hudObs(sx(x), sgY(y), g.measureText("THE QUEEN").width + 8 * s, 16 * s);
     }
     // (v1.7.6) Chef Grumblo: a purple sign over his head
     if (c.grumblo && c.state === "walk") {
@@ -88002,9 +88053,9 @@ function drawSigns(g, s, t, sx, sy) {
       g.fillStyle = "#c69bff";
       g.strokeStyle = "rgba(10,6,20,.85)";
       g.lineWidth = 3 * s;
-      g.strokeText("CHEF GRUMBLO", sx(x), sy(y));
-      g.fillText("CHEF GRUMBLO", sx(x), sy(y));
-      hudObs(sx(x), sy(y), g.measureText("CHEF GRUMBLO").width + 8 * s, 14 * s);
+      g.strokeText("CHEF GRUMBLO", sx(x), sgY(y));
+      g.fillText("CHEF GRUMBLO", sx(x), sgY(y));
+      hudObs(sx(x), sgY(y), g.measureText("CHEF GRUMBLO").width + 8 * s, 14 * s);
     }
     // (v1.5.85) the twins in co-op: a gold label over each, pulsing while the other has been served and the clock runs
     if (c.twin && c.state === "walk") {
@@ -88014,14 +88065,14 @@ function drawSigns(g, s, t, sx, sy) {
       g.fillStyle = hurry && Math.sin(t * 16) > 0 ? "#fff3e2" : "#ffd24d";
       g.strokeStyle = "rgba(10,6,20,.85)";
       g.lineWidth = 3 * s;
-      g.strokeText("TWINS", sx(x), sy(y));
-      g.fillText("TWINS", sx(x), sy(y));
-      hudObs(sx(x), sy(y), g.measureText(T("TWINS")).width + 8 * s, 14 * s);
+      g.strokeText("TWINS", sx(x), sgY(y));
+      g.fillText("TWINS", sx(x), sgY(y));
+      hudObs(sx(x), sgY(y), g.measureText(T("TWINS")).width + 8 * s, 14 * s);
     }
     if ((c.outlaw && c.hold) || (c.vip > 0 && !c.vipDone)) {
       const [x, y] = projL(c.lane, c.x + 12, LY(c.lane, c.x) - 128, VSIDE.c),
         X = sx(x),
-        Y = sy(y);
+        Y = sgY(y);
       if (c.outlaw) {
         const drawn = G.tw && G.tw.o && G.tw.o.draw;
         g.font = Math.round((drawn ? 16 : 11) * s) + "px " + FD;
@@ -88042,6 +88093,7 @@ function drawSigns(g, s, t, sx, sy) {
   }
   g.textAlign = "center";
   g.textBaseline = "middle";
+  HUD_OBS.owner = null;
   // (v1.5.64) THE BIG CARDS DON'T PILE UP: on a phone the marchers' bigger placard cards (below) are wider than the
   // gap between two marchers, so one card covered half of the next ("ONS WIL MILKSHAKES!" over "ALL PLANETS UNITE").
   // A card that would land on one already drawn is now held up just above it. Whether it goes up is judged from where
@@ -88079,7 +88131,10 @@ function drawSigns(g, s, t, sx, sy) {
           hits = cards.filter((o) => Math.abs(o.bx - bx) < (o.w + cw) / 2 + (c.cardUp ? 6 : 0));
         c.cardUp = hits.length > 0;
         for (const o of hits) ty = Math.min(ty, o.y - (o.h + ch) / 2 - 1); // (above the highest one it meets)
+        // (v1.9.2: never up into the score and the sign - a stack climbed over HI and the HOLY row; that card waits)
+        if (ty - ch / 2 < (HUD_TOP.low || 0)) continue;
         cards.push({ bx, y: ty, w: cw, h: ch });
+        hudObs(tx, ty, cw, ch); // (and the floating words and captions keep clear of it)
       }
       g.fillStyle = "#ead7a8";
       g.strokeStyle = "rgba(60,36,16,.9)";
@@ -94265,6 +94320,15 @@ profWire();
 //  the game, and where the motion capture, the folk songs and the fonts come from. Both from the menu at any time.
 // =====================================================================================
 const NEWS = [
+  {
+    ver: "v1.9.2",
+    title: "SEE WHAT THEY WANT",
+    items: [
+      "A NAME TAG NEVER COVERS A CUSTOMER'S ORDER BUBBLE",
+      "SIGNS AND PLACARDS STAY CLEAR OF THE SCORE, SHAKE FEVER AND EACH OTHER",
+      "HARD: STAR RIVER RAPIDS INN NO LONGER STANDS OUT AS A SPIKE",
+    ],
+  },
   {
     ver: "v1.9.1",
     title: "ROUND AGAIN",

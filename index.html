@@ -132,7 +132,7 @@ body.txt1 .panel :is(button, h2, button span, button small, button b), body.txt2
 #jbList .jbJump { grid-column: 1 / -1; }
 #jukebox .buttons:last-child { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); }
 /* the coin shop: each price as a little badge in the corner (v1.2.0) */
-#shItems button, #shDecor button { position: relative; padding-right: 50px; }
+#shItems button, #shDecor button { position: relative; padding-right: 44px; } /* (v1.9.9: 44, was 50 - PLANETARIUM was cut in Polish) */
 #shItems .price, #shDecor .price { position: absolute; right: 8px; top: 7px; padding: 1px 7px; border-radius: 999px; font-size: 11px; font-weight: 800; color: var(--amber, #ffc34d); background: rgba(255,195,77,.14); white-space: nowrap; }
 #shDecor .price.own { color: #5ff5c8; background: rgba(95,245,200,.14); }
 /* the game-over results, as a small table (v1.2.0) */
@@ -1719,10 +1719,18 @@ function makeGL(cv, power, retro, levels, crt) {
         }
         flush();
         capture = [];
-        fn();
-        flush();
-        const segs = capture;
-        capture = null;
+        // (v1.9.9: let go of the capture even if the drawing fails - it kept capturing, and the screen stayed black)
+        let segs;
+        try {
+          fn();
+          flush();
+        } catch (e) {
+          n = 0; // (and what it had queued is dropped - drawn later, it landed on the screen without the camera)
+          throw e;
+        } finally {
+          segs = capture;
+          capture = null;
+        }
         L = segs.map((sg) => {
           const b = gl.createBuffer();
           gl.bindBuffer(gl.ARRAY_BUFFER, b);
@@ -2065,16 +2073,24 @@ function make2D(cv, cpuLevels) {
     layer(key, fn, dx, dy) {
       let L = layers.get(key);
       if (!L) {
-        if (layers.size > 4) layers.clear(); // (v1.8.56: 4, was 12 - each is a full-screen canvas, ~10 MB on a sharp phone, and endless travels through stop after stop)
+        // (v1.8.56: 4, was 12 - each is a full-screen canvas, ~10 MB on a sharp phone, and endless travels through stop after stop)
+        // (v1.9.9: but a stop uses ten of them every frame (wall, floor, the sides, four bars) - with room for four the
+        //  cache was emptied and all ten drawn again from scratch every frame, about three times slower. Twelve now,
+        //  and only the oldest one goes - the CPU path draws one pixel per point, about 1.3 MB each on a phone)
+        if (layers.size >= 12) layers.delete(layers.keys().next().value);
         const c = document.createElement("canvas");
         c.width = cv.width;
         c.height = cv.height;
         const g = c.getContext("2d");
         g.setTransform(sc, 0, 0, sc, 0, 0);
         ctx = g;
-        fn();
-        ctx.globalCompositeOperation = "source-over";
-        ctx = main;
+        // (v1.9.9: put back even if the drawing fails - or everything after it was drawn into this hidden canvas)
+        try {
+          fn();
+        } finally {
+          ctx.globalCompositeOperation = "source-over";
+          ctx = main;
+        }
         L = c;
         layers.set(key, L);
       }
@@ -2671,6 +2687,7 @@ function createRenderer(mode) {
             gfxNote =
               "The video card stopped responding, so the game switched to CPU drawing (it tries the video card again next start).";
             updateGfxText();
+            if (typeof updateLookText === "function") updateLookText(); // (v1.9.9: SCREEN says SCANLINES now)
             GL_FALLBACK.n++;
           };
           lostT = setTimeout(fall, 2000);
@@ -2788,7 +2805,7 @@ const DICT_ROWS                             = [
   ["ONE-BUTTON:", "EEN KNOPPIE:", "JEDEN PRZYCISK:"],
   ["OFF", "AF", "WYŁ."],
   ["ON", "AAN", "WŁ."],
-  ["BREAK REMINDER:", "POUSE-HERINNERING:", "PRZYPOMNIENIE O PRZERWIE:"],
+  ["BREAK REMINDER:", "POUSE-HERINNERING:", "PRZYPOMNIJ O PRZERWIE:"], // (v1.9.9: pl shorter - it was cut mid-word on a phone)
   ["CALM MODE:", "RUSTIGE MODUS:", "TRYB SPOKOJNY:"],
   ["FLAVOUR SHAPES:", "GEURVORMS:", "KSZTAŁTY SMAKÓW:"],
   ["VIBRATION:", "VIBRASIE:", "WIBRACJE:"],
@@ -2796,7 +2813,7 @@ const DICT_ROWS                             = [
   ["TEXT SIZE:", "TEKSGROOTTE:", "ROZMIAR TEKSTU:"],
   ["BIG", "GROOT", "DUŻY"],
   ["HUGE", "BAIE GROOT", "BARDZO DUŻY"],
-  ["LEFT-HANDED:", "LINKSHANDIG:", "DLA LEWORĘCZNYCH:"],
+  ["LEFT-HANDED:", "LINKSHANDIG:", "TRYB LEWORĘCZNY:"], // (v1.9.9: pl shorter)
   ["GAME OVER", "SPEL VERBY", "KONIEC GRY"],
   ["HOLIDAY:", "VAKANSIEDAG:", "ŚWIĘTO:"],
   ["BY DATE", "VOLGENS DATUM", "WEDŁUG DATY"],
@@ -3755,12 +3772,12 @@ const DICT_ROWS                             = [
   ["SHARE ▶", "DEEL ▶", "UDOSTĘPNIJ ▶"],
   ["QUIT", "OPGEHOU", "PRZERWANO"], // (v1.9.6: a high score's line on tour 2+ - "TOUR 2  ·  LEVEL 5  ·  QUIT" - is translated piece by piece)
   ["BACK TO THE CUP ▶", "TERUG NA DIE BEKER ▶", "WRÓĆ DO TURNIEJU ▶"],
-  ["RUN", "HARDLOOP", "BIEG"],
+  ["RUN", "LOOP", "BIEG"], // (v1.9.9: af shorter - HARDLOOP ran over the touch button's edge)
   ["BAR", "TOONBANK", "LADA"], // (v1.8.83: the touch arrows' other label - it stayed English)
   ["FLAVOUR", "GEUR", "SMAK"],
   ["CROSS", "KRUIS", "KRZYŻ"],
   ["HOLY", "WY", "WODA"],
-  ["WATER", "WATER", "ŚWIĘCONA"],
+  ["WATER", "WATER", "ŚW."], // (v1.9.9: "WODA / ŚW." - ŚWIĘCONA ran over the HOLY button's edge)
   ["PRESS", "DRUK", "NACIŚNIJ"],
   ["POUR", "SKINK", "NALEJ"],
   ["SLIDE", "GLY", "PCHNIJ"],
@@ -3886,6 +3903,14 @@ const DICT_ROWS                             = [
   ["YUM!", "LEKKER!", "MNIAM!"],
   ["THANKS FOR THE GOOD SERVICE!", "DANKIE VIR DIE GOEIE DIENS!", "DZIĘKUJĘ ZA ŚWIETNĄ OBSŁUGĘ!"],
   ["EMPTY! IT WAS OVER THERE", "LEEG! DIT WAS DAARDIE KANT", "PUSTO! BYŁO TAM"],
+  // (v1.9.9: kid mode's kinder lines)
+  ["SO CLOSE! IT WAS OVER THERE", "AMPER! DIT WAS DAARDIE KANT", "PRAWIE! BYŁO TAM"],
+  ["WHEE! THE GRAVITY IS OFF!", "WIEE! DIE SWAARTEKRAG IS AF!", "HURA! GRAWITACJA WYŁĄCZONA!"],
+  [
+    "SERVE THE WHOLE STOP BEFORE THEY DO!",
+    "BEDIEN DIE HELE HALTE VOOR HULLE!",
+    "OBSŁUŻ CAŁY PRZYSTANEK PRZED NIMI!",
+  ],
   ["WHERE IS IT?", "WAAR IS DIT?", "GDZIE TO JEST?"],
   ["BONUS ROUND: FIND THE ALIEN", "BONUSRONDE: VIND DIE RUIMTEWESE", "RUNDA BONUSOWA: ZNAJDŹ KOSMITĘ"],
   ["NO SERVICE", "GEEN DIENS", "NIE OBSŁUGUJEMY"],
@@ -6365,7 +6390,7 @@ const DICT_ROWS                             = [
   ["EXTRA PEEK", "EKSTRA LOER", "DODATKOWE ZERKNIĘCIE"],
   ["FLAG BUNTING", "VLAGGIES", "GIRLANDA Z FLAG"],
   ["NEON GL SIGN", "NEON-GL-BORD", "NEON GL"],
-  ["DISCO BALL", "DISKOBAL", "KULA DYSKOTEKOWA"],
+  ["DISCO BALL", "DISKOBAL", "KULA DISCO"], // (v1.9.9: pl shorter)
   ["POTTED PLANTS", "POTPLANTE", "ROŚLINY W DONICZKACH"],
   ["FISH TANK", "VISTENK", "AKWARIUM"],
   // (v1.8.54) three dearer decorations
@@ -6473,7 +6498,7 @@ const DICT_ROWS                             = [
   ["LEFT ALT", "LINKER-ALT", "LEWY ALT"],
   ["RIGHT ALT", "REGTER-ALT", "PRAWY ALT"],
   ["PARTY HAT", "PARTYHOED", "CZAPKA IMPREZOWA"], // (v1.8.97: shorter - on a phone held upright the long hat and pet names split mid-word)
-  ["CHEF'S HAT", "SJEFSMUS", "CZAPKA KUCHARSKA"],
+  ["CHEF'S HAT", "SJEFSMUS", "CZAPKA KUCHARZA"], // (v1.9.9: pl shorter)
   ["COWBOY HAT", "COWBOYHOED", "KAPELUSZ KOWBOJSKI"],
   ["PROPELLER CAP", "SKROEFPET", "CZAPKA ZE ŚMIGŁEM"],
   ["PIRATE HAT", "PIRAATHOED", "KAPELUSZ PIRACKI"],
@@ -6513,7 +6538,7 @@ const DICT_ROWS                             = [
   ["CAPE POINT", "KAAPPUNT", "PRZYLĄDEK CAPE POINT"],
   ["WAWEL HILL", "WAWEL-HEUWEL", "WZGÓRZE WAWELSKIE"],
   ["MALBORK CASTLE", "MALBORK-KASTEEL", "ZAMEK W MALBORKU"],
-  ["SPACE SHOW", "RUIMTEVERTONING", "KOSMICZNY POKAZ"],
+  ["SPACE SHOW", "RUIMTESKOU", "KOSMICZNY POKAZ"], // (v1.9.9: af shorter - the sticker tab broke in two)
   ["GREAT!", "WONDERLIK!", "ŚWIETNIE!"],
   ["NICE ONE!", "MOOI!", "NIEŹLE!"],
   [
@@ -6854,7 +6879,7 @@ const DICT_ROWS                             = [
   ],
 
   // (v1.4.79) TRANSLATIONS, v1.4.82: setting cards
-  ["BREAK REMINDER", "POUSE-HERINNERING", "PRZYPOMNIENIE O PRZERWIE"],
+  ["BREAK REMINDER", "POUSE-HERINNERING", "PRZYPOMNIJ O PRZERWIE"], // (v1.9.9: pl shorter)
   ["CALM MODE", "RUSTIGE MODUS", "TRYB SPOKOJNY"],
   ["CONTINUE AFTER GAME OVER", "GAAN VOORT NA SPEL VERBY", "KONTYNUACJA PO KOŃCU GRY"],
   ["FLAVOUR ORDERS", "GEURBESTELLINGS", "ZAMÓWIENIA SMAKÓW"],
@@ -6862,7 +6887,7 @@ const DICT_ROWS                             = [
   ["GRAPHICS", "GRAFIKA", "GRAFIKA"],
   ["HOLIDAY", "VAKANSIEDAG", "ŚWIĘTO"],
   ["LAYOUT", "UITLEG", "UKŁAD"],
-  ["LEFT-HANDED", "LINKSHANDIG", "DLA LEWORĘCZNYCH"],
+  ["LEFT-HANDED", "LINKSHANDIG", "TRYB LEWORĘCZNY"], // (v1.9.9: pl shorter)
   ["LOOK", "VOORKOMS", "WYGLĄD"],
   ["MUSIC", "MUSIEK", "MUZYKA"],
   ["ONE-BUTTON", "EEN KNOPPIE", "JEDEN PRZYCISK"],
@@ -6906,7 +6931,7 @@ const DICT_ROWS                             = [
   ],
   [
     "Run along the bar (left/right - on a phone held upright, the ▲ ▼ RUN buttons). Customers served quickly often leave a <b>TIP</b> on the counter - run up and grab it for bonus points. Tap a direction twice - or double-click / double-tap ahead of you on your bar - for a <b>TURBO</b> run. Change bar with up/down (upright: the ◀ ▶ BAR buttons), 1-4, or a tap/click on it.",
-    "Hardloop langs die toonbank (links/regs - op 'n foon wat regop gehou word, die ▲ ▼ HARDLOOP-knoppies). Klante wat vinnig bedien word, los dikwels 'n <b>FOOI</b> op die toonbank - hardloop op en gryp dit vir bonuspunte. Druk 'n rigting twee keer - of dubbelklik / dubbeltik voor jou op jou toonbank - vir 'n <b>TURBO</b>-lopie. Wissel toonbank met op/af (regop: die ◀ ▶ TOONBANK-knoppies), 1-4, of 'n tik/klik daarop.",
+    "Hardloop langs die toonbank (links/regs - op 'n foon wat regop gehou word, die ▲ ▼ LOOP-knoppies). Klante wat vinnig bedien word, los dikwels 'n <b>FOOI</b> op die toonbank - hardloop op en gryp dit vir bonuspunte. Druk 'n rigting twee keer - of dubbelklik / dubbeltik voor jou op jou toonbank - vir 'n <b>TURBO</b>-lopie. Wissel toonbank met op/af (regop: die ◀ ▶ TOONBANK-knoppies), 1-4, of 'n tik/klik daarop.",
     "Biegaj wzdłuż lady (lewo/prawo - na telefonie trzymanym pionowo przyciskami ▲ ▼ BIEG). Szybko obsłużeni klienci często zostawiają na ladzie <b>NAPIWEK</b> - podbiegnij i złap go po dodatkowe punkty. Naciśnij kierunek dwa razy - albo kliknij / stuknij dwukrotnie przed sobą na swojej ladzie - a pobiegniesz w trybie <b>TURBO</b>. Zmieniaj ladę strzałkami góra/dół (pionowo: przyciskami ◀ ▶ LADA), klawiszami 1-4 albo stuknięciem/kliknięciem.",
   ],
   [
@@ -8116,6 +8141,28 @@ const DICT_ROWS                             = [
     "DAILY CHALLENGE DONE!  +2 STARS",
     "DAAGLIKSE UITDAGING KLAAR!  +2 STERRE",
     "WYZWANIE DNIA UKOŃCZONE!  +2 GWIAZDKI",
+  ],
+  // (v1.9.9) RUNS EVERYWHERE
+  ["RUNS EVERYWHERE", "LOOP ORAL", "DZIAŁA WSZĘDZIE"],
+  [
+    "WITHOUT A VIDEO CARD THE GAME DRAWS ABOUT THREE TIMES FASTER",
+    "SONDER 'N VIDEOKAART TEKEN DIE SPEL OMTRENT DRIE KEER VINNIGER",
+    "BEZ KARTY GRAFICZNEJ GRA RYSUJE OKOŁO TRZY RAZY SZYBCIEJ",
+  ],
+  [
+    "CONTINUE GOES ON AT THE DIFFICULTY THE GAME WAS PLAYED ON",
+    "GAAN VOORT SPEEL VERDER OP DIE MOEILIKHEID WAAROP DIE SPEL GESPEEL IS",
+    "DALEJ KONTYNUUJE NA POZIOMIE TRUDNOŚCI, NA KTÓRYM TOCZYŁA SIĘ GRA",
+  ],
+  [
+    "CO-OP: TWINS NEVER WEAR SOMEONE ELSE'S SIGN, A LOST HOUSE SPECIAL COMES BACK",
+    "SAAMSPEEL: TWEELINGE DRA NOOIT IEMAND ANDERS SE BORD NIE, 'N VERLORE HUISSPESIAAL KOM TERUG",
+    "KOOPERACJA: BLIŹNIAKI NIGDY NIE NOSZĄ CUDZEJ TABLICZKI, UTRACONY SPECJAŁ DOMU WRACA",
+  ],
+  [
+    "SHORTER WORDS WHERE AFRIKAANS AND POLISH DIDN'T FIT A BUTTON",
+    "KORTER WOORDE WAAR AFRIKAANS EN POOLS NIE IN 'N KNOPPIE GEPAS HET NIE",
+    "KRÓTSZE SŁOWA TAM, GDZIE AFRIKAANS I POLSKI NIE MIEŚCIŁY SIĘ NA PRZYCISKU",
   ],
   // (v1.9.8) EVERY DAY A NEW ONE
   ["EVERY DAY A NEW ONE", "ELKE DAG 'N NUWE", "KAŻDEGO DNIA NOWE"],
@@ -11715,6 +11762,7 @@ const DICT_ROWS                             = [
     "Wpisz co najmniej dwa różne imiona, by zacząć turniej!",
   ],
   ["P or Esc", "P of Esc", "P lub Esc"],
+  ["✝ CROSS", "✝ KRUIS", "✝ KRZYŻ"], // (v1.9.9: the TOUCH list's "✝ CROSS · HOLY" - its first half stayed English)
   // (v1.9.8: the two move lines - "or" stayed English, and with so few letters the language test missed them)
   ["↑ ↓ or W S", "↑ ↓ of W S", "↑ ↓ lub W S"],
   ["← → or A D", "← → of A D", "← → lub A D"],
@@ -13957,7 +14005,7 @@ function resize() {
     // RETRO looks draw the game into a small picture; with the CRT screen on (GPU only) that picture is then shown
     // through a full-resolution TV pass, otherwise the browser just blows it up with hard pixel edges.
     CRT_ACTIVE = !!(retroLook && crtOn && QUAL >= 1 && R && R.kind === "GPU" && R.post);
-    const lpx = LOOK_PX[lookMode] * (gfx === "cpu" && QUAL < 1 ? 1.34 : 1); // a struggling CPU draws fewer, bigger pixels
+    const lpx = LOOK_PX[lookMode] * ((gfx === "cpu" || (R && R.kind === "CPU")) && QUAL < 1 ? 1.34 : 1); // a struggling CPU draws fewer, bigger pixels (v1.9.9: whatever is really drawing - no video card at all too)
     if (retroLook) {
       RW = Math.max(1, Math.round(W / lpx));
       RH = Math.max(1, Math.round(H / lpx));
@@ -16162,7 +16210,7 @@ const paramsRaw = () => {
   if (D.kid)
     return tourLoop({
       total: Math.round(Math.min(26, 8 + L * 2) * k2),
-      maxOn: Math.round(Math.min(7, 2 + L * 0.8) * k2) + rush,
+      maxOn: Math.round(Math.min(6, 2 + L * 0.6) * k2) + rush, // (v1.9.9: never busier than EASY - it was at stops 10-18)
       spawn: ((2.1 - 1.2 * e) / k2) * D.spawn * (rush ? 0.6 : 1),
       speed: (1 + 0.8 * e) * D.speed,
       empty: (190 + 110 * e) * D.empty,
@@ -17831,6 +17879,7 @@ function spawnPower() {
   const wt = (k) =>
     POWERS[k].w *
     (k === "life" && difficulty === "easy" ? 0.25 : 1) * // (v1.4.63: and halved again)
+    (k === "life" && !G.versus && (G.free || DF().kid) ? 0 : 1) * // (v1.9.9: none where lives are endless)
     (low
       ? { shield: 2.5, life: 3, slow: 1.8, decaf: 0.3 }[k] || 1
       : cruising
@@ -20884,9 +20933,13 @@ function update(dt) {
         G.level < LAST_LEVEL
       ) {
         // (v1.4.63: on EASY the milestone life only every 20 stops - half as many)
-        if (G.versus) for (const p of PL) p.lives++;
-        else G.lives++;
-        callout("MILESTONE: " + G.level + " STOPS DONE  ·  +1 LIFE", "#5ff5c8", 3);
+        // (v1.9.9: where lives are endless (kid mode, RELAX) just the milestone - "+1 LIFE" meant nothing there)
+        if (!G.versus && (G.free || DF().kid)) callout("MILESTONE: " + G.level + " STOPS DONE", "#5ff5c8", 3);
+        else {
+          if (G.versus) for (const p of PL) p.lives++;
+          else G.lives++;
+          callout("MILESTONE: " + G.level + " STOPS DONE  ·  +1 LIFE", "#5ff5c8", 3);
+        }
       } // a reward every five stops
     }
   }
@@ -21305,7 +21358,9 @@ function gravityFail(dt, demo) {
     G.gfT = 1e9;
     sfx("alarm");
     if (!demo) {
-      callout("ARTIFICIAL GRAVITY FAILURE!", "#ff6a6a", 2.2);
+      // (v1.9.9: kid mode - fun, not a red alarm)
+      if (DF().kid) callout("WHEE! THE GRAVITY IS OFF!", "#9fe8ff", 2.2);
+      else callout("ARTIFICIAL GRAVITY FAILURE!", "#ff6a6a", 2.2);
       G.callouts.push({
         text: "EVERYTHING FLOATS - THE CUSTOMERS AND YOUR SHAKES DRIFT ALONG SLOWER",
         c: "#e6d4ff",
@@ -22386,7 +22441,16 @@ function coopTwins(dt, demo) {
       !c.type.glutton &&
       !c.protest &&
       !c.extra &&
-      !c.twin
+      !c.twin &&
+      // (v1.9.9: nor anyone with a sign of their own - a connoisseur, an envoy, the Queen... - two signs sat on one head)
+      !c.conn &&
+      !c.envoy &&
+      !c.queen &&
+      !c.grumblo &&
+      !c.thief &&
+      !c.gold &&
+      !c.fan &&
+      !c.type.dragonB // (the once-a-stop guest too, as the connoisseur's pick leaves him be)
   );
   for (let i = 0; i < fresh.length; i++)
     for (let j = i + 1; j < fresh.length; j++)
@@ -23389,6 +23453,9 @@ function afterLoss() {
   //  and ten more serves were needed)
   const sp = shakes.find((s) => s.special !== undefined);
   if (sp && G.ckReady < 0 && active().some((p) => p.id === (sp.owner || 0))) G.ckReady = sp.owner || 0;
+  // (v1.9.9: and when the other player's special is ready meanwhile, the lost one's owner is one serve from it again -
+  //  it was simply gone, and ten more serves were needed)
+  else if (sp && G.ckReady !== (sp.owner || 0) && G.ckN) G.ckN[sp.owner || 0] = CK_EVERY - 1;
   shakes = [];
   empties = [];
   tips = [];
@@ -24388,8 +24455,14 @@ function revealDome() {
     for (let k = 0; k < 40; k++) confetti(domeX(b.pos[i]) + rnd(-60, 60), 200, 1);
     fireworks(3);
   } else {
-    callout("EMPTY! IT WAS OVER THERE", "#ff5fa8", 2.2);
-    sfx("aww");
+    // (v1.9.9: kid mode - a kind word in gold and a boing, not the pink and the "aww" it hides everywhere else)
+    if (kidOn()) {
+      callout("SO CLOSE! IT WAS OVER THERE", "#ffd24d", 2.2);
+      sfx("boing");
+    } else {
+      callout("EMPTY! IT WAS OVER THERE", "#ff5fa8", 2.2);
+      sfx("aww");
+    }
   }
 }
 // where dome i is drawn right now (it moves along an arc while it swaps)
@@ -69848,7 +69921,7 @@ function funMiniUpdate(dt) {
             M.have = [];
             M.pile = [];
             for (const o of M.items) if (o.inG) o.dead = true;
-            sfx("aww");
+            sfx(kidOn() ? "boing" : "aww"); // (v1.9.9: no "aww" in kid mode)
           }
           continue;
         }
@@ -70783,7 +70856,10 @@ function rivalLevelStart() {
   G.rival = { n: 0, el: 0, won: 0, at: -1, boost: 0, ph: Math.random() * 6.283, ahead: false, leadT: 0 };
   callout("THE BLACK HOLE BISTRO IS RACING YOU!", "#c69bff", 3);
   G.callouts.push({
-    text: "SERVE THE WHOLE STOP BEFORE THEY DO - EVERY SLIP HELPS THEM",
+    // (v1.9.9: in kid mode a slip doesn't help them - it said it did)
+    text: DF().kid
+      ? "SERVE THE WHOLE STOP BEFORE THEY DO!"
+      : "SERVE THE WHOLE STOP BEFORE THEY DO - EVERY SLIP HELPS THEM",
     c: "#e2ccff",
     life: 3.6,
     max: 3.6,
@@ -72748,6 +72824,7 @@ function contRemember() {
     sp: !!G.stampsPaid, // (v1.8.22: already paid at the festival - the score saved above has them in it)
     // (v1.9.5: whether the stop had an envoy - the replayed stop rolled again, and four times in ten its stamp was gone)
     ev: !!G.envoyPlan,
+    df: difficulty, // (v1.9.9: the difficulty it was played on - see continueGame)
   });
 }
 function continueGame() {
@@ -72755,6 +72832,13 @@ function continueGame() {
   if (!c || !contOn()) return;
   keepScore(); // (v1.5.41: the score goes in the table before you carry on - setup.ts)
   const keep = fromLevel;
+  // (v1.9.9) A CONTINUE GOES ON AT ITS OWN DIFFICULTY: a game lost on HARD could be continued in KID MODE - the score
+  //  kept, the lives endless, and the high-score table then called it all KID MODE. It's played on as it was saved
+  if (c.df && DIFFS[c.df] && c.df !== difficulty) {
+    difficulty = c.df;
+    store.set("diff2", difficulty);
+    diffText();
+  }
   fromLevel = c.level;
   G.introShown = true;
   G.contLoop = c.lp || 0; // (v1.8.88: the tour, for startGame - see there)
@@ -74223,7 +74307,20 @@ function funMystery(dt) {
     M.next -= dt;
     if (M.next <= 0) {
       const cand = customers.filter(
-        (c) => c.state === "walk" && !c.type.evil && !c.type.glutton && !c.gold && c.x < X1 - 240
+        // (v1.9.9: nor anyone with a sign of their own - twins, an envoy, the connoisseur... two signs on one head)
+        (c) =>
+          c.state === "walk" &&
+          !c.type.evil &&
+          !c.type.glutton &&
+          !c.gold &&
+          !c.twin &&
+          !c.conn &&
+          !c.envoy &&
+          !c.queen &&
+          !c.grumblo &&
+          !c.fan &&
+          !c.extra &&
+          c.x < X1 - 240
       );
       if (cand.length) {
         const c = cand[Math.floor(Math.random() * cand.length)];
@@ -79315,7 +79412,9 @@ function animalFor(demo) {
 }
 function animalServedSfx(c) {
   const k = c.type.kind;
-  if (k === "lion" || k === "wolf") sfx(k === "wolf" ? "howl" : "groan", c.x);
+  if ((k === "lion" || k === "wolf") && kidOn())
+    sfx("chime", c.x); // (v1.9.9: no howl or groan in kid mode)
+  else if (k === "lion" || k === "wolf") sfx(k === "wolf" ? "howl" : "groan", c.x);
   else if (k === "owl") sfx("chirp", c.x);
   else if (k === "elephant" || k === "hippo" || k === "rhino") sfx("snort", c.x);
   else sfx("squawk", c.x);
@@ -86771,7 +86870,7 @@ function levelOfTour(of) {
     inTour = ((lv - 1) % LAST_LEVEL) + 1;
   return (tour > 1 ? "TOUR " + tour + "  ·  " : "") + "LEVEL " + inTour + of + LAST_LEVEL;
 }
-const GAME_VERSION = "v1.9.8",
+const GAME_VERSION = "v1.9.9",
   GAME_DATE = "27.11.2026",
   VERSION_TEXT = GAME_VERSION + "  ·  " + GAME_DATE;
 const FB = '"Chakra Petch", "Segoe UI", sans-serif';
@@ -94875,6 +94974,16 @@ profWire();
 // =====================================================================================
 const NEWS = [
   {
+    ver: "v1.9.9",
+    title: "RUNS EVERYWHERE",
+    items: [
+      "WITHOUT A VIDEO CARD THE GAME DRAWS ABOUT THREE TIMES FASTER",
+      "CONTINUE GOES ON AT THE DIFFICULTY THE GAME WAS PLAYED ON",
+      "CO-OP: TWINS NEVER WEAR SOMEONE ELSE'S SIGN, A LOST HOUSE SPECIAL COMES BACK",
+      "SHORTER WORDS WHERE AFRIKAANS AND POLISH DIDN'T FIT A BUTTON",
+    ],
+  },
+  {
     ver: "v1.9.8",
     title: "EVERY DAY A NEW ONE",
     items: [
@@ -98421,6 +98530,12 @@ let slowN = 0,
 const PAUSE_DRAW = { n: 0 }; // (v1.8.43: see frameWork)
 function autoQuality(f) {
   if (document.hidden) return;
+  // (v1.9.9: not while paused - the picture is drawn every third frame there, so it looked fast, stepped the quality
+  //  up, and play stuttered until it stepped back down)
+  if (G.state === "paused") {
+    fastN = slowN = 0;
+    return;
+  }
   // (v1.9.6) A NEW SCREEN DENSITY: the window dragged onto a sharper monitor fires no resize (the size in CSS pixels
   //  stays the same) - the game stayed at the old density, stretched and blurred, until the window was resized
   if (Math.min(2, window.devicePixelRatio || 1) !== hdpr) resize();

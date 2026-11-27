@@ -653,7 +653,7 @@ body.touch2p #touch .tp button.holy { width: 60px; height: 60px; font-size: 11px
     <p data-tr>Every stop has its own <b>specials</b> tonight - the arrival screen says which (TONIGHT: ...). Pop the <b>balloon</b> by serving someone on its bar, run over a <b>shooting star</b> or a <b>lost parcel</b> to collect it, serve quickly on the bar where the <b>bell</b> rings, wake a <b>sleepyhead</b> with a shake, and serve <b>gift</b>, <b>mystery</b> and <b>birthday</b> guests for a surprise. During <b>tip rain</b> and <b>happy hour</b> every serve pays extra. A <b>×2</b> customer comes back for a second shake, tonight's <b>flavour</b> scores extra, and when the taps glow gold your next serve is a <b>golden shake</b>. Catch a <b>runaway donut</b> before it rolls off, and serve from the bar whose <b>tap sparkles</b>. They never cost a life.</p>
     <!-- (v2.0.4) THE SPACE EVENTS (specials.ts) -->
     <h3>SPACE EVENTS</h3>
-    <p data-tr>From stop 3 on, things happen out there too - every stop has its own event (the arrival screen says which), and others may come. A <b>UFO</b> may try to <b>abduct</b> a customer - serve them before the beam takes them (or they come back later, from space, with a big tip). Your <b>telepathy</b> turns every order to the flavour you're holding, a <b>comet</b> makes everyone stop and look, the <b>space whale</b> sings and the customers slow down to listen, a <b>hypno-wave</b> sends a bar's customers back a few steps, a <b>meteor shower</b> drops stars to catch, a tiny <b>black hole</b> swallows the empty glasses on its bar, a <b>satellite</b> drops a crate with a power-up, a <b>wormhole</b> moves a customer to another bar, a group of <b>alien tourists</b> wants serving together (a big bonus for the whole group), a <b>pulsar surge</b> makes the taps pour twice as fast, a <b>mind freeze</b> holds the customers still while you pour (not the bosses), and the little green visitors' saucer drops by.</p>
+    <p data-tr>From stop 3 on, things happen out there too - every stop has its own event (the arrival screen says which), and others may come. A <b>UFO</b> may try to <b>abduct</b> a customer - serve them before the beam takes them (or they come back later, from space, with a big tip). Your <b>telepathy</b> turns every order to the flavour you're holding, a <b>comet</b> makes everyone stop and look, the <b>space whale</b> sings and the customers slow down to listen, a <b>hypno-wave</b> sends a bar's customers back a few steps, a <b>meteor shower</b> drops stars to catch, a tiny <b>black hole</b> swallows the empty glasses on its bar, a <b>satellite</b> drops a crate with a power-up, a <b>wormhole</b> moves a customer to another bar, a group of <b>alien tourists</b> wants serving together (a big bonus for the whole group), a <b>pulsar surge</b> makes the taps pour twice as fast, a <b>mind freeze</b> holds the customers still while you pour (not the bosses), a <b>mind swap</b> makes two customers swap bars, an <b>eclipse</b> doubles every tip for a while, and the little green visitors' saucer drops by.</p>
     <h3>POWER-UPS, STARS AND COINS</h3>
     <p data-tr>Grab the <b>power-ups</b> that appear on the bar when it's quiet - all but the sleepy <b>DECAF</b> cup, which slows you down. Each level gives up to three <b>stars</b>, and you earn <b>coins</b> to spend in the COIN SHOP (PLAY MORE). RELAX MODE has no losing and no hurry.</p>
   </div>
@@ -7083,6 +7083,21 @@ const DICT_ROWS                             = [
     "'N SATELLIETAFLEWERING!  HARDLOOP NA DIE KRAT VIR 'N KRAG",
     "ZRZUT Z SATELITY!  BIEGNIJ DO SKRZYNI PO BONUS",
   ],
+  // (v2.1.0) the mind swap and the eclipse
+  ["A MIND SWAP", "'N BREINRUIL", "ZAMIANA UMYSŁÓW"],
+  ["AN ECLIPSE", "'N VERDUISTERING", "ZAĆMIENIE"],
+  [
+    "A MIND SWAP!  TWO CUSTOMERS SWAP PLACES",
+    "'N BREINRUIL!  TWEE KLANTE RUIL PLEKKE",
+    "ZAMIANA UMYSŁÓW!  DWÓCH KLIENTÓW ZAMIENIA SIĘ MIEJSCAMI",
+  ],
+  [
+    "AN ECLIPSE!  TIPS ARE WORTH DOUBLE",
+    "'N VERDUISTERING!  FOOIE IS DUBBEL WERD",
+    "ZAĆMIENIE!  NAPIWKI SĄ WARTE PODWÓJNIE",
+  ],
+  ["SWAP!", "RUIL!", "ZAMIANA!"],
+  ["ECLIPSE TIPS ×2", "VERDUISTERINGSFOOIE ×2", "NAPIWKI ZAĆMIENIA ×2"],
   // (v2.0.8) the stop's own space event - its name on the arrival screen
   ["IN THE SKY", "IN DIE LUG", "NA NIEBIE"],
   ["UFO ABDUCTIONS", "VVV-ONTVOERINGS", "PORWANIA PRZEZ UFO"],
@@ -7121,9 +7136,9 @@ const DICT_ROWS                             = [
   // (v2.0.4) CLOSE ENCOUNTERS - the space events (specials.ts)
   ["SPACE EVENTS", "RUIMTEGEBEURTENISSE", "WYDARZENIA KOSMICZNE"],
   [
-    "From stop 3 on, things happen out there too - every stop has its own event (the arrival screen says which), and others may come. A <b>UFO</b> may try to <b>abduct</b> a customer - serve them before the beam takes them (or they come back later, from space, with a big tip). Your <b>telepathy</b> turns every order to the flavour you\'re holding, a <b>comet</b> makes everyone stop and look, the <b>space whale</b> sings and the customers slow down to listen, a <b>hypno-wave</b> sends a bar\'s customers back a few steps, a <b>meteor shower</b> drops stars to catch, a tiny <b>black hole</b> swallows the empty glasses on its bar, a <b>satellite</b> drops a crate with a power-up, a <b>wormhole</b> moves a customer to another bar, a group of <b>alien tourists</b> wants serving together (a big bonus for the whole group), a <b>pulsar surge</b> makes the taps pour twice as fast, a <b>mind freeze</b> holds the customers still while you pour (not the bosses), and the little green visitors\' saucer drops by.",
-    "Vanaf halte 3 gebeur daar ook dinge daar buite - elke halte het sy eie gebeurtenis (die aankomsskerm sê watter), en ander kan ook kom. \'n <b>VVV</b> probeer dalk \'n klant <b>ontvoer</b> - bedien hulle voor die straal hulle vat (of hulle kom later terug, uit die ruimte, met \'n groot fooi). Jou <b>telepatie</b> verander elke bestelling na die geur wat jy hou, \'n <b>komeet</b> laat almal stilstaan om te kyk, die <b>ruimtewalvis</b> sing en die klante stap stadiger om te luister, \'n <b>hipnogolf</b> stuur \'n toonbank se klante \'n paar treë terug, \'n <b>meteorietreën</b> laat sterre val om te vang, \'n klein <b>swart gat</b> sluk die leë glase by sy toonbank in, \'n <b>satelliet</b> laat \'n krat met \'n krag val, \'n <b>wurmgat</b> skuif \'n klant na \'n ander toonbank, \'n groep <b>ruimtetoeriste</b> wil saam bedien word (\'n groot bonus vir die hele groep), \'n <b>pulsargolf</b> laat die krane twee keer so vinnig skink, \'n <b>breinvries</b> hou die klante stil terwyl jy skink (nie die baase nie), en die klein groen besoekers se pierring kom kuier.",
-    "Od przystanku 3 coś dzieje się też na zewnątrz - każdy przystanek ma własne wydarzenie (ekran przyjazdu mówi jakie), a mogą przyjść i inne. <b>UFO</b> może próbować <b>porwać</b> klienta - obsłuż go, zanim promień go zabierze (albo wróci później z kosmosu z dużym napiwkiem). Twoja <b>telepatia</b> zmienia każde zamówienie na smak, który trzymasz, <b>kometa</b> sprawia, że wszyscy stają i patrzą, <b>kosmiczny wieloryb</b> śpiewa, a klienci zwalniają, żeby posłuchać, <b>fala hipnozy</b> cofa klientów jednej lady o kilka kroków, <b>deszcz meteorów</b> zrzuca gwiazdy do złapania, mała <b>czarna dziura</b> połyka puste szklanki przy swojej ladzie, <b>satelita</b> zrzuca skrzynię z bonusem, <b>tunel czasoprzestrzenny</b> przenosi klienta do innej lady, grupa <b>kosmicznych turystów</b> chce być obsłużona razem (duża premia za całą grupę), <b>impuls pulsara</b> sprawia, że krany nalewają dwa razy szybciej, <b>mrożenie umysłu</b> zatrzymuje klientów, kiedy nalewasz (nie szefów), a do baru zagląda spodek małych zielonych gości.",
+    "From stop 3 on, things happen out there too - every stop has its own event (the arrival screen says which), and others may come. A <b>UFO</b> may try to <b>abduct</b> a customer - serve them before the beam takes them (or they come back later, from space, with a big tip). Your <b>telepathy</b> turns every order to the flavour you\'re holding, a <b>comet</b> makes everyone stop and look, the <b>space whale</b> sings and the customers slow down to listen, a <b>hypno-wave</b> sends a bar\'s customers back a few steps, a <b>meteor shower</b> drops stars to catch, a tiny <b>black hole</b> swallows the empty glasses on its bar, a <b>satellite</b> drops a crate with a power-up, a <b>wormhole</b> moves a customer to another bar, a group of <b>alien tourists</b> wants serving together (a big bonus for the whole group), a <b>pulsar surge</b> makes the taps pour twice as fast, a <b>mind freeze</b> holds the customers still while you pour (not the bosses), a <b>mind swap</b> makes two customers swap bars, an <b>eclipse</b> doubles every tip for a while, and the little green visitors\' saucer drops by.",
+    "Vanaf halte 3 gebeur daar ook dinge daar buite - elke halte het sy eie gebeurtenis (die aankomsskerm sê watter), en ander kan ook kom. \'n <b>VVV</b> probeer dalk \'n klant <b>ontvoer</b> - bedien hulle voor die straal hulle vat (of hulle kom later terug, uit die ruimte, met \'n groot fooi). Jou <b>telepatie</b> verander elke bestelling na die geur wat jy hou, \'n <b>komeet</b> laat almal stilstaan om te kyk, die <b>ruimtewalvis</b> sing en die klante stap stadiger om te luister, \'n <b>hipnogolf</b> stuur \'n toonbank se klante \'n paar treë terug, \'n <b>meteorietreën</b> laat sterre val om te vang, \'n klein <b>swart gat</b> sluk die leë glase by sy toonbank in, \'n <b>satelliet</b> laat \'n krat met \'n krag val, \'n <b>wurmgat</b> skuif \'n klant na \'n ander toonbank, \'n groep <b>ruimtetoeriste</b> wil saam bedien word (\'n groot bonus vir die hele groep), \'n <b>pulsargolf</b> laat die krane twee keer so vinnig skink, \'n <b>breinvries</b> hou die klante stil terwyl jy skink (nie die baase nie), \'n <b>breinruil</b> laat twee klante toonbanke ruil, \'n <b>verduistering</b> verdubbel elke fooi vir \'n rukkie, en die klein groen besoekers se pierring kom kuier.",
+    "Od przystanku 3 coś dzieje się też na zewnątrz - każdy przystanek ma własne wydarzenie (ekran przyjazdu mówi jakie), a mogą przyjść i inne. <b>UFO</b> może próbować <b>porwać</b> klienta - obsłuż go, zanim promień go zabierze (albo wróci później z kosmosu z dużym napiwkiem). Twoja <b>telepatia</b> zmienia każde zamówienie na smak, który trzymasz, <b>kometa</b> sprawia, że wszyscy stają i patrzą, <b>kosmiczny wieloryb</b> śpiewa, a klienci zwalniają, żeby posłuchać, <b>fala hipnozy</b> cofa klientów jednej lady o kilka kroków, <b>deszcz meteorów</b> zrzuca gwiazdy do złapania, mała <b>czarna dziura</b> połyka puste szklanki przy swojej ladzie, <b>satelita</b> zrzuca skrzynię z bonusem, <b>tunel czasoprzestrzenny</b> przenosi klienta do innej lady, grupa <b>kosmicznych turystów</b> chce być obsłużona razem (duża premia za całą grupę), <b>impuls pulsara</b> sprawia, że krany nalewają dwa razy szybciej, <b>mrożenie umysłu</b> zatrzymuje klientów, kiedy nalewasz (nie szefów), <b>zamiana umysłów</b> sprawia, że dwóch klientów zamienia się ladami, <b>zaćmienie</b> na chwilę podwaja każdy napiwek, a do baru zagląda spodek małych zielonych gości.",
   ],
   ["A UFO IS ABDUCTING A CUSTOMER!", "'N VVV ONTVOER 'N KLANT!", "UFO PORYWA KLIENTA!"],
   [
@@ -8423,6 +8438,23 @@ const DICT_ROWS                             = [
     "DAILY CHALLENGE DONE!  +2 STARS",
     "DAAGLIKSE UITDAGING KLAAR!  +2 STERRE",
     "WYZWANIE DNIA UKOŃCZONE!  +2 GWIAZDKI",
+  ],
+  // (v2.1.0) SWAPS AND SHADOWS
+  ["SWAPS AND SHADOWS", "RUILE EN SKADUWEES", "ZAMIANY I CIENIE"],
+  [
+    "A MIND SWAP: TWO CUSTOMERS ON DIFFERENT BARS SWAP PLACES",
+    "'N BREINRUIL: TWEE KLANTE BY VERSKILLENDE TOONBANKE RUIL PLEKKE",
+    "ZAMIANA UMYSŁÓW: DWÓCH KLIENTÓW PRZY RÓŻNYCH LADACH ZAMIENIA SIĘ MIEJSCAMI",
+  ],
+  [
+    "AN ECLIPSE: FOR TEN SECONDS EVERY TIP IS WORTH DOUBLE",
+    "'N VERDUISTERING: VIR TIEN SEKONDES IS ELKE FOOI DUBBEL WERD",
+    "ZAĆMIENIE: PRZEZ DZIESIĘĆ SEKUND KAŻDY NAPIWEK JEST WART PODWÓJNIE",
+  ],
+  [
+    "FIFTEEN SPACE EVENTS NOW - EMBER AND M110 HAVE THE NEW ONES",
+    "NOU VYFTIEN RUIMTEGEBEURTENISSE - EMBER EN M110 HET DIE NUWES",
+    "TERAZ PIĘTNAŚCIE WYDARZEŃ KOSMICZNYCH - EMBER I M110 MAJĄ NOWE",
   ],
   // (v2.0.9) SPACE TROPHIES
   ["SPACE TROPHIES", "RUIMTETROFEË", "KOSMICZNE TROFEA"],
@@ -13942,6 +13974,7 @@ const DICT_PAT                             = [
   [/^(.+) IS THE CHAMPION!$/, "$1 IS DIE KAMPIOEN!", "$1 ZOSTAJE MISTRZEM!"],
   // (v2.0.0: the STOP SPECIALS - "TONIGHT: A & B", and any "A & B" put together from translated pieces)
   [/^TONIGHT: (.+)$/, "VANAAND: $1", "DZIŚ WIECZOREM: $1"],
+  [/^FIRST SIGHTING!  (\d+) OF (\d+)$/, "EERSTE WAARNEMING!  $1 VAN $2", "PIERWSZA OBSERWACJA!  $1 Z $2"], // (v2.1.0)
   [
     /^A WORMHOLE!  A CUSTOMER SLIPS TO BAR (\d+)$/,
     "'N WURMGAT!  'N KLANT GLIP NA TOONBANK $1",
@@ -21338,7 +21371,7 @@ function update(dt) {
     if (by) {
       t.dead = true;
       SCORER = by;
-      addScore(t.v || 1500, t.x, LY(t.lane, t.x) - 50);
+      addScore(tipWorth(t), t.x, LY(t.lane, t.x) - 50); // (v2.1.0: an ECLIPSE doubles tips - tipWorth, specials.ts)
       SCORER = null;
       sfx("tip", t.x); // (v1.8.44: where the tip was)
       tipFx(t.lane, t.x); // (v1.5.7: a ring of gold - juice.ts)
@@ -69587,7 +69620,7 @@ function funUpdate(dt, demo) {
           SCORER = P0;
           // (v1.8.81: the tip's own worth - a 250 good-service tip paid 1500 when the puppy fetched it - and the big tip's
           //  HOLO-SHOW, which a puppy owner never got)
-          addScore(tp.v || 1500, tp.x, LY(tp.lane, tp.x) - 50);
+          addScore(tipWorth(tp), tp.x, LY(tp.lane, tp.x) - 50); // (v2.1.0 review: the eclipse doubles a fetched tip too)
           SCORER = null;
           tipFx(tp.lane, tp.x);
           if (!tp.v) {
@@ -76026,10 +76059,10 @@ function specServed(c, s, demo) {
   }
 }
 // where a spot on the bar is on the screen (and how big things are drawn there) - as the order bubbles do
-function specScr(lane, x, dy, sx, sy) {
+function specScr(lane, x, dy, sx, sy, side ) {
   let px, py, k;
   if (VERT) {
-    const [vx, vy, sc] = vpt(lane, vMx(x), 0, VSIDE.c);
+    const [vx, vy, sc] = vpt(lane, vMx(x), 0, side === undefined ? VSIDE.c : side); // (v2.1.0: side - 0 is on the bar, where the tips lie)
     px = vx;
     py = vy + dy * sc * 0.6; // (in the tall view "up" runs along the bar - a little less of it)
     k = sc;
@@ -76122,6 +76155,7 @@ function specHud(g, s, sx, sy) {
   if (G.ev && G.ev.whale > 0) wins.push(["WHALE SONG", G.ev.whale, "#8fd0ff"]);
   if (G.ev && G.ev.pulsar > 0) wins.push(["PULSAR SURGE", G.ev.pulsar, "#ffe14d"]); // (v2.0.7)
   if (G.ev && G.ev.mind > 0) wins.push(["MIND FREEZE", G.ev.mind, "#7fd8ff"]);
+  if (G.ev && G.ev.ecl > 0) wins.push(["ECLIPSE TIPS ×2", G.ev.ecl, "#ffd24d"]); // (v2.1.0)
   // (v2.0.3) the stop challenge and how far it's got - and for a few seconds once it's done
   if (S.ch && (!S.ch.done || G.time - S.ch.doneT < 4))
     wins.unshift([
@@ -76184,7 +76218,9 @@ const EVENT_KINDS = [
   "tourists",
   "pulsar",
   "mindfreeze",
-]; // (v2.0.5: + blackhole and satellite; v2.0.6: + wormhole and tourists; v2.0.7: + pulsar and mind freeze)
+  "swap",
+  "eclipse",
+]; // (v2.0.5: + blackhole and satellite; v2.0.6: + wormhole and tourists; v2.0.7: + pulsar and mind freeze; v2.1.0: + mind swap and eclipse)
 // (v2.0.8) THE SKY'S OWN EVENT AT EACH STOP: from stop 3 on, every stop has its own space event - it comes first,
 //  a little sooner, and the arrival screen and the map say which ("IN THE SKY: A COMET"). A second tour shifts them
 const EV_INFO = {
@@ -76201,6 +76237,8 @@ const EV_INFO = {
   tourists: { n: "ALIEN TOURISTS", e: "📸" },
   pulsar: { n: "A PULSAR SURGE", e: "⚡" },
   mindfreeze: { n: "MIND FREEZE", e: "❄️" },
+  swap: { n: "A MIND SWAP", e: "🔀" }, // (v2.1.0)
+  eclipse: { n: "AN ECLIPSE", e: "🌑" },
 };
 // each stop's own event, chosen for the place (stops 3-40): the Moon's classic UFO, little green men on Mars, the
 //  ocean worlds' whale, the comet at the Comet Express, the pulsar at the Crab Pulsar Disco, the black hole at
@@ -76226,7 +76264,7 @@ const EV_AT = [
   "meteors", // the Orion Nebula
   "pulsar", // the Crab Pulsar Disco
   "blackhole", // Sagittarius A*
-  "comet", // Ember
+  "eclipse", // Ember (v2.1.0: was the comet)
   "satellite", // Ferrum
   "hypno", // Azura's glass storms
   "wormhole", // Janus
@@ -76239,7 +76277,7 @@ const EV_AT = [
   "telepathy", // Prisma
   "wormhole", // the Wanderer
   "meteors", // M32's sand sea
-  "telepathy", // M110's old stars
+  "swap", // M110's old stars (v2.1.0: was telepathy)
   "visitors", // the NGC 206 star nursery
   "whale", // the Star River
   "pulsar", // Nova Every Year
@@ -76247,6 +76285,10 @@ const EV_AT = [
   "tourists", // Mayall II star city
   "blackhole", // the Andromeda Core
 ];
+// (v2.1.0) what a tip pays when it's picked up - the eclipse doubles it (update.ts by hand or magnet, fun.ts the puppy)
+function tipWorth(t) {
+  return (t.v || 1500) * (G.ev && G.ev.ecl > 0 ? 2 : 1);
+}
 // the stop's own event (i = the tour stop, 0-39) - none at the first two stops; a second tour moves them round
 function evSig(i, loop = G.loop || 0) {
   if (i < 2) return null;
@@ -76422,6 +76464,23 @@ function evStart(k) {
     E.mind = 10;
     specCall("MIND FREEZE!  WHILE YOU POUR, THE CUSTOMERS STAND STILL", "#7fd8ff", 2.4);
     sfx("hypno", TAPX);
+  } else if (k === "swap") {
+    // (v2.1.0) A MIND SWAP: two customers on different bars swap places (and bars) - a quick fade out and in. (Only
+    //  bars with no shake on the way, as the wormhole)
+    const free = (l) => !shakes.some((q) => q.lane === l && !q.dead);
+    const cand = customers.filter((c) => evAbductable(c) && free(c.lane)).sort(() => Math.random() - 0.5);
+    const a = cand[0],
+      b = a && cand.find((o) => o.lane !== a.lane);
+    if (!a || !b) return false;
+    a.hole = b.hole = true;
+    E.swap = { a, b, t: 0, moved: false };
+    specCall("A MIND SWAP!  TWO CUSTOMERS SWAP PLACES", "#ff9fe0", 2.4);
+    sfx("warp", a.x);
+  } else if (k === "eclipse") {
+    // (v2.1.0) AN ECLIPSE: for ten seconds the moon covers the sun - every tip picked up meanwhile is worth double
+    E.ecl = 10;
+    specCall("AN ECLIPSE!  TIPS ARE WORTH DOUBLE", "#ffd24d", 2.4);
+    sfx("harmony");
   } else if (k === "whale") {
     E.whale = 9;
     E.whaleX = -0.15;
@@ -76448,6 +76507,13 @@ function evUpdate(dt) {
         if (!seen[k]) {
           seen[k] = 1;
           store.set("evSeen", seen);
+          // (v2.1.0) and the first time ever: a little fanfare, and how many kinds you've seen
+          specCall(
+            "FIRST SIGHTING!  " + Object.keys(seen).length + " OF " + EVENT_KINDS.length,
+            "#9fe8ff",
+            2.4,
+            true
+          );
         }
         fStat("evKinds", Object.keys(seen).length, true);
         E.t = rnd(32, 55);
@@ -76557,6 +76623,53 @@ function evUpdate(dt) {
           c.hole = false;
           E.hole = null;
         }
+      }
+    }
+  }
+  // (v2.1.0) the mind swap: both fade, swap bars and spots, fade back in (and if one's served or gone before the
+  //  swap, it's off - the other just fades back)
+  if (E.ecl > 0) E.ecl -= dt;
+  if (E.swap) {
+    const W = E.swap,
+      a = W.a,
+      b = W.b;
+    W.t += dt;
+    const ok = (c) => customers.includes(c) && c.state === "walk";
+    if (!W.moved && (!ok(a) || !ok(b))) {
+      for (const c of [a, b]) {
+        c.hole = false;
+        if (c.state !== "out") c.alpha = 1;
+      }
+      E.swap = null;
+    } else {
+      const f = W.moved ? Math.min(1, (W.t - 0.9) / 0.6) : Math.max(0.05, 1 - W.t / 0.8);
+      for (const c of [a, b])
+        if (ok(c) || (W.moved && c.state !== "out")) {
+          // (review: after the swap, one served meanwhile fades back in too - not left faint as they slide back)
+          c.alpha = f;
+          if (ok(c) && W.t < 1.3) {
+            c.napT = Math.max(c.napT || 0, 0.15);
+            c.moving = false;
+          }
+        }
+      if (!W.moved && W.t > 0.9) {
+        W.moved = true;
+        const la = a.lane,
+          xa = a.x;
+        a.lane = b.lane;
+        a.x = b.x;
+        b.lane = la;
+        b.x = xa;
+        a.alarmed = a.warned = b.alarmed = b.warned = false;
+        worldText("SWAP!", a, "#ff9fe0");
+        sfx("beamin", a.x);
+      }
+      if (W.moved && W.t > 1.6) {
+        for (const c of [a, b]) {
+          c.hole = false;
+          if (c.state !== "out") c.alpha = 1;
+        }
+        E.swap = null;
       }
     }
   }
@@ -76714,6 +76827,42 @@ function evHud(g, s, sx, sy, icon, bob) {
     }
     for (const p of active())
       if (p.pour > 0 && !(E.tele > 0)) icon("🧠", p.lane, p.x, VERT ? -150 : -130, 30);
+  }
+  // (v2.1.0) the mind swap: pink swirls on both of them
+  if (E.swap)
+    for (const c of [E.swap.a, E.swap.b]) {
+      if (!customers.includes(c) || c.state === "out") continue; // (review: not on someone already gone)
+      const p = specScr(c.lane, c.x, -50, sx, sy),
+        r = 26 * p.u;
+      g.strokeStyle = "rgba(255,159,224,0.75)";
+      g.lineWidth = 3 * s;
+      const a0 = G.time * (COMFORT.calm ? 1.2 : 5);
+      g.beginPath();
+      g.ellipse(p.x, p.y, r * 0.6, r, 0, a0, a0 + 2.2);
+      g.stroke();
+      g.beginPath();
+      g.ellipse(p.x, p.y, r * 0.9, r * 1.3, 0, a0 + 3, a0 + 5);
+      g.stroke();
+    }
+  // (v2.1.0) the eclipse: the moon slides over the sun, up in the sky - and a gold ring round every tip on the bars
+  if (E.ecl > 0) {
+    const f = 1 - E.ecl / 10,
+      px = Math.round(Math.min(48, 34 * s * TXT())),
+      x = cssW * (VERT ? 0.3 : 0.27), // (beside the stage show, not over it)
+      y = Math.max((HUD_TOP.low || 0) + px * 0.8, cssH * 0.12);
+    g.font = px + "px sans-serif";
+    g.globalAlpha = Math.min(1, E.ecl, (10 - E.ecl) * 2);
+    g.fillText("☀️", x, y);
+    g.fillText("🌑", x - px * 1.2 + f * px * 2.4, y);
+    g.globalAlpha = 1;
+    g.strokeStyle = "rgba(255,210,77,0.8)";
+    g.lineWidth = 2 * s;
+    for (const t of tips) {
+      const p = specScr(t.lane, t.x, -12, sx, sy, 0); // (review: on the coin in the tall view, not the customer's side)
+      g.beginPath();
+      g.arc(p.x, p.y, 16 * p.u, 0, Math.PI * 2);
+      g.stroke();
+    }
   }
   // (v2.0.7) the pulsar surge: a beat of light over the taps
   if (E.pulsar > 0)
@@ -88892,7 +89041,7 @@ function levelOfTour(of) {
     inTour = ((lv - 1) % LAST_LEVEL) + 1;
   return (tour > 1 ? "TOUR " + tour + "  ·  " : "") + "LEVEL " + inTour + of + LAST_LEVEL;
 }
-const GAME_VERSION = "v2.0.9",
+const GAME_VERSION = "v2.1.0",
   GAME_DATE = "27.11.2026",
   VERSION_TEXT = GAME_VERSION + "  ·  " + GAME_DATE;
 const FB = '"Chakra Petch", "Segoe UI", sans-serif';
@@ -96995,6 +97144,15 @@ profWire();
 //  the game, and where the motion capture, the folk songs and the fonts come from. Both from the menu at any time.
 // =====================================================================================
 const NEWS = [
+  {
+    ver: "v2.1.0",
+    title: "SWAPS AND SHADOWS",
+    items: [
+      "A MIND SWAP: TWO CUSTOMERS ON DIFFERENT BARS SWAP PLACES",
+      "AN ECLIPSE: FOR TEN SECONDS EVERY TIP IS WORTH DOUBLE",
+      "FIFTEEN SPACE EVENTS NOW - EMBER AND M110 HAVE THE NEW ONES",
+    ],
+  },
   {
     ver: "v2.0.9",
     title: "SPACE TROPHIES",

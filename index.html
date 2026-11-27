@@ -8117,6 +8117,28 @@ const DICT_ROWS                             = [
     "DAAGLIKSE UITDAGING KLAAR!  +2 STERRE",
     "WYZWANIE DNIA UKOŃCZONE!  +2 GWIAZDKI",
   ],
+  // (v1.9.7) KEEP WHAT YOU EARNED
+  ["KEEP WHAT YOU EARNED", "HOU WAT JY VERDIEN HET", "ZACHOWAJ TO, CO ZDOBYTE"],
+  [
+    "A CUSTOMER YOU SERVED STAYS SERVED WHEN YOU SLIP ON ANOTHER BAR",
+    "'N KLANT WAT JY BEDIEN HET, BLY BEDIEN AS JY OP 'N ANDER TOONBANK GLY",
+    "OBSŁUŻONY KLIENT ZOSTAJE OBSŁUŻONY, GDY POŚLIZGNIESZ SIĘ PRZY INNEJ LADZIE",
+  ],
+  [
+    "THE VIP AND THE OUTLAW PAY ONLY WHEN YOU REALLY SERVE THEM",
+    "DIE VIP EN DIE BANDIET BETAAL NET AS JY HULLE REGTIG BEDIEN",
+    "VIP I BANITA PŁACĄ TYLKO WTEDY, GDY NAPRAWDĘ ICH OBSŁUŻYSZ",
+  ],
+  [
+    "VERSUS: POINTS, HOLY WATER, POWER-UPS AND PETS COUNT FOR WHOEVER EARNED THEM",
+    "TEEN MEKAAR: PUNTE, WYWATER, KRAGTE EN TROETELDIERE TEL VIR WIE DIT VERDIEN HET",
+    "POJEDYNEK: PUNKTY, WODA ŚWIĘCONA, BONUSY I ZWIERZAKI LICZĄ SIĘ DLA TEGO, KTO NA NIE ZAPRACOWAŁ",
+  ],
+  [
+    "TRIPLE SHOT: A PERFECT POUR REACHES THE FRONT CUSTOMER",
+    "DRIEDUBBELE SKOOT: 'N PERFEKTE SKINK BEREIK DIE VOORSTE KLANT",
+    "POTRÓJNY STRZAŁ: IDEALNE NALANIE TRAFIA DO PIERWSZEGO KLIENTA",
+  ],
   // (v1.9.6) SMOOTH EDGES
   ["SMOOTH EDGES", "GLADDE RANDE", "GŁADKIE KRAWĘDZIE"],
   [
@@ -16445,6 +16467,7 @@ function startLevel() {
     p.holy = DF().holy;
     p.crossCD = 0;
     p.crossT = 0;
+    p.tired = 0; // (v1.9.7: no DECAF carried into a new stop)
   }
   if (!G.demo) {
     G.readyT = 1.9;
@@ -17692,7 +17715,8 @@ function demoInput(dt) {
         want = c.lane;
       }
   }
-  const pu = powerups.find((u) => u.lane === P.lane && u.t > 0.5 && u.x > TAPX - 380),
+  // (v1.9.7: never the sleepy DECAF - one-button mode's helper (and the demo) walked straight into it)
+  const pu = powerups.find((u) => !POWERS[u.type].bad && u.lane === P.lane && u.t > 0.5 && u.x > TAPX - 380),
     calm =
       !customers.some((c) => c.state === "walk" && c.x > X1 - 320) && !empties.some((m) => m.x > TAPX - 300);
   if (pu && urgent < 0 && calm && !P.pouring) {
@@ -18437,7 +18461,9 @@ function update(dt) {
             extra: k > 0,
             batch,
             beat: onBeat(),
-            perfect: perfect && k === 0,
+            // (v1.9.7: on the shake that arrives first, as the cocktail - with TRIPLE SHOT the front customer got a plain
+            //  one, and the perfect pour's push, bonus and fever were lost)
+            perfect: perfect && k === (hasPw("triple") && (!G.versus || pwOwner("triple") === P) ? 2 : 0),
             // (v1.8.1: the house cocktail, when it's ready) (v1.8.86: on the shake that arrives first - with TRIPLE SHOT the extras
             //  slide ahead, and the cocktail went to the third customer, not the front one)
             special:
@@ -19110,7 +19136,8 @@ function update(dt) {
           E.carry = "empty";
           sfx("screech", E.x);
           if (!demo) {
-            SCORER = P1;
+            // (v1.9.7: in versus, the player whose shake it was - it always scored for player 1)
+            SCORER = m.by !== undefined && active().includes(PL[m.by]) ? PL[m.by] : P1;
             addScore(150, E.x, LY(E.lane, E.x) - 90);
             SCORER = null;
             G.callouts.push({
@@ -19277,6 +19304,7 @@ function update(dt) {
         if (line[i].x > line[i - 1].x - 40) line[i].x = line[i - 1].x - 40;
     }
     for (const c of angry) {
+      if (hasPw("freeze") || G.showT > 0 || c.hold) continue; // (v1.9.7: frozen marchers don't throw bananas)
       c.protest.anger = Math.min(1, c.protest.anger + dt / 22);
       c.angry = c.protest.anger > 0.55;
       // once they're properly cross they lob bananas at you
@@ -19667,6 +19695,8 @@ function update(dt) {
         c.state = "out";
         if (!c.extra) G.served++;
         G.servedAll = (G.servedAll || 0) + 1;
+        // (v1.9.7: the door's points go to whoever served them - in versus they always went to player 1)
+        SCORER = c.servedBy !== undefined && !c.refused && PL[c.servedBy] ? PL[c.servedBy] : null;
         addScore(
           c.refused
             ? 0
@@ -19682,6 +19712,7 @@ function update(dt) {
           c.x + 30,
           LY(c.lane, c.x) - 70
         );
+        SCORER = null;
         if (c.type.kind === "rex" && !c.refused && !demo)
           callout("JURASSIC TIP!  THE T-REX IS FULL", "#7dff9a", 1.8);
         if (c.type.boss && !demo) kidBossDone(c);
@@ -19844,7 +19875,10 @@ function update(dt) {
     if (catcher && s.holy) {
       // TSSSS! the devil (or demon, or vampire) is banished - and the water flows on to the next one
       s.hits = (s.hits || 0) + 1;
+      // (v1.9.7: as the player who sent it - in versus player 2's holy water paid player 1)
+      P = PL[s.owner || 0];
       if (!redeem(catcher, demo)) refuse(catcher, demo, "holy");
+      P = P1;
       sfx("sizzle", catcher.x);
       sparkle(catcher.x + 10, LY(s.lane, catcher.x) - 50, [0.5, 0.85, 1, 1], 18, s.lane);
       const [hx, hy] = projL(s.lane, catcher.x + 20, LY(s.lane, catcher.x) - 60);
@@ -20761,6 +20795,10 @@ function update(dt) {
     !(G.queenAt > 0)
   ) {
     G.state = "clear";
+    // (v1.9.7) THE LIGHTS COME BACK FOR THE CELEBRATION: the twists don't run on the clear screen, so a stop ended in
+    //  LIGHTS OUT, a flare, a sandstorm or fog kept it frozen over the stars, the fireworks and the map
+    G.flare = G.dark = G.sand = G.warp = G.fog = 0;
+    G.ls = null;
     levelClearMech(demo);
     G.clearT = demo ? 1.5 : 3.2;
     shakes = [];
@@ -21531,7 +21569,13 @@ function updateTwist(dt, demo) {
       if (c.state !== "walk" && !o.done) {
         o.done = true;
         c.hold = false;
-        if (c.state === "pushed") {
+        // (v1.9.7: only a real serve - kicked out, or pushed back without a shake (a samurai's KIAI, a shield save),
+        //  he still paid FASTEST POUR IN THE WEST)
+        if (c.state === "pushed" && (c.servedBy === undefined || c.refused || c.dry)) {
+          c.left = 9999;
+          c.refused = true;
+          if (!demo) callout("TOO SLOW, PARTNER", "#e0a050", 1.4);
+        } else if (c.state === "pushed") {
           c.left = 9999;
           if (!demo) {
             fairBonus(1000, c.servedBy, c.x + 20, LY(c.lane, c.x) - 100); // (v1.5.99: to whoever served him)
@@ -21697,7 +21741,13 @@ function updateTwist(dt, demo) {
     const c = W.v;
     if (c) {
       if (c.state === "walk" || c.state === "drink") c.vip -= dt;
-      if (c.state === "pushed" && !c.vipDone) {
+      // (v1.9.7: delighted only by a real serve - kicked out, or pushed back by a KIAI or a save, the VIP still paid +1500)
+      if (c.state === "pushed" && !c.vipDone && (c.servedBy === undefined || c.refused || c.dry)) {
+        c.vipDone = true;
+        c.left = 9999;
+        c.refused = true;
+        if (!demo) callout("THE VIP LEFT IN A HUFF", "#c0a0a0", 1.4);
+      } else if (c.state === "pushed" && !c.vipDone) {
         c.vipDone = true;
         c.left = 9999;
         if (!demo) {
@@ -21913,7 +21963,7 @@ function updateTwist(dt, demo) {
       flavor: 0,
       alpha: 1,
       seed: 0.5,
-      fed: 0,
+      fed: G.glutton === true && G.gluttonFed ? G.gluttonFed : 0, // (v1.9.7: half of what he'd had, after a slip)
     });
     sfx(DF().kid ? "boing" : "dragon", X0); // (v1.9.1: kid mode - no roar)
     if (!demo) callout("THE GALACTIC GLUTTON IS HERE!  KEEP THE SHAKES COMING", "#ff5fd8", 3);
@@ -21970,9 +22020,15 @@ function twistServed(c, s, demo) {
     sfx("chime", c.x, c.lane);
     if (up || down) {
       W.seq = [];
-      SCORER = PL[s.owner || 0];
-      const got = addScore(1500) || 1500; // (v1.8.78: what was really added)
-      SCORER = null;
+      // (v1.9.7: in versus the run is built from both players' serves - shared, as the other shared bonuses are; the
+      //  whole 1500 went to whoever served the last bar)
+      let got;
+      if (G.versus) got = fairBonus(1500) || 1500;
+      else {
+        SCORER = PL[s.owner || 0];
+        got = addScore(1500) || 1500; // (v1.8.78: what was really added)
+        SCORER = null;
+      }
       callout("CRYSTAL HARMONY!  +" + got, "#9ff0ff", 2);
       sfx("harmony");
       for (let i = 0; i < 20; i++) confetti(rnd(100, PW - 100), -10, 1);
@@ -22553,6 +22609,7 @@ function dragonFire(d, s, demo) {
       if (c.type.evil) {
         P = PL[s.owner || 0];
         refuse(c, demo);
+        P = P1; // (v1.9.7: put back - it stayed player 2 for the rest of the frame)
       } else {
         c.state = "pushed";
         c.left = 9999;
@@ -22864,7 +22921,7 @@ function redeem(c, demo) {
                 : null;
   if (!to) return false;
   const toType = to === "wolfman" ? wolfManType() : TYPE_OF[to];
-  c.rd = { t: 0, from: c.type, to: toType, kind: to, was: from, done: false, wolf: !!c.wolf };
+  c.rd = { t: 0, from: c.type, to: toType, kind: to, was: from, done: false, wolf: !!c.wolf, by: P }; // (v1.9.7: by - who saved them)
   c.redeemed = true;
   c.bat = 0;
   c.fly = null;
@@ -22961,7 +23018,7 @@ function redeemStep(c, dt, demo) {
       G.rdChain = G.time - (G.rdLast ?? -99) < 8 ? (G.rdChain || 1) + 1 : 1;
       G.rdLast = G.time;
       if (G.rdChain > 1) {
-        SCORER = P;
+        SCORER = D.by || P; // (v1.9.7: the saver, not whoever P is by now)
         addScore(250 * G.rdChain, c.x + 20, y - 160);
         SCORER = null;
         callout(G.rdChain + " SAVED IN A ROW!  +" + 250 * G.rdChain, "#ffe070", 2);
@@ -23223,12 +23280,24 @@ function lose(why, lane, x) {
 function afterLoss() {
   P = P1;
   rivalSlip(); // (v1.7.3: a slip lets the Black Hole Bistro shoot ahead)
+  // (v1.9.7) A SERVED CUSTOMER STAYS SERVED: one already sliding out of the door when you slipped on another bar was
+  //  cleared away uncounted - each slip cost serves the stop had already been given. Whoever would reach the door is
+  //  counted now, as the door would have (their door points go with them) - never a big eater, who stops at the door
+  //  to drink again. (Counted before the versus lives below, so they don't count toward a player's way back in)
+  for (const c of customers)
+    if (c.state === "pushed" && !c.type.glutton && (c.fly || c.left >= c.x - (X0 - 14))) {
+      c.state = "out";
+      if (!c.extra) G.served++;
+      G.servedAll = (G.servedAll || 0) + 1;
+    }
   if (G.versus) {
     // versus: only the player who slipped up loses a life
     const w = G.loser || P1;
     w.lives--;
     if (w.lives <= 0) {
       w.alive = false;
+      // (v1.9.7: their power-ups go with them - pwOwner handed SPEED, TRIPLE, MAGNET or SHIELD to the opponent)
+      for (const k of ["speed", "triple", "magnet", "shield"]) if (G.pwBy && G.pwBy[k] === w.id) G.pw[k] = 0;
       callout("PLAYER " + (w.id + 1) + " IS OUT!  BACK AFTER 8 SERVES", w.id ? "#5fb0ff" : "#ff5fa8", 2.4);
       G.rejoinLeft = 8; // (v1.4.31: they come back - see update.ts)
       G.rjSv = G.served;
@@ -23261,6 +23330,16 @@ function afterLoss() {
   const full = (c) => c.type.glutton && (c.fed || 0) >= (c.type.need || GLUTTON_FED);
   const bc = customers.find((c) => c.type.boss && c.state !== "out" && (c.fed || 0) > 0 && !full(c));
   if (bc) G.bossFed = Math.floor(Math.min(bc.fed, (bc.type.need || 1) - 1) / 2);
+  // (v1.9.7: the Galactic Glutton too - he isn't a "boss", and came back from nothing after a slip on another bar)
+  const gc = customers.find(
+    (c) => c.type.glutton && !c.type.boss && c.state !== "out" && (c.fed || 0) > 0 && !full(c)
+  );
+  if (gc) G.gluttonFed = Math.floor(Math.min(gc.fed, (gc.type.need || GLUTTON_FED) - 1) / 2);
+  // (v1.9.7: and a RUSH HOUR stops with the slip - the bar was cleared and filled up again at rush speed at once)
+  if (G.rush > 0 || G.rushWarn > 0) {
+    G.rush = G.rushWarn = 0;
+    G.rushT = rnd(28, 40);
+  }
   // (v1.8.64: an envoy not yet served comes back a little later - cleared away with the rest, the stop's stamp was lost)
   if (customers.some((c) => c.envoy && c.state !== "out")) G.envoyAt = G.time + 3;
   // (v1.8.85: the twins go with everyone else - their pair stayed "waiting", and no new twins came that stop)
@@ -44016,8 +44095,15 @@ function drawTwistFx(t) {
       rect(x - 60, T, w / 8 + 120, h, withA(c, 0.06 * k));
     }
     // (v1.4.49: thinner - you can now make out who is coming in through the fog by the doors)
-    rect(L, T, w * 0.45, h, withA(c, 0.24 * k));
-    rect(L + w * 0.45, T, w * 0.2, h, withA(c, 0.12 * k));
+    // (v1.9.7: in the tall view (a phone held upright) the doors are at the top - the thick fog goes there, not down
+    //  the first two bars over your own taps)
+    if (VERT) {
+      rect(L, T, w, h * 0.45, withA(c, 0.24 * k));
+      rect(L, T + h * 0.45, w, h * 0.2, withA(c, 0.12 * k));
+    } else {
+      rect(L, T, w * 0.45, h, withA(c, 0.24 * k));
+      rect(L + w * 0.45, T, w * 0.2, h, withA(c, 0.12 * k));
+    }
     R.setAdd(true);
     if (here().mark === "exo")
       for (let i = 0; i < 20; i++)
@@ -54416,6 +54502,7 @@ function kidLevelStart() {
   G.boss = false;
   G.bossDone = false;
   G.bossFed = 0; // (v1.8.58: what the boss keeps after a lost life - twists.ts afterLoss)
+  G.gluttonFed = 0; // (v1.9.7: and the Galactic Glutton)
   G.starsNow = 0;
   G.starsT = -1;
   if (!G.demo) {
@@ -54583,7 +54670,9 @@ function kidUpdate(dt, demo) {
   // every boss lands with a THUD - and burps after a shake or two
   for (const c of customers)
     if (c.type.boss) {
-      if (!demo && G.state === "play" && !DF().kid && c.state !== "out") bossTricks(c, dt);
+      // (v1.9.7: not while FREEZE holds everyone - a frozen boss still jumped bars)
+      if (!demo && G.state === "play" && !DF().kid && c.state !== "out" && !hasPw("freeze") && !(G.showT > 0))
+        bossTricks(c, dt);
       if (c.bornT !== undefined && !c.landed && G.time - c.bornT > 0.55) {
         c.landed = true;
         G.shake = Math.max(G.shake || 0, 10);
@@ -68873,7 +68962,16 @@ function funUpdate(dt, demo) {
           // (v1.8.59: a fetched tip is not a rescue - BEST FRIENDS is "your pet saves you 5 times"; it counted every tip)
         }
     if (pet === "alien" && !used.a) {
-      const c = customers.find((c) => c.state === "walk" && c.x > X1 - 70 && !c.type.evil);
+      // (v1.9.7: in versus only a customer who'd cost YOUR life (nearestTo) - it froze the opponent's; and never one
+      //  already frozen - a second alien in co-op spent its freeze on the same customer)
+      const c = customers.find(
+        (c) =>
+          c.state === "walk" &&
+          c.x > X1 - 70 &&
+          !c.type.evil &&
+          !(c.blessT > 0) &&
+          (!G.versus || nearestTo(c.lane) === P0)
+      );
       if (c) {
         used.a = 1;
         c.blessT = 3.5;
@@ -68903,7 +69001,7 @@ function funUpdate(dt, demo) {
     }
     if (pet === "robot")
       for (const c of customers)
-        if (c.state === "walk" && c.x > X1 - 170 && !c.robWarn) {
+        if (c.state === "walk" && c.x > X1 - 170 && !c.robWarn && (!G.versus || nearestTo(c.lane) === P0)) {
           c.robWarn = true;
           sfx("tick");
         }
@@ -71361,7 +71459,7 @@ function funRobWarn(c, t) {
     c.state === "walk" &&
     c.robWarn &&
     c.x > X1 - 170 &&
-    active().some((p) => petPower(p) === "robot") &&
+    active().some((p) => petPower(p) === "robot" && (!G.versus || nearestTo(c.lane) === p)) && // (v1.9.7: your own bars)
     Math.sin(t * 12) > 0
   ) {
     const y = LY(c.lane, c.x) - 150;
@@ -74075,7 +74173,10 @@ function funMystery(dt) {
   const M = G.case || (G.case = { next: 7, prints: [] });
   for (const p of M.prints) p.age += dt;
   M.prints = M.prints.filter((p) => p.age < 6);
-  const th = customers.find((c) => c.thief && (c.state === "walk" || c.state === "drink"));
+  // (v1.9.7: a thief pushed back without a shake (a shield or pet save) is still the thief - while he slid, a second one
+  //  was picked at once, and the first never stopped glinting; the escape clock only runs while he's in the bar)
+  const th = customers.find((c) => c.thief && c.state !== "out");
+  if (th && th.state !== "walk" && th.state !== "drink") return;
   if (!th) {
     M.next -= dt;
     if (M.next <= 0) {
@@ -74086,6 +74187,7 @@ function funMystery(dt) {
         const c = cand[Math.floor(Math.random() * cand.length)];
         c.thief = true;
         c.thiefT = 24;
+        M.next = rnd(14, 20); // (v1.9.7: and the next one only after a while)
         callout("A SHAKE THIEF IS IN THE BAR!  FOLLOW THE GLOWING FOOTPRINTS", "#9fd0ff", 2.8);
         sfx("hypno", c.x);
       } else M.next = 2;
@@ -86621,7 +86723,7 @@ function levelOfTour(of) {
     inTour = ((lv - 1) % LAST_LEVEL) + 1;
   return (tour > 1 ? "TOUR " + tour + "  ·  " : "") + "LEVEL " + inTour + of + LAST_LEVEL;
 }
-const GAME_VERSION = "v1.9.6",
+const GAME_VERSION = "v1.9.7",
   GAME_DATE = "27.11.2026",
   VERSION_TEXT = GAME_VERSION + "  ·  " + GAME_DATE;
 const FB = '"Chakra Petch", "Segoe UI", sans-serif';
@@ -87739,13 +87841,20 @@ function drawHud(fps) {
             (modesTxt() ? (ghostDiff() !== null ? 36 : 20) * s : 0) +
             (G.time - (HUDB.flawDown ?? -9) < 0.5 ? 16 * s : 0) + // (v1.9.0: under FLAWLESS when it moved down - coach.ts)
             row * 22 * s;
-        g.fillStyle = P0.c;
+        // (v1.9.7: in versus a power-up that's one player's own is drawn in their colour - whose SHIELD was running?)
+        const pc =
+          G.versus && G.pwBy && G.pwBy[k] !== undefined && ["speed", "triple", "magnet", "shield"].includes(k)
+            ? G.pwBy[k]
+              ? "#5fb0ff"
+              : "#ff5fa8"
+            : P0.c;
+        g.fillStyle = pc;
         g.globalAlpha = left < 2 && Math.sin(t * 18) < 0 ? 0.4 : 1;
         g.font = fD(10);
         g.fillText(P0.name, pad, y);
         g.fillStyle = "rgba(255,255,255,.15)";
         g.fillRect(pad, y + 13 * s, 110 * s, 4 * s);
-        g.fillStyle = P0.c;
+        g.fillStyle = pc;
         g.fillRect(
           pad,
           y + 13 * s,
@@ -94699,6 +94808,16 @@ profWire();
 //  the game, and where the motion capture, the folk songs and the fonts come from. Both from the menu at any time.
 // =====================================================================================
 const NEWS = [
+  {
+    ver: "v1.9.7",
+    title: "KEEP WHAT YOU EARNED",
+    items: [
+      "A CUSTOMER YOU SERVED STAYS SERVED WHEN YOU SLIP ON ANOTHER BAR",
+      "THE VIP AND THE OUTLAW PAY ONLY WHEN YOU REALLY SERVE THEM",
+      "VERSUS: POINTS, HOLY WATER, POWER-UPS AND PETS COUNT FOR WHOEVER EARNED THEM",
+      "TRIPLE SHOT: A PERFECT POUR REACHES THE FRONT CUSTOMER",
+    ],
+  },
   {
     ver: "v1.9.6",
     title: "SMOOTH EDGES",

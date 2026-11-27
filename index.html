@@ -8116,6 +8116,23 @@ const DICT_ROWS                             = [
     "DAAGLIKSE UITDAGING KLAAR!  +2 STERRE",
     "WYZWANIE DNIA UKOŃCZONE!  +2 GWIAZDKI",
   ],
+  // (v1.9.1) ROUND AGAIN
+  ["ROUND AGAIN", "WEER RONDOM", "JESZCZE JEDNA RUNDA"],
+  [
+    "THE SECOND TOUR CAN WIN GALACTIC CHAMPION, EVEN IF THE FIRST BEGAN PART-WAY",
+    "DIE TWEEDE TOER KAN GALAKTIESE KAMPIOEN WEN, SELFS AS DIE EERSTE HALFPAD BEGIN HET",
+    "DRUGA TRASA MOŻE ZDOBYĆ GALAKTYCZNEGO MISTRZA, NAWET JEŚLI PIERWSZA ZACZĘŁA SIĘ W POŁOWIE",
+  ],
+  [
+    "THE ARRIVAL SCREEN AND GAME OVER SAY WHICH TOUR YOU'RE ON",
+    "DIE AANKOMSSKERM EN SPEL VERBY SÊ OP WATTER TOER JY IS",
+    "EKRAN PRZYBYCIA I KONIEC GRY MÓWIĄ, NA KTÓREJ TRASIE JESTEŚ",
+  ],
+  [
+    "KID MODE: NO DRAGON ROARS, NO FLICKERING LIGHTS, NOBODY GETS FIRED",
+    "KINDERMODUS: GEEN DRAKEGEBRUL, GEEN FLIKKERENDE LIGTE, NIEMAND WORD AFGEDANK NIE",
+    "TRYB DLA DZIECI: BEZ RYKU SMOKA, BEZ MIGAJĄCYCH ŚWIATEŁ, NIKT NIE ZOSTAJE ZWOLNIONY",
+  ],
   // (v1.9.0) CALM MEANS CALM
   ["CALM MEANS CALM", "KALM BETEKEN KALM", "SPOKÓJ ZNACZY SPOKÓJ"],
   [
@@ -18398,7 +18415,7 @@ function update(dt) {
       type = TYPE_OF.dragon;
       G.dragonSeen = true;
       G.nextSeed = Math.random();
-      sfx("dragon", X0);
+      sfx(DF().kid ? "boing" : "dragon", X0); // (v1.9.1: no roar for the little ones - as the boss's, v1.8.65)
       if (!demo)
         callout(
           "A " +
@@ -20958,21 +20975,23 @@ function loadShedding(dt, demo) {
   d.t += dt;
   // dark... the generator outside is cranked (it coughs black smoke), splutters, CATCHES - and hums away until Spacekom is back
   // (v1.8.92: in calm mode no strobing - the lights go down and come back smoothly)
-  G.dark = COMFORT.calm
-    ? d.t < 5.6
-      ? Math.min(1, d.t / 0.8)
-      : Math.min(1, Math.max(0, 1 - (d.t - 6.6) * 2))
-    : d.t < 0.6
-      ? Math.sin(d.t * 40) > 0
-        ? 0.9
-        : 0.2
-      : d.t < 5.6
-        ? 1
-        : d.t < 6.6
-          ? Math.sin(d.t * 26) > 0.2
-            ? 1
-            : 0.35
-          : Math.max(0, 1 - (d.t - 6.6) * 2);
+  // (v1.9.1: in kid mode too)
+  G.dark =
+    COMFORT.calm || DF().kid
+      ? d.t < 5.6
+        ? Math.min(1, d.t / 0.8)
+        : Math.min(1, Math.max(0, 1 - (d.t - 6.6) * 2))
+      : d.t < 0.6
+        ? Math.sin(d.t * 40) > 0
+          ? 0.9
+          : 0.2
+        : d.t < 5.6
+          ? 1
+          : d.t < 6.6
+            ? Math.sin(d.t * 26) > 0.2
+              ? 1
+              : 0.35
+            : Math.max(0, 1 - (d.t - 6.6) * 2);
   if (d.t >= 4.2 && !d.crank) {
     d.crank = true;
     sfx("chug");
@@ -21353,15 +21372,17 @@ function updateTwist(dt, demo) {
     if (W.d) {
       const d = W.d;
       d.t += dt;
-      G.dark = COMFORT.calm
-        ? Math.min(1, d.t / 0.8, Math.max(0, 1 - (d.t - 7) * 2)) // (v1.8.92: calm mode - no flicker)
-        : d.t < 0.6
-          ? Math.sin(d.t * 40) > 0
-            ? 0.9
-            : 0.2
-          : d.t < 7
-            ? 1
-            : Math.max(0, 1 - (d.t - 7) * 2);
+      // (v1.9.1: calm mode's smooth dark in kid mode too)
+      G.dark =
+        COMFORT.calm || DF().kid
+          ? Math.min(1, d.t / 0.8, Math.max(0, 1 - (d.t - 7) * 2)) // (v1.8.92: calm mode - no flicker)
+          : d.t < 0.6
+            ? Math.sin(d.t * 40) > 0
+              ? 0.9
+              : 0.2
+            : d.t < 7
+              ? 1
+              : Math.max(0, 1 - (d.t - 7) * 2);
       if (d.t > 7.5) {
         W.d = null;
         G.dark = 0;
@@ -21698,7 +21719,7 @@ function updateTwist(dt, demo) {
       seed: 0.5,
       fed: 0,
     });
-    sfx("dragon", X0);
+    sfx(DF().kid ? "boing" : "dragon", X0); // (v1.9.1: kid mode - no roar)
     if (!demo) callout("THE GALACTIC GLUTTON IS HERE!  KEEP THE SHAKES COMING", "#ff5fd8", 3);
   }
 }
@@ -22030,7 +22051,7 @@ function coopLevelClear(demo) {
   }
   // (v1.5.91) a team goal not reached: how close you came
   if (G.tg && !G.tg.done) G.tgStreak = 0; // (v1.6.2: and the goal streak starts again)
-  if (G.tg && !G.tg.done)
+  if (G.tg && !G.tg.done && !DF().kid)
     G.callouts.push({
       text: "TEAM GOAL MISSED: " + Math.min(tgProg(G.tg), G.tg.n) + " / " + G.tg.n,
       c: "#ffb08a",
@@ -22324,7 +22345,7 @@ function dragonFire(d, s, demo) {
     who = PL[s.owner || 0],
     lanes = dk === "black" ? [d.lane - 1, d.lane, d.lane + 1] : [d.lane];
   d.fire = 1.2;
-  sfx("dragon", d.x);
+  sfx(DF().kid ? "boing" : "dragon", d.x); // (v1.9.1: kid mode - no roar)
   G.shake = Math.max(G.shake, 6);
   let n = 0;
   if (dk === "silver" && !demo) {
@@ -23017,7 +23038,16 @@ function afterLoss() {
       G.rjSv = G.served;
     }
     if (!PL.some((p) => p.alive)) {
-      startFired();
+      // (v1.9.1: in kid mode no manager storming in with "YOU'RE FIRED!" - straight to the results)
+      if (DF().kid) {
+        // (as the fired scene would: no "PLAYER 2 IS OUT!" left over the results, no shakes frozen mid-bar)
+        G.callouts = [];
+        shakes = [];
+        empties = [];
+        tips = [];
+        resetPowers();
+        gameOver();
+      } else startFired();
       return;
     }
   } else if (!DF().kid) {
@@ -23456,6 +23486,9 @@ function endEnding() {
 // NEW TOUR (after the final credits): back to Mercury with your score and lives - and everything a notch faster
 function newTour() {
   G.loop = (G.loop || 0) + 1;
+  // (v1.9.1: a new tour starts at stop 1 - a whole tour, so it can win GALACTIC CHAMPION even when the first was
+  //  begun part-way)
+  G.fromStart = true;
   G.coreShown = false;
   G.won = false;
   G.mwDone = false;
@@ -23546,7 +23579,13 @@ function gameOver() {
       R1 = { ...R0 },
       rows                                      = [
         ["HIGH SCORE", String(G.hi).padStart(6, "0"), best ? "NEW HIGH SCORE!" : "", best],
-        ["LEVEL", G.level + "  ·  " + titleCase(here().name), "", false],
+        // (v1.9.1: and which tour - "LEVEL 12" on tour 2 read as worse than stop 39 on the first)
+        [
+          "LEVEL",
+          (G.loop ? "TOUR " + (G.loop + 1) + "  ·  " : "") + G.level + "  ·  " + titleCase(here().name),
+          "",
+          false,
+        ],
       ];
     for (const [k, label] of [
       ["perf", "PERFECT STREAK"],
@@ -23914,7 +23953,13 @@ function finishJump() {
     // (v1.7.4: stop 4's card is Bogdan's warning about the Black Hole Bistro - only where it really races you)
     // (v1.8.72: not in ENDLESS - since it travels it was handed the tour's postcards: Bogdan's hello again at stop 1, the
     //  festival's welcome at stop 40 with no festival)
-    if (STORY[G.level] && !G.endless && !(G.loop && G.level === 1) && !(G.level === 4 && !rivalStop())) {
+    // (v1.9.1: nor stop 4's on a later tour - Bogdan met Chef Grumblo all over again, after you'd raced and beaten him)
+    if (
+      STORY[G.level] &&
+      !G.endless &&
+      !(G.loop && (G.level === 1 || G.level === 4)) &&
+      !(G.level === 4 && !rivalStop())
+    ) {
       startStory(G.level, "approach");
       cardSeen(G.level); // (v1.8.74: remembered for THE STORY's journal)
     }
@@ -57427,7 +57472,7 @@ function hurryUpdate(dt, demo) {
     c.state = "out";
     c.happy = 0;
     if (!c.extra) G.served++;
-    if (!demo) worldText("TOO SLOW - BYE!", c, "#ffb070");
+    if (!demo && !DF().kid) worldText("TOO SLOW - BYE!", c, "#ffb070"); // (v1.9.1: not in kid mode)
   }
 }
 function hurryServed(c, s, demo) {
@@ -71958,7 +72003,7 @@ function funHud(g, s, t, fD, sx, sy) {
     // (v1.8.27: in ENDLESS the heading said "LEVEL 1 OF 40" - there is no 40th in endless; it names the mode instead)
     neon2(
       g,
-      G.endless ? "ENDLESS MODE" : "LEVEL " + G.level + " OF " + LAST_LEVEL,
+      G.endless ? "ENDLESS MODE" : levelOfTour(" OF "), // (v1.9.1: "TOUR 2  ·  LEVEL 7 OF 40" on a later tour)
       cssW / 2,
       ty0,
       14 * s,
@@ -82411,7 +82456,8 @@ function freeSave(why, lane, x) {
 function lifeLostMech() {
   if (G.demo) return;
   if (!G.versus && difficulty !== "hard") G.assist = Math.min(1, (G.assist || 0) + 0.5);
-  if (G.flawless > 1)
+  if (G.flawless > 1 && !DF().kid)
+    // (v1.9.1: not in kid mode - next to "OOPS! NO PROBLEM" it said something was lost)
     G.callouts.push({
       text: "FLAWLESS RUN OVER - x" + flawMul().toFixed(1) + " LOST",
       c: "#ff9a7a",
@@ -86222,7 +86268,7 @@ function levelOfTour(of) {
     inTour = ((lv - 1) % LAST_LEVEL) + 1;
   return (tour > 1 ? "TOUR " + tour + "  ·  " : "") + "LEVEL " + inTour + of + LAST_LEVEL;
 }
-const GAME_VERSION = "v1.9.0",
+const GAME_VERSION = "v1.9.1",
   GAME_DATE = "27.11.2026",
   VERSION_TEXT = GAME_VERSION + "  ·  " + GAME_DATE;
 const FB = '"Chakra Petch", "Segoe UI", sans-serif';
@@ -87573,11 +87619,11 @@ function drawHud(fps) {
     if (B.t > 2.6 || G.state !== "play") G.lsBanner = null;
     else {
       // (v1.8.92: in calm mode the banner fades in and out without the dying-tube buzz)
-      const on = COMFORT.calm || B.t > 0.5 || Math.sin(B.t * 47) > 0,
+      const on = COMFORT.calm || DF().kid || B.t > 0.5 || Math.sin(B.t * 47) > 0, // (v1.9.1: and kid mode)
         // (v1.8.93: after its first moment it fades to a faint 30% - at 55% the big letters still hid the customers on
         //  the middle bars for over a second; and it eases down instead of dropping at once)
         k = Math.min(1, B.t * 4, (2.6 - B.t) * 2.5) * (B.t < 0.8 ? 1 : Math.max(0.3, 1 - (B.t - 0.8) * 2.5)),
-        fl = !COMFORT.calm && B.t > 0.5 && Math.sin(B.t * 31) > 0.93 ? 0.35 : 1;
+        fl = !COMFORT.calm && !DF().kid && B.t > 0.5 && Math.sin(B.t * 31) > 0.93 ? 0.35 : 1;
       g.save();
       g.textAlign = "center";
       g.textBaseline = "middle";
@@ -94220,6 +94266,15 @@ profWire();
 // =====================================================================================
 const NEWS = [
   {
+    ver: "v1.9.1",
+    title: "ROUND AGAIN",
+    items: [
+      "THE SECOND TOUR CAN WIN GALACTIC CHAMPION, EVEN IF THE FIRST BEGAN PART-WAY",
+      "THE ARRIVAL SCREEN AND GAME OVER SAY WHICH TOUR YOU'RE ON",
+      "KID MODE: NO DRAGON ROARS, NO FLICKERING LIGHTS, NOBODY GETS FIRED",
+    ],
+  },
+  {
     ver: "v1.9.0",
     title: "CALM MEANS CALM",
     items: [
@@ -97407,6 +97462,10 @@ function shareCard(kind                ) {
     g.font = "700 " + size + "px 'Chakra Petch', 'Segoe UI', sans-serif";
     g.textAlign = "center";
     g.textBaseline = "middle";
+    // (v1.9.1: shrunk to fit like the neon lines - "TOUR 2 · REACHED LEVEL 38 · S ANDROMEDAE SUPERNOVA SHACK" ran off)
+    let s2 = size;
+    while (g.measureText(txt).width > N - 120 && s2 > 16)
+      g.font = "700 " + (s2 -= 2) + "px 'Chakra Petch', 'Segoe UI', sans-serif";
     g.fillStyle = colr;
     g.fillText(txt, N / 2, y);
   };
@@ -97459,7 +97518,13 @@ function shareCard(kind                ) {
   } else {
     neon(String(G.score).padStart(6, "0"), 680, 120, "#ffd24d", 30);
     plain(
-      G.won ? "CONQUERED THE GALAXY!" : "REACHED LEVEL " + G.level + "  ·  " + here().name,
+      G.won
+        ? "CONQUERED THE GALAXY!"
+        : (G.loop ? "TOUR " + (G.loop + 1) + "  ·  " : "") +
+            "REACHED LEVEL " +
+            G.level +
+            "  ·  " +
+            here().name, // (v1.9.1: the tour too)
       780,
       34,
       "#fff3e2"

@@ -651,6 +651,9 @@ body.touch2p #touch .tp button.holy { width: 60px; height: 60px; font-size: 11px
     <!-- (v2.0.1) THE STOP SPECIALS (specials.ts) -->
     <h3>STOP SPECIALS</h3>
     <p data-tr>Every stop has its own <b>specials</b> tonight - the arrival screen says which (TONIGHT: ...). Pop the <b>balloon</b> by serving someone on its bar, run over a <b>shooting star</b> or a <b>lost parcel</b> to collect it, serve quickly on the bar where the <b>bell</b> rings, wake a <b>sleepyhead</b> with a shake, and serve <b>gift</b>, <b>mystery</b> and <b>birthday</b> guests for a surprise. During <b>tip rain</b> and <b>happy hour</b> every serve pays extra. A <b>×2</b> customer comes back for a second shake, tonight's <b>flavour</b> scores extra, and when the taps glow gold your next serve is a <b>golden shake</b>. Catch a <b>runaway donut</b> before it rolls off, and serve from the bar whose <b>tap sparkles</b>. They never cost a life.</p>
+    <!-- (v2.0.4) THE SPACE EVENTS (specials.ts) -->
+    <h3>SPACE EVENTS</h3>
+    <p data-tr>From stop 3 on, things happen out there too. A <b>UFO</b> may try to <b>abduct</b> a customer - serve them before the beam takes them (or they come back later, from space, with a big tip). Your <b>telepathy</b> turns every order to the flavour you're holding, a <b>comet</b> makes everyone stop and look, the <b>space whale</b> sings and the customers slow down to listen, a <b>hypno-wave</b> sends a bar's customers back a few steps, a <b>meteor shower</b> drops stars to catch, and the little green visitors' saucer drops by.</p>
     <h3>POWER-UPS, STARS AND COINS</h3>
     <p data-tr>Grab the <b>power-ups</b> that appear on the bar when it's quiet - all but the sleepy <b>DECAF</b> cup, which slows you down. Each level gives up to three <b>stars</b>, and you earn <b>coins</b> to spend in the COIN SHOP (PLAY MORE). RELAX MODE has no losing and no hurry.</p>
   </div>
@@ -7050,6 +7053,52 @@ const DICT_ROWS                             = [
   ["POUR 3 GOLDEN SHAKES", "SKINK 3 GOUE SKOMMELS", "NALEJ 3 ZŁOTE KOKTAJLE"],
   ["CATCH 2 DONUTS", "VANG 2 DONUTS", "ZŁAP 2 PĄCZKI"],
   ["SERVE 6 FROM A LUCKY TAP", "BEDIEN 6 BY 'N GELUKSKRAAN", "OBSŁUŻ 6 PRZY SZCZĘŚLIWYM KRANIE"],
+  // (v2.0.4) CLOSE ENCOUNTERS - the space events (specials.ts)
+  ["SPACE EVENTS", "RUIMTEGEBEURTENISSE", "WYDARZENIA KOSMICZNE"],
+  [
+    "From stop 3 on, things happen out there too. A <b>UFO</b> may try to <b>abduct</b> a customer - serve them before the beam takes them (or they come back later, from space, with a big tip). Your <b>telepathy</b> turns every order to the flavour you\'re holding, a <b>comet</b> makes everyone stop and look, the <b>space whale</b> sings and the customers slow down to listen, a <b>hypno-wave</b> sends a bar\'s customers back a few steps, a <b>meteor shower</b> drops stars to catch, and the little green visitors\' saucer drops by.",
+    "Vanaf halte 3 gebeur daar ook dinge daar buite. \'n <b>VVV</b> probeer dalk \'n klant <b>ontvoer</b> - bedien hulle voor die straal hulle vat (of hulle kom later terug, uit die ruimte, met \'n groot fooi). Jou <b>telepatie</b> verander elke bestelling na die geur wat jy hou, \'n <b>komeet</b> laat almal stilstaan om te kyk, die <b>ruimtewalvis</b> sing en die klante stap stadiger om te luister, \'n <b>hipnogolf</b> stuur \'n toonbank se klante \'n paar treë terug, \'n <b>meteorietreën</b> laat sterre val om te vang, en die klein groen besoekers se pierring kom kuier.",
+    "Od przystanku 3 coś dzieje się też na zewnątrz. <b>UFO</b> może próbować <b>porwać</b> klienta - obsłuż go, zanim promień go zabierze (albo wróci później z kosmosu z dużym napiwkiem). Twoja <b>telepatia</b> zmienia każde zamówienie na smak, który trzymasz, <b>kometa</b> sprawia, że wszyscy stają i patrzą, <b>kosmiczny wieloryb</b> śpiewa, a klienci zwalniają, żeby posłuchać, <b>fala hipnozy</b> cofa klientów jednej lady o kilka kroków, <b>deszcz meteorów</b> zrzuca gwiazdy do złapania, a do baru zagląda spodek małych zielonych gości.",
+  ],
+  ["A UFO IS ABDUCTING A CUSTOMER!", "'N VVV ONTVOER 'N KLANT!", "UFO PORYWA KLIENTA!"],
+  [
+    "SERVE THEM BEFORE THE BEAM TAKES THEM",
+    "BEDIEN HULLE VOOR DIE STRAAL HULLE VAT",
+    "OBSŁUŻ GO, ZANIM PROMIEŃ GO ZABIERZE",
+  ],
+  ["BEAMED UP!", "OPGESTRAAL!", "TELEPORTOWANY!"],
+  ["BACK FROM SPACE!", "TERUG UIT DIE RUIMTE!", "Z POWROTEM Z KOSMOSU!"],
+  ["RESCUED!", "GERED!", "URATOWANY!"],
+  ["THANKS FOR WAITING!", "DANKIE VIR WAG!", "DZIĘKI ZA CZEKANIE!"],
+  [
+    "TELEPATHY!  EVERYONE WANTS YOUR FLAVOUR",
+    "TELEPATIE!  ALMAL WIL JOU GEUR HÊ",
+    "TELEPATIA!  WSZYSCY CHCĄ TWOJEGO SMAKU",
+  ],
+  [
+    "SWITCH FLAVOUR - THEIR ORDERS FOLLOW YOUR THOUGHTS",
+    "WISSEL GEUR - HULLE BESTELLINGS VOLG JOU GEDAGTES",
+    "ZMIEŃ SMAK - ICH ZAMÓWIENIA PODĄŻAJĄ ZA TWOIMI MYŚLAMI",
+  ],
+  ["TELEPATHY", "TELEPATIE", "TELEPATIA"],
+  [
+    "A COMET!  EVERYONE STOPS TO LOOK",
+    "'N KOMEET!  ALMAL STAAN STIL OM TE KYK",
+    "KOMETA!  WSZYSCY STAJĄ, ŻEBY POPATRZEĆ",
+  ],
+  ["OOOH!", "OOOH!", "OOOCH!"],
+  ["THE SPACE WHALE SINGS!", "DIE RUIMTEWALVIS SING!", "KOSMICZNY WIELORYB ŚPIEWA!"],
+  [
+    "THE CUSTOMERS SLOW DOWN TO LISTEN",
+    "DIE KLANTE STAP STADIGER OM TE LUISTER",
+    "KLIENCI ZWALNIAJĄ, ŻEBY POSŁUCHAĆ",
+  ],
+  ["WHALE SONG", "WALVISLIED", "PIEŚŃ WIELORYBA"],
+  [
+    "A METEOR SHOWER!  CATCH THE FALLING STARS",
+    "'N METEORIETREËN!  VANG DIE VALLENDE STERRE",
+    "DESZCZ METEORÓW!  ŁAP SPADAJĄCE GWIAZDY",
+  ],
   ["FLAVOUR ORDERS", "GEURBESTELLINGS", "ZAMÓWIENIA SMAKÓW"],
   ["FLAVOUR SHAPES", "GEURVORMS", "KSZTAŁTY SMAKÓW"],
   ["GRAPHICS", "GRAFIKA", "GRAFIKA"],
@@ -8309,6 +8358,28 @@ const DICT_ROWS                             = [
     "DAILY CHALLENGE DONE!  +2 STARS",
     "DAAGLIKSE UITDAGING KLAAR!  +2 STERRE",
     "WYZWANIE DNIA UKOŃCZONE!  +2 GWIAZDKI",
+  ],
+  // (v2.0.4) CLOSE ENCOUNTERS
+  ["CLOSE ENCOUNTERS", "NABYE ONTMOETINGS", "BLISKIE SPOTKANIA"],
+  [
+    "UFO ABDUCTIONS! SERVE THE CUSTOMER BEFORE THE BEAM TAKES THEM - OR THEY COME BACK FROM SPACE",
+    "VVV-ONTVOERINGS! BEDIEN DIE KLANT VOOR DIE STRAAL HULLE VAT - OF HULLE KOM TERUG UIT DIE RUIMTE",
+    "PORWANIA PRZEZ UFO! OBSŁUŻ KLIENTA, ZANIM PROMIEŃ GO ZABIERZE - ALBO WRÓCI Z KOSMOSU",
+  ],
+  [
+    "TELEPATHY: FOR A WHILE EVERY ORDER FOLLOWS THE FLAVOUR YOU'RE HOLDING",
+    "TELEPATIE: 'N RUKKIE VOLG ELKE BESTELLING DIE GEUR WAT JY HOU",
+    "TELEPATIA: PRZEZ CHWILĘ KAŻDE ZAMÓWIENIE PODĄŻA ZA SMAKIEM, KTÓRY TRZYMASZ",
+  ],
+  [
+    "COMETS, THE SINGING SPACE WHALE, HYPNO-WAVES AND METEOR SHOWERS",
+    "KOMETE, DIE SINGENDE RUIMTEWALVIS, HIPNOGOLWE EN METEORIETREËNS",
+    "KOMETY, ŚPIEWAJĄCY KOSMICZNY WIELORYB, FALE HIPNOZY I DESZCZE METEORÓW",
+  ],
+  [
+    "MORE UFOS: VISITORS DROP BY MORE OFTEN, AND LITTLE SAUCERS CROSS THE SKY",
+    "MEER VVV'S: BESOEKERS KOM MEER DIKWELS KUIER, EN KLEIN PIERRINGS VLIEG OOR DIE LUG",
+    "WIĘCEJ UFO: GOŚCIE WPADAJĄ CZĘŚCIEJ, A MAŁE SPODKI PRZELATUJĄ PO NIEBIE",
   ],
   // (v2.0.3) A CHALLENGE AT EVERY STOP
   ["A CHALLENGE AT EVERY STOP", "'N UITDAGING BY ELKE HALTE", "WYZWANIE NA KAŻDYM PRZYSTANKU"],
@@ -13726,6 +13797,11 @@ const DICT_PAT                             = [
   [/^(.+) IS THE CHAMPION!$/, "$1 IS DIE KAMPIOEN!", "$1 ZOSTAJE MISTRZEM!"],
   // (v2.0.0: the STOP SPECIALS - "TONIGHT: A & B", and any "A & B" put together from translated pieces)
   [/^TONIGHT: (.+)$/, "VANAAND: $1", "DZIŚ WIECZOREM: $1"],
+  [
+    /^HYPNO-WAVE!  BAR (\d+) STEPS BACK$/,
+    "HIPNOGOLF!  TOONBANK $1 STAP TERUG",
+    "FALA HIPNOZY!  LADA $1 SIĘ COFA",
+  ], // (v2.0.4)
   [/^TONIGHT'S FLAVOUR: (.+)$/, "VANAAND SE GEUR: $1", "SMAK WIECZORU: $1"],
   [/^(.+) & (.+)$/, "$1 & $2", "$1 & $2"],
   // (v1.4.79) v1.5.2
@@ -18869,7 +18945,9 @@ function update(dt) {
   }
   // ---- customers come in ----
   if (!(G.breather > 0)) G.spawnT -= dt;
-  const remaining = G.total - G.served - customers.filter((c) => c.state !== "out").length;
+  // (v2.0.4: a customer beamed up by a UFO is still to come - specials.ts G.ev.away)
+  const remaining =
+    G.total - G.served - customers.filter((c) => c.state !== "out").length - (G.ev ? G.ev.away.length : 0);
   // (v1.5.11) A KNOCK AT THE DOOR: the next customer's bar is chosen a moment early, so that door can light up and
   // swing a little before they walk in (doorWarn, juice.ts) - you see where they'll come from instead of being surprised
   // (v1.5.38) NOBODY HIDDEN IN THE DOORWAY: a group arrives a quarter of a second apart, and the second could be sent to
@@ -19778,6 +19856,7 @@ function update(dt) {
           dt *
           (G.mind && c.type.kind === "astro" ? 1.45 : 1) *
           (hasPw("slow") ? 0.5 : 1) *
+          (G.ev && G.ev.whale > 0 ? 0.55 : 1) * // (v2.0.4: listening to the SPACE WHALE - specials.ts)
           (c.protest && !c.protest.calm ? 0.75 + c.protest.anger * 0.25 : 1) * // (v1.4.28: back to their old pace - it was the limbs that needed calming) // (v1.4.1: protesters march slowly - never faster than anyone else; v1.4.27: slower still)
           (c.type.sprints ? 1.7 : 1) *
           (c.wolf ? 1.6 : 1) *
@@ -21138,6 +21217,7 @@ function update(dt) {
   // (v1.9.5: and not while the Queen or Chef Grumblo has been announced but is still on the way in - the crowd
   //  finished in those two seconds, the stop cleared, and the guest the screen had just announced never came)
   if (
+    !(G.ev && G.ev.away.length) && // (v2.0.4: nor while a customer is away with the UFO)
     G.served >= G.total &&
     !customers.some((c) => c.state !== "out") &&
     !(G.grumbloAt > 0) &&
@@ -69036,6 +69116,7 @@ function ckPickConnoisseur() {
     (o) =>
       o.state === "walk" &&
       o.x > X0 - 4 &&
+      !o.abd && // (v2.0.4: not someone in a UFO's beam)
       !o.type.evil &&
       !o.type.boss &&
       !o.type.glutton &&
@@ -74614,6 +74695,7 @@ function funMystery(dt) {
         // (v1.9.9: nor anyone with a sign of their own - twins, an envoy, the connoisseur... two signs on one head)
         (c) =>
           c.state === "walk" &&
+          !c.abd && // (v2.0.4: not someone in a UFO's beam)
           !c.type.evil &&
           !c.type.glutton &&
           !c.gold &&
@@ -75367,10 +75449,12 @@ function specPickable(c) {
     !c.ufo &&
     !(c.blessT > 0) &&
     !(c.napT > 0) &&
+    !c.abd &&
     !c.hold
   );
 }
 function specLevelStart() {
+  evLevelStart(); // (v2.0.4: and the SPACE EVENTS - below)
   // (with FLAVOUR ORDERS off there's only one flavour to pour - tonight's flavour would be every shake or none, so
   //  that stop has happy hour instead)
   const on = specList(); // (v2.0.2: the FLAVOUR ORDERS swap is in specAt now)
@@ -75439,6 +75523,7 @@ function specAnnounce() {
     });
 }
 function specUpdate(dt) {
+  evUpdate(dt); // (v2.0.4)
   const S = G.sp;
   if (!S || !S.on.length || !specOn()) return;
   S.t += dt;
@@ -75455,9 +75540,10 @@ function specUpdate(dt) {
     if (S.balloon) S.balloon.t += dt;
   }
   // shooting stars: one falls onto a bar and lies there a while - run over it to catch it
-  if (specHas("star")) {
+  // (v2.0.4: and the meteor shower's, on any stop)
+  if (specHas("star") || S.stars.length) {
     // (v2.0.2 playtest: one at a time, a little less often - there was nearly always one lying there)
-    if (S.stars.length < 1 && (S.sT -= dt) <= 0) {
+    if (specHas("star") && S.stars.length < 1 && (S.sT -= dt) <= 0) {
       S.sT = rnd(10, 14);
       S.stars.push({ lane: Math.floor(Math.random() * LANES), x: rnd(X0 + 120, TAPX - 120), t: 0 });
       sfx("whoosh", X1);
@@ -75614,6 +75700,7 @@ function specUpdate(dt) {
 // a customer has just been served (update.ts, after the catch) - the specials that answer a serve
 function specServed(c, s, demo) {
   c.napT = 0; // (a birthday singer served mid-song doesn't stand frozen later, when they walk in again)
+  if (!demo && specOn()) evServed(c, PL[s.owner || 0] || P1); // (v2.0.4: a rescue from the UFO, a returnee)
   const S = G.sp;
   if (demo || !S || !S.on.length || !specOn()) return;
   const who = PL[s.owner || 0] || P1;
@@ -75763,7 +75850,7 @@ function specScr(lane, x, dy, sx, sy) {
 // the specials drawn over the bars (on the HUD layer, like the name tags)
 function specHud(g, s, sx, sy) {
   const S = G.sp;
-  if (!S || !S.on.length || !specOn() || !["play", "lost"].includes(G.state)) return;
+  if (!S || !specOn() || !["play", "lost"].includes(G.state)) return; // (every stop has specials - and its events)
   const t = G.time,
     bob = (f) => (COMFORT.calm ? 0 : Math.sin(t * f));
   g.save();
@@ -75829,12 +75916,15 @@ function specHud(g, s, sx, sy) {
         g.fillText(e, p.x, p.y);
       } else icon(e, c.lane, c.x, -112 + 4 * bob(3), 30); // (v2.0.2: right over the head)
     }
+  evHud(g, s, sx, sy, icon, bob); // (v2.0.4: the SPACE EVENTS)
   // the windows: how long tip rain and happy hour still run - small, at the right, under the LIVES (clear of the
   //  stage show in the middle)
   const wins = [];
   if (S.rain > 0) wins.push(["TIP RAIN", S.rain, SPECIALS.tiprain.c]);
   if (S.happy > 0) wins.push(["HAPPY HOUR", S.happy, SPECIALS.happy.c]);
   if (S.lucky) wins.push(["LUCKY TAP", S.lucky.t, SPECIALS.luckytap.c]); // (v2.0.2)
+  if (G.ev && G.ev.tele > 0) wins.push(["TELEPATHY", G.ev.tele, "#ff8fff"]); // (v2.0.4)
+  if (G.ev && G.ev.whale > 0) wins.push(["WHALE SONG", G.ev.whale, "#8fd0ff"]);
   // (v2.0.3) the stop challenge and how far it's got - and for a few seconds once it's done
   if (S.ch && (!S.ch.done || G.time - S.ch.doneT < 4))
     wins.unshift([
@@ -75876,6 +75966,331 @@ function specHud(g, s, sx, sy) {
 }
 // the display font at a size, with TEXT SIZE (the HUD's own fD isn't in reach here)
 const fDs = (s, n) => "700 " + Math.round(n * s * TXT()) + "px " + FD;
+// =====================================================================================
+//  (v2.0.4) CLOSE ENCOUNTERS - SPACE EVENTS: from stop 3 on, now and then something happens out there: a UFO tries
+//  to ABDUCT a customer (serve them before the beam takes them - or they come back later, "back from space"), the
+//  bartender's TELEPATHY turns every order to the flavour you're holding, a COMET makes everyone stop and look, the
+//  SPACE WHALE sings and the customers slow down to listen; and little UFOs cross the sky. Never a life to lose.
+//  (Where the stop specials run - specOn - and each event at most once a stop)
+// =====================================================================================
+const EVENT_KINDS = ["abduct", "telepathy", "comet", "whale", "visitors", "meteors", "hypno"];
+function evLevelStart() {
+  G.ev = {
+    on: specOn() && G.level >= 3,
+    t: rnd(22, 38), // (the first one, a while into the stop)
+    done: [],
+    abd: null,
+    away: [],
+    tele: 0,
+    comet: null,
+    whale: 0,
+    whaleX: 0,
+    fly: null,
+    flyT: rnd(8, 20),
+  };
+}
+// a customer free to be taken by a UFO: walking in, in the middle stretch of the bar, nobody special
+const evAbductable = (c) =>
+  specPickable(c) && c.x > X0 + 150 && c.x < TAPX - 260 && !(c.napT > 0) && c.alpha > 0.9;
+function evStart(k) {
+  const E = G.ev;
+  if (k === "abduct") {
+    const cand = customers.filter(evAbductable);
+    if (!cand.length) return false;
+    const c = cand[Math.floor(Math.random() * cand.length)];
+    c.abd = true;
+    E.abd = { c, t: 0, fromX: X1 + 200 };
+    specCall("A UFO IS ABDUCTING A CUSTOMER!", "#9fffd0", 2.2);
+    specCall("SERVE THEM BEFORE THE BEAM TAKES THEM", "#e8fff4", 3.4, true);
+    sfx("ufo", c.x);
+  } else if (k === "telepathy") {
+    if (!COMFORT.flav) return false; // (only one flavour to pour - nothing for the thoughts to change)
+    E.tele = 10;
+    specCall("TELEPATHY!  EVERYONE WANTS YOUR FLAVOUR", "#ff8fff", 2.2);
+    specCall("SWITCH FLAVOUR - THEIR ORDERS FOLLOW YOUR THOUGHTS", "#ffe8ff", 3.4, true);
+    sfx("hypno", TAPX);
+  } else if (k === "comet") {
+    E.comet = { t: 0 };
+    specCall("A COMET!  EVERYONE STOPS TO LOOK", "#9fe8ff", 2.2);
+    sfx("whoosh");
+    let n = 0;
+    for (const c of customers)
+      if (c.state === "walk" && !c.type.boss && !c.type.glutton) {
+        c.napT = Math.max(c.napT || 0, 2.6);
+        c.moving = false;
+        if (n++ < 2) worldText("OOOH!", c, "#9fe8ff");
+      }
+  } else if (k === "visitors") {
+    // (more UFOs: the little green visitors' saucer comes now - ufoVisit, twists.ts)
+    if (G.ufo || G.ls || G.gf || G.protest) return false;
+    G.ufoT = 0;
+  } else if (k === "meteors") {
+    // a meteor shower: three falling stars land at once, on different bars - run over them (specials' stars)
+    const S = G.sp;
+    if (!S) return false;
+    const lanes = [...Array(LANES).keys()].sort(() => Math.random() - 0.5).slice(0, 3);
+    for (const l of lanes) S.stars.push({ lane: l, x: rnd(X0 + 140, TAPX - 140), t: -Math.random() * 0.8 });
+    specCall("A METEOR SHOWER!  CATCH THE FALLING STARS", "#ffe066", 2.2);
+    sfx("meteors");
+  } else if (k === "hypno") {
+    // an alien telepath's HYPNO-WAVE: everyone walking on one bar steps back towards the door for a moment
+    const lanes = [...Array(LANES).keys()].filter((l) =>
+      customers.some((c) => c.lane === l && c.state === "walk" && c.x > X0 + 120)
+    );
+    if (!lanes.length) return false;
+    const l = lanes[Math.floor(Math.random() * lanes.length)];
+    let n = 0;
+    for (const c of customers)
+      // (review: never a flyer (pushed, they fly out of the door and count as served), the VIP or the outlaw (a push
+      //  with no shake ruined their bonus), a guest or a marcher)
+      if (
+        c.lane === l &&
+        c.state === "walk" &&
+        c.x > X0 + 120 &&
+        !c.type.boss &&
+        !c.type.glutton &&
+        !c.type.flyer &&
+        !c.fly &&
+        !c.extra &&
+        !c.hold &&
+        !c.protest &&
+        !c.abd
+      ) {
+        c.alarmed = c.warned = false; // (the full alarm again when they walk back up)
+        c.state = "pushed";
+        c.left = Math.min(90, c.x - X0 - 60); // (a few steps - never out of the door: that would count as served)
+        c.leftMax = c.left;
+        c.dry = true; // (no shake, so no empty glass comes back)
+        n++;
+      }
+    if (!n) return false;
+    E.hypnoLane = l;
+    E.hypnoT = 1.6;
+    specCall("HYPNO-WAVE!  BAR " + (l + 1) + " STEPS BACK", "#ff8fff", 2.2);
+    sfx("hypno", X0 + 200);
+  } else if (k === "whale") {
+    E.whale = 9;
+    E.whaleX = -0.15;
+    specCall("THE SPACE WHALE SINGS!", "#8fd0ff", 2.2);
+    specCall("THE CUSTOMERS SLOW DOWN TO LISTEN", "#e8f4ff", 3.4, true);
+    sfx("harmony");
+  }
+  return true;
+}
+function evUpdate(dt) {
+  const E = G.ev;
+  if (!E || !E.on || !specOn()) return;
+  // the next event, now and then (each one at most once a stop)
+  if ((E.t -= dt) <= 0) {
+    const left = EVENT_KINDS.filter((k) => !E.done.includes(k));
+    if (left.length) {
+      const k = left[Math.floor(Math.random() * left.length)];
+      if (evStart(k)) {
+        E.done.push(k);
+        E.t = rnd(32, 55);
+      } else E.t = 2; // (couldn't start now - another look soon)
+    } else E.t = 1e9;
+  }
+  // the abduction: the saucer glides over, the beam lifts them (they fade) - unless served first
+  if (E.abd) {
+    const A = E.abd,
+      c = A.c;
+    A.t += dt;
+    if (!customers.includes(c) || c.state !== "walk") {
+      // (served, pushed, or gone some other way - the beam lets go)
+      c.abd = false;
+      c.alpha = 1;
+      E.abd = null;
+    } else if (A.t > 0.9) {
+      c.napT = Math.max(c.napT || 0, 0.15); // (held in the beam)
+      c.moving = false;
+      c.alpha = Math.max(0.05, 1 - (A.t - 0.9) / 3.2);
+      if (A.t > 4.1) {
+        // beamed up - away for a while, then back at the door
+        customers.splice(customers.indexOf(c), 1);
+        c.abd = false;
+        c.conn = false; // (review: no sign of anyone else's comes back with them - one may have been picked meanwhile)
+        c.thief = false;
+        c.spk = null;
+        E.away.push({ c, back: G.time + 7 });
+        E.abd = null;
+        worldText("BEAMED UP!", c, "#9fffd0");
+        sfx("beam", c.x);
+      }
+    }
+  }
+  for (const w of E.away)
+    if (G.time >= w.back) {
+      const c = w.c;
+      c.x = X0 - 40;
+      c.state = "walk";
+      c.alpha = 1;
+      c.napT = 0;
+      c.returnee = true;
+      customers.push(c);
+      w.done = true;
+      worldText("BACK FROM SPACE!", c, "#9fffd0");
+      sfx("beamin", X0);
+    }
+  E.away = E.away.filter((w) => !w.done);
+  // telepathy: every order follows the thoughts of the bartender nearest that bar
+  if (E.tele > 0) {
+    E.tele -= dt;
+    // (review: not while a shake is already on its way down their bar - switching flavour turned it into a WRONG order)
+    for (const c of customers)
+      if (c.state === "walk" && c.want !== undefined && !shakes.some((q) => q.lane === c.lane && !q.dead)) {
+        const p = nearestTo(c.lane);
+        if (p && p.flav !== undefined) c.want = p.flav;
+      }
+  }
+  if (E.hypnoT > 0) E.hypnoT -= dt;
+  if (E.comet) {
+    E.comet.t += dt;
+    if (E.comet.t > 3.2) E.comet = null;
+  }
+  if (E.whale > 0) {
+    E.whale -= dt;
+    E.whaleX += dt / 9;
+  }
+  // little UFOs crossing the sky now and then - just passing
+  if (E.fly) {
+    E.fly.t += dt;
+    if (E.fly.t > E.fly.d) E.fly = null;
+  } else if ((E.flyT -= dt) <= 0) {
+    E.flyT = rnd(14, 30);
+    E.fly = { t: 0, d: rnd(4, 6), y: rnd(0.08, 0.2), dir: Math.random() < 0.5 ? 1 : -1 };
+  }
+}
+// a served customer - the events that answer a serve (from specServed)
+function evServed(c, who) {
+  const E = G.ev;
+  if (!E || !E.on) return;
+  if (E.abd && E.abd.c === c) {
+    c.abd = false;
+    c.alpha = 1;
+    E.abd = null;
+    specScore(400, who, c.lane, c.x);
+    worldText("RESCUED!", c, "#9fffd0");
+    sfx("chime", c.x, 4);
+  }
+  if (c.returnee) {
+    c.returnee = false;
+    specScore(500, who, c.lane, c.x);
+    tips.push({ lane: c.lane, x: Math.min(X1 - 60, c.x + 24), t: 0, v: 500 });
+    worldText("THANKS FOR WAITING!", c, "#9fffd0");
+  }
+}
+// the events drawn over the bars and the sky (from specHud)
+function evHud(g, s, sx, sy, icon, bob) {
+  const E = G.ev;
+  if (!E || !E.on) return;
+  // the UFO and its beam
+  if (E.abd) {
+    const A = E.abd,
+      c = A.c,
+      f = Math.min(1, A.t / 0.9),
+      ux = A.fromX + (c.x - A.fromX) * f,
+      top = specScr(c.lane, ux, -190, sx, sy),
+      foot = specScr(c.lane, c.x, 0, sx, sy);
+    if (A.t > 0.9) {
+      const w0 = 10 * top.u,
+        w1 = 34 * foot.u,
+        gr = g.createLinearGradient(0, top.y, 0, foot.y);
+      gr.addColorStop(0, "rgba(160,255,210,0.55)");
+      gr.addColorStop(1, "rgba(160,255,210,0.08)");
+      g.fillStyle = gr;
+      g.beginPath();
+      g.moveTo(top.x - w0, top.y);
+      g.lineTo(top.x + w0, top.y);
+      g.lineTo(foot.x + w1, foot.y);
+      g.lineTo(foot.x - w1, foot.y);
+      g.closePath();
+      g.fill();
+    }
+    // (the saucer itself always shows - up there it can be over the HUD's edge, where the little signs keep out)
+    const up = specScr(c.lane, ux, -195 + 4 * bob(4), sx, sy),
+      upx = Math.max(VERT ? 26 : 22, Math.min(56, 48 * up.u));
+    g.font = Math.round(upx) + "px sans-serif";
+    g.fillText("🛸", up.x, Math.max(up.y, (HUD_TOP.low || 0) + upx / 2));
+  }
+  // telepathy: rings round every head, and a brain over the bartenders
+  if (E.tele > 0) {
+    const ph = (G.time * 1.6) % 1;
+    g.strokeStyle = "rgba(255,143,255," + (0.6 * (1 - ph)).toFixed(2) + ")";
+    g.lineWidth = 2 * s;
+    for (const c of customers)
+      if (c.state === "walk" && c.want !== undefined) {
+        const p = specScr(c.lane, c.x, -100, sx, sy);
+        g.beginPath();
+        g.arc(p.x, p.y, (10 + 22 * ph) * p.u, 0, Math.PI * 2);
+        g.stroke();
+      }
+    for (const p of active()) icon("🧠", p.lane, p.x, VERT ? -150 : -130, 30);
+  }
+  // the hypno-wave: purple rings rolling along the bar towards the door
+  if (E.hypnoT > 0) {
+    const f = 1 - E.hypnoT / 1.6;
+    for (let i = 0; i < 3; i++) {
+      const x = TAPX - (f + i * 0.15) * (TAPX - X0),
+        p = specScr(E.hypnoLane, x, -60, sx, sy);
+      g.strokeStyle = "rgba(255,143,255," + (0.7 * (1 - f)).toFixed(2) + ")";
+      g.lineWidth = 3 * s;
+      g.beginPath();
+      g.arc(p.x, p.y, 26 * p.u, 0, Math.PI * 2);
+      g.stroke();
+    }
+  }
+  // a comet across the sky (the top of the screen)
+  if (E.comet) {
+    const f = E.comet.t / 3.2,
+      x = -0.1 * cssW + f * 1.2 * cssW,
+      y = Math.max((HUD_TOP.low || 0) + 14 * s, cssH * (0.08 + 0.1 * f)), // (under the HUD's top lines)
+      r = 7 * s;
+    const gr = g.createLinearGradient(x - 160 * s, y - 30 * s, x, y);
+    gr.addColorStop(0, "rgba(159,232,255,0)");
+    gr.addColorStop(1, "rgba(220,248,255,0.9)");
+    g.strokeStyle = gr;
+    g.lineWidth = r * 1.6;
+    g.lineCap = "round";
+    g.beginPath();
+    g.moveTo(x - 160 * s, y - 30 * s);
+    g.lineTo(x, y);
+    g.stroke();
+    g.fillStyle = "#ffffff";
+    g.beginPath();
+    g.arc(x, y, r, 0, Math.PI * 2);
+    g.fill();
+  }
+  // the space whale swims across the top, singing
+  if (E.whale > 0) {
+    const x = E.whaleX * cssW * 1.3,
+      y0w = Math.max((HUD_TOP.low || 0) + 36 * s, cssH * 0.14),
+      y = y0w + 6 * s * bob(1.5),
+      px = Math.round(Math.min(64, 46 * s * TXT()));
+    g.font = px + "px sans-serif";
+    g.globalAlpha = Math.min(1, E.whale);
+    g.fillText("🐋", x, y);
+    g.font = Math.round(px * 0.45) + "px sans-serif";
+    g.fillStyle = "#8fd0ff";
+    for (let i = 0; i < 3; i++)
+      g.fillText("♪", x - px * (0.6 + i * 0.5), y - px * (0.3 + 0.25 * Math.sin(G.time * 3 + i)));
+    g.globalAlpha = 1;
+  }
+  // a little UFO crossing the sky
+  if (E.fly) {
+    const f = E.fly.t / E.fly.d,
+      x = E.fly.dir > 0 ? -40 * s + f * (cssW + 80 * s) : cssW + 40 * s - f * (cssW + 80 * s),
+      y =
+        Math.max((HUD_TOP.low || 0) + 14 * s, cssH * E.fly.y) + (COMFORT.calm ? 0 : 8 * s * Math.sin(f * 12));
+    g.font = Math.round(22 * s) + "px sans-serif";
+    g.globalAlpha = 0.85;
+    g.fillText("🛸", x, y);
+    g.globalAlpha = 1;
+  }
+  // the returnees' little sign
+  for (const c of customers)
+    if (c.returnee && c.state === "walk") icon("👽", c.lane, c.x, -112 + 4 * bob(3), 26);
+}
 // =====================================================================================
 //  HOLIDAYS (v2026.10.03q): CHRISTMAS, HALLOWEEN and the Polish ALL SAINTS' DAY dress up the whole pub.
 //  They come by the calendar - or pick one on the menu (HOLIDAY) to see it any time of year.
@@ -87928,7 +88343,7 @@ function levelOfTour(of) {
     inTour = ((lv - 1) % LAST_LEVEL) + 1;
   return (tour > 1 ? "TOUR " + tour + "  ·  " : "") + "LEVEL " + inTour + of + LAST_LEVEL;
 }
-const GAME_VERSION = "v2.0.3",
+const GAME_VERSION = "v2.0.4",
   GAME_DATE = "27.11.2026",
   VERSION_TEXT = GAME_VERSION + "  ·  " + GAME_DATE;
 const FB = '"Chakra Petch", "Segoe UI", sans-serif';
@@ -96031,6 +96446,16 @@ profWire();
 //  the game, and where the motion capture, the folk songs and the fonts come from. Both from the menu at any time.
 // =====================================================================================
 const NEWS = [
+  {
+    ver: "v2.0.4",
+    title: "CLOSE ENCOUNTERS",
+    items: [
+      "UFO ABDUCTIONS! SERVE THE CUSTOMER BEFORE THE BEAM TAKES THEM - OR THEY COME BACK FROM SPACE",
+      "TELEPATHY: FOR A WHILE EVERY ORDER FOLLOWS THE FLAVOUR YOU'RE HOLDING",
+      "COMETS, THE SINGING SPACE WHALE, HYPNO-WAVES AND METEOR SHOWERS",
+      "MORE UFOS: VISITORS DROP BY MORE OFTEN, AND LITTLE SAUCERS CROSS THE SKY",
+    ],
+  },
   {
     ver: "v2.0.3",
     title: "A CHALLENGE AT EVERY STOP",

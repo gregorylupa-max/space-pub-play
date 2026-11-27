@@ -8116,6 +8116,28 @@ const DICT_ROWS                             = [
     "DAAGLIKSE UITDAGING KLAAR!  +2 STERRE",
     "WYZWANIE DNIA UKOŃCZONE!  +2 GWIAZDKI",
   ],
+  // (v1.9.0) CALM MEANS CALM
+  ["CALM MEANS CALM", "KALM BETEKEN KALM", "SPOKÓJ ZNACZY SPOKÓJ"],
+  [
+    "CALM MODE: THE BAR NO LONGER SHAKES AT FULL STRENGTH",
+    "KALM MODUS: DIE KROEG SKUD NIE MEER OP VOLLE STERKTE NIE",
+    "TRYB SPOKOJNY: BAR NIE TRZĘSIE SIĘ JUŻ Z PEŁNĄ SIŁĄ",
+  ],
+  [
+    "CALM MODE: NO STAR RUSH INTO THE FIRST STOP, A GENTLER SEA, A STEADY FEVER GLOW",
+    "KALM MODUS: GEEN STERRESTORM NA DIE EERSTE HALTE NIE, 'N SAGTER SEE, 'N BESTENDIGE KOORSGLOED",
+    "TRYB SPOKOJNY: BEZ GWIEZDNEGO PĘDU DO PIERWSZEGO PRZYSTANKU, ŁAGODNIEJSZE MORZE, SPOKOJNA POŚWIATA GORĄCZKI",
+  ],
+  [
+    "ON A PHONE: FLAWLESS, THE ENDING'S TITLE AND THE ARRIVAL LINES KEEP CLEAR AND READABLE",
+    "OP 'N FOON: FOUTLOOS, DIE EINDE SE TITEL EN DIE AANKOMSREËLS BLY OOP EN LEESBAAR",
+    "NA TELEFONIE: BEZBŁĘDNIE, TYTUŁ ZAKOŃCZENIA I LINIJKI PRZYBYCIA SĄ WIDOCZNE I CZYTELNE",
+  ],
+  [
+    "A CUP MATCH NO LONGER RAISES THE HI ON THE SCORE BAR",
+    "'N BEKERWEDSTRYD VERHOOG NIE MEER DIE HOOGSTE TELLING OP DIE TELLINGSTREEP NIE",
+    "MECZ TURNIEJOWY NIE PODNOSI JUŻ REKORDU NA PASKU WYNIKU",
+  ],
   // (v1.8.99) THE WHOLE STORY
   ["THE WHOLE STORY", "DIE HELE STORIE", "CAŁA HISTORIA"],
   [
@@ -13461,7 +13483,11 @@ const KM
 // (v1.8.99) THE GAME'S OWN KEYS CAN'T BE TAKEN: P (pause), F (full screen), M / N (sound, music), T (pour mode), V, G,
 // L, C (the view settings), E / R (flavour) - chosen for an action, they no longer did their own job (with P taken,
 // the mini-games and the bonus round could not be paused from the keyboard at all)
+// (v1.9.0: and Tab, Backspace and K - moving between buttons, and skipping a mini-game)
 const KM_RESERVED = [
+  "Tab",
+  "Backspace",
+  "KeyK",
   "KeyP",
   "KeyF",
   "KeyM",
@@ -20489,7 +20515,7 @@ function update(dt) {
       if (!t.v) {
         G.showT = 3.6;
         if (!demo) callout("TIP!  HOLO-SHOW TIME", "#ffc34d", 2.2);
-        for (let i = 0; i < 30; i++) confetti(PW / 2 + rnd(-200, 200), 60, 1);
+        for (let i = 0; i < (COMFORT.calm ? 10 : 30); i++) confetti(PW / 2 + rnd(-200, 200), 60, 1); // (v1.9.0: fewer in calm mode)
       } // (the big tip, from a regular who stayed for more, starts the holo-show)
       else if (!demo) worldText("THANKS FOR THE GOOD SERVICE!", { lane: t.lane, x: t.x }, "#ffd24d"); // (a good-service tip: just the coins)
       coins(t.lane, t.x, LY(t.lane, t.x) - 10, t.v ? 6 : 12);
@@ -21549,7 +21575,9 @@ function updateTwist(dt, demo) {
     // (v1.5.15: a bigger roll - GL liked it: about half as much again, with a slower second swell on top, so it never
     // quite repeats; a little less with motion turned down)
     G.roll =
-      (Math.sin(G.time * 0.7) * 0.022 + Math.sin(G.time * 0.31 + 1.3) * 0.009) * K * Math.max(0.5, MOTION());
+      (Math.sin(G.time * 0.7) * 0.022 + Math.sin(G.time * 0.31 + 1.3) * 0.009) *
+      K *
+      (COMFORT.calm ? 0.25 : Math.max(0.5, MOTION())); // (v1.9.0: a quarter of the roll in calm mode - it was half)
     if (W.next <= 0 && !W.b) {
       W.b = { t: 0 };
       if (!demo) callout(say || "BIG WAVE!", "#7ae8f0", 1.2);
@@ -21557,7 +21585,12 @@ function updateTwist(dt, demo) {
     }
     if (W.b) {
       W.b.t += dt;
-      G.roll += Math.sin(W.b.t * 4) * 0.03 * K * Math.max(0, 1 - W.b.t / 2.2) * Math.max(0.5, MOTION());
+      G.roll +=
+        Math.sin(W.b.t * 4) *
+        0.03 *
+        K *
+        Math.max(0, 1 - W.b.t / 2.2) *
+        (COMFORT.calm ? 0.25 : Math.max(0.5, MOTION()));
       if (W.b.t > 1.1 && !W.b.hit) {
         W.b.hit = true;
         G.shake = 8;
@@ -23385,8 +23418,9 @@ function updateEnding(dt) {
   }
   if (t > 13) {
     // the party: fireworks, confetti, the crowd singing
-    if (Math.random() < dt * 1.6) fireworks(1);
-    if (Math.random() < dt * 22) confetti(rnd(-60, PW + 60), -20, 1);
+    // (v1.9.0: fewer in calm mode - one rocket at a time was capped, but not how often)
+    if (Math.random() < dt * (COMFORT.calm ? 0.4 : 1.6)) fireworks(1);
+    if (Math.random() < dt * (COMFORT.calm ? 6 : 22)) confetti(rnd(-60, PW + 60), -20, 1);
     if (t > 14 && once("chant")) sfx("fanchant");
     if (t > 19 && once("horn")) sfx("vuvuzela");
     if (t > 23 && once("chant2")) sfx("fanchant");
@@ -24805,7 +24839,9 @@ function draw() {
   CAM.x += (ctx2 - CAM.x) * Math.min(1, cdt * 3);
   CAM.y += (cty - CAM.y) * Math.min(1, cdt * 3);
   push();
-  translate(ox + sx + CAM.x, oy + sy + CAM.y);
+  // (v1.9.0: SHK, the shake as calm mode, kid mode and MOTION turn it down - the raw sx / sy shook the bar, the people
+  //  and the glasses at full strength in calm mode, over a background that hardly moved)
+  translate(ox + SHK[0] + CAM.x, oy + SHK[1] + CAM.y);
   if (MIRW) {
     translate(PW, 0);
     scaleXY(-1, 1);
@@ -43650,7 +43686,9 @@ function drawTwistFx(t) {
     rect(L, T, w, h, withA(c, 0.12 * k));
     for (let i = 0; i < 24; i++) {
       const y = T + hash(i * 3.3) * h,
-        x = L + ((((hash(i * 7.7) * w + (G.warp > 0 ? -t * 1600 : -t * 90)) % w) + w) % w);
+        x =
+          L +
+          ((((hash(i * 7.7) * w + (G.warp > 0 ? -t * (COMFORT.calm ? 300 : 1600) : -t * 90)) % w) + w) % w); // (v1.9.0: slower in calm mode)
       streak(x + (G.warp > 0 ? 120 : 30), y, x, y, 2, withA(c, 0.35 * k)); // (v1.4.68: tapered streaks, not flat sticks)
     }
     R.setAdd(false);
@@ -71915,7 +71953,8 @@ function funHud(g, s, t, fD, sx, sy) {
     g.globalAlpha = Math.max(0, Math.min(a, ek));
     // (v1.8.13) READABLE ON A SMALL PHONE HELD UPRIGHT: the game's scale made the lines under the stop's name about five
     // pixels high on a 360-wide screen - on a tall screen they're drawn bigger and further apart (there's room below)
-    const kA = cssH > cssW * 1.2 ? Math.max(1, 9.5 / (12 * s)) : 1;
+    // (v1.9.0: on a phone held sideways too - its lines were about 8 pixels - and with the TEXT SIZE setting, within reason)
+    const kA = Math.min(1.7, Math.max(1, 9.5 / (12 * s)) * TXT());
     // (v1.8.27: in ENDLESS the heading said "LEVEL 1 OF 40" - there is no 40th in endless; it names the mode instead)
     neon2(
       g,
@@ -73287,8 +73326,10 @@ function drawApproach(t) {
   // the WARP: stars streaming out from the middle of the screen while the place grows from a speck into view
   // (straight after a hyperspace trip the bar just eases into orbit - the place is already there, settling into view;
   //  only at the very start of a game does it warp in from a speck)
-  const zoom = A0.orbit ? 0.82 + 0.18 * ease(clamp(A0.t / 1.2, 0, 1)) : ease(clamp(A0.t / 1.0, 0, 1)),
-    warp = A0.orbit ? 0 : 1 - zoom,
+  // (v1.9.0: in calm mode the first stop eases into view like the others - no rush of 160 star streaks from a speck)
+  const soft = A0.orbit || COMFORT.calm,
+    zoom = soft ? 0.82 + 0.18 * ease(clamp(A0.t / 1.2, 0, 1)) : ease(clamp(A0.t / 1.0, 0, 1)),
+    warp = soft ? 0 : 1 - zoom,
     cx0 = L + w * 0.5,
     cy0 = T + h * 0.5;
   if (warp > 0.01) {
@@ -82434,11 +82475,27 @@ function flawHud(g, s, pad, fD) {
   g.font = fD(13); // (the display face - a little wider than the HI line's, so it errs on the safe side)
   const hiW = g.measureText(T("HI 0000000")).width;
   g.font = fD(11);
-  g.fillText(
-    "FLAWLESS x" + flawMul().toFixed(1),
-    Math.max(pad + (cssW < 700 ? 96 : 150) * s, pad + hiW + 10 * s),
-    pad + 24 * s
-  );
+  const txt = "FLAWLESS x" + flawMul().toFixed(1);
+  let x = Math.max(pad + (cssW < 700 ? 96 : 150) * s, pad + hiW + 10 * s),
+    y = pad + 24 * s;
+  // (v1.9.0) CLEAR OF THE CORNER BUTTONS: on a phone held upright, at the biggest text size, it ran under Full screen /
+  //  Pause - there it goes after the HOLY row instead, a line lower, at the left
+  if (HUDB.l && x + g.measureText(txt).width > HUDB.l - 6 * s && y < HUDB.b && modesTxt()) {
+    // (in TIME ATTACK, BOSS RUSH and ENDLESS their own line is down there - so it stays and is squeezed to fit instead)
+    //  (never below three-quarters size - then just "x1.3", or nothing: the stop's clear still says it)
+    const room = HUDB.l - 6 * s - x,
+      tw = g.measureText(txt).width,
+      short = "x" + flawMul().toFixed(1);
+    if (tw * 0.75 <= room) g.font = fD((11 * room) / tw);
+    else if (g.measureText(short).width <= room) return void g.fillText(short, x, y);
+    else return;
+  } else if (HUDB.l && x + g.measureText(txt).width > HUDB.l - 6 * s && y < HUDB.b) {
+    HUDB.flawDown = G.time; // (the power-up timers below make room - hud.ts)
+    x = pad;
+    y = pad + 24 * s + 16 * s * TXT(); // (under the HI line...)
+    if (HUDB.holyY > 0 && G.time - (HUDB.holyT ?? -9) < 0.5) y = Math.max(y, HUDB.holyY + 22 * s); // (...and the HOLY row)
+  }
+  g.fillText(txt, x, y);
 }
 // =====================================================================================
 //  THE GALAXY MAP (v2026.10.04ao, the two galaxies v2026.10.04ar): the whole tour on one page - drawn on the two real
@@ -86165,8 +86222,8 @@ function levelOfTour(of) {
     inTour = ((lv - 1) % LAST_LEVEL) + 1;
   return (tour > 1 ? "TOUR " + tour + "  ·  " : "") + "LEVEL " + inTour + of + LAST_LEVEL;
 }
-const GAME_VERSION = "v1.8.99",
-  GAME_DATE = "26.11.2026",
+const GAME_VERSION = "v1.9.0",
+  GAME_DATE = "27.11.2026",
   VERSION_TEXT = GAME_VERSION + "  ·  " + GAME_DATE;
 const FB = '"Chakra Petch", "Segoe UI", sans-serif';
 let FD = '"Bungee", "Impact", sans-serif';
@@ -86249,6 +86306,8 @@ const HUDB = {
   sign: null, // (v1.5.66: the box the sign's words fill this frame - {l, r, t, b} - or null)
   holyR: 0,
   holyY: 0,
+  holyT: -9, // (v1.9.0: when the HOLY row was last drawn)
+  flawDown: -9, // (v1.9.0: when FLAWLESS last moved under the HI line)
   teamR: 0, // (v1.8.89: the right end of the two players' TEAM / VERSUS line)
 };
 let signX = 0,
@@ -87023,8 +87082,9 @@ function drawHud(fps) {
     // a rainbow glow around the screen while the fever lasts
     g.save();
     g.lineWidth = 6 * s;
-    g.strokeStyle = "hsl(" + ((t * 300) % 360) + " 95% 62%)";
-    g.globalAlpha = 0.45 + 0.25 * Math.sin(t * 10);
+    // (v1.9.0: in calm mode a slow, steady glow - the colours cycled 300 degrees a second and it pulsed)
+    g.strokeStyle = "hsl(" + ((t * (COMFORT.calm ? 30 : 300)) % 360) + " 95% 62%)";
+    g.globalAlpha = COMFORT.calm ? 0.45 : 0.45 + 0.25 * Math.sin(t * 10);
     g.shadowColor = g.strokeStyle;
     g.shadowBlur = 20 * s * GLOW();
     g.strokeRect(3, 3, cssW - 6, cssH - 6);
@@ -87105,12 +87165,14 @@ function drawHud(fps) {
       g.shadowBlur = 0;
       g.font = fB(13);
       g.fillStyle = "#b9a8b8";
+      // (v1.9.0: not raised by a cup match - it isn't saved as a high score since v1.8.94, so the HI shouldn't climb)
+      const hiNow = CUP.match
+        ? G.hi || 0
+        : Math.max(G.hi || 0, G.score || 0, G.versus ? Math.max(P1.score || 0, P2.score || 0) : 0);
       const teamLine =
         (G.versus ? "VERSUS" : "TEAM " + String(G.score).padStart(6, "0")) +
         "   HI " +
-        String(
-          Math.max(G.hi || 0, G.score || 0, G.versus ? Math.max(P1.score || 0, P2.score || 0) : 0)
-        ).padStart(6, "0");
+        String(hiNow).padStart(6, "0");
       HUDB.teamR = pad + g.measureText(T(teamLine)).width; // (v1.8.89: where it ends - FLAWLESS goes after it, coach.ts)
       g.fillText(
         // (v1.6.13) THE TEAM'S SCORE: in co-op the two of you play for one score (it's what goes in the high scores),
@@ -87118,9 +87180,7 @@ function drawHud(fps) {
         (G.versus ? "VERSUS" : "TEAM " + String(G.score).padStart(6, "0")) +
           "   HI " +
           // (v1.8.87: as one player's does - the best of the saved HI and this game's; it lagged behind the score)
-          String(
-            Math.max(G.hi || 0, G.score || 0, G.versus ? Math.max(P1.score || 0, P2.score || 0) : 0)
-          ).padStart(6, "0"),
+          String(hiNow).padStart(6, "0"),
         pad,
         pad + 62 * s
       );
@@ -87244,6 +87304,7 @@ function drawHud(fps) {
         x0 += 20 * s;
       }
       HUDB.holyY = y0; // (v1.8.76: and its height - a "DID YOU KNOW?" keeps clear of it, see keepRightOf)
+      HUDB.holyT = G.time; // (v1.9.0: when it was last drawn - FLAWLESS steps under it only while it's there)
       HUDB.holyR = x0; // (v1.5.33: where the HOLY row ends on the right - an announcement on a phone keeps clear of it)
     }
     // active power-ups: icon colour, name and a shrinking timer bar
@@ -87260,6 +87321,7 @@ function drawHud(fps) {
             (twoP() ? 104 : 72) * s +
             (holyOn ? 20 * s : 0) +
             (modesTxt() ? (ghostDiff() !== null ? 36 : 20) * s : 0) +
+            (G.time - (HUDB.flawDown ?? -9) < 0.5 ? 16 * s : 0) + // (v1.9.0: under FLAWLESS when it moved down - coach.ts)
             row * 22 * s;
         g.fillStyle = P0.c;
         g.globalAlpha = left < 2 && Math.sin(t * 18) < 0 ? 0.4 : 1;
@@ -88099,19 +88161,23 @@ function drawEndingHud(g, s, fD, fB) {
         : names[0] + " & " + names[1]
       : names[0];
     const ta = fin ? Math.min(1, Math.max(0, (25.5 - et) * 2)) : Math.min(1, Math.max(0, (23.6 - et) * 2)); // (the title makes way for the credits)
+    // (v1.9.0: below the corner buttons - on a phone held sideways the title ran under Full screen / Start over)
+    const tbEl = $("topbtns"),
+      tby = tbEl && !tbEl.hidden ? tbEl.getBoundingClientRect().bottom : 0,
+      ty0 = Math.max(cssH * (tall ? 0.1 : 0.09), tby + 16 * s);
     big(
       "BEST BARTENDER" + (two && !G.versus ? "S" : "") + (fin ? " IN THE UNIVERSE" : " IN THE MILKY WAY"),
-      cssH * (tall ? 0.1 : 0.09),
+      ty0,
       "#ffd24d",
       30,
       Math.min(ta, pt * 2)
     );
-    big(title, cssH * (tall ? 0.1 : 0.09) + 44 * s, "#ff5fa8", 26, Math.min(ta, (pt - 0.6) * 2));
+    big(title, ty0 + 44 * s, "#ff5fa8", 26, Math.min(ta, (pt - 0.6) * 2));
     const drop = small(
       fin
         ? "You served every bar in TWO galaxies - and the Grand Festival will never forget your shakes!" // (v1.7.0: the story's end)
         : "You served every bar in our home galaxy. Next stop: ANDROMEDA!",
-      cssH * (tall ? 0.1 : 0.09) + 80 * s,
+      ty0 + 80 * s,
       "#fff3e2",
       15,
       Math.min(ta, (pt - 1.2) * 2)
@@ -88124,7 +88190,7 @@ function drawEndingHud(g, s, fD, fB) {
           : G.queenDone
             ? "The Queen of Andromeda made you her guests of honour!"
             : "Even Chef Grumblo of the Black Hole Bistro asked for your recipe!",
-        cssH * (tall ? 0.1 : 0.09) + 104 * s + drop * 1.2, // (v1.8.15: lower when the line above took two rows)
+        ty0 + 104 * s + drop * 1.2, // (v1.8.15: lower when the line above took two rows)
         "#ffe98a",
         14,
         Math.min(ta, (pt - 1.8) * 2)
@@ -94153,6 +94219,16 @@ profWire();
 //  the game, and where the motion capture, the folk songs and the fonts come from. Both from the menu at any time.
 // =====================================================================================
 const NEWS = [
+  {
+    ver: "v1.9.0",
+    title: "CALM MEANS CALM",
+    items: [
+      "CALM MODE: THE BAR NO LONGER SHAKES AT FULL STRENGTH",
+      "CALM MODE: NO STAR RUSH INTO THE FIRST STOP, A GENTLER SEA, A STEADY FEVER GLOW",
+      "ON A PHONE: FLAWLESS, THE ENDING'S TITLE AND THE ARRIVAL LINES KEEP CLEAR AND READABLE",
+      "A CUP MATCH NO LONGER RAISES THE HI ON THE SCORE BAR",
+    ],
+  },
   {
     ver: "v1.8.99",
     title: "THE WHOLE STORY",

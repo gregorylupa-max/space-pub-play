@@ -634,7 +634,7 @@ body.touch2p #touch .tp button.holy { width: 60px; height: 60px; font-size: 11px
     <h3>YOU LOSE A LIFE WHEN</h3>
     <p data-tr>&bull; a customer reaches your end of the bar &bull; a shake slides off the far end with nobody to catch it &bull; an empty glass slides back past you and smashes. So: serve them early, never slide a shake down an empty bar, and run to catch the empties!</p>
     <h3>RUNNING, TIPS AND TURBO</h3>
-    <p data-tr>Run along the bar (left/right). Customers served quickly often leave a <b>TIP</b> on the counter - run up and grab it for bonus points. Tap a direction twice - or double-click / double-tap ahead of you on your bar - for a <b>TURBO</b> run. Change bar with up/down, 1-4, or a tap/click on it.</p>
+    <p data-tr>Run along the bar (left/right - on a phone held upright, the ▲ ▼ RUN buttons). Customers served quickly often leave a <b>TIP</b> on the counter - run up and grab it for bonus points. Tap a direction twice - or double-click / double-tap ahead of you on your bar - for a <b>TURBO</b> run. Change bar with up/down (upright: the ◀ ▶ BAR buttons), 1-4, or a tap/click on it.</p>
     <h3>FLAVOURS</h3>
     <p data-tr>Some customers show the flavour they'd like in a bubble over their head - strawberry, chocolate or mint. Switch your flavour (<b>E</b>, a <b>right-click</b>, SELECT on a controller, or the FLAVOUR words / button) and serve the one they asked for: <b>+150</b>. The wrong flavour is still fine - just no bonus. Don't want to bother? Turn <b>FLAVOUR ORDERS</b> off in SETTINGS: then nobody asks, and there's just one flavour to pour.</p>
     <h3>SPECIAL GUESTS</h3>
@@ -649,7 +649,7 @@ body.touch2p #touch .tp button.holy { width: 60px; height: 60px; font-size: 11px
     <h3>HOUSE COCKTAILS</h3>
     <p data-tr>Every stop has its own <b>HOUSE COCKTAIL</b>. Every 10 serves the house special is ready: your next pour comes out as the stop's cocktail. Whoever catches it tips big and leaves happy - land it on the customer with the gold <b>★ COCKTAIL</b> sign for double. Each new one goes into your <b>COCKTAIL MENU</b> in the Trophy Room.</p>
     <h3>POWER-UPS, STARS AND COINS</h3>
-    <p data-tr>Grab the <b>power-ups</b> that appear on the bar when it's quiet. Each level gives up to three <b>stars</b>, and you earn <b>coins</b> to spend in the COIN SHOP (PLAY MORE). RELAX MODE has no losing and no hurry.</p>
+    <p data-tr>Grab the <b>power-ups</b> that appear on the bar when it's quiet - all but the sleepy <b>DECAF</b> cup, which slows you down. Each level gives up to three <b>stars</b>, and you earn <b>coins</b> to spend in the COIN SHOP (PLAY MORE). RELAX MODE has no losing and no hurry.</p>
   </div>
   <button id="howBack" class="primary">DONE <kbd>Esc</kbd></button>
 </section>
@@ -3753,6 +3753,7 @@ const DICT_ROWS                             = [
   ["PLAY AGAIN", "SPEEL WEER", "ZAGRAJ JESZCZE RAZ"],
   ["MENU", "KIESLYS", "MENU"],
   ["SHARE ▶", "DEEL ▶", "UDOSTĘPNIJ ▶"],
+  ["QUIT", "OPGEHOU", "PRZERWANO"], // (v1.9.6: a high score's line on tour 2+ - "TOUR 2  ·  LEVEL 5  ·  QUIT" - is translated piece by piece)
   ["BACK TO THE CUP ▶", "TERUG NA DIE BEKER ▶", "WRÓĆ DO TURNIEJU ▶"],
   ["RUN", "HARDLOOP", "BIEG"],
   ["BAR", "TOONBANK", "LADA"], // (v1.8.83: the touch arrows' other label - it stayed English)
@@ -6904,9 +6905,9 @@ const DICT_ROWS                             = [
     "• klient dojdzie do twojego końca lady • koktajl spadnie z drugiego końca, bo nikt go nie złapał • pusta szklanka prześlizgnie się obok ciebie i rozbije. Więc: obsługuj wcześnie, nigdy nie pchaj koktajlu po pustej ladzie i biegnij łapać puste szklanki!",
   ],
   [
-    "Run along the bar (left/right). Customers served quickly often leave a <b>TIP</b> on the counter - run up and grab it for bonus points. Tap a direction twice - or double-click / double-tap ahead of you on your bar - for a <b>TURBO</b> run. Change bar with up/down, 1-4, or a tap/click on it.",
-    "Hardloop langs die toonbank (links/regs). Klante wat vinnig bedien word, los dikwels 'n <b>FOOI</b> op die toonbank - hardloop op en gryp dit vir bonuspunte. Druk 'n rigting twee keer - of dubbelklik / dubbeltik voor jou op jou toonbank - vir 'n <b>TURBO</b>-lopie. Wissel toonbank met op/af, 1-4, of 'n tik/klik daarop.",
-    "Biegaj wzdłuż lady (lewo/prawo). Szybko obsłużeni klienci często zostawiają na ladzie <b>NAPIWEK</b> - podbiegnij i złap go po dodatkowe punkty. Naciśnij kierunek dwa razy - albo kliknij / stuknij dwukrotnie przed sobą na swojej ladzie - a pobiegniesz w trybie <b>TURBO</b>. Zmieniaj ladę strzałkami góra/dół, klawiszami 1-4 albo stuknięciem/kliknięciem.",
+    "Run along the bar (left/right - on a phone held upright, the ▲ ▼ RUN buttons). Customers served quickly often leave a <b>TIP</b> on the counter - run up and grab it for bonus points. Tap a direction twice - or double-click / double-tap ahead of you on your bar - for a <b>TURBO</b> run. Change bar with up/down (upright: the ◀ ▶ BAR buttons), 1-4, or a tap/click on it.",
+    "Hardloop langs die toonbank (links/regs - op 'n foon wat regop gehou word, die ▲ ▼ HARDLOOP-knoppies). Klante wat vinnig bedien word, los dikwels 'n <b>FOOI</b> op die toonbank - hardloop op en gryp dit vir bonuspunte. Druk 'n rigting twee keer - of dubbelklik / dubbeltik voor jou op jou toonbank - vir 'n <b>TURBO</b>-lopie. Wissel toonbank met op/af (regop: die ◀ ▶ TOONBANK-knoppies), 1-4, of 'n tik/klik daarop.",
+    "Biegaj wzdłuż lady (lewo/prawo - na telefonie trzymanym pionowo przyciskami ▲ ▼ BIEG). Szybko obsłużeni klienci często zostawiają na ladzie <b>NAPIWEK</b> - podbiegnij i złap go po dodatkowe punkty. Naciśnij kierunek dwa razy - albo kliknij / stuknij dwukrotnie przed sobą na swojej ladzie - a pobiegniesz w trybie <b>TURBO</b>. Zmieniaj ladę strzałkami góra/dół (pionowo: przyciskami ◀ ▶ LADA), klawiszami 1-4 albo stuknięciem/kliknięciem.",
   ],
   [
     "Some customers show the flavour they'd like in a bubble over their head - strawberry, chocolate or mint. Switch your flavour (<b>E</b>, a <b>right-click</b>, SELECT on a controller, or the FLAVOUR words / button) and serve the one they asked for: <b>+150</b>. The wrong flavour is still fine - just no bonus. Don't want to bother? Turn <b>FLAVOUR ORDERS</b> off in SETTINGS: then nobody asks, and there's just one flavour to pour.",
@@ -6930,9 +6931,9 @@ const DICT_ROWS                             = [
     "Nie obsługuj <b>diabłów, demonów ani wampirów</b>: podbiegnij wzdłuż lady i wskaż im drzwi albo wyślij WODĘ ŚWIĘCONĄ (H) / pokaż KRZYŻ (Q). <b>Anioły</b> są warte potrójne punkty. Klienci ze <b>stoperem</b> się spieszą - obsłuż ich szybko, a dostaniesz premię. <b>Protest</b> ucicha, gdy obsłużysz demonstrantów.",
   ],
   [
-    "Grab the <b>power-ups</b> that appear on the bar when it's quiet. Each level gives up to three <b>stars</b>, and you earn <b>coins</b> to spend in the COIN SHOP (PLAY MORE). RELAX MODE has no losing and no hurry.",
-    "Gryp die <b>kragte</b> wat op die toonbank verskyn as dit stil is. Elke vlak gee tot drie <b>sterre</b>, en jy verdien <b>munte</b> om in die MUNTWINKEL (SPEEL MEER) te spandeer. In ONTSPAN kan jy nie verloor nie en is daar geen haaste nie.",
-    "Łap <b>bonusy</b>, które pojawiają się na ladzie, gdy jest spokojnie. Każdy poziom daje do trzech <b>gwiazdek</b>, a do tego zarabiasz <b>monety</b> do wydania w SKLEPIE (WIĘCEJ GRANIA). W TRYBIE RELAKSU nie da się przegrać i nie ma pośpiechu.",
+    "Grab the <b>power-ups</b> that appear on the bar when it's quiet - all but the sleepy <b>DECAF</b> cup, which slows you down. Each level gives up to three <b>stars</b>, and you earn <b>coins</b> to spend in the COIN SHOP (PLAY MORE). RELAX MODE has no losing and no hurry.",
+    "Gryp die <b>kragte</b> wat op die toonbank verskyn as dit stil is - almal behalwe die slaperige <b>KAFEÏENVRY</b>-koppie, wat jou stadiger maak. Elke vlak gee tot drie <b>sterre</b>, en jy verdien <b>munte</b> om in die MUNTWINKEL (SPEEL MEER) te spandeer. In ONTSPAN kan jy nie verloor nie en is daar geen haaste nie.",
+    "Łap <b>bonusy</b>, które pojawiają się na ladzie, gdy jest spokojnie - wszystkie oprócz sennego kubka <b>BEZKOFEINOWEJ</b>, który cię spowalnia. Każdy poziom daje do trzech <b>gwiazdek</b>, a do tego zarabiasz <b>monety</b> do wydania w SKLEPIE (WIĘCEJ GRANIA). W TRYBIE RELAKSU nie da się przegrać i nie ma pośpiechu.",
   ],
   ["Drawing on:", "Teken met:", "Rysuje:"],
   ["the processor", "die verwerker", "procesor"],
@@ -8115,6 +8116,28 @@ const DICT_ROWS                             = [
     "DAILY CHALLENGE DONE!  +2 STARS",
     "DAAGLIKSE UITDAGING KLAAR!  +2 STERRE",
     "WYZWANIE DNIA UKOŃCZONE!  +2 GWIAZDKI",
+  ],
+  // (v1.9.6) SMOOTH EDGES
+  ["SMOOTH EDGES", "GLADDE RANDE", "GŁADKIE KRAWĘDZIE"],
+  [
+    "NEW PLAYERS: THE TIPS NAME THE RIGHT BUTTONS, HOW TO PLAY FITS A PHONE HELD UPRIGHT",
+    "NUWE SPELERS: DIE WENKE NOEM DIE REGTE KNOPPIES, HOE OM TE SPEEL PAS BY 'N FOON WAT REGOP GEHOU WORD",
+    "NOWI GRACZE: WSKAZÓWKI PODAJĄ WŁAŚCIWE PRZYCISKI, JAK GRAĆ PASUJE DO TELEFONU TRZYMANEGO PIONOWO",
+  ],
+  [
+    "KEYBOARD: ENTER IN PLAY NO LONGER PRESSES START OVER, A HELD KEY PRESSES A BUTTON ONCE",
+    "SLEUTELBORD: ENTER IN DIE SPEL DRUK NIE MEER HERBEGIN NIE, 'N INGEDRUKTE SLEUTEL DRUK 'N KNOPPIE NET EEN KEER",
+    "KLAWIATURA: ENTER W GRZE NIE NACISKA JUŻ OD NOWA, PRZYTRZYMANY KLAWISZ NACISKA PRZYCISK TYLKO RAZ",
+  ],
+  [
+    "TWO PLAYERS ON ONE TOUCH SCREEN: EACH FINGER STEERS ONLY ITS OWN PLAYER",
+    "TWEE SPELERS OP EEN RAAKSKERM: ELKE VINGER STUUR NET SY EIE SPELER",
+    "DWÓCH GRACZY NA JEDNYM EKRANIE DOTYKOWYM: KAŻDY PALEC STERUJE TYLKO SWOIM GRACZEM",
+  ],
+  [
+    "THE CUP: AN EIGHT-PLAYER BRACKET YOU CAN READ ON A PHONE, AND SHARE SHARES THE RIGHT GAME",
+    "DIE BEKER: 'N AGT-SPELER-SKEMA WAT JY OP 'N FOON KAN LEES, EN DEEL DEEL DIE REGTE SPEL",
+    "PUCHAR: DRABINKA OŚMIU GRACZY CZYTELNA NA TELEFONIE, A UDOSTĘPNIJ UDOSTĘPNIA WŁAŚCIWĄ GRĘ",
   ],
   // (v1.9.5) EVERYONE GETS THEIR TURN
   ["EVERYONE GETS THEIR TURN", "ELKEEN KRY SY BEURT", "KAŻDY DOCZEKA SIĘ SWOJEJ KOLEI"],
@@ -13174,6 +13197,11 @@ const DICT_PAT                             = [
     "PUSTA SZKLANKA! IDŹ DO TEGO BARU ($1)",
   ],
   [
+    /^A TIP! GO TO THAT BAR \((.+)\)$/,
+    "'N FOOI! GAAN NA DAARDIE TOONBANK ($1)",
+    "NAPIWEK! IDŹ DO TEGO BARU ($1)",
+  ], // (v1.9.6: the tip on another bar)
+  [
     /^A TIP! RUN (.+) TO GRAB IT$/,
     "'N FOOITJIE! HARDLOOP $1 OM DIT TE VAT",
     "NAPIWEK! BIEGNIJ $1, BY GO ZŁAPAĆ",
@@ -13196,7 +13224,14 @@ const DICT_PAT                             = [
   [/^★ (\d+) OF (\d+) STARS(.*)$/, "★ $1 VAN $2 STERRE$3", "★ $1 Z $2 GWIAZDEK$3"],
   [/^(.+) WINS THE MATCH!(.*)$/, "$1 WEN DIE WEDSTRYD!$2", "$1 WYGRYWA MECZ!$2"],
   [/^(.+) WINS THE ASTRO CAFÉ CUP!$/, "$1 WEN DIE ASTRO CAFÉ-BEKER!", "$1 WYGRYWA PUCHAR ASTRO CAFÉ!"],
-  [/^♪ THE BAND PLAYS: (.+) - A (.+)$/, "♪ DIE ORKES SPEEL: $1", "♪ ZESPÓŁ GRA: $1"],
+  // (v1.9.6: the words sent with a shared card)
+  [/^(.+) won the Astro Café Cup!$/, "$1 het die Astro Café-beker gewen!", "$1 wygrywa Puchar Astro Café!"],
+  [
+    /^I scored (\d+) in Astro Café! Can you beat it\?$/,
+    "Ek het $1 in Astro Café behaal! Kan jy dit klop?",
+    "Mój wynik w Astro Café: $1! Pobijesz go?",
+  ],
+  [/^♪ THE BAND PLAYS: (.+) - AN? (.+)$/, "♪ DIE ORKES SPEEL: $1", "♪ ZESPÓŁ GRA: $1"],
   [/^BEST (\d+)$/, "BESTE $1", "REKORD $1"],
   [
     /^Everyone keeps their own stars, hats, pets, coins, stickers and trophies\. Playing now: (.+)\.$/,
@@ -13432,9 +13467,17 @@ let T_KEEP              = new Set();
 // (only while the cup is up - its screen open or a match on; a player named MENU or BACK left those words in English
 //  everywhere else for as long as the bracket was saved. cup.ts sets it once everything is loaded)
 let T_KEEP_ON = () => false;
+// (v1.9.6: lines worked out while the cup was up kept its players' names in English afterwards - "FLAVOUR: MINT" with a
+//  player called MINT; the cache starts again whenever the cup comes up or goes)
+let T_KEEP_WAS = false;
 function T(s) {
   if (LANG === "en" || typeof s !== "string" || !s) return s;
-  if (T_KEEP.size && T_KEEP_ON() && T_KEEP.has(s.trim())) return s;
+  const kon = !!(T_KEEP.size && T_KEEP_ON());
+  if (kon !== T_KEEP_WAS) {
+    T_KEEP_WAS = kon;
+    TCACHE.clear();
+  }
+  if (kon && T_KEEP.has(s.trim())) return s;
   // (v1.8.43) NOTHING TO TRANSLATE WITHOUT LETTERS: the rolling score, the timers and the counters are new strings
   //  almost every frame - each went through the cache, a trim and up to 250 patterns, and in a long endless game they
   //  filled the cache until it was emptied, so every fixed word had to be looked up again. (No row is without letters)
@@ -13733,6 +13776,9 @@ window.addEventListener("keyup", kmDoor, true);
 function buildKeys() {
   const list = $("kmList");
   if (!list) return;
+  // (v1.9.6: the cursor stays on the row being changed - rebuilt, it jumped back to the first row every time)
+  const ae = document.activeElement                      ,
+    had = ae && list.contains(ae) ? ae.dataset.km : null;
   list.innerHTML = "";
   for (const p of [1, 2]) {
     const h = document.createElement("div");
@@ -13754,6 +13800,7 @@ function buildKeys() {
             (mine && mine !== KM_DEFAULT[p][a] ? "  ·  (USUAL: " + keyName(KM_DEFAULT[p][a]) + ")" : "")) +
         "</small>";
       if (KM.wait === id) b.className = "on";
+      b.dataset.km = id;
       b.onclick = () => {
         KM.wait = id;
         KM.no = false;
@@ -13761,6 +13808,7 @@ function buildKeys() {
         buildKeys();
       };
       list.appendChild(b);
+      if (had === id) b.focus();
     }
   }
 }
@@ -16519,6 +16567,7 @@ function quitScore() {
     n: String(store.get("name", "GL")).slice(0, 3) || "GL",
     s: G.score,
     sec:
+      (G.loop ? "TOUR " + (G.loop + 1) + "  ·  " : "") + // (v1.9.6: the tour too, as GAME OVER and the share card say)
       "LEVEL " +
       G.level +
       (difficulty !== "normal" ? " " + DIFFS[difficulty].name : "") +
@@ -16715,6 +16764,14 @@ window.addEventListener("keydown", (e) => {
   const held = e.ctrlKey || e.metaKey;
   const k = e.code;
   if (["Space", "ArrowUp", "ArrowDown", "ArrowLeft", "ArrowRight"].includes(k)) e.preventDefault();
+  // (v1.9.6) ENTER POURS, IT DOESN'T PRESS BUTTONS: in play Enter (player 2's POUR, and a POUR key alone) also clicked the
+  //  corner button that had the focus - two pours on "Start over" restarted the whole game, on "Full screen" every pour
+  //  flipped it - and Tab walked the focus onto them
+  if (
+    ["Enter", "NumpadEnter", "Tab"].includes(k) &&
+    ["play", "lost", "clear", "bonus", "mini", "approach", "jump"].includes(G.state)
+  )
+    e.preventDefault();
   if (e.repeat) {
     keys.add(k);
     return;
@@ -20576,6 +20633,7 @@ function update(dt) {
       SCORER = null;
       sfx("grab", m.x);
       sparkle(m.x, LY(m.lane, m.x) - 14, [1, 0.4, 0.4, 1], 6, m.lane);
+      coachCaught(demo); // (v1.9.6: a catch all the same - "CATCH THE EMPTY GLASS!" went on pointing at glasses it took)
       continue;
     } // the magnet pulls empties straight to you
     const cw = DF().catchW || 1,
@@ -23589,9 +23647,10 @@ function updateEnding(dt) {
     // (v1.9.0: fewer in calm mode - one rocket at a time was capped, but not how often)
     if (Math.random() < dt * (COMFORT.calm ? 0.4 : 1.6)) fireworks(1);
     if (Math.random() < dt * (COMFORT.calm ? 6 : 22)) confetti(rnd(-60, PW + 60), -20, 1);
-    if (t > 14 && once("chant")) sfx("fanchant");
-    if (t > 19 && once("horn")) sfx("vuvuzela");
-    if (t > 23 && once("chant2")) sfx("fanchant");
+    // (v1.9.6: not all at once - a skip to the credits jumps to 25 s, and the three went off in the same frame)
+    if (t > 14 && t < 25 && once("chant")) sfx("fanchant");
+    if (t > 19 && t < 25 && once("horn")) sfx("vuvuzela");
+    if (t > 23 && t < 25 && once("chant2")) sfx("fanchant");
     for (const p of E.ps) p.dance = (t - 13 + p.id * 0.4) % 4.8; // dance, then hold the trophy up high
   }
   // (v1.4.41) after "THANK YOU FOR PLAYING" the game no longer rolls straight on into a new tour: it waits, the party
@@ -23679,6 +23738,7 @@ function gameOver() {
   //  continue with its own little stage 1-3, and contRemember now leaves cup matches out)
   contRemember();
   const cupM = cupResult(); // (a cup match: the result goes into the bracket)
+  G.overCup = !!cupM; // (v1.9.6: for SHARE - menus.ts)
   say("GAME OVER", true);
   if (twoP()) G.score = G.versus ? Math.max(P1.score, P2.score) : P1.score + P2.score;
   // (v1.8.94: a cup match is a party game - it went into the high-score table, HI and YOUR RECORDS; leaving it out, as
@@ -68126,7 +68186,12 @@ function funLevelStart() {
     if (G.folk !== null && !G.demo) used.push(G.folk);
     if (G.folk !== null && !G.demo)
       G.callouts.push({
-        text: "♪ THE BAND PLAYS: " + TRACKS[G.folk].title + " - A " + TRACKS[G.folk].where.toUpperCase(),
+        // (v1.9.6: "AN AFRIKAANS FOLK SONG" - it said "A AFRIKAANS")
+        text:
+          "♪ THE BAND PLAYS: " +
+          TRACKS[G.folk].title +
+          (/^[AEIOU]/i.test(TRACKS[G.folk].where) ? " - AN " : " - A ") +
+          TRACKS[G.folk].where.toUpperCase(),
         c: "#9fd0ff",
         life: 3,
         max: 3,
@@ -69577,6 +69642,9 @@ function funMiniUpdate(dt) {
       it.y += it.vy * dt;
       it.rot += it.spin * dt;
       if (it.vx) it.x += it.vx * dt;
+      // (v1.9.6: the phone turned upright mid-round - what was already falling at the wide view's edges was off the
+      //  screen and out of the glass's reach; it slides into the tall view's range)
+      else if (MINI_TALL() && !it.inG) it.x = clamp(it.x, 200, 760);
       if (it.inG) {
         // (v1.4.46) while it sinks it drifts into the exact spot it will rest on in the pile - no jump when it lands
         const ni = M.pile.length,
@@ -69800,6 +69868,7 @@ function miniDuelStep(M, dt, inp0) {
     it.y += it.vy * dt;
     it.rot += it.spin * dt;
     if (it.vx) it.x += it.vx * dt;
+    else if (MINI_TALL() && !it.inG) it.x = clamp(it.x, 200, 760); // (v1.9.6: as in the one-player game - a turned phone)
     if (it.inG) {
       const gl = M.gl[it.g],
         ni = gl.pile.length,
@@ -73033,9 +73102,13 @@ function funPointer(type, x, y) {
   if (G.state === "mini" && G.mini) {
     const M = G.mini;
     if (type === "down") {
-      M.ptr = true;
-      M.px = x;
-      M.py = y;
+      // (v1.9.6: not with the two players' touch pads up - a finger on the picture (player 2's side, or a gap between
+      //  the pad's buttons) steered player 1's glass or stork, as it did the bartender before v1.8.34)
+      if (!(M.gl && document.body.classList.contains("touch2p"))) {
+        M.ptr = true;
+        M.px = x;
+        M.py = y;
+      }
       if (M.phase === "intro" && M.t > 0.8) {
         M.phase = "go";
         M.t = 0;
@@ -82597,8 +82670,11 @@ function coachHud(g, s, t, fD, sx, sy) {
       return [sx(p[0]), sy(p[1])];
     };
   let tip = null;
+  // (v1.9.6: in ONE-BUTTON mode the helper does the running and the bar changes - only the POUR tip is any use there;
+  //  the others asked for keys the game ignores in that mode)
+  const one = oneBtn();
   const waiting = customers.filter((c) => c.state === "walk" && !c.type.evil);
-  if (!d.catch && empties.length) {
+  if (!one && !d.catch && empties.length) {
     const m = empties.reduce((a, b) => (b.x > a.x ? b : a));
     tip = {
       lane: m.lane,
@@ -82606,9 +82682,18 @@ function coachHud(g, s, t, fD, sx, sy) {
       y: LY(m.lane, m.x) - 40,
       text: m.lane === P0.lane ? "CATCH THE EMPTY GLASS!" : "AN EMPTY GLASS! GO TO THAT BAR (" + K.bars + ")",
     };
-  } else if (!d.tip && tips.length) {
+  } else if (!one && !d.tip && tips.length) {
     const tp = tips[0];
-    tip = { lane: tp.lane, x: tp.x, y: LY(tp.lane, tp.x) - 40, text: "A TIP! RUN " + K.run + " TO GRAB IT" };
+    // (v1.9.6: on another bar it said RUN all the same - first the bar, as the empty glass's tip does)
+    tip = {
+      lane: tp.lane,
+      x: tp.x,
+      y: LY(tp.lane, tp.x) - 40,
+      text:
+        tp.lane === P0.lane
+          ? "A TIP! RUN " + K.run + " TO GRAB IT"
+          : "A TIP! GO TO THAT BAR (" + K.bars + ")",
+    };
   } else if (!d.pour && waiting.some((c) => c.lane === P0.lane) && !P0.pouring)
     tip = {
       lane: P0.lane,
@@ -82618,7 +82703,7 @@ function coachHud(g, s, t, fD, sx, sy) {
       //  IT" was the very first thing a new player was told, and it was wrong there)
       text: K.pour + (pourMode === "tap" || oneBtn() ? " - IT SLIDES BY ITSELF" : " - LET GO TO SLIDE IT"),
     };
-  else if (d.pour && !d.lane && waiting.length && !waiting.some((c) => c.lane === P0.lane)) {
+  else if (!one && d.pour && !d.lane && waiting.length && !waiting.some((c) => c.lane === P0.lane)) {
     const c = waiting[0];
     tip = {
       lane: c.lane,
@@ -83491,7 +83576,7 @@ const CUP
   back: false,
 };
 // (v1.8.94) the players' names, kept out of the translation (lang.ts T_KEEP) - in full and as the score bar shows them
-const cupCut = (nm        ) => nm.slice(0, 6);
+const cupCut = (nm        ) => Array.from(nm).slice(0, 6).join(""); // (v1.9.6: whole letters - an emoji was cut in half)
 function cupKeep() {
   T_KEEP = new Set();
   for (const nm of (CUP.s && CUP.s.names) || []) {
@@ -83718,6 +83803,17 @@ function drawCupPanel() {
     dpr = Math.min(2, window.devicePixelRatio || 1);
   if (!r.width) return;
   c.hidden = !CUP.s;
+  // (v1.9.6) ROOM FOR EIGHT ON A PHONE: held upright the bracket was 129 px tall - four first-round matches each got
+  //  28 px, and the second name of every match hid under the first. A narrow bracket with four first matches is taller
+  {
+    const want = CUP.s && CUP.s.rounds[0].length > 2 && r.width < 560 ? "16/11" : "";
+    // (kept in a flag - the browser reads the style back as "16 / 11", which never equalled "16/11")
+    if ((c.dataset.ar || "") !== want) {
+      c.dataset.ar = want;
+      c.style.aspectRatio = want;
+      return; // (measured again next frame, at its new height)
+    }
+  }
   if (c.width !== Math.round(r.width * dpr) || c.height !== Math.round(r.height * dpr)) {
     c.width = Math.round(r.width * dpr);
     c.height = Math.round(r.height * dpr);
@@ -83735,7 +83831,8 @@ function drawCupPanel() {
   const R = S.rounds.length,
     colW = w / (R + 1),
     nx = cupNext(),
-    fs = Math.max(10, Math.min(15, colW / 9));
+    // (v1.9.6: and no bigger than the first round's rows allow - the two names of a match overlapped)
+    fs = Math.max(8, Math.min(15, colW / 9, (h - 24) / S.rounds[0].length / 2 / 1.9));
   g.textBaseline = "middle";
   g.lineCap = "round";
   // each round is a column; each match a pair of name boxes, with lines joining the winner to the next round
@@ -83773,8 +83870,14 @@ function drawCupPanel() {
         g.stroke();
         g.font = "700 " + Math.round(fs) + "px " + FB;
         g.fillStyle = lost ? "rgba(255,243,226,.35)" : won ? "#ffd24d" : "#fff3e2";
-        g.fillText(nm || (r0 === 0 ? "— bye —" : "?"), x + 8, y);
         const sc = which ? m.sb : m.sa;
+        // (v1.9.6: a long name kept inside its box, clear of the score - it ran over the lines and the score)
+        g.fillText(
+          nm || (r0 === 0 ? "— bye —" : "?"),
+          x + 8,
+          y,
+          Math.max(10, bw - 14 - (sc !== undefined ? fs * 2 : 0))
+        );
         if (sc !== undefined) {
           g.textAlign = "right";
           g.font = "600 " + Math.round(fs * 0.8) + "px " + FB;
@@ -85589,6 +85692,8 @@ window.addEventListener("keydown", (e) => {
     e.code === "Escape" &&
     !ATTRACT.on &&
     G.state === "menu" &&
+    $("bye").hidden && // (v1.9.6: not behind the goodbye screen or the crash box)
+    $("crash").hidden &&
     !CS.open &&
     !JB.open &&
     !SB.open &&
@@ -86516,7 +86621,7 @@ function levelOfTour(of) {
     inTour = ((lv - 1) % LAST_LEVEL) + 1;
   return (tour > 1 ? "TOUR " + tour + "  ·  " : "") + "LEVEL " + inTour + of + LAST_LEVEL;
 }
-const GAME_VERSION = "v1.9.5",
+const GAME_VERSION = "v1.9.6",
   GAME_DATE = "27.11.2026",
   VERSION_TEXT = GAME_VERSION + "  ·  " + GAME_DATE;
 const FB = '"Chakra Petch", "Segoe UI", sans-serif';
@@ -86576,17 +86681,24 @@ function touchTops() {
     for (const gp of Array.from(el.querySelectorAll(".grp"))) {
       const rc = (gp               ).getBoundingClientRect();
       if (rc.height <= 0) continue;
+      // (v1.9.6: the two-player pads' P1 / P2 labels sit above their group - GL and the tune's name were drawn over "P2")
+      const who = gp.querySelector(".who")                      ,
+        wt = who ? who.getBoundingClientRect() : null,
+        top = wt && wt.height > 0 ? Math.min(rc.top, wt.top) : rc.top;
       if (rc.left + rc.width / 2 < cssW / 2) {
-        TOUCHB.l = Math.min(TOUCHB.l, rc.top);
+        TOUCHB.l = Math.min(TOUCHB.l, top);
         TOUCHB.lx = Math.max(TOUCHB.lx, rc.right);
       } else {
-        TOUCHB.r = Math.min(TOUCHB.r, rc.top);
+        TOUCHB.r = Math.min(TOUCHB.r, top);
         TOUCHB.rx = Math.min(TOUCHB.rx, rc.left);
       }
     }
   }
   return TOUCHB;
 }
+// (v1.9.6: where a versus player's lives must end on the score row at y - the corner buttons' left edge while the row
+//  is level with them (HUDB.right is the screen's edge on a narrow screen, where the one-player lives go under them))
+const vEdge = (y) => (HUDB.l > 0 && !$("topbtns").hidden && y - 6 < (HUDB.b || 0) ? HUDB.l - 6 : HUDB.right);
 const HUDB = {
   w: 0,
   t: -9,
@@ -87444,6 +87556,15 @@ function drawHud(fps) {
           g.font = fB(11);
           g.globalAlpha = 1; // (bright, though the rest of an out player's line is faded)
           g.fillText("BACK IN " + G.rejoinLeft, pad + 170 * s, y + 3 * s);
+          g.font = fD(18);
+        } else if (G.versus && vEdge(y) && pad + 170 * s + 6 * 9 * s + 22 * s > vEdge(y)) {
+          // (v1.9.6) LIVES THAT FIT: on a narrow phone held upright the bars ran under the "Full screen" button - there,
+          //  one bar and "x3", pulled in to clear the corner buttons
+          g.font = fB(11);
+          const lt = "x" + Math.max(0, p.lives),
+            lx0 = Math.min(pad + 170 * s, vEdge(y) - g.measureText(lt).width - 10 * s);
+          g.fillRect(lx0, y + 4 * s, 6 * s, 12 * s);
+          g.fillText(lt, lx0 + 8 * s, y + 3 * s);
           g.font = fD(18);
         } else if (G.versus) {
           for (let i = 0; i < Math.min(6, Math.max(0, p.lives)); i++) {
@@ -93416,6 +93537,7 @@ $("nameForm").addEventListener("submit", (e) => {
     s: G.score,
     // (v1.6.6: and a team's score says so - CO-OP or VERSUS - so it isn't taken for one player's)
     sec:
+      (G.loop ? "TOUR " + (G.loop + 1) + "  ·  " : "") + // (v1.9.6: the tour too, as GAME OVER and the share card say)
       "LEVEL " +
       G.level +
       (difficulty !== "normal" ? " " + DIFFS[difficulty].name : "") +
@@ -93536,7 +93658,9 @@ $("oAgain").onclick = () => {
   if (G.state === "menu") startGame(); // (in case that mode couldn't start - an ordinary game, as before)
 };
 $("oMenu").onclick = toMenu;
-$("oShare").onclick = () => shareNow(G.versus && CUP.s && CUP.s.champ && !cupNext() ? "cup" : "game");
+// (v1.9.6: the cup's card only after the cup match itself - a finished cup is kept until NEW CUP, and every later
+//  versus game shared its old champion instead of this game's score)
+$("oShare").onclick = () => shareNow(G.overCup && CUP.s && CUP.s.champ && !cupNext() ? "cup" : "game");
 // EXIT GAME: press it twice (so a stray press never quits). In the Windows app it closes the window; in a browser a page
 // can't close its own tab, so the game goes quiet and says goodbye - with a way back in.
 function exitGame() {
@@ -94234,6 +94358,13 @@ window.addEventListener(
     }
     if (!panelNav() || (e.target && ["INPUT", "TEXTAREA"].includes((e.target          ).tagName))) return;
     const k = e.code;
+    // (v1.9.6: Esc on the goodbye screen goes back to the game, as B does - it started the demo behind it)
+    if (k === "Escape" && !$("bye").hidden) {
+      e.preventDefault();
+      e.stopImmediatePropagation();
+      $("byeBack").click();
+      return;
+    }
     if (k === "KeyO" && G.state === "menu" && !JB.open && !SB.open && !WD.open && !fpAny()) {
       // (v1.4.6) O: the Solar System tour, the Sun to Pluto
       e.preventDefault();
@@ -94294,6 +94425,9 @@ window.addEventListener(
     ) {
       e.preventDefault();
       e.stopImmediatePropagation();
+      // (v1.9.6: once per press - held, it pressed the button 30 times a second, past every "press again to confirm":
+      //  NEW CUP, START OVER, EXIT GAME, the shop's buys)
+      if (e.repeat) return;
       navPress();
       return;
     }
@@ -94565,6 +94699,16 @@ profWire();
 //  the game, and where the motion capture, the folk songs and the fonts come from. Both from the menu at any time.
 // =====================================================================================
 const NEWS = [
+  {
+    ver: "v1.9.6",
+    title: "SMOOTH EDGES",
+    items: [
+      "NEW PLAYERS: THE TIPS NAME THE RIGHT BUTTONS, HOW TO PLAY FITS A PHONE HELD UPRIGHT",
+      "KEYBOARD: ENTER IN PLAY NO LONGER PRESSES START OVER, A HELD KEY PRESSES A BUTTON ONCE",
+      "TWO PLAYERS ON ONE TOUCH SCREEN: EACH FINGER STEERS ONLY ITS OWN PLAYER",
+      "THE CUP: AN EIGHT-PLAYER BRACKET YOU CAN READ ON A PHONE, AND SHARE SHARES THE RIGHT GAME",
+    ],
+  },
   {
     ver: "v1.9.5",
     title: "EVERYONE GETS THEIR TURN",
@@ -97881,8 +98025,8 @@ async function shareNow(kind                ) {
     name = "astro-cafe-" + (kind === "cup" ? "cup" : String(G.score)) + ".png",
     text =
       kind === "cup" && CUP.s && CUP.s.champ
-        ? CUP.s.champ + " won the Astro Café Cup!"
-        : "I scored " + G.score + " in Astro Café! Can you beat it?";
+        ? T(CUP.s.champ + " won the Astro Café Cup!")
+        : T("I scored " + G.score + " in Astro Café! Can you beat it?"); // (v1.9.6: in the game's language)
   try {
     const file = new File([blob], name, { type: "image/png" });
     if (navigator.canShare && navigator.canShare({ files: [file] })) {
@@ -98082,6 +98226,9 @@ let slowN = 0,
 const PAUSE_DRAW = { n: 0 }; // (v1.8.43: see frameWork)
 function autoQuality(f) {
   if (document.hidden) return;
+  // (v1.9.6) A NEW SCREEN DENSITY: the window dragged onto a sharper monitor fires no resize (the size in CSS pixels
+  //  stays the same) - the game stayed at the old density, stretched and blurred, until the window was resized
+  if (Math.min(2, window.devicePixelRatio || 1) !== hdpr) resize();
   if (qualCool > 0) {
     qualCool--;
     return;

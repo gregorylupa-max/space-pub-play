@@ -8116,6 +8116,28 @@ const DICT_ROWS                             = [
     "DAAGLIKSE UITDAGING KLAAR!  +2 STERRE",
     "WYZWANIE DNIA UKOŃCZONE!  +2 GWIAZDKI",
   ],
+  // (v1.9.4) FAIR PLAY AGAIN
+  ["FAIR PLAY AGAIN", "WEER EERLIKE SPEL", "ZNOWU UCZCIWA GRA"],
+  [
+    "CONTROLLERS: START ON THE BARTENDER CHOICE PICKS, AN UNPLUGGED PAD LEAVES THE OTHER ITS OWN PLAYER",
+    "BEHEERDERS: START BY DIE KROEGMAN-KEUSE KIES, 'N UITGEPROPTE BEHEERDER LAAT DIE ANDER BY SY EIE SPELER",
+    "PADY: START PRZY WYBORZE BARMANA WYBIERA, A PO ODŁĄCZENIU JEDNEGO PADA DRUGI ZOSTAJE PRZY SWOIM GRACZU",
+  ],
+  [
+    "CONTINUE NO LONGER HANDS OUT A PILE OF EXTRA LIVES",
+    "GAAN VOORT DEEL NIE MEER 'N HOOP EKSTRA LEWENS UIT NIE",
+    "DALEJ NIE ROZDAJE JUŻ STOSU DODATKOWYCH ŻYĆ",
+  ],
+  [
+    "TIME ATTACK, BOSS RUSH AND ENDLESS: YOUR SHOP ITEMS WAIT FOR A NORMAL GAME",
+    "TYDJAG, BAAS-STORMLOOP EN EINDLOSE SPEL: JOU WINKELITEMS WAG VIR 'N GEWONE SPEL",
+    "NA CZAS, SZTURM NA BOSSÓW I TRYB BEZ KOŃCA: TWOJE RZECZY ZE SKLEPU CZEKAJĄ NA ZWYKŁĄ GRĘ",
+  ],
+  [
+    "MUSIC OFF STAYS OFF AFTER THE MUSIC BOX, AND THE PILGRIMS' BELLS RING ONCE",
+    "MUSIEK AF BLY AF NA DIE MUSIEKDOOS, EN DIE PELGRIMS SE KLOKKE LUI NET EEN KEER",
+    "WYŁĄCZONA MUZYKA ZOSTAJE WYŁĄCZONA PO SZAFIE GRAJĄCEJ, A DZWONY PIELGRZYMÓW BIJĄ RAZ",
+  ],
   // (v1.9.3) SAID PROPERLY
   ["SAID PROPERLY", "REG GESÊ", "POWIEDZIANE JAK NALEŻY"],
   [
@@ -16240,7 +16262,14 @@ function resetGame(demo) {
   G.score = 0;
   // (v1.8.75: the secret code's life, in the next game only - and not in a mode with its own records or a cup match)
   const eggLife =
-    !demo && EGG.lifeNext && !G.taNext && !G.brushNext && !G.dailyNext && !G.endlessNext && !CUP.match; // (v1.8.76: nor endless - it keeps a record)
+    !demo &&
+    EGG.lifeNext &&
+    !G.taNext &&
+    !G.brushNext &&
+    !G.dailyNext &&
+    !G.endlessNext &&
+    !CUP.match &&
+    !G.freeNext; // (v1.8.76: nor endless - it keeps a record) (v1.9.4: nor RELAX - lives are endless there, it was used up for nothing)
   if (eggLife) EGG.lifeNext = false;
   G.lives = DF().lives + (eggLife ? 1 : 0);
   G.nextLife = 25000;
@@ -16454,7 +16483,8 @@ function quitScore() {
   const live = ["play", "paused", "lost", "clear", "bonus", "mini", "approach", "story", "jump"].includes(
     G.state
   );
-  if (!live || G.demo || CUP.match || !(G.score > 0)) return;
+  // (v1.9.4: nor RELAX - it can't be lost or cleared, so its score went in the table as a NORMAL game and became HI)
+  if (!live || G.demo || CUP.match || G.free || !(G.score > 0)) return;
   const table = hiScores();
   // (and the HI score with it - the next GAME OVER called a smaller score a NEW HIGH SCORE)
   if (G.score > (G.hi || 0)) {
@@ -16806,9 +16836,29 @@ window.addEventListener("blur", () => {
 });
 // (v1.8.53) A CONTROLLER UNPLUGGED (or its battery flat) PAUSES THE GAME: it played on - and with two players the other
 // controller, now the only one, was read as player 2's, so player 1 steered the wrong bartender and lost lives
-window.addEventListener("gamepaddisconnected", () => {
+window.addEventListener("gamepaddisconnected", (ev) => {
   if (["play", "lost", "clear", "bonus", "mini"].includes(G.state)) pause(true);
+  // (v1.9.4) AND THE CONTROLLER LEFT IS STILL ITS OWN PLAYER'S: with two players a lone controller was read as player
+  //  2's - so when player 2's went, player 1's steered player 2 after RESUME. The one that's left keeps its player
+  //  (controllers are paired by their order: the lower index is player 1's)
+  try {
+    const left = Array.from(navigator.getGamepads ? navigator.getGamepads() : []).filter(
+      (p) => p && p.connected
+    );
+    if (G.players === 2 && left.length === 1 && ev && ev.gamepad) G.padP1 = left[0].index < ev.gamepad.index;
+  } catch (e) {}
 });
+// (v1.9.4) A MENU START ONLY STARTS A GAME FROM THE MENU ITSELF: on the bartender choice it began the stop with the
+//  panel still open over the bar (player 2 never got to pick, and the pad's arrows then moved the panel's focus
+//  too), and on the goodbye screen it started a game behind it
+const padMenuFree = () =>
+  !JB.open &&
+  !SB.open &&
+  !WD.open &&
+  !fpAny() &&
+  !(typeof CS !== "undefined" && CS.open) &&
+  $("bye").hidden &&
+  $("crash").hidden;
 // (v1.8.53: when the game last changed screen - B / SELECT only skip a mini-game or bonus round after half a second)
 const PADSTATE = { s: "", t: 0 };
 const anyKey = (...ks) => ks.some((k) => keys.has(k));
@@ -16884,12 +16934,14 @@ function readPads() {
     if (pd.down && !pd.downW) edge.down = true;
     if (pd.left && !pd.leftW) edge.left = true;
     if (pd.right && !pd.rightW) edge.right = true;
-    if (b(3) && !pd.y) edge.holy = true;
+    // (v1.9.4: Y and B count in play only, like Q and H - pressed on the life-lost screen they waited, and the cross
+    //  and holy water went off by themselves as play resumed)
+    if (b(3) && !pd.y && G.state === "play") edge.holy = true;
     pd.y = b(3); // Y / triangle: holy water
     if (b(1) && !pd.bx) {
       if (G.state === "mini" || G.state === "bonus") {
         if (skipOK) skipMini();
-      } else edge.cross = true;
+      } else if (G.state === "play") edge.cross = true;
     }
     pd.bx = b(1); // B / circle: show the cross (in a mini-game: skip it)
     if (b(8) && !pd.bk && (G.state === "mini" || G.state === "bonus") && !b(9) && skipOK) skipMini();
@@ -16919,6 +16971,9 @@ function readPads() {
   } // that press just woke up the menu
   const pourW = pad.pourW || pad2.pourW;
   if (two && !pad2.start) DROPIN.hold = false; // (v1.6.4: let go since joining - from the frame player 2's pad is read)
+  // (v1.9.4: whose START it was, before the two are merged - for the two-player bartender choice below)
+  const st1 = pad.start && !pad.startW,
+    st2 = pad2.start && !pad2.startW && !DROPIN.hold;
   if (pad2.start && !pad2.startW && !DROPIN.hold) pad.start = true;
   // high-score initials with a controller, the arcade way: D-pad up / down changes the letter, left / right moves,
   // A goes to the next letter (and saves after the last), START saves straight away, B goes back a letter
@@ -16972,7 +17027,7 @@ function readPads() {
     if (e("b")) navBack();
     if (e("a") && performance.now() - NAVT.a > 250 && (NAVT.a = performance.now())) {
       if (!navPress()) {
-        if (G.state === "menu" && !JB.open && !SB.open && !WD.open && !fpAny()) startGame();
+        if (G.state === "menu" && padMenuFree()) startGame();
         else if (G.state === "paused") pause(false);
         else if (G.state === "over") beginGame();
       }
@@ -16984,7 +17039,14 @@ function readPads() {
       closeJukebox();
       return;
     }
-    if (pad.start && !pad.startW && G.state === "menu" && !JB.open && !SB.open && !WD.open && !fpAny()) {
+    if (pad.start && !pad.startW && G.state === "menu" && CS.open) {
+      // (v1.9.4: with a pad each, only the player whose turn it is - the other's START picked for them)
+      if (csTwo && !(CS.who ? st2 : st1)) return;
+      if (CS.start) confirmChar();
+      else closeChars();
+      return;
+    }
+    if (pad.start && !pad.startW && G.state === "menu" && padMenuFree()) {
       startGame();
       return;
     }
@@ -40995,9 +41057,25 @@ function basilica(S) {
     }
     R.setAdd(false);
   } // a hymn rising
-  if (!(G.demo || G.state === "menu") && ph > 12 && ph < 12 + 1 / 30 && typeof sfx === "function") {
+  // (v1.9.4: once a showing, and not while paused - G.time stops there, so paused inside the window the bells rang
+  //  on every frame and piled up; they go through the BACKGROUND volume like the rest of the window's sounds)
+  if (
+    !(G.demo || G.state === "menu" || G.state === "paused") &&
+    ph > 12 &&
+    ph < 12 + 1 / 30 &&
+    typeof sfx === "function" &&
+    G.time - PILG_SND.bells > 2
+  ) {
+    PILG_SND.bells = G.time;
     bgSfx("pilgrims", bx);
-    if (typeof SPACE_FX !== "undefined" && AC) SPACE_FX.bells(fxOut(bx), AC.currentTime);
+    if (typeof SPACE_FX !== "undefined" && AC && !muted && VOL.bg * VOL.fx > 0) {
+      SFX_BG = true;
+      try {
+        SPACE_FX.bells(fxOut(bx), AC.currentTime);
+      } finally {
+        SFX_BG = false;
+      }
+    }
   }
 }
 
@@ -52402,8 +52480,14 @@ function pilgrimage(L, Rr, y0, yb, t, k, tall, ph) {
     }
   for (const p of outside)
     drawPilgrim(p.x, p.y, k * 0.58 * p.sc, t, p.i, (ph - p.i * 0.7) * 5.2, fade * p.al);
-  if (!demo && ph > 11.9 && ph < 12.0 + 1 / 30 && typeof sfx === "function") bgSfx("pilgrims", sx);
+  // (v1.9.4: once a showing - the 0.13 s window played the chime on every frame in it, 6-16 times on top of itself)
+  if (!demo && ph > 11.9 && ph < 12.0 + 1 / 30 && typeof sfx === "function" && G.time - PILG_SND.chime > 2) {
+    PILG_SND.chime = G.time;
+    bgSfx("pilgrims", sx);
+  }
 }
+// (v1.9.4) THE PILGRIMS' CHIME AND BELLS, ONCE EACH: when they last rang (game time)
+const PILG_SND = { chime: -99, bells: -99 };
 // a lantern ship: a curved hull with planks and gold trim, a mast with a bellied sail, a lantern swinging at the prow,
 // hooded travellers aboard, and a trail of sparkles behind it
 function drawPilgrimShip(x, y, k, t, i, fade, f, A, W2) {
@@ -67574,10 +67658,11 @@ const FLAV_NAMES = ["STRAWBERRY", "CHOCOLATE", "MINT"],
 const oneBtn = () => !!store.get("onebtn", false) && !twoP();
 // ---- COINS and STATS ----
 const fCoins = () => store.get("coins", 0) | 0;
-function addCoins(n, why ) {
+function addCoins(n, why , keep = false) {
   if (G.demo || n <= 0) return;
   // (v1.8.48: RELAX mode, where nothing can go wrong, pays half - it paid full coins for ever, risk-free)
-  if (G.free) n = Math.ceil(n / 2);
+  // (v1.9.4: "keep" - a once-ever prize pays in full, as addCoinsQuiet's does)
+  if (G.free && !keep) n = Math.ceil(n / 2);
   store.set("coins", fCoins() + n);
   fStat("coinsEarned", n);
   if (why)
@@ -67932,14 +68017,17 @@ function funGameStart() {
   if (!G.demo) {
     // (v1.8.48) A SHOP ITEM ONLY WHERE IT CAN HELP: in RELAX and KID MODE no life is ever lost, and in VERSUS each player
     //  counts their own lives - the EXTRA LIFE (and in relax and kid mode the LUCKY CHARM) was used up for nothing there
-    const canLose = !G.free && !DF().kid;
+    // (v1.9.4: nor in Time Attack, Boss Rush or Endless - modes with their own records, kept fair to the old ones as
+    //  the secret code's life and the house specials are; the items wait in your pocket for a normal game)
+    const recRun = !!(G.taNext || G.brushNext || G.endless);
+    const canLose = !G.free && !DF().kid && !recRun;
     if (canLose && !G.versus && invUse("life")) {
       G.lives++;
       G.startMsg = "EXTRA LIFE FROM THE SHOP!";
     }
     // (v1.8.55: in VERSUS neither - the ROCKET SHOES only ever sped up player 1, and the LUCKY CHARM saved whoever
     //  slipped first, the opponent too)
-    G.shoes = !G.versus && invUse("shoes");
+    G.shoes = !G.versus && !recRun && invUse("shoes");
     // (v1.8.69: the LUCKY CHARM is only taken from your pocket when it actually saves you - taken at the start, an unused
     //  one was simply gone after the game)
     G.charm = canLose && !G.versus && (inv().save || 0) > 0;
@@ -68433,7 +68521,7 @@ function ckServed(c, s, demo) {
     M[k] = 1;
     store.set("cocktails", M);
     fStat("cocktails", Object.keys(M).length, true);
-    addCoins(10, "NEW COCKTAIL");
+    addCoins(10, "NEW COCKTAIL", true); // (v1.9.4: once ever - not halved in RELAX, like the mixer's new cocktail)
     G.callouts.push({ text: "NEW FOR YOUR COCKTAIL MENU!", c: "#5ff5c8", life: 2.6, max: 2.6, sub: true });
   }
   sfx("tip", c.x);
@@ -72394,6 +72482,10 @@ function continueGame() {
   G.score = c.g;
   P1.score = c.p1;
   P2.score = c.p2;
+  // (v1.9.4) THE EXTRA-LIFE MARKS CATCH UP WITH THE SCORE: startGame set them back to 25,000, so the first serve after
+  //  CONTINUE paid every mark between there and the score kept - seven lives at 300,000, and again every game over
+  for (const p of [P1, P2])
+    while (p.score >= p.nextLife) p.nextLife += difficulty === "easy" ? 160000 : 40000;
   G.contN = (c.n || 0) + 1;
   // (v1.8.19) the festival stamps and races won come back too - and continuing at the Grand Festival itself, the
   // stamps are paid out now (the stop began before they were back)
@@ -83751,7 +83843,8 @@ function modesUpdate(dt) {
     ghostRecord(dt);
   }
   if (G.brush && playing) G.brush.t += dt;
-  if (G.ta && G.ta.endT > 0) {
+  // (v1.9.4: not while paused - the finish's 3 seconds ran on under the pause menu, and GAME OVER replaced it)
+  if (G.ta && G.ta.endT > 0 && G.state !== "paused") {
     G.ta.endT -= dt;
     if (G.ta.endT <= 0 && G.state !== "over") {
       G.ta.endT = -1;
@@ -86043,7 +86136,8 @@ window.addEventListener(
         // (v1.8.76: anywhere in a game - between scenes too - it's this game's)
         if (
           ["play", "lost", "clear", "bonus", "mini", "approach", "story", "jump"].includes(G.state) &&
-          !G.demo
+          !G.demo &&
+          !(G.ta || G.brush || G.endless || G.daily || G.free || CUP.match) // (v1.9.4: not in a record run, the daily, RELAX or a cup match - as the next-game life; it waits for the next game)
         )
           G.lives++;
         else EGG.lifeNext = true;
@@ -86345,7 +86439,7 @@ function levelOfTour(of) {
     inTour = ((lv - 1) % LAST_LEVEL) + 1;
   return (tour > 1 ? "TOUR " + tour + "  ·  " : "") + "LEVEL " + inTour + of + LAST_LEVEL;
 }
-const GAME_VERSION = "v1.9.3",
+const GAME_VERSION = "v1.9.4",
   GAME_DATE = "27.11.2026",
   VERSION_TEXT = GAME_VERSION + "  ·  " + GAME_DATE;
 const FB = '"Chakra Petch", "Segoe UI", sans-serif';
@@ -88728,10 +88822,17 @@ function unlockAudio() {
 for (const ev of ["pointerdown", "pointerup", "touchstart", "touchend", "mousedown", "click", "keydown"])
   window.addEventListener(ev, unlockAudio, { capture: true, passive: true });
 document.addEventListener("visibilitychange", () => {
-  if (!document.hidden && AC && AC.state !== "running") AC.resume().catch(() => {});
+  if (!document.hidden && AC && AC.state !== "running" && !byeUp()) AC.resume().catch(() => {});
   // (v1.8.46: a record from your own music, paused when the tab was hidden (below), plays on when you're back)
   try {
-    if (!document.hidden && typeof REC !== "undefined" && REC.playing >= 0 && REC.el && REC.el.paused)
+    if (
+      !document.hidden &&
+      !byeUp() &&
+      typeof REC !== "undefined" &&
+      REC.playing >= 0 &&
+      REC.el &&
+      REC.el.paused
+    )
       REC.el.play().catch(() => {});
   } catch (e) {}
   // (v1.8.44) A HIDDEN TAB IS QUIET: the game pauses itself only mid-stop, so on the menu, paused, or with a phone's
@@ -88782,9 +88883,15 @@ function bgSfx(name, x , kind ) {
 }
 const volText = (v) =>
   "▮".repeat(Math.round(v * 4)) + "▯".repeat(4 - Math.round(v * 4)) + " " + Math.round(v * 100) + "%";
+// (v1.9.4) GOODBYE MEANS QUIET: EXIT GAME suspends the sound, and any key, click or coming back to the tab woke it
+//  again behind the goodbye screen - BACK TO THE GAME is what brings it back
+const byeUp = () => {
+  const b = document.getElementById("bye");
+  return !!b && !b.hidden;
+};
 function audio() {
   if (AC) {
-    if (AC.state !== "running") AC.resume().catch(() => {});
+    if (AC.state !== "running" && !byeUp()) AC.resume().catch(() => {});
     return AC;
   }
   try {
@@ -93367,6 +93474,12 @@ function exitGame() {
   } catch (e) {
     /* no sound to stop */
   }
+  // (v1.9.4: a record from your own music plays through an audio element, not the sound engine - it played on)
+  try {
+    for (const el of [REC.el, REC.el2]) if (el && !el.paused) el.pause();
+  } catch (e) {
+    /* no record playing */
+  }
   try {
     window.close();
   } catch (e) {
@@ -93397,6 +93510,12 @@ $("bExit").onclick = exitGame;
 }
 $("byeBack").onclick = () => {
   $("bye").hidden = true;
+  // (v1.9.4: the record paused for the goodbye plays on)
+  try {
+    if (REC.playing >= 0 && REC.el && REC.el.paused) REC.el.play().catch(() => {});
+  } catch (e) {
+    /* no record */
+  }
   const b = $("bExit");
   b.classList.remove("sure");
   b.textContent = "EXIT GAME";
@@ -93532,6 +93651,8 @@ function closeJukebox() {
       : null;
   // (v1.8.66: not with YOUR MUSIC chosen - your own songs come back now, and the music box's song played on over them)
   if (MY.mode === "mine") JB.radio = null;
+  // (v1.9.4: nor with MUSIC OFF - the song played on behind the menu, then the next, with the menu saying MUSIC: OFF)
+  if (MY.mode === "off") JB.radio = null;
   JB.playing = -1;
   if (AC && myBus) myBus.gain.setTargetAtTime(0.9, AC.currentTime, 0.1);
   showPanels();
@@ -94353,6 +94474,16 @@ profWire();
 //  the game, and where the motion capture, the folk songs and the fonts come from. Both from the menu at any time.
 // =====================================================================================
 const NEWS = [
+  {
+    ver: "v1.9.4",
+    title: "FAIR PLAY AGAIN",
+    items: [
+      "CONTROLLERS: START ON THE BARTENDER CHOICE PICKS, AN UNPLUGGED PAD LEAVES THE OTHER ITS OWN PLAYER",
+      "CONTINUE NO LONGER HANDS OUT A PILE OF EXTRA LIVES",
+      "TIME ATTACK, BOSS RUSH AND ENDLESS: YOUR SHOP ITEMS WAIT FOR A NORMAL GAME",
+      "MUSIC OFF STAYS OFF AFTER THE MUSIC BOX, AND THE PILGRIMS' BELLS RING ONCE",
+    ],
+  },
   {
     ver: "v1.9.3",
     title: "SAID PROPERLY",

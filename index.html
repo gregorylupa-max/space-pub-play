@@ -8116,6 +8116,28 @@ const DICT_ROWS                             = [
     "DAAGLIKSE UITDAGING KLAAR!  +2 STERRE",
     "WYZWANIE DNIA UKOŃCZONE!  +2 GWIAZDKI",
   ],
+  // (v1.9.5) EVERYONE GETS THEIR TURN
+  ["EVERYONE GETS THEIR TURN", "ELKEEN KRY SY BEURT", "KAŻDY DOCZEKA SIĘ SWOJEJ KOLEI"],
+  [
+    "THE QUEEN AND CHEF GRUMBLO ALWAYS COME ONCE THEY'RE ANNOUNCED",
+    "DIE KONINGIN EN SJEF GRUMBLO KOM ALTYD SODRA HULLE AANGEKONDIG IS",
+    "KRÓLOWA I SZEF GRUMBLO ZAWSZE PRZYCHODZĄ, GDY ZOSTANĄ ZAPOWIEDZIANI",
+  ],
+  [
+    "CONTINUE BRINGS THE STOP'S ENVOY BACK, SO ITS STAMP ISN'T LOST",
+    "GAAN VOORT BRING DIE HALTE SE GESANT TERUG, SODAT SY STEMPEL NIE VERLORE GAAN NIE",
+    "DALEJ PRZYWRACA POSŁA PRZYSTANKU, WIĘC JEGO PIECZĄTKA NIE PRZEPADA",
+  ],
+  [
+    "KID MODE: IN CHERRY DUEL THE WRONG THINGS BOUNCE OFF THE GLASS",
+    "KINDERMODUS: IN DIE KERSIE-TWEEGEVEG BONS DIE VERKEERDE DINGE VAN DIE GLAS AF",
+    "TRYB DZIECIĘCY: W WIŚNIOWYM POJEDYNKU ZŁE RZECZY ODBIJAJĄ SIĘ OD SZKLANKI",
+  ],
+  [
+    "CALM MODE: THE WORDS AND THE COMBO NO LONGER BOUNCE",
+    "RUSTIGE MODUS: DIE WOORDE EN DIE KOMBO WIP NIE MEER NIE",
+    "TRYB SPOKOJNY: NAPISY I COMBO JUŻ NIE PODSKAKUJĄ",
+  ],
   // (v1.9.4) FAIR PLAY AGAIN
   ["FAIR PLAY AGAIN", "WEER EERLIKE SPEL", "ZNOWU UCZCIWA GRA"],
   [
@@ -12749,6 +12771,7 @@ const DICT_PAT                             = [
   [/^PLAYER (\d+) IS OUT - (.+)!$/, "SPELER $1 IS UIT - $2!", "GRACZ $1 ODPADA - $2!"],
   [/^PLAYER (\d+) HIT AN ASTEROID!$/, "SPELER $1 HET 'N ASTEROÏDE GETREF!", "GRACZ $1 UDERZYŁ W ASTEROIDĘ!"], // (v1.5.96)
   [/^PLAYER (\d+) WINS THE DUEL!$/, "SPELER $1 WEN DIE TWEEGEVEG!", "GRACZ $1 WYGRYWA POJEDYNEK!"],
+  [/^PLAYER (\d+) WINS THE RACE!$/, "SPELER $1 WEN DIE WEDREN!", "GRACZ $1 WYGRYWA WYŚCIG!"], // (v1.9.5: the stork race)
   [/^OOPS - YOU CAUGHT (.+)!$/, "OEPS - JY HET $1 GEVANG!", "UPS - ZŁAPAŁEŚ: $1!"],
   // (v1.4.76) in a row, and the Time Attack ghost
   [/^(\d+) IN A ROW!$/, "$1 AGTER MEKAAR!", "$1 Z RZĘDU!"],
@@ -20292,7 +20315,18 @@ function update(dt) {
         // Pan Zbyszek: "RAZEM!" - the whole bar links arms and is pushed back together
         let n = 0;
         for (const o of customers)
-          if (o !== catcher && o.lane === s.lane && o.state === "walk" && !o.type.evil && !o.type.glutton) {
+          // (v1.9.5: not the envoy, the Queen or Chef Grumblo - they were marched out unserved, and the stop's stamp
+          //  or the finale's guest lost with them)
+          if (
+            o !== catcher &&
+            o.lane === s.lane &&
+            o.state === "walk" &&
+            !o.type.evil &&
+            !o.type.glutton &&
+            !o.envoy &&
+            !o.queen &&
+            !o.grumblo
+          ) {
             o.state = "pushed";
             o.left = 9999;
             o.happy = 3;
@@ -20660,7 +20694,14 @@ function update(dt) {
     }
   }
   // ---- level clear ----
-  if (G.served >= G.total && !customers.some((c) => c.state !== "out")) {
+  // (v1.9.5: and not while the Queen or Chef Grumblo has been announced but is still on the way in - the crowd
+  //  finished in those two seconds, the stop cleared, and the guest the screen had just announced never came)
+  if (
+    G.served >= G.total &&
+    !customers.some((c) => c.state !== "out") &&
+    !(G.grumbloAt > 0) &&
+    !(G.queenAt > 0)
+  ) {
     G.state = "clear";
     levelClearMech(demo);
     G.clearT = demo ? 1.5 : 3.2;
@@ -60778,7 +60819,7 @@ function interHud(g, s) {
   // the big title, and the light-years left to go
   if (j < 4) {
     g.globalAlpha = clamp(Math.min(j * 2, (4 - j) * 2), 0, 1);
-    neon2(g, "TO ANDROMEDA!", cx, cssH * 0.12, 30 * s, "#ff8fd0");
+    neon2(g, "TO ANDROMEDA!", cx, cssH * 0.12, 30 * s * Math.min(TXT(), cssW / (420 * s)), "#ff8fd0"); // (v1.9.5: TEXT SIZE, within the width)
     g.globalAlpha = 1;
   }
   if (j > 11 && j < 25) {
@@ -61002,6 +61043,9 @@ function drawCore(t) {
 // long lines run off the sides of narrow screens) - it shrinks to fit, and if it would get too small to read it breaks
 // into two or three lines at the spaces instead. Returns the lines and the size (in CSS pixels).
 function capFit(g, txt, s, maxPx = 15, minPx = 11) {
+  // (v1.9.5: TEXT SIZE reaches these captions too - the jump to Andromeda's and the galactic core's; they still wrap to fit)
+  maxPx *= TXT();
+  minPx *= TXT();
   const maxW = cssW * 0.9,
     widthAt = (ln, px) => {
       g.font = Math.round(px * s) + "px " + FD;
@@ -69177,6 +69221,7 @@ const ING = {
 function startMiniGame() {
   const kind = MINI_KINDS[Math.floor(G.level / 3 - 1) % 3];
   G.state = "mini";
+  G.pourLock = [true, true]; // (v1.9.5: a POUR held on from the stop skipped the instructions card at 0.8 s)
   G.mini = {
     kind,
     t: 0,
@@ -69386,6 +69431,8 @@ function funMiniUpdate(dt) {
   if (M.phase === "intro" && (M.t > 3.2 || (pour && M.t > 0.8))) {
     M.phase = "go";
     M.t = 0;
+    // (v1.9.5: the round itself takes a held button at once - one-button BOGDAN'S DELIVERY climbs by holding)
+    G.pourLock = [false, false];
     sfx("start");
   }
   if (M.phase === "done") {
@@ -69406,6 +69453,9 @@ function funMiniUpdate(dt) {
   if (M.t >= M.len) {
     M.phase = "done";
     M.t = 0;
+    // (v1.9.5: a POUR still held from the round (one-button BOGDAN'S DELIVERY is played by holding) cut the result
+    //  short at 1.2 s - it has to be let go and pressed again)
+    G.pourLock = [true, true];
     if (M.gl) {
       // (v1.5.95) the duel's result: both glasses' cherries count for the coins
       const [a, b] = M.gl;
@@ -69742,6 +69792,9 @@ function miniDuelStep(M, dt, inp0) {
   }
   const rim = MINI_GY - MINI_RIM;
   for (const it of M.items) {
+    // (v1.9.5) GONE IS GONE, IN THE DUELS TOO: the team mixer's finished (or spoiled) shake marks what was sinking as
+    //  gone - one reaching the bottom in that same frame still landed in the fresh glass (v1.8.83 fixed the one-player game)
+    if (it.dead) continue;
     const py = it.y;
     it.vy += (it.vx !== undefined ? 700 : 0) * dt;
     it.y += it.vy * dt;
@@ -69770,6 +69823,17 @@ function miniDuelStep(M, dt, inp0) {
         if (gl.wrong) continue; // (that glass is out - it falls on past)
         if (M.team) {
           teamMixCatch(M, gl, it, dx);
+          caughtNow = true;
+          break;
+        }
+        // (v1.9.5: KID MODE, two players - the wrong thing bounces off the glass, as in the one-player game since
+        //  v1.8.36; one sock put that child's glass out of CHERRY DUEL)
+        if (it.kind !== "cherry" && kidOn()) {
+          it.vx = (dx >= 0 ? 1 : -1) * rnd(160, 260);
+          it.vy = -rnd(320, 420);
+          it.spin = rnd(-9, 9);
+          gl.hurt = 0.5;
+          sfx("boing");
           caughtNow = true;
           break;
         }
@@ -70414,6 +70478,7 @@ function envoyLevelStart() {
   G.stamps0 = G.stamps || 0; // (v1.8.64: the stamps at the start of this stop - what CONTINUE remembers, see contRemember)
   // (one envoy on about six stops in ten, a little while into the stop - never on the festival's own stop)
   G.envoyAt = envoyTour() && G.level < LAST_LEVEL && Math.random() < 0.6 ? G.time + rnd(8, 20) : -1;
+  G.envoyPlan = G.envoyAt !== -1; // (v1.9.5: this stop has an envoy - for CONTINUE, see contRemember)
   // (v1.8.19: paid once a game - a crash recovery starting the stop again used to pay them twice)
   if (envoyTour() && G.level === LAST_LEVEL && (G.stamps || 0) > 0 && !G.stampsPaid) {
     G.stampsPaid = true;
@@ -70769,7 +70834,8 @@ function queenUpdate() {
   if (G.queenDone || G.level !== LAST_LEVEL || !envoyTour() || G.state !== "play") return;
   if (!(G.total > 0) || G.served < G.total * 0.4) return;
   // (v1.7.7: never once the stop's whole crowd is served - she'd hold up the end of the stop, and come back after a slip)
-  if (G.served >= G.total) {
+  if (G.served >= G.total && !(G.queenAt > 0)) {
+    // (v1.9.5: unless she's already been announced - then she still walks in; the stop waits for her, see update.ts)
     G.queenAt = 0;
     return;
   }
@@ -71935,7 +72001,11 @@ function funHud(g, s, t, fD, sx, sy) {
       const w = M.duelWin;
       neon2(
         g,
-        w === -2 ? "TEAMWORK!" : w < 0 ? "A DRAW!" : "PLAYER " + (w + 1) + " WINS THE DUEL!", // (v1.5.97: the team mixer)
+        w === -2
+          ? "TEAMWORK!"
+          : w < 0
+            ? "A DRAW!"
+            : "PLAYER " + (w + 1) + (M.kind === "stork" ? " WINS THE RACE!" : " WINS THE DUEL!"), // (v1.5.97: the team mixer) (v1.9.5: the stork race is a race)
         cssW / 2,
         cssH * 0.26,
         (VERT ? 22 : 30) * s,
@@ -72467,6 +72537,8 @@ function contRemember() {
     fs: !!G.fromStart, // (v1.8.59: begun at the first stop - for GALACTIC CHAMPION)
     lp: G.loop || 0, // (v1.8.88: which tour - a continue in tour 2 dropped back to tour 1's easier bar)
     sp: !!G.stampsPaid, // (v1.8.22: already paid at the festival - the score saved above has them in it)
+    // (v1.9.5: whether the stop had an envoy - the replayed stop rolled again, and four times in ten its stamp was gone)
+    ev: !!G.envoyPlan,
   });
 }
 function continueGame() {
@@ -72495,6 +72567,11 @@ function continueGame() {
   G.fromStart = c.fs !== false; // (v1.8.59: a continue keeps where the tour began; an older save counts as from the start)
   G.stampsPaid = !!c.sp; // (v1.8.22: a continue at the festival used to pay them again, every time)
   if (G.level === LAST_LEVEL) envoyLevelStart();
+  else if (c.ev && envoyTour()) {
+    // (v1.9.5: the stop's envoy comes again, as the saved stamps expect)
+    G.envoyAt = G.time + rnd(8, 20);
+    G.envoyPlan = true;
+  }
   callout("CONTINUE " + G.contN + "  ·  STAGE " + c.level + "  ·  SCORE " + c.g, "#5ff5c8", 2.6);
 }
 function funMenuText() {
@@ -86439,7 +86516,7 @@ function levelOfTour(of) {
     inTour = ((lv - 1) % LAST_LEVEL) + 1;
   return (tour > 1 ? "TOUR " + tour + "  ·  " : "") + "LEVEL " + inTour + of + LAST_LEVEL;
 }
-const GAME_VERSION = "v1.9.4",
+const GAME_VERSION = "v1.9.5",
   GAME_DATE = "27.11.2026",
   VERSION_TEXT = GAME_VERSION + "  ·  " + GAME_DATE;
 const FB = '"Chakra Petch", "Segoe UI", sans-serif';
@@ -87572,7 +87649,7 @@ function drawHud(fps) {
       // has a dark edge to read against any bar, and fades out instead of vanishing
       const since = t - G.lastCatch,
         n = Math.min(4, G.combo),
-        pop = 1 + 0.4 * Math.max(0, 1 - since / 0.22),
+        pop = COMFORT.calm ? 1 : 1 + 0.4 * Math.max(0, 1 - since / 0.22), // (v1.9.5: still in calm mode)
         cc = n >= 4 ? "#ffd24d" : n === 3 ? "#ff9a3d" : "#ff5fa8",
         txt = "COMBO x" + G.combo; // (v1.8.87: the real count - it stopped at x4, and the daily asks for a combo of 5)
       g.save();
@@ -87688,7 +87765,14 @@ function drawHud(fps) {
       // and ease to a stop as they fade (instead of appearing full-size and drifting up at one speed); big scores are
       // drawn a little bigger
       const age = (1 - k) * c.max,
-        pop = age < 0.1 ? 0.55 + (age / 0.1) * 0.7 : age < 0.22 ? 1.25 - ((age - 0.1) / 0.12) * 0.25 : 1,
+        // (v1.9.5: calm mode - the words just fade in, no spring on every catch)
+        pop = COMFORT.calm
+          ? 1
+          : age < 0.1
+            ? 0.55 + (age / 0.1) * 0.7
+            : age < 0.22
+              ? 1.25 - ((age - 0.1) / 0.12) * 0.25
+              : 1,
         num = /^[+-]\d+$/.test(c.text) ? Math.abs(+c.text) : 0,
         big = num >= 500 ? 1.3 : num >= 200 ? 1.12 : 1,
         rise = 34 * (1 - k * k);
@@ -87756,7 +87840,14 @@ function drawHud(fps) {
       // (v1.5.28) BIG ANNOUNCEMENTS WITH A PUNCH: they spring in - from small, overshooting a little and settling - and a
       // streak of light sweeps across the letters once they've landed (they used to just fade in and drift up)
       const age = (1 - k) * c.max,
-        pop = age < 0.14 ? 0.6 + (age / 0.14) * 0.52 : age < 0.3 ? 1.12 - ((age - 0.14) / 0.16) * 0.12 : 1,
+        // (v1.9.5: calm mode - no spring, as its light sweep below)
+        pop = COMFORT.calm
+          ? 1
+          : age < 0.14
+            ? 0.6 + (age / 0.14) * 0.52
+            : age < 0.3
+              ? 1.12 - ((age - 0.14) / 0.16) * 0.12
+              : 1,
         bx = cssW / 2,
         by = cssH * 0.42 - (1 - k) * 12 * s;
       g.save();
@@ -88550,7 +88641,7 @@ function drawFiredHud(g, s, t, fD, fB, sx, sy) {
   if (lines) {
     const big = lines[1] === "FIRED!",
       k = Math.min(1, (big ? T - 1 : T - 3) * 6),
-      pop = big ? 1 + Math.max(0, 0.25 - (T - 1)) * 1.6 : 1;
+      pop = big && !COMFORT.calm ? 1 + Math.max(0, 0.25 - (T - 1)) * 1.6 : 1; // (v1.9.5: not in calm mode)
     // (v1.5.40: "...AND DON'T SLAM THE DOOR!" was tiny, about nine pixels, rattling about in a big bubble - now it's a size
     //  you can read at a glance, and the bubble still grows to fit)
     let f0 = (big ? 19 : 12) * pop,
@@ -94474,6 +94565,16 @@ profWire();
 //  the game, and where the motion capture, the folk songs and the fonts come from. Both from the menu at any time.
 // =====================================================================================
 const NEWS = [
+  {
+    ver: "v1.9.5",
+    title: "EVERYONE GETS THEIR TURN",
+    items: [
+      "THE QUEEN AND CHEF GRUMBLO ALWAYS COME ONCE THEY'RE ANNOUNCED",
+      "CONTINUE BRINGS THE STOP'S ENVOY BACK, SO ITS STAMP ISN'T LOST",
+      "KID MODE: IN CHERRY DUEL THE WRONG THINGS BOUNCE OFF THE GLASS",
+      "CALM MODE: THE WORDS AND THE COMBO NO LONGER BOUNCE",
+    ],
+  },
   {
     ver: "v1.9.4",
     title: "FAIR PLAY AGAIN",

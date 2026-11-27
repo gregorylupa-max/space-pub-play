@@ -8117,6 +8117,28 @@ const DICT_ROWS                             = [
     "DAAGLIKSE UITDAGING KLAAR!  +2 STERRE",
     "WYZWANIE DNIA UKOŃCZONE!  +2 GWIAZDKI",
   ],
+  // (v1.9.8) EVERY DAY A NEW ONE
+  ["EVERY DAY A NEW ONE", "ELKE DAG 'N NUWE", "KAŻDEGO DNIA NOWE"],
+  [
+    "THE DAILY CHALLENGE: A DIFFERENT STOP AND GOAL EACH DAY, AND YOUR STREAK SURVIVES A TIME ZONE",
+    "DIE DAAGLIKSE UITDAGING: ELKE DAG 'N ANDER HALTE EN DOEL, EN JOU REEKS OORLEEF 'N TYDSONE",
+    "WYZWANIE DNIA: CODZIENNIE INNY PRZYSTANEK I CEL, A TWOJA SERIA PRZETRWA ZMIANĘ STREFY CZASOWEJ",
+  ],
+  [
+    "ON A PHONE WITH HUGE TEXT, WARNINGS ARE NEVER SQUEEZED TINY",
+    "OP 'N FOON MET BAIE GROOT TEKS WORD WAARSKUWINGS NOOIT PIEPKLEIN GEDRUK NIE",
+    "NA TELEFONIE Z BARDZO DUŻYM TEKSTEM OSTRZEŻENIA NIGDY NIE SĄ ŚCIŚNIĘTE DO MALUTKICH",
+  ],
+  [
+    "VERSUS: THE PLAYER SITTING OUT GETS THE STOP'S BONUS AND COMES BACK SOONER",
+    "TEEN MEKAAR: DIE SPELER WAT UIT IS, KRY DIE HALTE SE BONUS EN KOM GOUER TERUG",
+    "POJEDYNEK: GRACZ, KTÓRY ODPADŁ, DOSTAJE PREMIĘ ZA PRZYSTANEK I WRACA SZYBCIEJ",
+  ],
+  [
+    "SETTINGS: THE LAST ENGLISH WORDS TRANSLATED",
+    "INSTELLINGS: DIE LAASTE ENGELSE WOORDE VERTAAL",
+    "USTAWIENIA: OSTATNIE ANGIELSKIE SŁOWA PRZETŁUMACZONE",
+  ],
   // (v1.9.7) KEEP WHAT YOU EARNED
   ["KEEP WHAT YOU EARNED", "HOU WAT JY VERDIEN HET", "ZACHOWAJ TO, CO ZDOBYTE"],
   [
@@ -11693,6 +11715,10 @@ const DICT_ROWS                             = [
     "Wpisz co najmniej dwa różne imiona, by zacząć turniej!",
   ],
   ["P or Esc", "P of Esc", "P lub Esc"],
+  // (v1.9.8: the two move lines - "or" stayed English, and with so few letters the language test missed them)
+  ["↑ ↓ or W S", "↑ ↓ of W S", "↑ ↓ lub W S"],
+  ["← → or A D", "← → of A D", "← → lub A D"],
+  ["software", "sagteware", "programowo"], // (v1.9.8: the pause screen's "CPU · software · 60 FPS")
   ["Space · Enter · X · Ctrl", "Spasie · Enter · X · Ctrl", "Spacja · Enter · X · Ctrl"],
   [
     "full screen · sound · music · graphics · look · CRT screen · music box · bartender · wide/tall layout",
@@ -14016,7 +14042,7 @@ function updateLookText() {
     ? "OFF (PIXEL LOOKS ONLY)"
     : !crtOn
       ? "FLAT"
-      : gfx === "cpu"
+      : gfx === "cpu" || (typeof R !== "undefined" && R && R.kind !== "GPU") // (v1.9.8: what's really drawing - no video card means no CRT)
         ? "SCANLINES"
         : "CRT TV";
   document.body.classList.toggle("retro", retroLook);
@@ -17962,11 +17988,17 @@ function update(dt) {
   updateBell(dt);
   // (v1.4.31) BACK IN THE GAME: in VERSUS, a player who's out comes back after the other one serves 8 customers - with
   // one life, so nobody sits on the sofa for the rest of the game
-  if (G.versus && G.state === "play" && G.rejoinLeft > 0) {
+  // (v1.9.8: counted on the stop-clear screen too - the serve that ended a stop was never counted; the comeback itself
+  //  waits for play)
+  if (
+    G.versus &&
+    (G.state === "play" || G.state === "clear") &&
+    (G.rejoinLeft > 0 || PL.some((p) => p.alive === false))
+  ) {
     const sv = G.served - (G.rjSv ?? G.served);
     if (sv > 0) G.rejoinLeft -= sv;
     G.rjSv = G.served;
-    if (G.rejoinLeft <= 0) {
+    if (G.rejoinLeft <= 0 && G.state === "play") {
       for (const p of PL)
         if (!p.alive) {
           p.alive = true;
@@ -17982,7 +18014,7 @@ function update(dt) {
         }
       G.rejoinLeft = 0;
     }
-  } else G.rjSv = G.served;
+  } else if (!(G.rejoinLeft > 0)) G.rjSv = G.served; // (v1.9.8: not while someone waits - the serve that cleared a stop was taken in uncounted)
   // CHURCH BELLS in the distance: now and then (every couple of minutes of play) a soft peal drifts in from somewhere far away
   if (G.state === "play" && !G.demo) {
     G.churchT = (G.churchT ?? rnd(40, 90)) - dt;
@@ -20725,7 +20757,10 @@ function update(dt) {
       if (demo) continue;
       // (v1.8.32) WHO DROPPED IT: whoever stands on that bar; if nobody does, whoever served that customer (in versus
       //  the player on the nearest bar was blamed for the other player's glass); only then the nearest
-      const on = active().find((p) => p.lane === m.lane),
+      // (v1.9.8: both on that bar - whoever is nearer the taps, as for a grab; it was always player 1)
+      const on = active()
+          .filter((p) => p.lane === m.lane)
+          .sort((a, b) => Math.abs(a.x - TAPX) - Math.abs(b.x - TAPX))[0],
         srv = m.by !== undefined ? PL[m.by] : null;
       LOSER = on || (srv && active().includes(srv) ? srv : nearestTo(m.lane));
       lose("empty", m.lane, TAPX + 26);
@@ -20821,7 +20856,9 @@ function update(dt) {
       //  rose by twice what the sign said; versus keeps a whole one each, as before)
       let gotPts = 0;
       const coopN = !G.versus && active().length > 1 ? active().length : 1;
-      for (const p of active()) {
+      // (v1.9.8: in versus the player sitting out gets theirs too, as the comment above says - and as the galaxy prize,
+      //  the stamps and the milestone lives do)
+      for (const p of G.versus ? PL : active()) {
         SCORER = p;
         const g1 = addScore(Math.round(bonusPts / coopN)) || 0;
         gotPts = coopN > 1 ? gotPts + g1 : Math.max(gotPts, g1);
@@ -54405,8 +54442,11 @@ const DAILY_GOALS = [
 ];
 function dailyToday() {
   const d = todayStr(),
-    seed = d.split("-").reduce((a, v) => a * 31 + +v, 7);
-  return { date: d, goal: DAILY_GOALS[seed % DAILY_GOALS.length], level: 1 + ((seed >> 3) % 8) };
+    seed = d.split("-").reduce((a, v) => a * 31 + +v, 7),
+    // (v1.9.8: the seed stirred first - it grows by one a day, so the stop stayed the same eight days running and the
+    //  goals came round in a fixed order)
+    h = Math.imul(seed ^ (seed >>> 15), 0x2c1b3c6d) >>> 0;
+  return { date: d, goal: DAILY_GOALS[h % DAILY_GOALS.length], level: 1 + ((h >>> 8) % 8) };
 }
 function dailyInfo() {
   const D = store.get("daily", { last: "", streak: 0 }),
@@ -54419,8 +54459,10 @@ function dailyInfo() {
     String(y.getMonth() + 1).padStart(2, "0") +
     "-" +
     String(y.getDate()).padStart(2, "0");
-  const alive = D.last === T.date || D.last === ys;
-  return { done: D.last === T.date, streak: alive ? D.streak : 0, ys };
+  // (v1.9.8: a later saved day (the clock put back, or a flight west) counts as done and alive - it reset the streak
+  //  to 1 and paid the day's reward again; the dates are YYYY-MM-DD, so they compare as text)
+  const alive = D.last >= ys;
+  return { done: !!D.last && D.last >= T.date, streak: alive ? D.streak : 0, ys };
 }
 function startDaily() {
   if (G.state !== "menu") return;
@@ -54449,8 +54491,8 @@ function dailyAdd(id, v, set ) {
         String(prev.getMonth() + 1).padStart(2, "0") +
         "-" +
         String(prev.getDate()).padStart(2, "0"),
-      streak = S.last === D.date ? S.streak : S.last === ps ? (S.streak | 0) + 1 : 1;
-    store.set("daily", { last: D.date, streak });
+      streak = S.last >= D.date ? S.streak : S.last === ps ? (S.streak | 0) + 1 : 1;
+    if (!(S.last > D.date)) store.set("daily", { last: D.date, streak }); // (v1.9.8: never back to an earlier day)
     store.set("dailyStars", (store.get("dailyStars", 0) | 0) + 2);
     funDaily();
     callout(
@@ -57106,7 +57148,7 @@ function mouseTap(wx, wy) {
   const [px, py] = projL(m.lane, m.x, LY(m.lane, m.x) - 10),
     r = 34 * pS(m.lane, m.x) * (VERT ? 1.7 : 1);
   if (Math.hypot(wx - px, wy - py) > Math.max(26, r)) return false;
-  mouseFound(P1);
+  mouseFound(G.versus ? active()[0] || P1 : P1); // (v1.9.8: not a player who's out)
   return true;
 }
 // the mouse and its cheese, sitting on the bar (drawn in the bar's own space)
@@ -68095,7 +68137,7 @@ function funEvent() {
   return "";
 }
 const EVENT_NAMES = {
-  xmas: "MERRY CHRISTMAS!  WESOLYCH SWIAT!  GESEENDE KERSFEES!",
+  xmas: "MERRY CHRISTMAS!  WESOŁYCH ŚWIĄT!  GESEENDE KERSFEES!", // (v1.9.8: with its Polish letters)
   allsaints: "ALL SAINTS' DAY - A CANDLE FOR EVERYONE WE REMEMBER",
   newyear: "HAPPY NEW YEAR!",
   easter: "EASTER EGG HUNT - FIND THE EGGS ON THE BARS",
@@ -82975,6 +83017,9 @@ function flawHud(g, s, pad, fD) {
     if (HUDB.holyY > 0 && G.time - (HUDB.holyT ?? -9) < 0.5) y = Math.max(y, HUDB.holyY + 22 * s); // (...and the HOLY row)
   }
   g.fillText(txt, x, y);
+  // (v1.9.8: the floating words keep clear of it, as of the rest of the HUD)
+  const fw = g.measureText(T(txt)).width;
+  hudObs(x + fw / 2, y + 7 * s * TXT(), fw + 8 * s, 16 * s * TXT()); // (drawn from its top - the box's middle is lower)
 }
 // =====================================================================================
 //  THE GALAXY MAP (v2026.10.04ao, the two galaxies v2026.10.04ar): the whole tour on one page - drawn on the two real
@@ -86528,6 +86573,9 @@ function holiday() {
   //  phone's touch buttons and the confetti fell over the bar all day)
   if (store.get("eventPick", "auto") === "none" || ["play", "lost", "bonus", "mini"].includes(G.state))
     return null;
+  // (v1.9.8: a HOLIDAY picked in the settings decides it - Freedom Day's banner showed over a Halloween pub)
+  const pk = store.get("eventPick", "auto");
+  if (pk !== "auto") return pk === "freedom" ? "za" : pk === "plind" ? "pl" : null;
   const d = new Date(),
     m = d.getMonth() + 1,
     day = d.getDate();
@@ -86723,7 +86771,7 @@ function levelOfTour(of) {
     inTour = ((lv - 1) % LAST_LEVEL) + 1;
   return (tour > 1 ? "TOUR " + tour + "  ·  " : "") + "LEVEL " + inTour + of + LAST_LEVEL;
 }
-const GAME_VERSION = "v1.9.7",
+const GAME_VERSION = "v1.9.8",
   GAME_DATE = "27.11.2026",
   VERSION_TEXT = GAME_VERSION + "  ·  " + GAME_DATE;
 const FB = '"Chakra Petch", "Segoe UI", sans-serif';
@@ -86950,7 +86998,7 @@ function drawHud(fps) {
   // (v1.4.80) how wide the "CO-OP   HI 000000" line under the two players' scores is, in this language
   const coopW = () => {
     const f = g.font;
-    g.font = fB(13);
+    g.font = fB(13, 700); // (v1.9.8: bold, as it is drawn now)
     // (v1.6.13: co-op's line is the team's score now - "TEAM 012345   HI 045000")
     const w = g.measureText(T(G.versus ? "VERSUS   HI 000000" : "TEAM 000000   HI 000000")).width;
     g.font = f;
@@ -87237,6 +87285,14 @@ function drawHud(fps) {
     g.font = fD(px);
     const wMax = Math.max(...lines.map((l) => g.measureText(l).width));
     if (wMax > room) g.font = fD((px * room) / wMax);
+    // (v1.9.8) NEVER TINY: dropped under the corner buttons on an upright phone, with HUGE text the gap between the score
+    //  and the LIVES grew so narrow that urgent warnings ("A DEMON! SHOW THE CROSS...") came out at 5 pixels. Below 10
+    //  pixels it takes the whole width of the screen instead, below the score's corner (see y0)
+    let wideRow = false;
+    if (plate && sgY && !cramp && parseFloat(g.font) < 10) {
+      g.font = fD(Math.min(px, (px * (cssW - 40 * s)) / wMax)); // (its glass 30 px wider - all of it on the screen)
+      wideRow = true;
+    }
     g.fillStyle = colr;
     g.shadowColor = colr;
     g.shadowBlur = 16 * s * GLOW();
@@ -87264,10 +87320,13 @@ function drawHud(fps) {
           : HUDB.under
             ? (HUDB.l || cssW) - 6 * s // (v1.5.42: on the top row beside the corner buttons - not under them)
             : HUDB.lives, // (v1.4.80: and of the LIVES on the right)
-      cx = Math.max(sgY ? wNow : leftEdge + wNow, Math.min(rightEdge - wNow, cramp ? cssW / 2 : signX)),
+      cx = wideRow
+        ? cssW / 2
+        : Math.max(sgY ? wNow : leftEdge + wNow, Math.min(rightEdge - wNow, cramp ? cssW / 2 : signX)),
       // (v1.5.33 "polish") on a phone the announcement drops to its own row under the buttons - where a wide one ran
       // right across the HOLY water bottles under the score. If it reaches over that corner, it now hangs just below it
-      leftBot = 14 * s + (twoP() ? 96 : 66) * s,
+      // (v1.9.8: and the TIME ATTACK / BOSS RUSH / ENDLESS line under it - a two-line warning landed on it)
+      leftBot = 14 * s + (twoP() ? 96 : 66) * s + (modesTxt() ? (ghostDiff() !== null ? 36 : 20) * s : 0),
       y0 =
         plate && sgY && cx - wNow < Math.max(HUDB.scoreW, G.level >= 2 ? HUDB.holyR : 0)
           ? Math.max(y00, leftBot + 5 * s + ((lines.length - 1) / 2) * lh)
@@ -87681,8 +87740,9 @@ function drawHud(fps) {
         g.globalAlpha = 1;
       }
       g.shadowBlur = 0;
-      g.font = fB(13);
-      g.fillStyle = "#b9a8b8";
+      // (v1.9.8: brighter, bold and with a dark edge, as the one-player HI line - over a lit bar it couldn't be read)
+      g.font = fB(13, 700);
+      g.fillStyle = "#e0d0e0";
       // (v1.9.0: not raised by a cup match - it isn't saved as a high score since v1.8.94, so the HI shouldn't climb)
       const hiNow = CUP.match
         ? G.hi || 0
@@ -87692,6 +87752,12 @@ function drawHud(fps) {
         "   HI " +
         String(hiNow).padStart(6, "0");
       HUDB.teamR = pad + g.measureText(T(teamLine)).width; // (v1.8.89: where it ends - FLAWLESS goes after it, coach.ts)
+      g.save();
+      g.lineWidth = 3 * s;
+      g.lineJoin = "round";
+      g.strokeStyle = "rgba(4,2,12,.8)";
+      g.strokeText(teamLine, pad, pad + 62 * s);
+      g.restore();
       g.fillText(
         // (v1.6.13) THE TEAM'S SCORE: in co-op the two of you play for one score (it's what goes in the high scores),
         // but it was never shown - only 1UP and 2UP. Now the line under them says it: "TEAM 012345   HI 045000"
@@ -94808,6 +94874,16 @@ profWire();
 //  the game, and where the motion capture, the folk songs and the fonts come from. Both from the menu at any time.
 // =====================================================================================
 const NEWS = [
+  {
+    ver: "v1.9.8",
+    title: "EVERY DAY A NEW ONE",
+    items: [
+      "THE DAILY CHALLENGE: A DIFFERENT STOP AND GOAL EACH DAY, AND YOUR STREAK SURVIVES A TIME ZONE",
+      "ON A PHONE WITH HUGE TEXT, WARNINGS ARE NEVER SQUEEZED TINY",
+      "VERSUS: THE PLAYER SITTING OUT GETS THE STOP'S BONUS AND COMES BACK SOONER",
+      "SETTINGS: THE LAST ENGLISH WORDS TRANSLATED",
+    ],
+  },
   {
     ver: "v1.9.7",
     title: "KEEP WHAT YOU EARNED",

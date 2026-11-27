@@ -648,6 +648,9 @@ body.touch2p #touch .tp button.holy { width: 60px; height: 60px; font-size: 11px
     <p data-tr>Every stop has its own gravity - the arrival screen shows how strong it is. On a <b>light</b> world everyone floats, and a shake sends customers sailing further back - but they drift back in quicker. On a <b>heavy</b> world they plod in slowly - but a shake barely pushes them. In the mini-games things fall slowly or fast to match.</p>
     <h3>HOUSE COCKTAILS</h3>
     <p data-tr>Every stop has its own <b>HOUSE COCKTAIL</b>. Every 10 serves the house special is ready: your next pour comes out as the stop's cocktail. Whoever catches it tips big and leaves happy - land it on the customer with the gold <b>★ COCKTAIL</b> sign for double. Each new one goes into your <b>COCKTAIL MENU</b> in the Trophy Room.</p>
+    <!-- (v2.0.1) THE STOP SPECIALS (specials.ts) -->
+    <h3>STOP SPECIALS</h3>
+    <p data-tr>Every stop has its own <b>specials</b> tonight - the arrival screen says which (TONIGHT: ...). Pop the <b>balloon</b> by serving someone on its bar, run over a <b>shooting star</b> or a <b>lost parcel</b> to collect it, serve quickly on the bar where the <b>bell</b> rings, wake a <b>sleepyhead</b> with a shake, and serve <b>gift</b>, <b>mystery</b> and <b>birthday</b> guests for a surprise. During <b>tip rain</b> and <b>happy hour</b> every serve pays extra. A <b>×2</b> customer comes back for a second shake, tonight's <b>flavour</b> scores extra, and when the taps glow gold your next serve is a <b>golden shake</b>. Catch a <b>runaway donut</b> before it rolls off, and serve from the bar whose <b>tap sparkles</b>. They never cost a life.</p>
     <h3>POWER-UPS, STARS AND COINS</h3>
     <p data-tr>Grab the <b>power-ups</b> that appear on the bar when it's quiet - all but the sleepy <b>DECAF</b> cup, which slows you down. Each level gives up to three <b>stars</b>, and you earn <b>coins</b> to spend in the COIN SHOP (PLAY MORE). RELAX MODE has no losing and no hurry.</p>
   </div>
@@ -768,6 +771,8 @@ const $ = (id        )         => document.getElementById(id)          ; // (a p
 const PROFILE_KEYS = new Set([
   "coins",
   "trophies",
+  "spChal", // (v2.0.3: the stop challenges done - specials.ts)
+  "specSeen", // (v2.0.3: the stop specials already introduced)
   "stats",
   "inv",
   "dailyStars",
@@ -6974,6 +6979,77 @@ const DICT_ROWS                             = [
   ["MYSTERY PRIZE: A BIG TIP!", "GEHEIME PRYS: 'N GROOT FOOI!", "TAJEMNICZA NAGRODA: DUŻY NAPIWEK!"],
   ["MYSTERY PRIZE: COINS!", "GEHEIME PRYS: MUNTE!", "TAJEMNICZA NAGRODA: MONETY!"],
   ["MYSTERY PRIZE: A SHIELD!", "GEHEIME PRYS: 'N SKILD!", "TAJEMNICZA NAGRODA: TARCZA!"],
+  // (v2.0.1) two more STOP SPECIALS, their trophies and HOW TO PLAY
+  ["BIRTHDAY PARTY", "VERJAARDAGPARTYTJIE", "PRZYJĘCIE URODZINOWE"],
+  [
+    "SERVE THE BIRTHDAY GUEST - THE WHOLE BAR STOPS TO SING",
+    "BEDIEN DIE VERJAARDAGGAS - DIE HELE TOONBANK STAAN STIL OM TE SING",
+    "OBSŁUŻ SOLENIZANTA - CAŁA LADA STAJE, ŻEBY ZAŚPIEWAĆ",
+  ],
+  ["GOLDEN SHAKE", "GOUE SKOMMEL", "ZŁOTY KOKTAJL"],
+  [
+    "WHEN THE TAPS GLOW GOLD, YOUR NEXT SERVE IS WORTH A FORTUNE",
+    "AS DIE KRANE GOUD GLOEI, IS JOU VOLGENDE BEDIENING 'N FORTUIN WERD",
+    "GDY KRANY ŚWIECĄ NA ZŁOTO, TWOJE NASTĘPNE OBSŁUŻENIE JEST WARTE FORTUNĘ",
+  ],
+  ["IT'S MY BIRTHDAY!", "DIS MY VERJAARDAG!", "MAM DZIŚ URODZINY!"],
+  ["HAPPY BIRTHDAY!", "VEELS GELUK!", "STO LAT!"],
+  [
+    "THE TAPS GLOW GOLD!  YOUR NEXT SERVE IS GOLDEN",
+    "DIE KRANE GLOEI GOUD!  JOU VOLGENDE BEDIENING IS GOUD",
+    "KRANY ŚWIECĄ NA ZŁOTO!  NASTĘPNE OBSŁUŻENIE JEST ZŁOTE",
+  ],
+  ["A GOLDEN SHAKE!", "'N GOUE SKOMMEL!", "ZŁOTY KOKTAJL!"],
+  ["STAR CATCHER", "STERVANGER", "ŁOWCA GWIAZD"],
+  ["catch 15 shooting stars", "vang 15 vallende sterre", "złap 15 spadających gwiazd"],
+  ["WAKE-UP CALL", "WEKROEP", "POBUDKA"],
+  ["wake 15 sleepyheads", "maak 15 laksmanne wakker", "obudź 15 śpiochów"],
+  ["LOST AND FOUND", "VERLORE EN GEVIND", "BIURO RZECZY ZNALEZIONYCH"],
+  ["return 10 lost parcels", "gee 10 verlore pakkies terug", "oddaj 10 zgubionych paczek"],
+  ["PARTY POPPER", "BALLONBARSER", "MISTRZ BALONÓW"],
+  ["pop 25 balloons", "laat 25 ballonne bars", "przebij 25 balonów"],
+  ["STOP SPECIALS", "HALTE-SPESIALES", "ATRAKCJE PRZYSTANKÓW"],
+  [
+    "Every stop has its own <b>specials</b> tonight - the arrival screen says which (TONIGHT: ...). Pop the <b>balloon</b> by serving someone on its bar, run over a <b>shooting star</b> or a <b>lost parcel</b> to collect it, serve quickly on the bar where the <b>bell</b> rings, wake a <b>sleepyhead</b> with a shake, and serve <b>gift</b>, <b>mystery</b> and <b>birthday</b> guests for a surprise. During <b>tip rain</b> and <b>happy hour</b> every serve pays extra. A <b>×2</b> customer comes back for a second shake, tonight's <b>flavour</b> scores extra, and when the taps glow gold your next serve is a <b>golden shake</b>. Catch a <b>runaway donut</b> before it rolls off, and serve from the bar whose <b>tap sparkles</b>. They never cost a life.",
+    "Elke halte het vanaand sy eie <b>spesiales</b> - die aankomsskerm sê watter (VANAAND: ...). Laat die <b>ballon</b> bars deur iemand by sy toonbank te bedien, hardloop oor 'n <b>vallende ster</b> of 'n <b>verlore pakkie</b> om dit op te tel, bedien gou by die toonbank waar die <b>klok</b> lui, maak 'n <b>laksman</b> met 'n skommel wakker, en bedien <b>geskenk</b>-, <b>geheim</b>- en <b>verjaardag</b>gaste vir 'n verrassing. Tydens <b>fooitjiereën</b> en die <b>gelukkige uur</b> betaal elke bediening ekstra. 'n <b>×2</b>-klant kom terug vir 'n tweede skommel, vanaand se <b>geur</b> tel ekstra, en as die krane goud gloei, is jou volgende bediening 'n <b>goue skommel</b>. Vang 'n <b>wegloop-donut</b> voor hy afrol, en bedien by die toonbank waar die <b>kraan vonkel</b>. Hulle kos nooit 'n lewe nie.",
+    "Każdy przystanek ma dziś własne <b>atrakcje</b> - ekran przylotu mówi, jakie (DZIŚ WIECZOREM: ...). Przebij <b>balon</b>, obsługując kogoś przy jego ladzie, przebiegnij przez <b>spadającą gwiazdę</b> albo <b>zgubioną paczkę</b>, żeby ją zebrać, szybko obsłuż kogoś przy ladzie, nad którą dzwoni <b>dzwonek</b>, obudź <b>śpiocha</b> koktajlem i obsługuj gości z <b>prezentem</b>, <b>tajemniczych</b> i <b>urodzinowych</b> - czeka niespodzianka. Podczas <b>deszczu napiwków</b> i <b>szczęśliwej godziny</b> każde obsłużenie daje więcej. Klient <b>×2</b> wraca po drugi koktajl, dzisiejszy <b>smak</b> daje dodatkowe punkty, a gdy krany świecą na złoto, następne obsłużenie to <b>złoty koktajl</b>. Złap <b>uciekającego pączka</b>, zanim spadnie, i obsługuj przy ladzie, nad którą <b>kran się skrzy</b>. Nigdy nie kosztują życia.",
+  ],
+  // (v2.0.2) two more STOP SPECIALS
+  ["RUNAWAY DONUT", "WEGLOOP-DONUT", "UCIEKAJĄCY PĄCZEK"],
+  [
+    "A DONUT ROLLS DOWN A BAR - RUN TO MEET IT BEFORE IT FALLS OFF",
+    "'N DONUT ROL AF TEEN 'N TOONBANK - HARDLOOP HOM TEGEMOET VOOR HY AFVAL",
+    "PĄCZEK TOCZY SIĘ PO LADZIE - BIEGNIJ MU NA SPOTKANIE, ZANIM SPADNIE",
+  ],
+  ["LUCKY TAP", "GELUKSKRAAN", "SZCZĘŚLIWY KRAN"],
+  [
+    "WHEN A TAP SPARKLES, EVERY SERVE FROM THAT BAR SCORES EXTRA",
+    "AS 'N KRAAN VONKEL, TEL ELKE BEDIENING BY DAARDIE TOONBANK EKSTRA",
+    "GDY KRAN SKRZY SIĘ, KAŻDE OBSŁUŻENIE PRZY TEJ LADZIE DAJE WIĘCEJ",
+  ],
+  ["CAUGHT THE DONUT!", "DIE DONUT GEVANG!", "MAM PĄCZKA!"],
+  ["IT ROLLED AWAY...", "HY HET WEGGEROL...", "ODTOCZYŁ SIĘ..."],
+  ["A LUCKY TAP IS SPARKLING!", "'N GELUKSKRAAN VONKEL!", "SZCZĘŚLIWY KRAN SIĘ SKRZY!"],
+  ["LUCKY TAP!", "GELUKSKRAAN!", "SZCZĘŚLIWY KRAN!"],
+  // (v2.0.3) THE STOP CHALLENGES (specials.ts)
+  ["CHALLENGE", "UITDAGING", "WYZWANIE"],
+  ["STOP CHALLENGE", "HALTE-UITDAGING", "WYZWANIE PRZYSTANKU"],
+  ["STOP CHALLENGE DONE!", "HALTE-UITDAGING VOLTOOI!", "WYZWANIE PRZYSTANKU ZALICZONE!"],
+  ["POP 3 BALLOONS", "LAAT 3 BALLONNE BARS", "PRZEBIJ 3 BALONY"],
+  ["CATCH 3 SHOOTING STARS", "VANG 3 VALLENDE STERRE", "ZŁAP 3 SPADAJĄCE GWIAZDY"],
+  ["ANSWER THE BELL 3 TIMES", "ANTWOORD DIE KLOK 3 KEER", "ODPOWIEDZ NA DZWONEK 3 RAZY"],
+  ["SERVE 2 LUCKY GIFTS", "BEDIEN 2 GELUKSGESKENKE", "OBSŁUŻ 2 SZCZĘŚLIWE PREZENTY"],
+  ["WAKE 3 SLEEPYHEADS", "MAAK 3 LAKSMANNE WAKKER", "OBUDŹ 3 ŚPIOCHY"],
+  ["SERVE 6 IN THE TIP RAIN", "BEDIEN 6 IN DIE FOOITJIEREËN", "OBSŁUŻ 6 W DESZCZU NAPIWKÓW"],
+  ["FILL UP 2 BIG APPETITES", "MAAK 2 GROOT APTYTE VOL", "NAKARM 2 WIELKIE APETYTY"],
+  ["SERVE 8 IN TONIGHT'S FLAVOUR", "BEDIEN 8 IN VANAAND SE GEUR", "PODAJ 8 W DZISIEJSZYM SMAKU"],
+  ["RETURN 2 PARCELS", "GEE 2 PAKKIES TERUG", "ODDAJ 2 PACZKI"],
+  ["SERVE 8 IN HAPPY HOUR", "BEDIEN 8 IN DIE GELUKKIGE UUR", "OBSŁUŻ 8 W SZCZĘŚLIWEJ GODZINIE"],
+  ["SERVE 3 MYSTERY GUESTS", "BEDIEN 3 GEHEIMSINNIGE GASTE", "OBSŁUŻ 3 TAJEMNICZYCH GOŚCI"],
+  ["SING FOR A BIRTHDAY", "SING VIR 'N VERJAARDAG", "ZAŚPIEWAJ NA URODZINY"],
+  ["POUR 3 GOLDEN SHAKES", "SKINK 3 GOUE SKOMMELS", "NALEJ 3 ZŁOTE KOKTAJLE"],
+  ["CATCH 2 DONUTS", "VANG 2 DONUTS", "ZŁAP 2 PĄCZKI"],
+  ["SERVE 6 FROM A LUCKY TAP", "BEDIEN 6 BY 'N GELUKSKRAAN", "OBSŁUŻ 6 PRZY SZCZĘŚLIWYM KRANIE"],
   ["FLAVOUR ORDERS", "GEURBESTELLINGS", "ZAMÓWIENIA SMAKÓW"],
   ["FLAVOUR SHAPES", "GEURVORMS", "KSZTAŁTY SMAKÓW"],
   ["GRAPHICS", "GRAFIKA", "GRAFIKA"],
@@ -8233,6 +8309,67 @@ const DICT_ROWS                             = [
     "DAILY CHALLENGE DONE!  +2 STARS",
     "DAAGLIKSE UITDAGING KLAAR!  +2 STERRE",
     "WYZWANIE DNIA UKOŃCZONE!  +2 GWIAZDKI",
+  ],
+  // (v2.0.3) A CHALLENGE AT EVERY STOP
+  ["A CHALLENGE AT EVERY STOP", "'N UITDAGING BY ELKE HALTE", "WYZWANIE NA KAŻDYM PRZYSTANKU"],
+  [
+    "EVERY STOP HAS ITS OWN LITTLE CHALLENGE - POP 3 BALLOONS, CATCH 2 DONUTS...",
+    "ELKE HALTE HET SY EIE KLEIN UITDAGING - LAAT 3 BALLONNE BARS, VANG 2 DONUTS...",
+    "KAŻDY PRZYSTANEK MA WŁASNE MAŁE WYZWANIE - PRZEBIJ 3 BALONY, ZŁAP 2 PĄCZKI...",
+  ],
+  [
+    "IT'S ON THE ARRIVAL SCREEN, AND ITS PROGRESS SHOWS AT THE RIGHT WHILE YOU PLAY",
+    "DIT STAAN OP DIE AANKOMSSKERM, EN HOE VER JY IS, WYS REGS TERWYL JY SPEEL",
+    "JEST NA EKRANIE PRZYLOTU, A POSTĘP WIDAĆ PO PRAWEJ PODCZAS GRY",
+  ],
+  [
+    "DONE, IT PAYS COINS AND A BONUS, AND THE GALAXY MAP TICKS THE STOP",
+    "VOLTOOI, BETAAL DIT MUNTE EN 'N BONUS, EN DIE STERRESTELSELKAART MERK DIE HALTE AF",
+    "ZALICZONE DAJE MONETY I PREMIĘ, A MAPA GALAKTYKI ODHACZA PRZYSTANEK",
+  ],
+  // (v2.0.2) ROLL WITH IT
+  ["ROLL WITH IT", "ROL DAARMEE", "TOCZ SIĘ Z TYM"],
+  [
+    "NEW STOP SPECIALS: A RUNAWAY DONUT TO CATCH, AND A LUCKY TAP THAT SPARKLES",
+    "NUWE HALTE-SPESIALES: 'N WEGLOOP-DONUT OM TE VANG, EN 'N GELUKSKRAAN WAT VONKEL",
+    "NOWE ATRAKCJE PRZYSTANKÓW: UCIEKAJĄCY PĄCZEK DO ZŁAPANIA I SZCZĘŚLIWY KRAN, KTÓRY SIĘ SKRZY",
+  ],
+  [
+    "THE STOP CLEAR SAYS WHAT TONIGHT'S SPECIALS BROUGHT IN",
+    "DIE HALTE SE EINDE SÊ WAT VANAAND SE SPESIALES INGEBRING HET",
+    "KONIEC PRZYSTANKU MÓWI, ILE PRZYNIOSŁY DZISIEJSZE ATRAKCJE",
+  ],
+  [
+    "THE GALAXY MAP SHOWS EACH STOP'S SPECIALS",
+    "DIE STERRESTELSELKAART WYS ELKE HALTE SE SPESIALES",
+    "MAPA GALAKTYKI POKAZUJE ATRAKCJE KAŻDEGO PRZYSTANKU",
+  ],
+  [
+    "ON THE SECOND TOUR EVERY STOP HAS A NEW MIX",
+    "OP DIE TWEEDE TOER HET ELKE HALTE 'N NUWE MENGSEL",
+    "NA DRUGIEJ TRASIE KAŻDY PRZYSTANEK MA NOWĄ MIESZANKĘ",
+  ],
+  // (v2.0.1) PARTY TIME
+  ["PARTY TIME", "PARTYTYD", "CZAS NA IMPREZĘ"],
+  [
+    "NEW STOP SPECIALS: A BIRTHDAY PARTY WHERE THE WHOLE BAR STOPS TO SING",
+    "NUWE HALTE-SPESIALES: 'N VERJAARDAGPARTYTJIE WAAR DIE HELE TOONBANK STILSTAAN OM TE SING",
+    "NOWE ATRAKCJE PRZYSTANKÓW: PRZYJĘCIE URODZINOWE, NA KTÓRYM CAŁA LADA STAJE, ŻEBY ZAŚPIEWAĆ",
+  ],
+  [
+    "AND THE GOLDEN SHAKE: WHEN THE TAPS GLOW GOLD, YOUR NEXT SERVE IS WORTH A FORTUNE",
+    "EN DIE GOUE SKOMMEL: AS DIE KRANE GOUD GLOEI, IS JOU VOLGENDE BEDIENING 'N FORTUIN WERD",
+    "I ZŁOTY KOKTAJL: GDY KRANY ŚWIECĄ NA ZŁOTO, TWOJE NASTĘPNE OBSŁUŻENIE JEST WARTE FORTUNĘ",
+  ],
+  [
+    "FOUR NEW TROPHIES: STAR CATCHER, WAKE-UP CALL, LOST AND FOUND, PARTY POPPER",
+    "VIER NUWE TROFEE: STERVANGER, WEKROEP, VERLORE EN GEVIND, BALLONBARSER",
+    "CZTERY NOWE TROFEA: ŁOWCA GWIAZD, POBUDKA, BIURO RZECZY ZNALEZIONYCH, MISTRZ BALONÓW",
+  ],
+  [
+    "HOW TO PLAY EXPLAINS THE STOP SPECIALS",
+    "HOE OM TE SPEEL VERDUIDELIK DIE HALTE-SPESIALES",
+    "JAK GRAĆ OBJAŚNIA ATRAKCJE PRZYSTANKÓW",
   ],
   // (v2.0.0) SOMETHING NEW AT EVERY STOP
   ["SOMETHING NEW AT EVERY STOP", "IETS NUUTS BY ELKE HALTE", "COŚ NOWEGO NA KAŻDYM PRZYSTANKU"],
@@ -18207,14 +18344,14 @@ function update(dt) {
     // the big announcements take turns (one at a time, the next one waiting its go - hurried along if others are queued);
     // the little ones over people's heads just float up and fade
     const big = G.callouts.filter((c) => !c.world && !c.sub);
-    if (big.length > 3) for (const c of big.slice(1, big.length - 2)) c.life = 0;
+    if (big.length > 3) for (const c of big.slice(1, big.length - 2)) if (!c.keep) c.life = 0; // (v2.0.2: "keep" - a stop special's news waits its turn)
     const head = big.find((c) => c.life > 0);
     // (v1.4.83) THE SMALL ONES TAKE TURNS TOO: at the start of a level "NEW STICKER", the region's name and the fun fact
     // all arrived at once, and only the newest one was shown - the others ran out unseen. Now they wait in line like the
     // big ones: the first one shows and counts down, the rest wait their go (hurried along a little when there's a
     // queue), and no more than four ever wait
     const subs = G.callouts.filter((c) => c.sub && c.life > 0);
-    if (subs.length > 4) for (const c of subs.slice(1, subs.length - 3)) c.life = 0;
+    if (subs.length > 4) for (const c of subs.slice(1, subs.length - 3)) if (!c.keep) c.life = 0;
     const subHead = subs.find((c) => c.life > 0);
     for (let i = G.callouts.length - 1; i >= 0; i--) {
       const c = G.callouts[i];
@@ -21049,6 +21186,9 @@ function update(dt) {
         "#5ff5c8",
         3
       );
+      // (v2.0.2) and what tonight's STOP SPECIALS brought in, under it (specials.ts)
+      if (!demo && G.sp && G.sp.got > 0)
+        G.callouts.push({ text: "STOP SPECIALS  ·  +" + G.sp.got, c: "#ffd24d", life: 3, max: 3, sub: true });
       // (v1.8.40: an endless stop doesn't unlock the tour's stops or give the tour's milestone life)
       if (!G.endless && !G.brush && !G.daily && !CUP.match && G.level + 1 > unlocked())
         // (v1.8.84: see above)
@@ -68170,6 +68310,11 @@ const TROPHIES = [
   { id: "t35", name: "FEATHERWEIGHT", line: "clear 5 stops with low gravity", k: "lightClears", n: 5 }, // (v1.8.10)
   { id: "t36", name: "HEAVYWEIGHT", line: "clear 5 stops with heavy gravity", k: "heavyClears", n: 5 }, // (v1.8.10)
   { id: "t31", name: "MIND READER", line: "8 right flavour orders in a row", k: "ordStreak", n: 8 }, // (v1.7.9)
+  // (v2.0.1) four for the STOP SPECIALS (specials.ts counts them)
+  { id: "t37", name: "STAR CATCHER", line: "catch 15 shooting stars", k: "spStars", n: 15 },
+  { id: "t38", name: "WAKE-UP CALL", line: "wake 15 sleepyheads", k: "spWakes", n: 15 },
+  { id: "t39", name: "LOST AND FOUND", line: "return 10 lost parcels", k: "spParcels", n: 10 },
+  { id: "t40", name: "PARTY POPPER", line: "pop 25 balloons", k: "spBalloons", n: 25 },
   { id: "t30", name: "ROYAL SERVICE", line: "serve the Queen of Andromeda her mint shake", k: "queen", n: 1 }, // (v1.7.4)
   {
     id: "t20",
@@ -72728,7 +72873,7 @@ function funHud(g, s, t, fD, sx, sy) {
     }
     // (v2.0.0) TONIGHT'S STOP SPECIALS - what's new on this bar (specials.ts)
     {
-      const on = specOn() ? SPEC_AT[tourStop()] || [] : [];
+      const on = specOn() ? specAt(tourStop()) : []; // (v2.0.2: specAt - a new mix on tour 2)
       if (on.length)
         fitText(
           g,
@@ -72739,6 +72884,19 @@ function funHud(g, s, t, fD, sx, sy) {
           "700 ",
           12 * s * kA,
           SPECIALS[on[0]].c
+        );
+      // (v2.0.3) and the stop's challenge (ticked if you've done it before)
+      const gl = on.length ? SPEC_GOAL[on[0]] : null;
+      if (gl)
+        fitText(
+          g,
+          T("CHALLENGE") + ": " + T(gl.t) + (specChalDone(tourStop(), on[0]) ? "  ✓" : ""),
+          cssW / 2,
+          nextRow(),
+          cssW - 24,
+          "700 ",
+          12 * s * kA,
+          "#ffd24d"
         );
     }
     if (v.fact && A0.t > 1.0) {
@@ -75043,7 +75201,83 @@ const SPECIALS = {
     c: "#c69bff",
     e: "❓",
   },
+  // (v2.0.1) two more, for the later stops
+  birthday: {
+    n: "BIRTHDAY PARTY",
+    hint: "SERVE THE BIRTHDAY GUEST - THE WHOLE BAR STOPS TO SING",
+    c: "#ffb0e0",
+    e: "🎂",
+  },
+  // (v2.0.2) and two more
+  donut: {
+    n: "RUNAWAY DONUT",
+    hint: "A DONUT ROLLS DOWN A BAR - RUN TO MEET IT BEFORE IT FALLS OFF",
+    c: "#ffb070",
+    e: "🍩",
+  },
+  luckytap: {
+    n: "LUCKY TAP",
+    hint: "WHEN A TAP SPARKLES, EVERY SERVE FROM THAT BAR SCORES EXTRA",
+    c: "#9ff0ff",
+    e: "✨",
+  },
+  golden: {
+    n: "GOLDEN SHAKE",
+    hint: "WHEN THE TAPS GLOW GOLD, YOUR NEXT SERVE IS WORTH A FORTUNE",
+    c: "#ffd24d",
+    e: "🏆",
+  },
 };
+// (v2.0.3) THE STOP CHALLENGE: each stop's first special sets it a little goal - done, it pays coins and a bonus,
+//  and the galaxy map ticks the stop
+const SPEC_GOAL = {
+  balloon: { n: 3, t: "POP 3 BALLOONS" },
+  star: { n: 3, t: "CATCH 3 SHOOTING STARS" },
+  bell: { n: 3, t: "ANSWER THE BELL 3 TIMES" },
+  gift: { n: 2, t: "SERVE 2 LUCKY GIFTS" },
+  sleepy: { n: 3, t: "WAKE 3 SLEEPYHEADS" },
+  tiprain: { n: 6, t: "SERVE 6 IN THE TIP RAIN" },
+  big: { n: 2, t: "FILL UP 2 BIG APPETITES" },
+  flavour: { n: 8, t: "SERVE 8 IN TONIGHT'S FLAVOUR" },
+  parcel: { n: 2, t: "RETURN 2 PARCELS" },
+  happy: { n: 8, t: "SERVE 8 IN HAPPY HOUR" },
+  mystery: { n: 3, t: "SERVE 3 MYSTERY GUESTS" },
+  birthday: { n: 1, t: "SING FOR A BIRTHDAY" },
+  golden: { n: 3, t: "POUR 3 GOLDEN SHAKES" },
+  donut: { n: 2, t: "CATCH 2 DONUTS" },
+  luckytap: { n: 6, t: "SERVE 6 FROM A LUCKY TAP" },
+};
+// (done challenges are kept by stop AND goal - on tour 2 a stop has another set, and another goal)
+const specChalDone = (i, k) => !!store.get("spChal", {})[i + ":" + k];
+// one more towards the stop's challenge (k: the special that did it, who: the player - in versus the reward is theirs)
+function specProg(k, who ) {
+  const S = G.sp;
+  if (!S || !S.ch || S.ch.done || S.ch.k !== k) return;
+  // (v2.0.3: in versus each player counts their own - one did two, the other took the bonus with the third)
+  if (G.versus) {
+    const id = (who || P1).id || 0;
+    S.ch.nv = S.ch.nv || [0, 0];
+    S.ch.nv[id]++;
+    S.ch.n = Math.max(S.ch.nv[0], S.ch.nv[1]);
+    if (S.ch.nv[id] < S.ch.goal) return;
+  } else {
+    S.ch.n++;
+    if (S.ch.n < S.ch.goal) return;
+  }
+  S.ch.done = true;
+  S.ch.doneT = G.time;
+  const m = store.get("spChal", {}),
+    key = tourStop() + ":" + k,
+    first = !m[key];
+  m[key] = 1;
+  store.set("spChal", m);
+  const p = who || P1;
+  specScore(1000, p, p.lane, TAPX - 60);
+  addCoins(first ? 20 : 5, "STOP CHALLENGE"); // (a stop done for the first time pays more)
+  specCall("STOP CHALLENGE DONE!", "#ffd24d", 2.4);
+  sfx("fanfare");
+  for (let i = 0; i < (COMFORT.calm ? 8 : 24); i++) confetti(rnd(0, PW), -10, 1);
+}
 // what each stop has (stop 1 first): one new thing a stop at first, then pairs
 const SPEC_AT = [
   ["balloon"],
@@ -75067,35 +75301,47 @@ const SPEC_AT = [
   ["star", "parcel"],
   ["gift", "big"],
   ["happy", "mystery"],
-  ["flavour", "star"],
-  ["balloon", "bell"],
+  ["birthday", "star"], // (v2.0.1: was flavour & star - the first birthday party)
+  ["donut", "bell"], // (v2.0.2: was balloon & bell - the first runaway donut)
   ["sleepy", "tiprain"],
   ["big", "parcel"],
-  ["gift", "mystery"],
+  ["golden", "gift"], // (v2.0.1: was gift & mystery - the first golden shake)
   ["happy", "balloon"],
-  ["star", "sleepy"],
+  ["donut", "sleepy"], // (v2.0.2: was star & sleepy)
   ["flavour", "bell"],
   ["tiprain", "gift"],
-  ["parcel", "mystery"],
+  ["birthday", "parcel"], // (v2.0.1: was parcel & mystery)
   ["big", "happy"],
-  ["balloon", "flavour"],
+  ["luckytap", "flavour"], // (v2.0.2: was balloon & flavour - the first lucky tap)
   ["star", "gift"],
-  ["bell", "parcel"],
+  ["golden", "bell"], // (v2.0.1: was bell & parcel)
   ["sleepy", "mystery"],
-  ["tiprain", "big"],
-  ["happy", "star"],
+  ["luckytap", "donut"], // (v2.0.2: was tiprain & big)
+  ["birthday", "golden"], // (v2.0.1: was happy & star)
   ["flavour", "parcel"],
   ["mystery", "balloon", "bell"],
 ];
 // (review: nor the daily challenge (its goals) or a cup match (luck in a competition))
 const specOn = () => !G.demo && !G.ta && !G.brush && !G.endless && !G.daily && !CUP.match && G.level >= 1;
-const specList = () => (specOn() ? SPEC_AT[tourStop()] || [] : []);
+// (v2.0.2) A NEW MIX ON THE NEXT TOUR: on tour 2 and after, each stop takes another stop's set (eleven stops on) -
+//  the Grand Festival keeps its own three
+const specAt = (i, loop = G.loop || 0) =>
+  (SPEC_AT[i === LAST_LEVEL - 1 ? i : (i + 11 * loop) % (LAST_LEVEL - 1)] || []).map((k) =>
+    // (with FLAVOUR ORDERS off there's only one flavour to pour - tonight's flavour would be every shake or none, so
+    //  that stop has happy hour instead - here, so the arrival line and the map say so too)
+    k === "flavour" && !COMFORT.flav ? "happy" : k
+  );
+const specList = () => (specOn() ? specAt(tourStop()) : []);
 const specHas = (k) => !!G.sp && G.sp.on.includes(k);
 // (who did it - in versus the bonus is theirs)
+// (v2.0.2 playtest: worth more the further the tour goes - a flat +300 was nothing next to a late stop's scores, and
+//  not worth leaving the taps for)
 function specScore(pts, who, lane, x) {
   SCORER = who || P1;
+  pts = Math.round((pts * (1 + 0.06 * Math.min(30, tourStop()))) / 10) * 10;
   const got = addScore(pts, x, LY(lane, x) - 60) || pts;
   SCORER = null;
+  if (G.sp) G.sp.got = (G.sp.got || 0) + got; // (v2.0.2: what tonight's specials brought in - said at the stop clear)
   return got;
 }
 // a customer free to be picked: walking in, far enough from the taps, and not someone who already has a sign
@@ -75127,9 +75373,11 @@ function specPickable(c) {
 function specLevelStart() {
   // (with FLAVOUR ORDERS off there's only one flavour to pour - tonight's flavour would be every shake or none, so
   //  that stop has happy hour instead)
-  const on = specList().map((k) => (k === "flavour" && !COMFORT.flav ? "happy" : k));
+  const on = specList(); // (v2.0.2: the FLAVOUR ORDERS swap is in specAt now)
+  const g0 = on.length ? SPEC_GOAL[on[0]] : null;
   G.sp = {
     on,
+    ch: g0 ? { k: on[0], n: 0, goal: g0.n, t: g0.t, done: false } : null, // (v2.0.3: the stop challenge)
     t: 0,
     said: false,
     balloon: null,
@@ -75149,7 +75397,20 @@ function specLevelStart() {
     happyT: rnd(10, 16),
     happy: 0,
     mysT: rnd(6, 10),
+    bdayT: rnd(10, 14),
+    goldT: rnd(9, 14),
+    gold: false,
+    donuts: [],
+    dT: rnd(6, 10),
+    lucky: null,
+    lkT: rnd(8, 12),
   };
+}
+// (v2.0.2 playtest) A SPECIAL'S NEWS IS KEPT: arriving with the stop's own burst of news, "NEW: LUCKY TAP" and its
+//  hint were cut from the queue unseen - these wait their turn ("keep", update.ts) instead
+function specCall(text, c, sec, sub = false) {
+  G.callouts.push({ text, c, life: sec, max: sec, keep: true, sub });
+  say(text);
 }
 // tell the player what's on tonight - a moment after the stop's own arrival lines, NEW the first time ever
 function specAnnounce() {
@@ -75161,12 +75422,12 @@ function specAnnounce() {
     if (!seen[k]) {
       seen[k] = 1;
       fresh = true;
-      callout("NEW: " + P0.n, P0.c, 2.6);
-      G.callouts.push({ text: P0.hint, c: "#fff3e2", life: 4.2, max: 4.2, sub: true });
+      specCall("NEW: " + P0.n, P0.c, 2.6);
+      specCall(P0.hint, "#fff3e2", 5, true);
     }
   }
   if (fresh) store.set("specSeen", seen);
-  else callout("TONIGHT: " + S.on.map((k) => SPECIALS[k].n).join(" & "), SPECIALS[S.on[0]].c, 2.2);
+  else specCall("TONIGHT: " + S.on.map((k) => SPECIALS[k].n).join(" & "), SPECIALS[S.on[0]].c, 2.2);
   if (S.on.includes("flavour"))
     G.callouts.push({
       text: "TONIGHT'S FLAVOUR: " + FLAV_NAMES[S.flav] + "  ·  " + FLAV_ICON[S.flav],
@@ -75174,6 +75435,7 @@ function specAnnounce() {
       life: 3.6,
       max: 3.6,
       sub: true,
+      keep: true, // (v2.0.2: waits its turn too)
     });
 }
 function specUpdate(dt) {
@@ -75194,8 +75456,9 @@ function specUpdate(dt) {
   }
   // shooting stars: one falls onto a bar and lies there a while - run over it to catch it
   if (specHas("star")) {
-    if (S.stars.length < 2 && (S.sT -= dt) <= 0) {
-      S.sT = rnd(7, 11);
+    // (v2.0.2 playtest: one at a time, a little less often - there was nearly always one lying there)
+    if (S.stars.length < 1 && (S.sT -= dt) <= 0) {
+      S.sT = rnd(10, 14);
       S.stars.push({ lane: Math.floor(Math.random() * LANES), x: rnd(X0 + 120, TAPX - 120), t: 0 });
       sfx("whoosh", X1);
     }
@@ -75208,6 +75471,8 @@ function specUpdate(dt) {
         specScore(300, by, st.lane, st.x);
         coins(st.lane, st.x, LY(st.lane, st.x) - 10, 8);
         sfx("chime", st.x, 3);
+        fStat("spStars"); // (v2.0.1: for STAR CATCHER)
+        specProg("star", by);
         worldText("CAUGHT A STAR!", { lane: st.lane, x: st.x }, SPECIALS.star.c);
         sparkle(st.x, LY(st.lane, st.x) - 14, [1, 0.9, 0.4, 1], 14, st.lane);
       } else if (st.t > 8) st.dead = true;
@@ -75224,7 +75489,7 @@ function specUpdate(dt) {
         customers.some((c) => c.lane === l && c.state === "walk")
       );
       if (lanes.length) {
-        S.bell = { lane: lanes[Math.floor(Math.random() * lanes.length)], t: 6 };
+        S.bell = { lane: lanes[Math.floor(Math.random() * lanes.length)], t: 4.5 }; // (v2.0.2: 4.5 s, was 6 - it was answered without trying)
         sfx("bell", TAPX);
       }
       S.beT = rnd(10, 15);
@@ -75234,9 +75499,12 @@ function specUpdate(dt) {
   const pick = (k, keyT, lo, hi, setup) => {
     if (!specHas(k)) return;
     if ((S[keyT] -= dt) > 0) return;
-    S[keyT] = rnd(lo, hi);
     const cand = customers.filter(specPickable);
-    if (!cand.length) return;
+    if (!cand.length) {
+      S[keyT] = 1; // (nobody to pick right now - another look in a second, not a whole wait)
+      return;
+    }
+    S[keyT] = rnd(lo, hi);
     const c = cand[Math.floor(Math.random() * cand.length)];
     c.spk = k;
     setup(c);
@@ -75244,6 +75512,13 @@ function specUpdate(dt) {
   pick("gift", "giftT", 11, 16, () => {});
   pick("mystery", "mysT", 11, 16, () => {});
   pick("big", "bigT", 9, 14, () => {});
+  pick("birthday", "bdayT", 35, 50, (c) => worldText("IT'S MY BIRTHDAY!", c, SPECIALS.birthday.c));
+  // (v2.0.1) the golden shake: now and then the taps glow gold - the next serve is worth a fortune
+  if (specHas("golden") && !S.gold && (S.goldT -= dt) <= 0) {
+    S.gold = true;
+    specCall("THE TAPS GLOW GOLD!  YOUR NEXT SERVE IS GOLDEN", SPECIALS.golden.c, 2.2);
+    sfx("power", TAPX);
+  }
   pick("sleepy", "sleepT", 10, 15, (c) => {
     c.napT = 6; // (a nap of its own - blessT stopped them too, but drew holy water's golden halo round them)
     c.moving = false;
@@ -75253,13 +75528,52 @@ function specUpdate(dt) {
     if (c.spk === "sleepy" && !(c.napT > 0) && c.state === "walk") {
       c.spk = null; // (woke up on their own - and walks on as usual)
     }
+  // (v2.0.2) a runaway donut rolls down a bar towards the taps - meet it before it falls off the end (nothing lost if
+  //  you don't)
+  if (specHas("donut")) {
+    if (!S.donuts.length && (S.dT -= dt) <= 0) {
+      S.dT = rnd(12, 18);
+      S.donuts.push({ lane: Math.floor(Math.random() * LANES), x: X0 + 30, t: 0 });
+      sfx("whoosh", X0);
+    }
+    for (const d of S.donuts) {
+      d.t += dt;
+      d.x += 95 * dt;
+      // (v2.0.2 playtest: you have to step out to meet it - standing at the taps caught it every time)
+      const by = active().find((p) => p.lane === d.lane && Math.abs(p.x - d.x) < 30 && p.x < TAPX - 40);
+      if (by) {
+        d.dead = true;
+        specScore(400, by, d.lane, d.x);
+        coins(d.lane, d.x, LY(d.lane, d.x) - 10, 8);
+        sfx("grab", d.x);
+        worldText("CAUGHT THE DONUT!", { lane: d.lane, x: d.x }, SPECIALS.donut.c);
+        specProg("donut", by);
+      } else if (d.x > X1 - 40) {
+        d.dead = true;
+        worldText("IT ROLLED AWAY...", { lane: d.lane, x: TAPX - 40 }, "#c8b0d0");
+      }
+    }
+    S.donuts = S.donuts.filter((d) => !d.dead);
+  }
+  // (v2.0.2) the lucky tap: one bar's tap sparkles for ten seconds - every serve from that bar scores extra
+  if (specHas("luckytap")) {
+    if (S.lucky) {
+      S.lucky.t -= dt;
+      if (S.lucky.t <= 0) S.lucky = null;
+    } else if ((S.lkT -= dt) <= 0) {
+      S.lucky = { lane: Math.floor(Math.random() * LANES), t: 10 };
+      S.lkT = rnd(20, 28);
+      specCall("A LUCKY TAP IS SPARKLING!", SPECIALS.luckytap.c, 2);
+      sfx("chime", TAPX, 5);
+    }
+  }
   // tip rain and happy hour: a few seconds at a time
   if (specHas("tiprain")) {
     if (S.rain > 0) S.rain -= dt;
     else if ((S.rainT -= dt) <= 0) {
       S.rain = 8;
       S.rainT = rnd(22, 30);
-      callout("TIP RAIN!  EVERY SERVE LEAVES A TIP", SPECIALS.tiprain.c, 2);
+      specCall("TIP RAIN!  EVERY SERVE LEAVES A TIP", SPECIALS.tiprain.c, 2);
       sfx("tipdrop", TAPX);
     }
   }
@@ -75268,7 +75582,7 @@ function specUpdate(dt) {
     else if ((S.happyT -= dt) <= 0) {
       S.happy = 10;
       S.happyT = rnd(24, 32);
-      callout("HAPPY HOUR!  EVERY SERVE SCORES EXTRA", SPECIALS.happy.c, 2);
+      specCall("HAPPY HOUR!  EVERY SERVE SCORES EXTRA", SPECIALS.happy.c, 2);
       sfx("fanfare");
     }
   }
@@ -75288,6 +75602,8 @@ function specUpdate(dt) {
         pc.dead = true;
         specScore(700, by, pc.lane, pc.x);
         sfx("tip", pc.x);
+        fStat("spParcels"); // (v2.0.1: for LOST AND FOUND)
+        specProg("parcel", by);
         worldText("RETURNED - THANK YOU!", { lane: pc.lane, x: pc.x }, SPECIALS.parcel.c);
         coins(pc.lane, pc.x, LY(pc.lane, pc.x) - 10, 6);
       } else if (pc.t > 12) pc.dead = true;
@@ -75297,15 +75613,19 @@ function specUpdate(dt) {
 }
 // a customer has just been served (update.ts, after the catch) - the specials that answer a serve
 function specServed(c, s, demo) {
+  c.napT = 0; // (a birthday singer served mid-song doesn't stand frozen later, when they walk in again)
   const S = G.sp;
   if (demo || !S || !S.on.length || !specOn()) return;
   const who = PL[s.owner || 0] || P1;
-  if (S.balloon && S.balloon.lane === s.lane && S.balloon.t > 0.8) {
+  // (v2.0.2 playtest: a serve that reaches someone under it - any serve on the bar popped it without trying)
+  if (S.balloon && S.balloon.lane === s.lane && S.balloon.t > 0.8 && Math.abs(c.x - S.balloon.x) < 180) {
     const b = S.balloon;
     S.balloon = null;
     S.bT = rnd(6, 10);
     specScore(250, who, b.lane, b.x);
     sfx("swish", b.x);
+    fStat("spBalloons"); // (v2.0.1: for PARTY POPPER)
+    specProg("balloon", who);
     worldText("POP!", { lane: b.lane, x: b.x }, SPECIALS.balloon.c);
     for (let i = 0; i < (COMFORT.calm ? 4 : 12); i++) confetti(b.x + rnd(-20, 20), LY(b.lane, b.x) - 160, 1);
   }
@@ -75314,21 +75634,50 @@ function specServed(c, s, demo) {
     specScore(500, who, c.lane, c.x);
     sfx("chime", c.x, 4);
     worldText("DING! RIGHT ON TIME", c, SPECIALS.bell.c);
+    specProg("bell", who);
   }
-  if (S.rain > 0 && tips.length < 6)
-    tips.push({ lane: c.lane, x: Math.min(X1 - 60, c.x + 24), t: 0, v: 250 });
+  if (S.rain > 0) {
+    if (tips.length < 6) tips.push({ lane: c.lane, x: Math.min(X1 - 60, c.x + 24), t: 0, v: 250 });
+    specProg("tiprain", who);
+  }
   if (S.happy > 0) {
     specScore(200, who, c.lane, c.x);
+    specProg("happy", who);
   }
-  if (specHas("flavour") && s.flavor === S.flav && s.special === undefined) {
-    specScore(150, who, c.lane, c.x);
-    worldText("TONIGHT'S FLAVOUR!", c, FLAV_TXT[S.flav]);
+  // (v2.0.2) the lucky tap - every serve from its bar
+  if (S.lucky && S.lucky.lane === s.lane) {
+    specScore(250, who, c.lane, c.x);
+    worldText("LUCKY TAP!", c, SPECIALS.luckytap.c);
+    specProg("luckytap", who);
+  }
+  // (v2.0.1) the golden shake - the first serve after the taps glow
+  if (S.gold) {
+    S.gold = false;
+    S.goldT = rnd(16, 22);
+    specScore(500, who, c.lane, c.x);
+    coins(c.lane, c.x, LY(c.lane, c.x) - 10, 12);
+    sfx("fanfare");
+    worldText("A GOLDEN SHAKE!", c, SPECIALS.golden.c);
+    specProg("golden", who);
+  }
+  // (v2.0.2 playtest: not for a customer who ordered another flavour - and the words only the first few times)
+  if (
+    specHas("flavour") &&
+    s.flavor === S.flav &&
+    s.special === undefined &&
+    (c.want === undefined || c.want === S.flav)
+  ) {
+    specScore(60, who, c.lane, c.x); // (v2.0.2: 60, was 150 - on every serve it came to a fifth of a late stop's score)
+    if ((S.flavN = (S.flavN || 0) + 1) <= 3) worldText("TONIGHT'S FLAVOUR!", c, FLAV_TXT[S.flav]);
+    specProg("flavour", who);
   }
   if (c.spk === "sleepy") {
     c.spk = null;
     c.napT = 0;
     specScore(400, who, c.lane, c.x);
     sfx("chirp", c.x);
+    fStat("spWakes"); // (v2.0.1: for WAKE-UP CALL)
+    specProg("sleepy", who);
     worldText("WAKEY WAKEY!", c, SPECIALS.sleepy.c);
   } else if (c.spk === "big") {
     if (!c.bigHalf) {
@@ -75345,6 +75694,7 @@ function specServed(c, s, demo) {
       specScore(600, who, c.lane, c.x);
       sfx("burp", c.x);
       worldText("STUFFED - THANK YOU!", c, SPECIALS.big.c);
+      specProg("big", who);
     }
   } else if (c.spk === "gift") {
     c.spk = null;
@@ -75358,6 +75708,20 @@ function specServed(c, s, demo) {
     });
     sfx("power", c.x);
     worldText("A GIFT FOR YOU!", c, SPECIALS.gift.c);
+    specProg("gift", who);
+  } else if (c.spk === "birthday") {
+    // (v2.0.1) HAPPY BIRTHDAY: everyone else walking on that bar stops for a moment to sing along
+    c.spk = null;
+    specScore(300, who, c.lane, c.x);
+    for (const o of customers)
+      if (o !== c && o.lane === c.lane && o.state === "walk" && !o.type.boss && !o.type.glutton) {
+        o.napT = Math.max(o.napT || 0, 2.5);
+        o.moving = false;
+      }
+    sfx("harmony", c.x);
+    worldText("HAPPY BIRTHDAY!", c, SPECIALS.birthday.c);
+    specProg("birthday", who);
+    for (let i = 0; i < (COMFORT.calm ? 6 : 18); i++) confetti(c.x + rnd(-30, 30), LY(c.lane, c.x) - 150, 1);
   } else if (c.spk === "mystery") {
     c.spk = null;
     const r = Math.floor(Math.random() * 4);
@@ -75376,6 +75740,7 @@ function specServed(c, s, demo) {
       worldText("MYSTERY PRIZE: A SHIELD!", c, SPECIALS.mystery.c);
     }
     sfx("bonus", c.x);
+    specProg("mystery", who);
   }
 }
 // where a spot on the bar is on the screen (and how big things are drawn there) - as the order bubbles do
@@ -75406,7 +75771,9 @@ function specHud(g, s, sx, sy) {
   g.textBaseline = "middle";
   const icon = (e, lane, x, dy, size, a = 1) => {
     const p = specScr(lane, x, dy, sx, sy),
-      px = Math.max(14, Math.min(46, size * p.u));
+      px = Math.max(VERT ? 20 : 14, Math.min(46, size * p.u)); // (v2.0.2: a little bigger at least, on a phone)
+    // (v2.0.3: never up over the HUD - with two players its block is taller, and a sign by the door covered it)
+    if (p.y - px / 2 < (HUD_TOP.low || 0)) return p;
     g.globalAlpha = a;
     g.font = Math.round(px) + "px sans-serif";
     g.fillText(e, p.x, p.y);
@@ -75416,7 +75783,7 @@ function specHud(g, s, sx, sy) {
   };
   if (S.balloon) {
     const b = S.balloon;
-    icon("🎈", b.lane, b.x, -70 + 8 * bob(2), 44, Math.min(1, b.t * 2));
+    icon("🎈", b.lane, b.x, (b.lane === 0 ? -45 : -70) + 8 * bob(2), 44, Math.min(1, b.t * 2)); // (lower on the top bar - clear of the stage's caption)
   }
   for (const st of S.stars) {
     const f = Math.min(1, st.t / 0.7);
@@ -75429,6 +75796,20 @@ function specHud(g, s, sx, sy) {
       st.t > 6.5 && bob(14) < 0 ? 0.4 : 1
     );
   }
+  for (const d of S.donuts) icon("🍩", d.lane, d.x, -18, 30);
+  if (S.lucky)
+    // (v2.0.3: lower in the wide view - the bars are only 86 apart, and 120 up sat on the tap of the bar above)
+    icon(
+      "✨",
+      S.lucky.lane,
+      TAPX + 20,
+      (VERT ? -120 : -55) + 5 * bob(8),
+      44,
+      S.lucky.t < 1.5 && bob(14) < 0 ? 0.4 : 1
+    ); // (over the tap, not the bartender)
+  // (v2.0.1: the golden shake waiting - a gold star over each player's taps)
+  // (a trophy, not a star - players had learnt to run over stars)
+  if (S.gold) for (const p of active()) icon("🏆", p.lane, TAPX + 20, (VERT ? -110 : -55) + 5 * bob(6), 36);
   if (S.bell)
     icon("🔔", S.bell.lane, TAPX - 90, -60 + 6 * bob(9), 36, S.bell.t < 1.5 && bob(14) < 0 ? 0.4 : 1);
   for (const pc of S.parcels) icon("📦", pc.lane, pc.x, -22, 28, pc.t > 10 && bob(14) < 0 ? 0.4 : 1);
@@ -75437,28 +75818,50 @@ function specHud(g, s, sx, sy) {
       const e = c.spk === "big" ? (c.bigHalf ? "×1" : "×2") : SPECIALS[c.spk] && SPECIALS[c.spk].e;
       if (!e) continue;
       if (e[0] === "×") {
-        const p = specScr(c.lane, c.x - 26, -128, sx, sy),
+        const p = specScr(c.lane, c.x, -112, sx, sy),
           px = Math.max(12, Math.min(30, 22 * p.u));
+        hudObs(p.x, p.y, px * 1.6, px); // (v2.0.2: floating words keep off it)
         g.font = "800 " + Math.round(px) + "px " + FB;
         g.lineWidth = 3 * s;
         g.strokeStyle = "rgba(8,4,16,.85)";
         g.strokeText(e, p.x, p.y);
         g.fillStyle = SPECIALS.big.c;
         g.fillText(e, p.x, p.y);
-      } else icon(e, c.lane, c.x - 26, -128 + 4 * bob(3), 30);
+      } else icon(e, c.lane, c.x, -112 + 4 * bob(3), 30); // (v2.0.2: right over the head)
     }
   // the windows: how long tip rain and happy hour still run - small, at the right, under the LIVES (clear of the
   //  stage show in the middle)
   const wins = [];
   if (S.rain > 0) wins.push(["TIP RAIN", S.rain, SPECIALS.tiprain.c]);
   if (S.happy > 0) wins.push(["HAPPY HOUR", S.happy, SPECIALS.happy.c]);
+  if (S.lucky) wins.push(["LUCKY TAP", S.lucky.t, SPECIALS.luckytap.c]); // (v2.0.2)
+  // (v2.0.3) the stop challenge and how far it's got - and for a few seconds once it's done
+  if (S.ch && (!S.ch.done || G.time - S.ch.doneT < 4))
+    wins.unshift([
+      "★ " + T(S.ch.t),
+      S.ch.done
+        ? "✓"
+        : G.versus && S.ch.nv
+          ? "P1 " + S.ch.nv[0] + "/" + S.ch.goal + "  P2 " + S.ch.nv[1] + "/" + S.ch.goal
+          : S.ch.n + "/" + S.ch.goal,
+      S.ch.done ? "#7dff9a" : "#ffd24d",
+    ]);
   if (wins.length) {
     g.font = fDs(s, 12);
     g.textAlign = "right";
     const xr = cssW - 14 * s;
     let y = Math.max(HUDB.b || 0, HUD_TOP.low || 0, 40 * s) + (HUDB.under ? 40 : 30) * s;
+    // (v2.0.3: on a phone held upright, below the stage's LIVE caption - the first line ran into it)
+    const cap = STAGE_CAP.box;
+    if (VERT && cap && performance.now() - cap.t < 500) y = Math.max(y, cap.y + cap.h / 2 + 12 * s);
     for (const [n, left, colr] of wins) {
-      const txt = T(n) + "  " + Math.ceil(left);
+      const txt = T(n) + "  " + (typeof left === "number" ? Math.ceil(left) : left);
+      // (v2.0.3: on a dark strip in the tall view - on a mirror stop the taps are up here, under the words)
+      if (VERT) {
+        const w0 = g.measureText(txt).width;
+        g.fillStyle = "rgba(8,4,16,.6)";
+        g.fillRect(xr - w0 - 6 * s, y - 9 * s, w0 + 12 * s, 18 * s);
+      }
       g.lineWidth = 3 * s;
       g.strokeStyle = "rgba(8,4,16,.85)";
       g.strokeText(txt, xr, y);
@@ -84204,9 +84607,17 @@ function gmPlayText() {
       "GRAVITY " +
       (gv < 0.1 ? gv.toFixed(2) : gv.toFixed(gv < 1 ? 2 : 1)) +
       " g  ·  HOUSE COCKTAIL: " +
-      (ck && store.get("cocktails", {})[k] ? ck.n : "???");
+      (ck && store.get("cocktails", {})[k] ? ck.n : "???") +
+      gmSpecIcons(k); // (v2.0.2)
   }
 }
+// (v2.0.2) the chosen stop's specials as their pictures ("   🎈 ⭐") - for the line under the map
+const gmSpecIcons = (k) => {
+  const on = specAt(k, 0);
+  return on.length
+    ? "   " + on.map((s) => SPECIALS[s].e).join(" ") + (specChalDone(k, on[0]) ? " ✓" : "")
+    : ""; // (v2.0.3: ✓ challenge done)
+};
 function gmPlay() {
   fromLevel = GMV.sel + 1;
   store.set("from", fromLevel);
@@ -84241,7 +84652,8 @@ function gmInfoLine(g, w, h) {
     ck = HOUSE_CK[k],
     known = !!store.get("cocktails", {})[k],
     a = T("GRAVITY " + (gv < 0.1 ? gv.toFixed(2) : gv.toFixed(gv < 1 ? 2 : 1)) + " g"),
-    b = T("HOUSE COCKTAIL") + ": " + (ck && known ? T(ck.n) : "???"),
+    // (v2.0.2: and the stop's specials, as their little pictures)
+    b = T("HOUSE COCKTAIL") + ": " + (ck && known ? T(ck.n) : "???") + gmSpecIcons(k),
     tall = gmTall();
   {
     // (v1.8.22: turned round while the map is open - the line over the map follows)
@@ -87516,7 +87928,7 @@ function levelOfTour(of) {
     inTour = ((lv - 1) % LAST_LEVEL) + 1;
   return (tour > 1 ? "TOUR " + tour + "  ·  " : "") + "LEVEL " + inTour + of + LAST_LEVEL;
 }
-const GAME_VERSION = "v2.0.0",
+const GAME_VERSION = "v2.0.3",
   GAME_DATE = "27.11.2026",
   VERSION_TEXT = GAME_VERSION + "  ·  " + GAME_DATE;
 const FB = '"Chakra Petch", "Segoe UI", sans-serif';
@@ -95619,6 +96031,35 @@ profWire();
 //  the game, and where the motion capture, the folk songs and the fonts come from. Both from the menu at any time.
 // =====================================================================================
 const NEWS = [
+  {
+    ver: "v2.0.3",
+    title: "A CHALLENGE AT EVERY STOP",
+    items: [
+      "EVERY STOP HAS ITS OWN LITTLE CHALLENGE - POP 3 BALLOONS, CATCH 2 DONUTS...",
+      "IT'S ON THE ARRIVAL SCREEN, AND ITS PROGRESS SHOWS AT THE RIGHT WHILE YOU PLAY",
+      "DONE, IT PAYS COINS AND A BONUS, AND THE GALAXY MAP TICKS THE STOP",
+    ],
+  },
+  {
+    ver: "v2.0.2",
+    title: "ROLL WITH IT",
+    items: [
+      "NEW STOP SPECIALS: A RUNAWAY DONUT TO CATCH, AND A LUCKY TAP THAT SPARKLES",
+      "THE STOP CLEAR SAYS WHAT TONIGHT'S SPECIALS BROUGHT IN",
+      "THE GALAXY MAP SHOWS EACH STOP'S SPECIALS",
+      "ON THE SECOND TOUR EVERY STOP HAS A NEW MIX",
+    ],
+  },
+  {
+    ver: "v2.0.1",
+    title: "PARTY TIME",
+    items: [
+      "NEW STOP SPECIALS: A BIRTHDAY PARTY WHERE THE WHOLE BAR STOPS TO SING",
+      "AND THE GOLDEN SHAKE: WHEN THE TAPS GLOW GOLD, YOUR NEXT SERVE IS WORTH A FORTUNE",
+      "FOUR NEW TROPHIES: STAR CATCHER, WAKE-UP CALL, LOST AND FOUND, PARTY POPPER",
+      "HOW TO PLAY EXPLAINS THE STOP SPECIALS",
+    ],
+  },
   {
     ver: "v2.0.0",
     title: "SOMETHING NEW AT EVERY STOP",

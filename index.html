@@ -7097,6 +7097,8 @@ const DICT_ROWS                             = [
     "ZAĆMIENIE!  NAPIWKI SĄ WARTE PODWÓJNIE",
   ],
   ["SWAP!", "RUIL!", "ZAMIANA!"],
+  ["ANY STOP FROM 3 ON", "ENIGE HALTE VANAF 3", "KAŻDY PRZYSTANEK OD 3"], // (v2.1.1: the sky log)
+  ["NEEDS FLAVOUR ORDERS ON", "HET GEURBESTELLINGS AAN NODIG", "WYMAGA WŁĄCZONYCH ZAMÓWIEŃ SMAKÓW"],
   ["ECLIPSE TIPS ×2", "VERDUISTERINGSFOOIE ×2", "NAPIWKI ZAĆMIENIA ×2"],
   // (v2.0.8) the stop's own space event - its name on the arrival screen
   ["IN THE SKY", "IN DIE LUG", "NA NIEBIE"],
@@ -8438,6 +8440,23 @@ const DICT_ROWS                             = [
     "DAILY CHALLENGE DONE!  +2 STARS",
     "DAAGLIKSE UITDAGING KLAAR!  +2 STERRE",
     "WYZWANIE DNIA UKOŃCZONE!  +2 GWIAZDKI",
+  ],
+  // (v2.1.1) SKY LOG
+  ["SKY LOG", "LUGLOGBOEK", "DZIENNIK NIEBA"],
+  [
+    "THE TROPHY ROOM HAS A SKY LOG: EVERY SPACE EVENT YOU'VE SEEN",
+    "DIE TROFEEKAMER HET 'N LUGLOGBOEK: ELKE RUIMTEGEBEURTENIS WAT JY GESIEN HET",
+    "SALA TROFEÓW MA DZIENNIK NIEBA: KAŻDE WYDARZENIE KOSMICZNE, KTÓRE WIDZIAŁEŚ",
+  ],
+  [
+    "THE ONES STILL MISSING TELL YOU WHERE TO LOOK UP",
+    "DIE WAT NOG ONTBREEK SÊ VIR JOU WAAR OM OP TE KYK",
+    "TE, KTÓRYCH JESZCZE BRAKUJE, MÓWIĄ, GDZIE SPOJRZEĆ W GÓRĘ",
+  ],
+  [
+    "FIRST SIGHTING! - THE FIRST TIME YOU SEE EACH KIND OF EVENT",
+    "EERSTE WAARNEMING! - DIE EERSTE KEER DAT JY ELKE SOORT GEBEURTENIS SIEN",
+    "PIERWSZA OBSERWACJA! - GDY PO RAZ PIERWSZY WIDZISZ DANE WYDARZENIE",
   ],
   // (v2.1.0) SWAPS AND SHADOWS
   ["SWAPS AND SHADOWS", "RUILE EN SKADUWEES", "ZAMIANY I CIENIE"],
@@ -13562,6 +13581,8 @@ const DICT_PAT                             = [
   ], // (v1.8.1)
   [/^COCKTAIL MENU  ·  (\d+) \/ (\d+)$/, "KELKIEMENU  ·  $1 / $2", "KARTA KOKTAJLI  ·  $1 / $2"],
   [/^SERVE IT AT (.+)$/, "BEDIEN DIT BY $1", "PODAJ GO W: $1"],
+  [/^SKY LOG  ·  (\d+) \/ (\d+)$/, "LUGLOGBOEK  ·  $1 / $2", "DZIENNIK NIEBA  ·  $1 / $2"], // (v2.1.1)
+  [/^LOOK UP AT (.+)$/, "KYK OP BY $1", "SPÓJRZ W GÓRĘ W: $1"],
   // (v1.8.0) this world's gravity, on the arrival screen
   [
     /^GRAVITY ([\d.]+) g  ·  ALMOST WEIGHTLESS$/,
@@ -73747,6 +73768,35 @@ function buildTroph() {
     el.appendChild(sm);
     list.appendChild(el);
   });
+  // (v2.1.1) THE SKY LOG: every kind of space event - the ones you've seen with their picture and name, the others a
+  //  mystery (and the first stop where it's the sky's own event, to go and look)
+  const S = store.get("evSeen", {}),
+    h2 = document.createElement("h3");
+  h2.style.gridColumn = "1 / -1";
+  h2.style.margin = "14px 0 4px";
+  h2.textContent = "SKY LOG  ·  " + EVENT_KINDS.filter((k) => S[k]).length + " / " + EVENT_KINDS.length;
+  list.appendChild(h2);
+  for (const k of EVENT_KINDS) {
+    const ok = !!S[k],
+      el = document.createElement("button"),
+      at = EV_AT.indexOf(k);
+    el.className = ok ? "on" : "lock";
+    const ic = document.createElement("span"); // (the picture on its own, so the name is translated on its own)
+    ic.textContent = (ok ? EV_INFO[k].e : "❔") + " ";
+    el.appendChild(ic);
+    el.appendChild(document.createTextNode(ok ? EV_INFO[k].n : "???"));
+    const sm = document.createElement("small");
+    // (review: telepathy needs FLAVOUR ORDERS on - with them off it never comes, so say so. The stop named is the first
+    //  tour's - a second tour moves them round)
+    sm.textContent =
+      k === "telepathy" && !COMFORT.flav
+        ? "NEEDS FLAVOUR ORDERS ON"
+        : at >= 0
+          ? "LOOK UP AT " + VENUES[at].name
+          : "ANY STOP FROM 3 ON";
+    el.appendChild(sm);
+    list.appendChild(el);
+  }
 }
 function funPanelsInit() {
   $k("bShop").onclick = () => openFP("shop");
@@ -89041,8 +89091,8 @@ function levelOfTour(of) {
     inTour = ((lv - 1) % LAST_LEVEL) + 1;
   return (tour > 1 ? "TOUR " + tour + "  ·  " : "") + "LEVEL " + inTour + of + LAST_LEVEL;
 }
-const GAME_VERSION = "v2.1.0",
-  GAME_DATE = "27.11.2026",
+const GAME_VERSION = "v2.1.1",
+  GAME_DATE = "28.11.2026",
   VERSION_TEXT = GAME_VERSION + "  ·  " + GAME_DATE;
 const FB = '"Chakra Petch", "Segoe UI", sans-serif';
 let FD = '"Bungee", "Impact", sans-serif';
@@ -97144,6 +97194,15 @@ profWire();
 //  the game, and where the motion capture, the folk songs and the fonts come from. Both from the menu at any time.
 // =====================================================================================
 const NEWS = [
+  {
+    ver: "v2.1.1",
+    title: "SKY LOG",
+    items: [
+      "THE TROPHY ROOM HAS A SKY LOG: EVERY SPACE EVENT YOU'VE SEEN",
+      "THE ONES STILL MISSING TELL YOU WHERE TO LOOK UP",
+      "FIRST SIGHTING! - THE FIRST TIME YOU SEE EACH KIND OF EVENT",
+    ],
+  },
   {
     ver: "v2.1.0",
     title: "SWAPS AND SHADOWS",

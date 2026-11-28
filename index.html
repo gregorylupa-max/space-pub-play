@@ -8441,6 +8441,23 @@ const DICT_ROWS                             = [
     "DAAGLIKSE UITDAGING KLAAR!  +2 STERRE",
     "WYZWANIE DNIA UKOŃCZONE!  +2 GWIAZDKI",
   ],
+  // (v2.1.4) FEWER LIVES ON EASY
+  ["FEWER LIVES ON EASY", "MINDER LEWENS OP MAKLIK", "MNIEJ ŻYĆ NA ŁATWYM"],
+  [
+    "ON EASY EACH EXTRA LIFE FROM THE SCORE NEEDS TWICE AS MANY POINTS AS THE LAST",
+    "OP MAKLIK HET ELKE EKSTRA LEWE UIT DIE TELLING TWEE KEER SOVEEL PUNTE AS DIE VORIGE NODIG",
+    "NA ŁATWYM KAŻDE DODATKOWE ŻYCIE ZA PUNKTY WYMAGA DWA RAZY WIĘCEJ PUNKTÓW NIŻ POPRZEDNIE",
+  ],
+  [
+    "EASY HOLDS 9 LIVES AT MOST - 17 BY THE END OF THE MILKY WAY WAS FAR TOO MANY",
+    "MAKLIK HOU HOOGSTENS 9 LEWENS - 17 TEEN DIE EINDE VAN DIE MELKWEG WAS VEELS TE VEEL",
+    "ŁATWY TRZYMA NAJWYŻEJ 9 ŻYĆ - 17 POD KONIEC DROGI MLECZNEJ TO BYŁO STANOWCZO ZA DUŻO",
+  ],
+  [
+    "THE HEART POWER-UP COMES HALF AS OFTEN ON EASY",
+    "DIE HART-KRAG KOM HALF SO DIKWELS OP MAKLIK",
+    "BONUS SERCA POJAWIA SIĘ NA ŁATWYM O POŁOWĘ RZADZIEJ",
+  ],
   // (v2.1.3) EDGE TO EDGE
   ["EDGE TO EDGE", "RAND TOT RAND", "OD KRAWĘDZI DO KRAWĘDZI"],
   [
@@ -16623,6 +16640,15 @@ const DIFFS = {
 // (v1.4.55) EASY is the default difficulty now (a new setting, "diff2", so everyone starts on EASY once)
 let difficulty = DIFFS[store.get("diff2", "easy")] ? store.get("diff2", "easy") : "easy";
 const DF = () => DIFFS[G.demo ? "normal" : G.free ? "kid" : difficulty]; // (FREE PLAY is always gentle)
+// (v2.1.4) FEWER LIVES ON EASY, AS THE OWNER ASKED: by the end of the Milky Way an EASY game had 17 lives - the scores
+//  of the far stops (100,000 a stop) passed a 160,000 mark nearly every stop. Now each EASY score life needs twice
+//  the gap of the one before (25,000, then 125,000, 325,000, 725,000, 1.5 million...) and EASY holds at most 9 lives
+//  (more never comes from the score, the milestone or the heart power-up - the shop's and the tour's still do)
+const EASY_MAX_LIVES = 9;
+const nextLifeMark = (x) => (difficulty === "easy" ? 25000 + 2 * (x - 25000) + 100000 : x + 40000);
+// how many of these lives there's room for (everything on NORMAL and HARD)
+const lifeRoom = (have, n = 1) =>
+  difficulty === "easy" ? Math.max(0, Math.min(n, EASY_MAX_LIVES - have)) : n;
 function cycleDiff() {
   difficulty = { kid: "easy", easy: "normal", normal: "hard", hard: "kid" }[difficulty];
   store.set("diff2", difficulty);
@@ -18448,7 +18474,8 @@ function spawnPower() {
   // (v1.4.57: on EASY the extra-life power-up turns up half as often - lives piled up into the dozens)
   const wt = (k) =>
     POWERS[k].w *
-    (k === "life" && difficulty === "easy" ? 0.25 : 1) * // (v1.4.63: and halved again)
+    (k === "life" && difficulty === "easy" ? 0.12 : 1) * // (v1.4.63: and halved again) (v2.1.4: and halved once more)
+    (k === "life" && !lifeRoom(G.versus ? Math.min(P1.lives, P2.lives) : G.lives) ? 0 : 1) * // (v2.1.4: none when EASY's 9 are full)
     (k === "life" && !G.versus && (G.free || DF().kid) ? 0 : 1) * // (v1.9.9: none where lives are endless)
     (low
       ? { shield: 2.5, life: 3, slow: 1.8, decaf: 0.3 }[k] || 1
@@ -18484,8 +18511,9 @@ function updatePowers(dt, demo) {
       u.dead = true;
       const P0 = POWERS[u.type];
       if (u.type === "life") {
-        if (G.versus) by.lives++;
-        else G.lives++;
+        // (v2.1.4: never past EASY's 9 - one already lying on the bar when they filled up)
+        if (G.versus) by.lives += lifeRoom(by.lives);
+        else G.lives += lifeRoom(G.lives);
       } else if (u.type === "decaf") {
         by.tired = 7;
         by.dashT = 0;
@@ -21530,9 +21558,16 @@ function update(dt) {
       ) {
         // (v1.4.63: on EASY the milestone life only every 20 stops - half as many)
         // (v1.9.9: where lives are endless (kid mode, RELAX) just the milestone - "+1 LIFE" meant nothing there)
-        if (!G.versus && (G.free || DF().kid)) callout("MILESTONE: " + G.level + " STOPS DONE", "#5ff5c8", 3);
+        // (v2.1.4: and none past EASY's 9 lives)
+        //  (review: in versus too - both already at 9 got the "+1 LIFE" words and no life)
+        if (
+          (!G.versus && (G.free || DF().kid)) ||
+          (!G.versus && !lifeRoom(G.lives)) ||
+          (G.versus && !PL.some((p) => lifeRoom(p.lives)))
+        )
+          callout("MILESTONE: " + G.level + " STOPS DONE", "#5ff5c8", 3);
         else {
-          if (G.versus) for (const p of PL) p.lives++;
+          if (G.versus) for (const p of PL) p.lives += lifeRoom(p.lives);
           else G.lives++;
           callout("MILESTONE: " + G.level + " STOPS DONE  ·  +1 LIFE", "#5ff5c8", 3);
         }
@@ -24696,9 +24731,11 @@ function addScore(n, x , y ) {
   // "EXTRA LIFE!" showed there; the milestones still move on
   let ups = 0;
   while (who.score >= who.nextLife) {
-    who.nextLife += difficulty === "easy" ? 160000 : 40000; // (v1.4.57: on EASY an extra life for every 80,000 points - half as many) (v1.4.63: halved again - every 160,000)
+    // (v1.4.57: on EASY an extra life for every 80,000 points - half as many) (v1.4.63: halved again - every 160,000)
+    who.nextLife = nextLifeMark(who.nextLife); // (v2.1.4: on EASY each gap twice the last - setup.ts)
     ups++;
   }
+  if (ups) ups = lifeRoom(G.versus ? who.lives : G.lives, ups); // (v2.1.4: EASY holds 9 at most)
   if (ups && !(!G.versus && (G.free || DF().kid))) {
     if (G.versus) who.lives += ups;
     else G.lives += ups;
@@ -73506,8 +73543,7 @@ function continueGame() {
   P2.score = c.p2;
   // (v1.9.4) THE EXTRA-LIFE MARKS CATCH UP WITH THE SCORE: startGame set them back to 25,000, so the first serve after
   //  CONTINUE paid every mark between there and the score kept - seven lives at 300,000, and again every game over
-  for (const p of [P1, P2])
-    while (p.score >= p.nextLife) p.nextLife += difficulty === "easy" ? 160000 : 40000;
+  for (const p of [P1, P2]) while (p.score >= p.nextLife) p.nextLife = nextLifeMark(p.nextLife); // (v2.1.4: the same marks as endgame.ts)
   G.contN = (c.n || 0) + 1;
   // (v1.8.19) the festival stamps and races won come back too - and continuing at the Grand Festival itself, the
   // stamps are paid out now (the stop began before they were back)
@@ -89147,7 +89183,7 @@ function levelOfTour(of) {
     inTour = ((lv - 1) % LAST_LEVEL) + 1;
   return (tour > 1 ? "TOUR " + tour + "  ·  " : "") + "LEVEL " + inTour + of + LAST_LEVEL;
 }
-const GAME_VERSION = "v2.1.3",
+const GAME_VERSION = "v2.1.4",
   GAME_DATE = "28.11.2026",
   VERSION_TEXT = GAME_VERSION + "  ·  " + GAME_DATE;
 const FB = '"Chakra Petch", "Segoe UI", sans-serif';
@@ -97250,6 +97286,15 @@ profWire();
 //  the game, and where the motion capture, the folk songs and the fonts come from. Both from the menu at any time.
 // =====================================================================================
 const NEWS = [
+  {
+    ver: "v2.1.4",
+    title: "FEWER LIVES ON EASY",
+    items: [
+      "ON EASY EACH EXTRA LIFE FROM THE SCORE NEEDS TWICE AS MANY POINTS AS THE LAST",
+      "EASY HOLDS 9 LIVES AT MOST - 17 BY THE END OF THE MILKY WAY WAS FAR TOO MANY",
+      "THE HEART POWER-UP COMES HALF AS OFTEN ON EASY",
+    ],
+  },
   {
     ver: "v2.1.3",
     title: "EDGE TO EDGE",

@@ -8441,6 +8441,23 @@ const DICT_ROWS                             = [
     "DAAGLIKSE UITDAGING KLAAR!  +2 STERRE",
     "WYZWANIE DNIA UKOŃCZONE!  +2 GWIAZDKI",
   ],
+  // (v2.1.2) OPEN WORMHOLES
+  ["OPEN WORMHOLES", "OOP WURMGATE", "OTWARTE TUNELE"],
+  [
+    "THE WORMHOLE TURNS UP AS IT SHOULD - BEFORE, A BUSY BAR KEPT IT AWAY",
+    "DIE WURMGAT DAAG NOU OP SOOS DIT MOET - VOORHEEN HET 'N BESIGE TOONBANK DIT WEGGEHOU",
+    "TUNEL CZASOPRZESTRZENNY POJAWIA SIĘ TERAZ TAK, JAK POWINIEN - WCZEŚNIEJ ZATŁOCZONA LADA GO ODSTRASZAŁA",
+  ],
+  [
+    "IT FINDS A FREE SPOT ON ANOTHER BAR FOR THE CUSTOMER TO POP OUT",
+    "DIT VIND 'N VRY PLEK BY 'N ANDER TOONBANK WAAR DIE KLANT UITKOM",
+    "ZNAJDUJE WOLNE MIEJSCE PRZY INNEJ LADZIE, GDZIE KLIENT SIĘ POJAWI",
+  ],
+  [
+    "TWIN SUNS, JANUS AND THE WANDERER GET THEIR WORMHOLE",
+    "TWIN SUNS, JANUS EN DIE SWERWER KRY HUL WURMGAT",
+    "TWIN SUNS, JANUS I WĘDROWIEC DOSTAJĄ SWÓJ TUNEL",
+  ],
   // (v2.1.1) SKY LOG
   ["SKY LOG", "LUGLOGBOEK", "DZIENNIK NIEBA"],
   [
@@ -76370,6 +76387,8 @@ const evAbductable = (c) =>
 // (v2.0.7) who a mind freeze holds (and who gets the frosty ring): not the bosses or the glutton - and not someone
 //  still fading in or out (review)
 const evFreezable = (c) => c.state === "walk" && !c.type.boss && !c.type.glutton && c.alpha > 0.5;
+// (v2.1.2) how far back the wormhole's traveller may come out (tried in this order)
+const EV_HOLE_BACK = [160, 220, 100, 280, 340];
 function evStart(k) {
   const E = G.ev;
   if (k === "abduct") {
@@ -76465,26 +76484,37 @@ function evStart(k) {
   } else if (k === "wormhole") {
     // (v2.0.6) A WORMHOLE: a customer steps into it and comes out on another bar, a few steps further back - watch
     //  where they went. (Not one with a shake already on its way to them, on either bar: it would miss, or meet
-    //  someone it wasn't poured for)
+    //  someone it wasn't poured for - v2.1.2: only their own bar now, see below)
     const free = (l) => !shakes.some((q) => q.lane === l && !q.dead);
     const cand = customers.filter((c) => evAbductable(c) && free(c.lane));
     if (!cand.length || LANES < 2) return false;
     const c = cand[Math.floor(Math.random() * cand.length)];
-    const x2 = Math.max(X0 + 60, c.x - 160);
     // (review: and nobody standing where they'd land - two on one spot are drawn as one, and the one behind is missed)
-    const to = [...Array(LANES).keys()].filter(
-      (l) =>
-        l !== c.lane &&
-        free(l) &&
-        !customers.some((o) => o !== c && o.lane === l && o.state !== "out" && Math.abs(o.x - x2) < 110)
-    );
+    // (v2.1.2) THE WORMHOLE FINDS ITS WAY MORE OFTEN: in a test it hardly ever started - a busy bar always had a shake
+    //  sliding down it. The bar they land on may have shakes (one meets whoever's first, as with any newcomer - nothing
+    //  is lost), and the landing spot is looked for along the bar (a little back first, then anywhere up to their own
+    //  spot) instead of one fixed place
+    //  (review: always at least 100 back - landing level with where they were left a fast walker no room)
+    const spot = (l) => {
+      for (const d of EV_HOLE_BACK) {
+        const x = Math.max(X0 + 60, c.x - d);
+        if (!customers.some((o) => o !== c && o.lane === l && o.state !== "out" && Math.abs(o.x - x) < 110))
+          return x;
+      }
+      return null;
+    };
+    const to = [...Array(LANES).keys()]
+      .filter((l) => l !== c.lane)
+      .map((l) => [l, spot(l)])
+      .filter((p) => p[1] !== null);
     if (!to.length) return false;
+    const [toL, x2] = to[Math.floor(Math.random() * to.length)];
     c.hole = true;
     E.hole = {
       c,
       t: 0,
       from: c.lane,
-      to: to[Math.floor(Math.random() * to.length)],
+      to: toL,
       x: c.x,
       x2,
       moved: false,
@@ -76656,6 +76686,18 @@ function evUpdate(dt) {
         c.alpha = Math.max(0.05, 1 - H.t / 0.9);
         if (H.t > 1) {
           H.moved = true;
+          // (v2.1.2 review: the spot was chosen a second ago - if someone has walked into it since, the nearest free
+          //  one further back; two drawn as one would hide the one behind)
+          const near = (x) =>
+            customers.some((o) => o !== c && o.lane === H.to && o.state !== "out" && Math.abs(o.x - x) < 60);
+          if (near(H.x2))
+            for (const d of EV_HOLE_BACK) {
+              const x = Math.max(X0 + 60, H.x - d);
+              if (!near(x)) {
+                H.x2 = x;
+                break;
+              }
+            }
           c.lane = H.to;
           c.x = H.x2;
           c.alarmed = c.warned = false; // (a new bar - its alarm from the start)
@@ -89091,7 +89133,7 @@ function levelOfTour(of) {
     inTour = ((lv - 1) % LAST_LEVEL) + 1;
   return (tour > 1 ? "TOUR " + tour + "  ·  " : "") + "LEVEL " + inTour + of + LAST_LEVEL;
 }
-const GAME_VERSION = "v2.1.1",
+const GAME_VERSION = "v2.1.2",
   GAME_DATE = "28.11.2026",
   VERSION_TEXT = GAME_VERSION + "  ·  " + GAME_DATE;
 const FB = '"Chakra Petch", "Segoe UI", sans-serif';
@@ -97194,6 +97236,15 @@ profWire();
 //  the game, and where the motion capture, the folk songs and the fonts come from. Both from the menu at any time.
 // =====================================================================================
 const NEWS = [
+  {
+    ver: "v2.1.2",
+    title: "OPEN WORMHOLES",
+    items: [
+      "THE WORMHOLE TURNS UP AS IT SHOULD - BEFORE, A BUSY BAR KEPT IT AWAY",
+      "IT FINDS A FREE SPOT ON ANOTHER BAR FOR THE CUSTOMER TO POP OUT",
+      "TWIN SUNS, JANUS AND THE WANDERER GET THEIR WORMHOLE",
+    ],
+  },
   {
     ver: "v2.1.1",
     title: "SKY LOG",
